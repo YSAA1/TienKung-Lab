@@ -15,6 +15,8 @@ import argparse
 import csv
 import json
 import math
+import sys
+import traceback
 from pathlib import Path
 
 from isaaclab.app import AppLauncher
@@ -73,9 +75,10 @@ patch_missing_physx_material_attributes()
 
 ROOT = Path(__file__).resolve().parents[2]
 RAW_WIDTH = 7 + len(T4_JOINT_NAMES)
-# A stale kinematics read would freeze the end-effector features; require the feet
-# to actually move across a clip before accepting it.
-MIN_FOOT_TRAVEL = 1.0e-4
+# Minimum foot-feature response to a deliberate knee change, used once to prove the
+# kinematics read is live. A per-clip travel threshold cannot do this job: a static
+# clip such as `t4_stand` legitimately produces almost no foot travel.
+MIN_KINEMATICS_RESPONSE = 1.0e-3
 
 
 def _read_motion(path: Path) -> list[list[float]]:
@@ -133,6 +136,32 @@ def _write_state(
     robot.update(args_cli.sim_dt)
 
 
+def _kinematics_response(
+    robot: Articulation,
+    sim: sim_utils.SimulationContext,
+    builder: T4AmpFeatureBuilder,
+) -> float:
+    """Return how far the foot features move when the knees are deliberately bent.
+
+    A stale forward-kinematics read would silently freeze the end-effector part of
+    every AMP frame, so this runs once before any motion is written.
+    """
+    neutral = robot.data.default_joint_pos.clone()
+    zero_velocity = torch.zeros_like(neutral)
+    knee_ids, _ = robot.find_joints(name_keys=["J_knee_l_pitch", "J_knee_r_pitch"], preserve_order=True)
+    bent = neutral.clone()
+    bent[:, knee_ids] += 0.4
+
+    foot_features = []
+    for joint_pos in (neutral, bent):
+        robot.write_joint_state_to_sim(joint_pos, zero_velocity)
+        robot.write_data_to_sim()
+        sim.forward()
+        robot.update(args_cli.sim_dt)
+        foot_features.append(builder.compute()[0, -6:].clone())
+    return (foot_features[1] - foot_features[0]).abs().max().item()
+
+
 def _generate_motion(
     path: Path,
     robot: Articulation,
@@ -174,9 +203,6 @@ def _generate_motion(
             foot_travel += sum(abs(a - b) for a, b in zip(current_foot, previous_foot))
         previous_foot = current_foot
 
-    if foot_travel < MIN_FOOT_TRAVEL:
-        raise RuntimeError(f"{path}: foot features never changed ({foot_travel:.3e}); kinematics read looks stale")
-
     stats = {
         "motion_class": amp_motion_class(path.stem),
         "motion_weight": amp_motion_weight(path.stem),
@@ -209,6 +235,14 @@ def main() -> None:
     motion_to_sim = [motion_index[name] for name in sim_joint_names]
     builder = T4AmpFeatureBuilder(robot, args_cli.sim_device)
 
+    kinematics_response = _kinematics_response(robot, sim, builder)
+    if kinematics_response < MIN_KINEMATICS_RESPONSE:
+        raise RuntimeError(
+            f"foot features moved only {kinematics_response:.3e} when the knees were bent; "
+            "forward kinematics were not refreshed before the AMP features were read"
+        )
+    print(f"kinematics response {kinematics_response:.4f} m", flush=True)
+
     output_dir = args_cli.output_dir if args_cli.output_dir.is_absolute() else ROOT / args_cli.output_dir
     output_dir.mkdir(parents=True, exist_ok=True)
 
@@ -240,6 +274,7 @@ def main() -> None:
         "human_playback_review": "approved" if not pending else "pending",
         "human_playback_pending": pending,
         "status": "formal" if not pending else "provisional",
+        "kinematics_response": kinematics_response,
         "simulator": "isaaclab",
         "fps": args_cli.fps,
         "sim_dt": args_cli.sim_dt,
@@ -254,7 +289,14 @@ def main() -> None:
 
 
 if __name__ == "__main__":
+    # Isaac Sim shutdown can stall while an exception is unwinding, which would
+    # otherwise swallow the failure; report it on stdout before closing the app.
+    exit_code = 0
     try:
         main()
-    finally:
-        app.close()
+    except BaseException:
+        traceback.print_exc(file=sys.stdout)
+        sys.stdout.flush()
+        exit_code = 1
+    app.close()
+    sys.exit(exit_code)
