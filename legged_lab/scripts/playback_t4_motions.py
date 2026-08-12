@@ -96,6 +96,15 @@ def _resolve_body_ids(body_names: list[str]) -> dict[str, int | None]:
     return resolved
 
 
+def _motion_to_sim_joint_indices(sim_joint_names: list[str]) -> list[int]:
+    motion_index_by_name = {name: index for index, name in enumerate(T4_JOINT_NAMES)}
+    missing = sorted(set(T4_JOINT_NAMES) - set(sim_joint_names))
+    extra = sorted(set(sim_joint_names) - set(T4_JOINT_NAMES))
+    if missing or extra:
+        raise RuntimeError(f"T4 joint name mismatch: missing={missing} extra={extra}")
+    return [motion_index_by_name[name] for name in sim_joint_names]
+
+
 def _motion_files(motion_dir: Path, selected: list[str] | None) -> list[Path]:
     motion_dir = motion_dir if motion_dir.is_absolute() else ROOT / motion_dir
     selected_set = set(selected or [])
@@ -112,12 +121,15 @@ def _step_to_frame(
     robot: Articulation,
     sim: sim_utils.SimulationContext,
     row: list[float],
+    motion_to_sim_joint_indices: list[int],
     joint_vel: torch.Tensor,
     device: torch.device,
 ) -> None:
     root_pose = torch.tensor([row[:3] + _xyzw_to_wxyz(row[3:7])], dtype=torch.float32, device=device)
     root_velocity = torch.zeros((1, 6), dtype=torch.float32, device=device)
-    joint_pos = torch.tensor([row[7:]], dtype=torch.float32, device=device)
+    motion_joint_pos = row[7:]
+    sim_joint_pos = [motion_joint_pos[index] for index in motion_to_sim_joint_indices]
+    joint_pos = torch.tensor([sim_joint_pos], dtype=torch.float32, device=device)
 
     robot.write_root_pose_to_sim(root_pose)
     robot.write_root_velocity_to_sim(root_velocity)
@@ -132,6 +144,7 @@ def _audit_motion(
     robot: Articulation,
     sim: sim_utils.SimulationContext,
     body_ids: dict[str, int | None],
+    motion_to_sim_joint_indices: list[int],
     device: torch.device,
 ) -> dict:
     rows = _read_motion(path)
@@ -152,7 +165,7 @@ def _audit_motion(
     nonfinite_sim_frames = 0
 
     for row in frames:
-        _step_to_frame(robot, sim, row, joint_vel, device)
+        _step_to_frame(robot, sim, row, motion_to_sim_joint_indices, joint_vel, device)
         root_state = robot.data.root_state_w[0].detach().cpu()
         if not torch.isfinite(robot.data.root_state_w).all():
             nonfinite_sim_frames += 1
@@ -200,11 +213,13 @@ def main() -> None:
     robot = Articulation(T4_CFG.replace(prim_path="/World/T4"))
     sim.reset()
 
-    joint_order_ok = tuple(robot.joint_names) == T4_JOINT_NAMES
+    sim_joint_names = list(robot.joint_names)
+    joint_order_ok = tuple(sim_joint_names) == T4_JOINT_NAMES
+    motion_to_sim_joint_indices = _motion_to_sim_joint_indices(sim_joint_names)
     body_ids = _resolve_body_ids(list(robot.body_names))
     motions = {}
     for path in _motion_files(args_cli.motion_dir, args_cli.motion):
-        motions[path.stem] = _audit_motion(path, robot, sim, body_ids, device)
+        motions[path.stem] = _audit_motion(path, robot, sim, body_ids, motion_to_sim_joint_indices, device)
 
     result = {
         "schema_version": SCHEMA_VERSION,
@@ -216,7 +231,10 @@ def main() -> None:
         "asset": {
             "num_joints": robot.num_joints,
             "num_bodies": robot.num_bodies,
-            "joint_names": list(robot.joint_names),
+            "joint_names": sim_joint_names,
+            "motion_joint_names": list(T4_JOINT_NAMES),
+            "motion_to_sim_joint_indices": motion_to_sim_joint_indices,
+            "joint_name_set_matches_t4_constants": set(sim_joint_names) == set(T4_JOINT_NAMES),
             "body_names": list(robot.body_names),
             "joint_order_matches_t4_constants": joint_order_ok,
             "resolved_body_ids": body_ids,
@@ -237,10 +255,6 @@ def main() -> None:
             "Continuous motion quality, sliding, foot penetration, and early foot lift need replay/video review.",
         ],
     }
-    if not joint_order_ok:
-        result["summary"]["rejected_count"] = len(motions)
-        result["summary"]["global_reject_reason"] = "joint_order_mismatch"
-
     args_cli.output.parent.mkdir(parents=True, exist_ok=True)
     args_cli.output.write_text(json.dumps(result, indent=2, sort_keys=True) + "\n")
     print(

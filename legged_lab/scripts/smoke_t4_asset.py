@@ -36,14 +36,17 @@ def main() -> None:
     print(f"T4_SMOKE joint_names={robot.joint_names}", flush=True)
     if robot.num_joints != len(T4_JOINT_NAMES):
         raise RuntimeError(f"expected {len(T4_JOINT_NAMES)} joints, got {robot.num_joints}")
-    if tuple(robot.joint_names) != T4_JOINT_NAMES:
-        raise RuntimeError("IsaacLab joint order does not match T4_JOINT_NAMES")
+    if set(robot.joint_names) != set(T4_JOINT_NAMES):
+        raise RuntimeError("IsaacLab joint names do not match T4_JOINT_NAMES")
     Path("/tmp/t4_asset_smoke_result.json").write_text(
         json.dumps(
             {
                 "num_joints": robot.num_joints,
                 "num_bodies": robot.num_bodies,
                 "joint_names": robot.joint_names,
+                "motion_joint_names": T4_JOINT_NAMES,
+                "joint_name_set_matches_t4_constants": True,
+                "joint_order_matches_t4_constants": tuple(robot.joint_names) == T4_JOINT_NAMES,
             },
             indent=2,
         )

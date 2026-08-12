@@ -159,6 +159,8 @@ def test_t4_motion_playback_script_declares_isaaclab_m0_contract() -> None:
     assert "SCHEMA_VERSION = \"t4_motion_playback.v1\"" in source
     assert "T4_JOINT_NAMES" in source
     assert "_xyzw_to_wxyz" in source
+    assert "_motion_to_sim_joint_indices" in source
+    assert "motion_to_sim_joint_indices" in source
     assert "write_root_pose_to_sim" in source
     assert "write_joint_state_to_sim" in source
     assert "human_playback_status" in source
@@ -177,5 +179,6 @@ def test_t4_isaaclab_smoke_script_applies_runtime_compat_patch() -> None:
     assert "patch_physx_backward_compatibility_setting(AppLauncher)" in source
     assert "patch_missing_physx_material_attributes()" in source
     assert "spawn_ground_plane" not in source
+    assert "set(robot.joint_names)" in source
     assert "SETTING_BACKWARD_COMPATIBILITY" in compat_source
     assert "improve_patch_friction" in compat_source
