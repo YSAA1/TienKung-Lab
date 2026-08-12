@@ -22,6 +22,10 @@ import os
 import torch
 from isaaclab.app import AppLauncher
 
+from legged_lab.scripts.isaaclab_runtime_compat import (
+    patch_missing_physx_material_attributes,
+    patch_physx_backward_compatibility_setting,
+)
 from legged_lab.utils import task_registry
 from rsl_rl.runners import AmpOnPolicyRunner, OnPolicyRunner
 
@@ -37,6 +41,7 @@ parser.add_argument("--seed", type=int, default=None, help="Seed used for the en
 # append RSL-RL cli arguments
 cli_args.add_rsl_rl_args(parser)
 # append AppLauncher cli args
+patch_physx_backward_compatibility_setting(AppLauncher)
 AppLauncher.add_app_launcher_args(parser)
 args_cli, hydra_args = parser.parse_known_args()
 # Start camera rendering
@@ -52,6 +57,8 @@ from isaaclab_tasks.utils import get_checkpoint_path
 
 from legged_lab.envs import *  # noqa:F401, F403
 from legged_lab.utils.cli_args import update_rsl_rl_cfg
+
+patch_missing_physx_material_attributes()
 
 
 def play():
