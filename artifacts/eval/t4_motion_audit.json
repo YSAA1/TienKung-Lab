@@ -1,0 +1,1992 @@
+{
+  "asset": {
+    "joint_count": 27,
+    "joint_names": [
+      "J_arm_l_01",
+      "J_arm_l_02",
+      "J_arm_l_03",
+      "J_arm_l_04",
+      "J_arm_l_05",
+      "J_arm_l_06",
+      "J_arm_l_07",
+      "J_arm_r_01",
+      "J_arm_r_02",
+      "J_arm_r_03",
+      "J_arm_r_04",
+      "J_arm_r_05",
+      "J_arm_r_06",
+      "J_arm_r_07",
+      "J_waist_yaw",
+      "J_hip_l_pitch",
+      "J_hip_l_roll",
+      "J_hip_l_yaw",
+      "J_knee_l_pitch",
+      "J_ankle_l_pitch",
+      "J_ankle_l_roll",
+      "J_hip_r_pitch",
+      "J_hip_r_roll",
+      "J_hip_r_yaw",
+      "J_knee_r_pitch",
+      "J_ankle_r_pitch",
+      "J_ankle_r_roll"
+    ],
+    "mjcf": {
+      "body_names": [
+        "Trunk",
+        "head_pitch_link",
+        "head_yaw_link",
+        "AL1",
+        "AL2",
+        "AL3",
+        "AL4",
+        "AL5",
+        "AL6",
+        "AL7",
+        "AR1",
+        "AR2",
+        "AR3",
+        "AR4",
+        "AR5",
+        "AR6",
+        "AR7",
+        "Waist_yaw",
+        "Hip_Pitch_Left",
+        "Hip_Roll_Left",
+        "Hip_Yaw_Left",
+        "Shank_Left",
+        "Ankle_Cross_Left",
+        "left_foot_link",
+        "Hip_Pitch_Right",
+        "Hip_Roll_Right",
+        "Hip_Yaw_Right",
+        "Shank_Right",
+        "Ankle_Cross_Right",
+        "right_foot_link"
+      ],
+      "joint_limits": {
+        "J_ankle_l_pitch": [
+          -0.872,
+          0.523
+        ],
+        "J_ankle_l_roll": [
+          -0.261,
+          0.261
+        ],
+        "J_ankle_r_pitch": [
+          -0.872,
+          0.523
+        ],
+        "J_ankle_r_roll": [
+          -0.261,
+          0.261
+        ],
+        "J_arm_l_01": [
+          -3.07,
+          2.67
+        ],
+        "J_arm_l_02": [
+          -0.174,
+          2.25
+        ],
+        "J_arm_l_03": [
+          -2.617,
+          2.617
+        ],
+        "J_arm_l_04": [
+          -2.094,
+          1.047
+        ],
+        "J_arm_l_05": [
+          -1.972,
+          1.972
+        ],
+        "J_arm_l_06": [
+          -1.614,
+          1.614
+        ],
+        "J_arm_l_07": [
+          -1.614,
+          1.614
+        ],
+        "J_arm_r_01": [
+          -3.07,
+          2.67
+        ],
+        "J_arm_r_02": [
+          -2.25,
+          0.174
+        ],
+        "J_arm_r_03": [
+          -2.617,
+          2.617
+        ],
+        "J_arm_r_04": [
+          -2.094,
+          1.047
+        ],
+        "J_arm_r_05": [
+          -1.972,
+          1.972
+        ],
+        "J_arm_r_06": [
+          -1.614,
+          1.614
+        ],
+        "J_arm_r_07": [
+          -1.614,
+          1.614
+        ],
+        "J_hip_l_pitch": [
+          -2.879,
+          2.356
+        ],
+        "J_hip_l_roll": [
+          -0.523,
+          2.966
+        ],
+        "J_hip_l_yaw": [
+          -2.75,
+          2.75
+        ],
+        "J_hip_r_pitch": [
+          -2.879,
+          2.356
+        ],
+        "J_hip_r_roll": [
+          -2.966,
+          0.523
+        ],
+        "J_hip_r_yaw": [
+          -2.75,
+          2.75
+        ],
+        "J_knee_l_pitch": [
+          -0.087,
+          2.443
+        ],
+        "J_knee_r_pitch": [
+          -0.087,
+          2.443
+        ],
+        "J_waist_yaw": [
+          -2.617,
+          2.617
+        ]
+      },
+      "joint_names": [
+        "J_arm_l_01",
+        "J_arm_l_02",
+        "J_arm_l_03",
+        "J_arm_l_04",
+        "J_arm_l_05",
+        "J_arm_l_06",
+        "J_arm_l_07",
+        "J_arm_r_01",
+        "J_arm_r_02",
+        "J_arm_r_03",
+        "J_arm_r_04",
+        "J_arm_r_05",
+        "J_arm_r_06",
+        "J_arm_r_07",
+        "J_waist_yaw",
+        "J_hip_l_pitch",
+        "J_hip_l_roll",
+        "J_hip_l_yaw",
+        "J_knee_l_pitch",
+        "J_ankle_l_pitch",
+        "J_ankle_l_roll",
+        "J_hip_r_pitch",
+        "J_hip_r_roll",
+        "J_hip_r_yaw",
+        "J_knee_r_pitch",
+        "J_ankle_r_pitch",
+        "J_ankle_r_roll"
+      ],
+      "joint_order_matches_t4_constants": true,
+      "mjcf_path": "legged_lab\\assets\\t4\\mjcf\\t4_std.xml",
+      "mjcf_sites": {
+        "backward_camera": {
+          "euler": [
+            0.0,
+            1.5708,
+            0.0
+          ],
+          "pos": [
+            -0.065,
+            0.0,
+            0.42
+          ],
+          "quat": null
+        },
+        "forward_camera": {
+          "euler": [
+            0.0,
+            -1.5708,
+            0.0
+          ],
+          "pos": [
+            0.085,
+            0.0,
+            0.42
+          ],
+          "quat": null
+        },
+        "imu": {
+          "euler": null,
+          "pos": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "quat": null
+        },
+        "imu_in_pelvis": {
+          "euler": null,
+          "pos": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "quat": null
+        },
+        "imu_in_torso": {
+          "euler": null,
+          "pos": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "quat": null
+        },
+        "left_foot": {
+          "euler": null,
+          "pos": [
+            0.047,
+            0.0,
+            -0.0345
+          ],
+          "quat": null
+        },
+        "left_knee_camera": {
+          "euler": [
+            0.0,
+            -1.5708,
+            0.0
+          ],
+          "pos": [
+            0.068,
+            0.0,
+            -0.08
+          ],
+          "quat": null
+        },
+        "left_palm": {
+          "euler": null,
+          "pos": [
+            0.005,
+            0.0,
+            -0.114
+          ],
+          "quat": null
+        },
+        "mid360_link": {
+          "euler": null,
+          "pos": [
+            0.0,
+            0.0,
+            0.535
+          ],
+          "quat": [
+            1.0,
+            0.0,
+            0.0,
+            0.0
+          ]
+        },
+        "right_foot": {
+          "euler": null,
+          "pos": [
+            0.047,
+            0.0,
+            -0.0345
+          ],
+          "quat": null
+        },
+        "right_knee_camera": {
+          "euler": [
+            0.0,
+            -1.5708,
+            0.0
+          ],
+          "pos": [
+            0.068,
+            0.0,
+            -0.08
+          ],
+          "quat": null
+        },
+        "right_palm": {
+          "euler": null,
+          "pos": [
+            0.005,
+            0.0,
+            -0.114
+          ],
+          "quat": null
+        }
+      },
+      "motor_joints": [
+        "J_arm_l_01",
+        "J_arm_l_02",
+        "J_arm_l_03",
+        "J_arm_l_04",
+        "J_arm_l_05",
+        "J_arm_l_06",
+        "J_arm_l_07",
+        "J_arm_r_01",
+        "J_arm_r_02",
+        "J_arm_r_03",
+        "J_arm_r_04",
+        "J_arm_r_05",
+        "J_arm_r_06",
+        "J_arm_r_07",
+        "J_waist_yaw",
+        "J_hip_l_pitch",
+        "J_hip_l_roll",
+        "J_hip_l_yaw",
+        "J_knee_l_pitch",
+        "J_ankle_l_pitch",
+        "J_ankle_l_roll",
+        "J_hip_r_pitch",
+        "J_hip_r_roll",
+        "J_hip_r_yaw",
+        "J_knee_r_pitch",
+        "J_ankle_r_pitch",
+        "J_ankle_r_roll"
+      ],
+      "motor_order_matches_t4_constants": true,
+      "num_bodies": 30,
+      "required_sites": [
+        "forward_camera",
+        "left_foot",
+        "right_foot",
+        "left_palm",
+        "right_palm"
+      ],
+      "required_sites_present": true
+    },
+    "mjcf_sites": {
+      "backward_camera": {
+        "euler": [
+          0.0,
+          1.5708,
+          0.0
+        ],
+        "pos": [
+          -0.065,
+          0.0,
+          0.42
+        ],
+        "quat": null
+      },
+      "forward_camera": {
+        "euler": [
+          0.0,
+          -1.5708,
+          0.0
+        ],
+        "pos": [
+          0.085,
+          0.0,
+          0.42
+        ],
+        "quat": null
+      },
+      "imu": {
+        "euler": null,
+        "pos": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "quat": null
+      },
+      "imu_in_pelvis": {
+        "euler": null,
+        "pos": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "quat": null
+      },
+      "imu_in_torso": {
+        "euler": null,
+        "pos": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "quat": null
+      },
+      "left_foot": {
+        "euler": null,
+        "pos": [
+          0.047,
+          0.0,
+          -0.0345
+        ],
+        "quat": null
+      },
+      "left_knee_camera": {
+        "euler": [
+          0.0,
+          -1.5708,
+          0.0
+        ],
+        "pos": [
+          0.068,
+          0.0,
+          -0.08
+        ],
+        "quat": null
+      },
+      "left_palm": {
+        "euler": null,
+        "pos": [
+          0.005,
+          0.0,
+          -0.114
+        ],
+        "quat": null
+      },
+      "mid360_link": {
+        "euler": null,
+        "pos": [
+          0.0,
+          0.0,
+          0.535
+        ],
+        "quat": [
+          1.0,
+          0.0,
+          0.0,
+          0.0
+        ]
+      },
+      "right_foot": {
+        "euler": null,
+        "pos": [
+          0.047,
+          0.0,
+          -0.0345
+        ],
+        "quat": null
+      },
+      "right_knee_camera": {
+        "euler": [
+          0.0,
+          -1.5708,
+          0.0
+        ],
+        "pos": [
+          0.068,
+          0.0,
+          -0.08
+        ],
+        "quat": null
+      },
+      "right_palm": {
+        "euler": null,
+        "pos": [
+          0.005,
+          0.0,
+          -0.114
+        ],
+        "quat": null
+      }
+    },
+    "required_sites_present": true,
+    "urdf": {
+      "joint_names": [
+        "J_arm_l_01",
+        "J_arm_l_02",
+        "J_arm_l_03",
+        "J_arm_l_04",
+        "J_arm_l_05",
+        "J_arm_l_06",
+        "J_arm_l_07",
+        "J_arm_r_01",
+        "J_arm_r_02",
+        "J_arm_r_03",
+        "J_arm_r_04",
+        "J_arm_r_05",
+        "J_arm_r_06",
+        "J_arm_r_07",
+        "J_waist_yaw",
+        "J_hip_l_pitch",
+        "J_hip_l_roll",
+        "J_hip_l_yaw",
+        "J_knee_l_pitch",
+        "J_ankle_l_pitch",
+        "J_ankle_l_roll",
+        "J_hip_r_pitch",
+        "J_hip_r_roll",
+        "J_hip_r_yaw",
+        "J_knee_r_pitch",
+        "J_ankle_r_pitch",
+        "J_ankle_r_roll"
+      ],
+      "joint_order_matches_t4_constants": true,
+      "num_links": 30,
+      "num_non_fixed_joints": 27,
+      "robot_name": "T4",
+      "urdf_path": "legged_lab\\assets\\t4\\urdf\\t4_std.urdf"
+    }
+  },
+  "limitations": [
+    "Offline audit does not prove IsaacLab playback quality.",
+    "Foot penetration, sliding, discontinuity, and early foot lift require visual playback review.",
+    "AMP expert generation must wait for accepted machine audit and human playback approval."
+  ],
+  "motions": {
+    "B10_-__Walk_turn_left_45_stageii": {
+      "category": "turn",
+      "human_playback_notes": "Must be checked in IsaacLab playback before AMP expert generation.",
+      "human_playback_status": "pending",
+      "machine_reject_reasons": [],
+      "machine_status": "accept",
+      "machine_warnings": [],
+      "name": "B10_-__Walk_turn_left_45_stageii",
+      "raw": {
+        "frames": 179,
+        "hard_joint_limit_violation_count": 0,
+        "hard_joint_limit_violations_sample": [],
+        "mean_xy_speed": 0.8121649807017147,
+        "min_joint_limit_margin": 0.027271269399999992,
+        "near_joint_limit_hit_count": 0,
+        "near_joint_limit_hits_sample": [],
+        "nonfinite_count": 0,
+        "path": "legged_lab\\envs\\t4\\datasets\\motion_source\\B10_-__Walk_turn_left_45_stageii.csv",
+        "quat_norm_max": 1.0000000006690188,
+        "quat_norm_min": 0.999999999311312,
+        "root_z_max": 0.856059028,
+        "root_z_min": 0.764751599,
+        "schema": "root_xyz(3)+root_quat_xyzw(4)+q27",
+        "width": 34,
+        "xy_displacement": 4.818845552163507
+      },
+      "visualization": {
+        "duration_s": 5.933333333333334,
+        "frame_duration": 0.03333333333333333,
+        "frame_width": 66,
+        "frames": 178,
+        "joint_order_matches_t4_constants": true,
+        "path": "legged_lab\\envs\\t4\\datasets\\motion_visualization\\B10_-__Walk_turn_left_45_stageii.txt",
+        "source_schema": "root_xyz + root_quat_xyzw + 27 T4 joints"
+      }
+    },
+    "B13_-__Walk_turn_right_90_stageii": {
+      "category": "turn",
+      "human_playback_notes": "Must be checked in IsaacLab playback before AMP expert generation.",
+      "human_playback_status": "pending",
+      "machine_reject_reasons": [],
+      "machine_status": "accept",
+      "machine_warnings": [],
+      "name": "B13_-__Walk_turn_right_90_stageii",
+      "raw": {
+        "frames": 168,
+        "hard_joint_limit_violation_count": 0,
+        "hard_joint_limit_violations_sample": [],
+        "mean_xy_speed": 0.7255087900808874,
+        "min_joint_limit_margin": 0.05510773400000002,
+        "near_joint_limit_hit_count": 0,
+        "near_joint_limit_hits_sample": [],
+        "nonfinite_count": 0,
+        "path": "legged_lab\\envs\\t4\\datasets\\motion_source\\B13_-__Walk_turn_right_90_stageii.csv",
+        "quat_norm_max": 1.0000000005584462,
+        "quat_norm_min": 0.9999999993909247,
+        "root_z_max": 0.853844459,
+        "root_z_min": 0.769291188,
+        "schema": "root_xyz(3)+root_quat_xyzw(4)+q27",
+        "width": 34,
+        "xy_displacement": 4.03866559811694
+      },
+      "visualization": {
+        "duration_s": 5.566666666666666,
+        "frame_duration": 0.03333333333333333,
+        "frame_width": 66,
+        "frames": 167,
+        "joint_order_matches_t4_constants": true,
+        "path": "legged_lab\\envs\\t4\\datasets\\motion_visualization\\B13_-__Walk_turn_right_90_stageii.txt",
+        "source_schema": "root_xyz + root_quat_xyzw + 27 T4 joints"
+      }
+    },
+    "B14_-__Walk_turn_right_45_t2_stageii": {
+      "category": "turn",
+      "human_playback_notes": "Must be checked in IsaacLab playback before AMP expert generation.",
+      "human_playback_status": "pending",
+      "machine_reject_reasons": [],
+      "machine_status": "accept",
+      "machine_warnings": [
+        "near_joint_limit_hits:8"
+      ],
+      "name": "B14_-__Walk_turn_right_45_t2_stageii",
+      "raw": {
+        "frames": 174,
+        "hard_joint_limit_violation_count": 0,
+        "hard_joint_limit_violations_sample": [],
+        "mean_xy_speed": 0.9257622126799703,
+        "min_joint_limit_margin": 0.0,
+        "near_joint_limit_hit_count": 8,
+        "near_joint_limit_hits_sample": [
+          {
+            "frame": 0,
+            "joint": "J_knee_l_pitch",
+            "lower": -0.087,
+            "margin": 0.0,
+            "upper": 2.443,
+            "value": -0.087
+          },
+          {
+            "frame": 1,
+            "joint": "J_knee_l_pitch",
+            "lower": -0.087,
+            "margin": 6.710299999990177e-06,
+            "upper": 2.443,
+            "value": -0.0869932897
+          },
+          {
+            "frame": 2,
+            "joint": "J_knee_l_pitch",
+            "lower": -0.087,
+            "margin": 7.999999968033578e-10,
+            "upper": 2.443,
+            "value": -0.0869999992
+          },
+          {
+            "frame": 3,
+            "joint": "J_knee_l_pitch",
+            "lower": -0.087,
+            "margin": 3.1154999999977173e-06,
+            "upper": 2.443,
+            "value": -0.0869968845
+          },
+          {
+            "frame": 4,
+            "joint": "J_knee_l_pitch",
+            "lower": -0.087,
+            "margin": 3.4228999999941223e-06,
+            "upper": 2.443,
+            "value": -0.0869965771
+          },
+          {
+            "frame": 5,
+            "joint": "J_knee_l_pitch",
+            "lower": -0.087,
+            "margin": 1.4281199999993666e-05,
+            "upper": 2.443,
+            "value": -0.0869857188
+          },
+          {
+            "frame": 6,
+            "joint": "J_knee_l_pitch",
+            "lower": -0.087,
+            "margin": 2.9313399999994494e-05,
+            "upper": 2.443,
+            "value": -0.0869706866
+          },
+          {
+            "frame": 7,
+            "joint": "J_knee_l_pitch",
+            "lower": -0.087,
+            "margin": 0.003694097499999993,
+            "upper": 2.443,
+            "value": -0.0833059025
+          }
+        ],
+        "nonfinite_count": 0,
+        "path": "legged_lab\\envs\\t4\\datasets\\motion_source\\B14_-__Walk_turn_right_45_t2_stageii.csv",
+        "quat_norm_max": 1.000000000549415,
+        "quat_norm_min": 0.999999999462741,
+        "root_z_max": 0.855083099,
+        "root_z_min": 0.76833871,
+        "schema": "root_xyz(3)+root_quat_xyzw(4)+q27",
+        "width": 34,
+        "xy_displacement": 5.338562093121162
+      },
+      "visualization": {
+        "duration_s": 5.766666666666667,
+        "frame_duration": 0.03333333333333333,
+        "frame_width": 66,
+        "frames": 173,
+        "joint_order_matches_t4_constants": true,
+        "path": "legged_lab\\envs\\t4\\datasets\\motion_visualization\\B14_-__Walk_turn_right_45_t2_stageii.txt",
+        "source_schema": "root_xyz + root_quat_xyzw + 27 T4 joints"
+      }
+    },
+    "B15_-__Walk_turn_around_stageii": {
+      "category": "turn",
+      "human_playback_notes": "Must be checked in IsaacLab playback before AMP expert generation.",
+      "human_playback_status": "pending",
+      "machine_reject_reasons": [],
+      "machine_status": "accept",
+      "machine_warnings": [
+        "near_joint_limit_hits:3"
+      ],
+      "name": "B15_-__Walk_turn_around_stageii",
+      "raw": {
+        "frames": 225,
+        "hard_joint_limit_violation_count": 0,
+        "hard_joint_limit_violations_sample": [],
+        "mean_xy_speed": 0.09907436012422968,
+        "min_joint_limit_margin": 0.008118369000000014,
+        "near_joint_limit_hit_count": 3,
+        "near_joint_limit_hits_sample": [
+          {
+            "frame": 90,
+            "joint": "J_ankle_r_roll",
+            "lower": -0.261,
+            "margin": 0.016244773000000018,
+            "upper": 0.261,
+            "value": 0.244755227
+          },
+          {
+            "frame": 91,
+            "joint": "J_ankle_r_roll",
+            "lower": -0.261,
+            "margin": 0.008118369000000014,
+            "upper": 0.261,
+            "value": 0.252881631
+          },
+          {
+            "frame": 92,
+            "joint": "J_ankle_r_roll",
+            "lower": -0.261,
+            "margin": 0.014861336000000003,
+            "upper": 0.261,
+            "value": 0.246138664
+          }
+        ],
+        "nonfinite_count": 0,
+        "path": "legged_lab\\envs\\t4\\datasets\\motion_source\\B15_-__Walk_turn_around_stageii.csv",
+        "quat_norm_max": 1.0000000005927656,
+        "quat_norm_min": 0.9999999993528969,
+        "root_z_max": 0.844744763,
+        "root_z_min": 0.762263083,
+        "schema": "root_xyz(3)+root_quat_xyzw(4)+q27",
+        "width": 34,
+        "xy_displacement": 0.739755222260915
+      },
+      "visualization": {
+        "duration_s": 7.466666666666667,
+        "frame_duration": 0.03333333333333333,
+        "frame_width": 66,
+        "frames": 224,
+        "joint_order_matches_t4_constants": true,
+        "path": "legged_lab\\envs\\t4\\datasets\\motion_visualization\\B15_-__Walk_turn_around_stageii.txt",
+        "source_schema": "root_xyz + root_quat_xyzw + 27 T4 joints"
+      }
+    },
+    "B4_-_Stand_to_Walk_backwards_stageii": {
+      "category": "stand",
+      "human_playback_notes": "Must be checked in IsaacLab playback before AMP expert generation.",
+      "human_playback_status": "pending",
+      "machine_reject_reasons": [],
+      "machine_status": "accept",
+      "machine_warnings": [
+        "near_joint_limit_hits:3"
+      ],
+      "name": "B4_-_Stand_to_Walk_backwards_stageii",
+      "raw": {
+        "frames": 138,
+        "hard_joint_limit_violation_count": 0,
+        "hard_joint_limit_violations_sample": [],
+        "mean_xy_speed": 0.7923694036849013,
+        "min_joint_limit_margin": 0.013952989099999993,
+        "near_joint_limit_hit_count": 3,
+        "near_joint_limit_hits_sample": [
+          {
+            "frame": 0,
+            "joint": "J_knee_l_pitch",
+            "lower": -0.087,
+            "margin": 0.017450129299999992,
+            "upper": 2.443,
+            "value": -0.0695498707
+          },
+          {
+            "frame": 1,
+            "joint": "J_knee_l_pitch",
+            "lower": -0.087,
+            "margin": 0.013952989099999993,
+            "upper": 2.443,
+            "value": -0.0730470109
+          },
+          {
+            "frame": 3,
+            "joint": "J_knee_l_pitch",
+            "lower": -0.087,
+            "margin": 0.019903487499999997,
+            "upper": 2.443,
+            "value": -0.0670965125
+          }
+        ],
+        "nonfinite_count": 0,
+        "path": "legged_lab\\envs\\t4\\datasets\\motion_source\\B4_-_Stand_to_Walk_backwards_stageii.csv",
+        "quat_norm_max": 1.0000000005551193,
+        "quat_norm_min": 0.9999999994033203,
+        "root_z_max": 0.839771851,
+        "root_z_min": 0.772775566,
+        "schema": "root_xyz(3)+root_quat_xyzw(4)+q27",
+        "width": 34,
+        "xy_displacement": 3.6184869434943825
+      },
+      "visualization": {
+        "duration_s": 4.566666666666666,
+        "frame_duration": 0.03333333333333333,
+        "frame_width": 66,
+        "frames": 137,
+        "joint_order_matches_t4_constants": true,
+        "path": "legged_lab\\envs\\t4\\datasets\\motion_visualization\\B4_-_Stand_to_Walk_backwards_stageii.txt",
+        "source_schema": "root_xyz + root_quat_xyzw + 27 T4 joints"
+      }
+    },
+    "B9_-__Walk_turn_left_90_stageii": {
+      "category": "turn",
+      "human_playback_notes": "Must be checked in IsaacLab playback before AMP expert generation.",
+      "human_playback_status": "pending",
+      "machine_reject_reasons": [],
+      "machine_status": "accept",
+      "machine_warnings": [],
+      "name": "B9_-__Walk_turn_left_90_stageii",
+      "raw": {
+        "frames": 151,
+        "hard_joint_limit_violation_count": 0,
+        "hard_joint_limit_violations_sample": [],
+        "mean_xy_speed": 0.6469375622669176,
+        "min_joint_limit_margin": 0.031111896,
+        "near_joint_limit_hit_count": 0,
+        "near_joint_limit_hits_sample": [],
+        "nonfinite_count": 0,
+        "path": "legged_lab\\envs\\t4\\datasets\\motion_source\\B9_-__Walk_turn_left_90_stageii.csv",
+        "quat_norm_max": 1.0000000005373,
+        "quat_norm_min": 0.9999999992901738,
+        "root_z_max": 0.840981072,
+        "root_z_min": 0.775955321,
+        "schema": "root_xyz(3)+root_quat_xyzw(4)+q27",
+        "width": 34,
+        "xy_displacement": 3.234687811334588
+      },
+      "visualization": {
+        "duration_s": 5.0,
+        "frame_duration": 0.03333333333333333,
+        "frame_width": 66,
+        "frames": 150,
+        "joint_order_matches_t4_constants": true,
+        "path": "legged_lab\\envs\\t4\\datasets\\motion_visualization\\B9_-__Walk_turn_left_90_stageii.txt",
+        "source_schema": "root_xyz + root_quat_xyzw + 27 T4 joints"
+      }
+    },
+    "t4_jog_backward": {
+      "category": "jog",
+      "human_playback_notes": "Must be checked in IsaacLab playback before AMP expert generation.",
+      "human_playback_status": "pending",
+      "machine_reject_reasons": [],
+      "machine_status": "accept",
+      "machine_warnings": [
+        "near_joint_limit_hits:31"
+      ],
+      "name": "t4_jog_backward",
+      "raw": {
+        "frames": 171,
+        "hard_joint_limit_violation_count": 0,
+        "hard_joint_limit_violations_sample": [],
+        "mean_xy_speed": 1.2446012180215857,
+        "min_joint_limit_margin": -7.390975942378475e-09,
+        "near_joint_limit_hit_count": 31,
+        "near_joint_limit_hits_sample": [
+          {
+            "frame": 36,
+            "joint": "J_ankle_l_roll",
+            "lower": -0.261,
+            "margin": 2.2411346445316838e-08,
+            "upper": 0.261,
+            "value": -0.26099997758865356
+          },
+          {
+            "frame": 37,
+            "joint": "J_ankle_l_roll",
+            "lower": -0.261,
+            "margin": -7.390975942378475e-09,
+            "upper": 0.261,
+            "value": -0.26100000739097595
+          },
+          {
+            "frame": 38,
+            "joint": "J_ankle_l_roll",
+            "lower": -0.261,
+            "margin": 0.016051329731941233,
+            "upper": 0.261,
+            "value": -0.24494867026805878
+          },
+          {
+            "frame": 45,
+            "joint": "J_ankle_l_roll",
+            "lower": -0.261,
+            "margin": 0.018553189992904673,
+            "upper": 0.261,
+            "value": -0.24244681000709534
+          },
+          {
+            "frame": 46,
+            "joint": "J_ankle_l_roll",
+            "lower": -0.261,
+            "margin": -7.390975942378475e-09,
+            "upper": 0.261,
+            "value": -0.26100000739097595
+          },
+          {
+            "frame": 46,
+            "joint": "J_ankle_r_roll",
+            "lower": -0.261,
+            "margin": 0.003487460374832163,
+            "upper": 0.261,
+            "value": 0.25751253962516785
+          },
+          {
+            "frame": 47,
+            "joint": "J_ankle_r_roll",
+            "lower": -0.261,
+            "margin": -7.390975942378475e-09,
+            "upper": 0.261,
+            "value": 0.26100000739097595
+          },
+          {
+            "frame": 48,
+            "joint": "J_ankle_r_roll",
+            "lower": -0.261,
+            "margin": 0.007945619583129893,
+            "upper": 0.261,
+            "value": 0.2530543804168701
+          },
+          {
+            "frame": 55,
+            "joint": "J_ankle_r_roll",
+            "lower": -0.261,
+            "margin": 3.986811637879395e-05,
+            "upper": 0.261,
+            "value": 0.2609601318836212
+          },
+          {
+            "frame": 56,
+            "joint": "J_ankle_r_roll",
+            "lower": -0.261,
+            "margin": -7.390975942378475e-09,
+            "upper": 0.261,
+            "value": 0.26100000739097595
+          }
+        ],
+        "nonfinite_count": 0,
+        "path": "legged_lab\\envs\\t4\\datasets\\motion_source\\t4_jog_backward.csv",
+        "quat_norm_max": 1.0000000386700376,
+        "quat_norm_min": 0.9999999600460044,
+        "root_z_max": 0.9362502098083496,
+        "root_z_min": 0.8326870799064636,
+        "schema": "root_xyz(3)+root_quat_xyzw(4)+q27",
+        "width": 34,
+        "xy_displacement": 7.052740235455653
+      },
+      "visualization": {
+        "duration_s": 5.666666666666667,
+        "frame_duration": 0.03333333333333333,
+        "frame_width": 66,
+        "frames": 170,
+        "joint_order_matches_t4_constants": true,
+        "path": "legged_lab\\envs\\t4\\datasets\\motion_visualization\\t4_jog_backward.txt",
+        "source_schema": "root_xyz + root_quat_xyzw + 27 T4 joints"
+      }
+    },
+    "t4_jog_forward": {
+      "category": "jog",
+      "human_playback_notes": "Must be checked in IsaacLab playback before AMP expert generation.",
+      "human_playback_status": "pending",
+      "machine_reject_reasons": [],
+      "machine_status": "accept",
+      "machine_warnings": [
+        "near_joint_limit_hits:83"
+      ],
+      "name": "t4_jog_forward",
+      "raw": {
+        "frames": 152,
+        "hard_joint_limit_violation_count": 0,
+        "hard_joint_limit_violations_sample": [],
+        "mean_xy_speed": 1.4081526703944416,
+        "min_joint_limit_margin": -1.0108947767761833e-07,
+        "near_joint_limit_hit_count": 83,
+        "near_joint_limit_hits_sample": [
+          {
+            "frame": 29,
+            "joint": "J_ankle_l_roll",
+            "lower": -0.261,
+            "margin": 0.014536373376846323,
+            "upper": 0.261,
+            "value": 0.2464636266231537
+          },
+          {
+            "frame": 30,
+            "joint": "J_ankle_l_roll",
+            "lower": -0.261,
+            "margin": 0.00042437767982483887,
+            "upper": 0.261,
+            "value": 0.26057562232017517
+          },
+          {
+            "frame": 31,
+            "joint": "J_ankle_l_pitch",
+            "lower": -0.872,
+            "margin": 0.0006300420761108372,
+            "upper": 0.523,
+            "value": -0.8713699579238892
+          },
+          {
+            "frame": 31,
+            "joint": "J_ankle_l_roll",
+            "lower": -0.261,
+            "margin": 0.0005048141479492285,
+            "upper": 0.261,
+            "value": 0.2604951858520508
+          },
+          {
+            "frame": 32,
+            "joint": "J_ankle_l_pitch",
+            "lower": -0.872,
+            "margin": 0.0005337805747985813,
+            "upper": 0.523,
+            "value": -0.8714662194252014
+          },
+          {
+            "frame": 32,
+            "joint": "J_ankle_l_roll",
+            "lower": -0.261,
+            "margin": 0.01609139895439149,
+            "upper": 0.261,
+            "value": 0.24490860104560852
+          },
+          {
+            "frame": 33,
+            "joint": "J_ankle_l_pitch",
+            "lower": -0.872,
+            "margin": 0.0007464499473571751,
+            "upper": 0.523,
+            "value": -0.8712535500526428
+          },
+          {
+            "frame": 34,
+            "joint": "J_ankle_l_pitch",
+            "lower": -0.872,
+            "margin": 0.00502958011627197,
+            "upper": 0.523,
+            "value": -0.866970419883728
+          },
+          {
+            "frame": 39,
+            "joint": "J_ankle_r_roll",
+            "lower": -0.261,
+            "margin": 0.0005651638507843115,
+            "upper": 0.261,
+            "value": -0.2604348361492157
+          },
+          {
+            "frame": 40,
+            "joint": "J_ankle_r_roll",
+            "lower": -0.261,
+            "margin": 5.221366883301215e-08,
+            "upper": 0.261,
+            "value": -0.2609999477863312
+          }
+        ],
+        "nonfinite_count": 0,
+        "path": "legged_lab\\envs\\t4\\datasets\\motion_source\\t4_jog_forward.csv",
+        "quat_norm_max": 1.000000039267602,
+        "quat_norm_min": 0.9999999633750282,
+        "root_z_max": 0.8411098718643188,
+        "root_z_min": 0.7435299158096313,
+        "schema": "root_xyz(3)+root_quat_xyzw(4)+q27",
+        "width": 34,
+        "xy_displacement": 7.087701774318689
+      },
+      "visualization": {
+        "duration_s": 5.033333333333333,
+        "frame_duration": 0.03333333333333333,
+        "frame_width": 66,
+        "frames": 151,
+        "joint_order_matches_t4_constants": true,
+        "path": "legged_lab\\envs\\t4\\datasets\\motion_visualization\\t4_jog_forward.txt",
+        "source_schema": "root_xyz + root_quat_xyzw + 27 T4 joints"
+      }
+    },
+    "t4_jog_left": {
+      "category": "jog",
+      "human_playback_notes": "Must be checked in IsaacLab playback before AMP expert generation.",
+      "human_playback_status": "pending",
+      "machine_reject_reasons": [],
+      "machine_status": "accept",
+      "machine_warnings": [
+        "near_joint_limit_hits:287"
+      ],
+      "name": "t4_jog_left",
+      "raw": {
+        "frames": 207,
+        "hard_joint_limit_violation_count": 0,
+        "hard_joint_limit_violations_sample": [],
+        "mean_xy_speed": 0.16193642785188858,
+        "min_joint_limit_margin": -1.0108947767761833e-07,
+        "near_joint_limit_hit_count": 287,
+        "near_joint_limit_hits_sample": [
+          {
+            "frame": 17,
+            "joint": "J_ankle_r_roll",
+            "lower": -0.261,
+            "margin": 0.016664527416229258,
+            "upper": 0.261,
+            "value": -0.24433547258377075
+          },
+          {
+            "frame": 18,
+            "joint": "J_ankle_l_roll",
+            "lower": -0.261,
+            "margin": -7.390975942378475e-09,
+            "upper": 0.261,
+            "value": 0.26100000739097595
+          },
+          {
+            "frame": 18,
+            "joint": "J_ankle_r_roll",
+            "lower": -0.261,
+            "margin": 0.0016218647956848242,
+            "upper": 0.261,
+            "value": -0.2593781352043152
+          },
+          {
+            "frame": 19,
+            "joint": "J_ankle_l_roll",
+            "lower": -0.261,
+            "margin": -7.390975942378475e-09,
+            "upper": 0.261,
+            "value": 0.26100000739097595
+          },
+          {
+            "frame": 19,
+            "joint": "J_ankle_r_pitch",
+            "lower": -0.872,
+            "margin": 2.0980834958272965e-08,
+            "upper": 0.523,
+            "value": -0.871999979019165
+          },
+          {
+            "frame": 19,
+            "joint": "J_ankle_r_roll",
+            "lower": -0.261,
+            "margin": 0.005678467512130747,
+            "upper": 0.261,
+            "value": -0.25532153248786926
+          },
+          {
+            "frame": 20,
+            "joint": "J_ankle_l_roll",
+            "lower": -0.261,
+            "margin": -7.390975942378475e-09,
+            "upper": 0.261,
+            "value": 0.26100000739097595
+          },
+          {
+            "frame": 20,
+            "joint": "J_ankle_r_pitch",
+            "lower": -0.872,
+            "margin": 2.0980834958272965e-08,
+            "upper": 0.523,
+            "value": -0.871999979019165
+          },
+          {
+            "frame": 21,
+            "joint": "J_ankle_l_roll",
+            "lower": -0.261,
+            "margin": -7.390975942378475e-09,
+            "upper": 0.261,
+            "value": 0.26100000739097595
+          },
+          {
+            "frame": 21,
+            "joint": "J_ankle_r_pitch",
+            "lower": -0.872,
+            "margin": 2.0980834958272965e-08,
+            "upper": 0.523,
+            "value": -0.871999979019165
+          }
+        ],
+        "nonfinite_count": 0,
+        "path": "legged_lab\\envs\\t4\\datasets\\motion_source\\t4_jog_left.csv",
+        "quat_norm_max": 1.0000000317923636,
+        "quat_norm_min": 0.9999999626997591,
+        "root_z_max": 0.858805775642395,
+        "root_z_min": 0.703732430934906,
+        "schema": "root_xyz(3)+root_quat_xyzw(4)+q27",
+        "width": 34,
+        "xy_displacement": 1.111963471249635
+      },
+      "visualization": {
+        "duration_s": 6.866666666666666,
+        "frame_duration": 0.03333333333333333,
+        "frame_width": 66,
+        "frames": 206,
+        "joint_order_matches_t4_constants": true,
+        "path": "legged_lab\\envs\\t4\\datasets\\motion_visualization\\t4_jog_left.txt",
+        "source_schema": "root_xyz + root_quat_xyzw + 27 T4 joints"
+      }
+    },
+    "t4_jog_right": {
+      "category": "jog",
+      "human_playback_notes": "Must be checked in IsaacLab playback before AMP expert generation.",
+      "human_playback_status": "pending",
+      "machine_reject_reasons": [],
+      "machine_status": "accept",
+      "machine_warnings": [
+        "near_joint_limit_hits:195"
+      ],
+      "name": "t4_jog_right",
+      "raw": {
+        "frames": 227,
+        "hard_joint_limit_violation_count": 0,
+        "hard_joint_limit_violations_sample": [],
+        "mean_xy_speed": 0.14863940915157495,
+        "min_joint_limit_margin": -1.0108947767761833e-07,
+        "near_joint_limit_hit_count": 195,
+        "near_joint_limit_hits_sample": [
+          {
+            "frame": 18,
+            "joint": "J_ankle_r_roll",
+            "lower": -0.261,
+            "margin": -7.390975942378475e-09,
+            "upper": 0.261,
+            "value": -0.26100000739097595
+          },
+          {
+            "frame": 19,
+            "joint": "J_ankle_r_roll",
+            "lower": -0.261,
+            "margin": 7.50279426575684e-06,
+            "upper": 0.261,
+            "value": -0.26099249720573425
+          },
+          {
+            "frame": 20,
+            "joint": "J_ankle_r_roll",
+            "lower": -0.261,
+            "margin": 0.005197607040405283,
+            "upper": 0.261,
+            "value": -0.2558023929595947
+          },
+          {
+            "frame": 28,
+            "joint": "J_ankle_l_pitch",
+            "lower": -0.872,
+            "margin": 0.002471110343933103,
+            "upper": 0.523,
+            "value": -0.8695288896560669
+          },
+          {
+            "frame": 30,
+            "joint": "J_ankle_r_roll",
+            "lower": -0.261,
+            "margin": 0.004393808603286753,
+            "upper": 0.261,
+            "value": -0.25660619139671326
+          },
+          {
+            "frame": 31,
+            "joint": "J_ankle_r_roll",
+            "lower": -0.261,
+            "margin": -7.390975942378475e-09,
+            "upper": 0.261,
+            "value": -0.26100000739097595
+          },
+          {
+            "frame": 32,
+            "joint": "J_ankle_r_roll",
+            "lower": -0.261,
+            "margin": -7.390975942378475e-09,
+            "upper": 0.261,
+            "value": -0.26100000739097595
+          },
+          {
+            "frame": 33,
+            "joint": "J_ankle_r_roll",
+            "lower": -0.261,
+            "margin": -7.390975942378475e-09,
+            "upper": 0.261,
+            "value": -0.26100000739097595
+          },
+          {
+            "frame": 34,
+            "joint": "J_ankle_r_roll",
+            "lower": -0.261,
+            "margin": -7.390975942378475e-09,
+            "upper": 0.261,
+            "value": -0.26100000739097595
+          },
+          {
+            "frame": 35,
+            "joint": "J_ankle_r_roll",
+            "lower": -0.261,
+            "margin": -7.390975942378475e-09,
+            "upper": 0.261,
+            "value": -0.26100000739097595
+          }
+        ],
+        "nonfinite_count": 0,
+        "path": "legged_lab\\envs\\t4\\datasets\\motion_source\\t4_jog_right.csv",
+        "quat_norm_max": 1.0000000296068594,
+        "quat_norm_min": 0.9999999643230358,
+        "root_z_max": 0.8434085845947266,
+        "root_z_min": 0.7496625781059265,
+        "schema": "root_xyz(3)+root_quat_xyzw(4)+q27",
+        "width": 34,
+        "xy_displacement": 1.1197502156085313
+      },
+      "visualization": {
+        "duration_s": 7.533333333333333,
+        "frame_duration": 0.03333333333333333,
+        "frame_width": 66,
+        "frames": 226,
+        "joint_order_matches_t4_constants": true,
+        "path": "legged_lab\\envs\\t4\\datasets\\motion_visualization\\t4_jog_right.txt",
+        "source_schema": "root_xyz + root_quat_xyzw + 27 T4 joints"
+      }
+    },
+    "t4_left_rotate": {
+      "category": "turn",
+      "human_playback_notes": "Must be checked in IsaacLab playback before AMP expert generation.",
+      "human_playback_status": "pending",
+      "machine_reject_reasons": [],
+      "machine_status": "accept",
+      "machine_warnings": [],
+      "name": "t4_left_rotate",
+      "raw": {
+        "frames": 232,
+        "hard_joint_limit_violation_count": 0,
+        "hard_joint_limit_violations_sample": [],
+        "mean_xy_speed": 0.010931480363833575,
+        "min_joint_limit_margin": 0.063000001,
+        "near_joint_limit_hit_count": 0,
+        "near_joint_limit_hits_sample": [],
+        "nonfinite_count": 0,
+        "path": "legged_lab\\envs\\t4\\datasets\\motion_source\\t4_left_rotate.csv",
+        "quat_norm_max": 1.0000000005975167,
+        "quat_norm_min": 0.9999999993339418,
+        "root_z_max": 0.864000022,
+        "root_z_min": 0.846000016,
+        "schema": "root_xyz(3)+root_quat_xyzw(4)+q27",
+        "width": 34,
+        "xy_displacement": 0.08417239880151853
+      },
+      "visualization": {
+        "duration_s": 7.7,
+        "frame_duration": 0.03333333333333333,
+        "frame_width": 66,
+        "frames": 231,
+        "joint_order_matches_t4_constants": true,
+        "path": "legged_lab\\envs\\t4\\datasets\\motion_visualization\\t4_left_rotate.txt",
+        "source_schema": "root_xyz + root_quat_xyzw + 27 T4 joints"
+      }
+    },
+    "t4_right_rotate": {
+      "category": "turn",
+      "human_playback_notes": "Must be checked in IsaacLab playback before AMP expert generation.",
+      "human_playback_status": "pending",
+      "machine_reject_reasons": [],
+      "machine_status": "accept",
+      "machine_warnings": [],
+      "name": "t4_right_rotate",
+      "raw": {
+        "frames": 194,
+        "hard_joint_limit_violation_count": 0,
+        "hard_joint_limit_violations_sample": [],
+        "mean_xy_speed": 0.0205234303599445,
+        "min_joint_limit_margin": 0.10900000500000001,
+        "near_joint_limit_hit_count": 0,
+        "near_joint_limit_hits_sample": [],
+        "nonfinite_count": 0,
+        "path": "legged_lab\\envs\\t4\\datasets\\motion_source\\t4_right_rotate.csv",
+        "quat_norm_max": 1.000000000587516,
+        "quat_norm_min": 0.9999999993639684,
+        "root_z_max": 0.860000014,
+        "root_z_min": 0.846000016,
+        "schema": "root_xyz(3)+root_quat_xyzw(4)+q27",
+        "width": 34,
+        "xy_displacement": 0.1320340686489763
+      },
+      "visualization": {
+        "duration_s": 6.433333333333334,
+        "frame_duration": 0.03333333333333333,
+        "frame_width": 66,
+        "frames": 193,
+        "joint_order_matches_t4_constants": true,
+        "path": "legged_lab\\envs\\t4\\datasets\\motion_visualization\\t4_right_rotate.txt",
+        "source_schema": "root_xyz + root_quat_xyzw + 27 T4 joints"
+      }
+    },
+    "t4_run": {
+      "category": "run_holdout",
+      "human_playback_notes": "Must be checked in IsaacLab playback before AMP expert generation.",
+      "human_playback_status": "pending",
+      "machine_reject_reasons": [
+        "hard_joint_limit_violations:16",
+        "holdout:t4_run_requires_independent_playback_and_limit_review"
+      ],
+      "machine_status": "reject",
+      "machine_warnings": [
+        "near_joint_limit_hits:8"
+      ],
+      "name": "t4_run",
+      "raw": {
+        "frames": 132,
+        "hard_joint_limit_violation_count": 16,
+        "hard_joint_limit_violations_sample": [
+          {
+            "frame": 40,
+            "joint": "J_ankle_r_roll",
+            "lower": -0.261,
+            "upper": 0.261,
+            "value": 0.276035201
+          },
+          {
+            "frame": 62,
+            "joint": "J_ankle_r_roll",
+            "lower": -0.261,
+            "upper": 0.261,
+            "value": 0.281449198
+          },
+          {
+            "frame": 63,
+            "joint": "J_ankle_r_roll",
+            "lower": -0.261,
+            "upper": 0.261,
+            "value": 0.282821467
+          },
+          {
+            "frame": 80,
+            "joint": "J_ankle_r_roll",
+            "lower": -0.261,
+            "upper": 0.261,
+            "value": 0.273610429
+          },
+          {
+            "frame": 81,
+            "joint": "J_ankle_r_roll",
+            "lower": -0.261,
+            "upper": 0.261,
+            "value": 0.268964136
+          },
+          {
+            "frame": 84,
+            "joint": "J_knee_r_pitch",
+            "lower": -0.087,
+            "upper": 2.443,
+            "value": 2.488396606
+          },
+          {
+            "frame": 96,
+            "joint": "J_ankle_r_roll",
+            "lower": -0.261,
+            "upper": 0.261,
+            "value": 0.268570021
+          },
+          {
+            "frame": 99,
+            "joint": "J_knee_r_pitch",
+            "lower": -0.087,
+            "upper": 2.443,
+            "value": 2.452941946
+          },
+          {
+            "frame": 103,
+            "joint": "J_ankle_l_roll",
+            "lower": -0.261,
+            "upper": 0.261,
+            "value": -0.276021961
+          },
+          {
+            "frame": 104,
+            "joint": "J_ankle_l_roll",
+            "lower": -0.261,
+            "upper": 0.261,
+            "value": -0.265923656
+          }
+        ],
+        "mean_xy_speed": 2.8957650756544124,
+        "min_joint_limit_margin": -0.04539660599999973,
+        "near_joint_limit_hit_count": 8,
+        "near_joint_limit_hits_sample": [
+          {
+            "frame": 39,
+            "joint": "J_ankle_r_roll",
+            "lower": -0.261,
+            "margin": 0.002528050000000004,
+            "upper": 0.261,
+            "value": 0.25847195
+          },
+          {
+            "frame": 41,
+            "joint": "J_ankle_r_roll",
+            "lower": -0.261,
+            "margin": 0.002406434000000013,
+            "upper": 0.261,
+            "value": 0.258593566
+          },
+          {
+            "frame": 61,
+            "joint": "J_ankle_r_roll",
+            "lower": -0.261,
+            "margin": 0.017663856000000006,
+            "upper": 0.261,
+            "value": 0.243336144
+          },
+          {
+            "frame": 64,
+            "joint": "J_ankle_r_roll",
+            "lower": -0.261,
+            "margin": 0.00958368100000001,
+            "upper": 0.261,
+            "value": 0.251416319
+          },
+          {
+            "frame": 100,
+            "joint": "J_knee_r_pitch",
+            "lower": -0.087,
+            "margin": 0.0007144850000000424,
+            "upper": 2.443,
+            "value": 2.442285515
+          },
+          {
+            "frame": 105,
+            "joint": "J_ankle_l_roll",
+            "lower": -0.261,
+            "margin": 0.015343420999999996,
+            "upper": 0.261,
+            "value": -0.245656579
+          },
+          {
+            "frame": 120,
+            "joint": "J_ankle_l_roll",
+            "lower": -0.261,
+            "margin": 0.009906928000000037,
+            "upper": 0.261,
+            "value": -0.251093072
+          },
+          {
+            "frame": 127,
+            "joint": "J_ankle_r_roll",
+            "lower": -0.261,
+            "margin": 0.005742258,
+            "upper": 0.261,
+            "value": 0.255257742
+          }
+        ],
+        "nonfinite_count": 0,
+        "path": "legged_lab\\envs\\t4\\datasets\\motion_source\\t4_run.csv",
+        "quat_norm_max": 1.0000000007154977,
+        "quat_norm_min": 0.999999999465203,
+        "root_z_max": 0.887267907,
+        "root_z_min": 0.773588785,
+        "schema": "root_xyz(3)+root_quat_xyzw(4)+q27",
+        "width": 34,
+        "xy_displacement": 12.6448408303576
+      },
+      "visualization": {
+        "duration_s": 4.366666666666666,
+        "frame_duration": 0.03333333333333333,
+        "frame_width": 66,
+        "frames": 131,
+        "joint_order_matches_t4_constants": true,
+        "path": "legged_lab\\envs\\t4\\datasets\\motion_visualization\\t4_run.txt",
+        "source_schema": "root_xyz + root_quat_xyzw + 27 T4 joints"
+      }
+    },
+    "t4_side_left": {
+      "category": "side",
+      "human_playback_notes": "Must be checked in IsaacLab playback before AMP expert generation.",
+      "human_playback_status": "pending",
+      "machine_reject_reasons": [],
+      "machine_status": "accept",
+      "machine_warnings": [],
+      "name": "t4_side_left",
+      "raw": {
+        "frames": 138,
+        "hard_joint_limit_violation_count": 0,
+        "hard_joint_limit_violations_sample": [],
+        "mean_xy_speed": 0.35631713888351546,
+        "min_joint_limit_margin": 0.148999997,
+        "near_joint_limit_hit_count": 0,
+        "near_joint_limit_hits_sample": [],
+        "nonfinite_count": 0,
+        "path": "legged_lab\\envs\\t4\\datasets\\motion_source\\t4_side_left.csv",
+        "quat_norm_max": 1.0000000005875174,
+        "quat_norm_min": 0.9999999993085703,
+        "root_z_max": 0.876999974,
+        "root_z_min": 0.819000006,
+        "schema": "root_xyz(3)+root_quat_xyzw(4)+q27",
+        "width": 34,
+        "xy_displacement": 1.6271816009013873
+      },
+      "visualization": {
+        "duration_s": 4.566666666666666,
+        "frame_duration": 0.03333333333333333,
+        "frame_width": 66,
+        "frames": 137,
+        "joint_order_matches_t4_constants": true,
+        "path": "legged_lab\\envs\\t4\\datasets\\motion_visualization\\t4_side_left.txt",
+        "source_schema": "root_xyz + root_quat_xyzw + 27 T4 joints"
+      }
+    },
+    "t4_side_right": {
+      "category": "side",
+      "human_playback_notes": "Must be checked in IsaacLab playback before AMP expert generation.",
+      "human_playback_status": "pending",
+      "machine_reject_reasons": [],
+      "machine_status": "accept",
+      "machine_warnings": [],
+      "name": "t4_side_right",
+      "raw": {
+        "frames": 151,
+        "hard_joint_limit_violation_count": 0,
+        "hard_joint_limit_violations_sample": [],
+        "mean_xy_speed": 0.3008723947724018,
+        "min_joint_limit_margin": 0.19659999760000002,
+        "near_joint_limit_hit_count": 0,
+        "near_joint_limit_hits_sample": [],
+        "nonfinite_count": 0,
+        "path": "legged_lab\\envs\\t4\\datasets\\motion_source\\t4_side_right.csv",
+        "quat_norm_max": 1.0000000006739302,
+        "quat_norm_min": 0.9999999993408685,
+        "root_z_max": 0.879999995,
+        "root_z_min": 0.819999993,
+        "schema": "root_xyz(3)+root_quat_xyzw(4)+q27",
+        "width": 34,
+        "xy_displacement": 1.504361973862009
+      },
+      "visualization": {
+        "duration_s": 5.0,
+        "frame_duration": 0.03333333333333333,
+        "frame_width": 66,
+        "frames": 150,
+        "joint_order_matches_t4_constants": true,
+        "path": "legged_lab\\envs\\t4\\datasets\\motion_visualization\\t4_side_right.txt",
+        "source_schema": "root_xyz + root_quat_xyzw + 27 T4 joints"
+      }
+    },
+    "t4_stand": {
+      "category": "stand",
+      "human_playback_notes": "Must be checked in IsaacLab playback before AMP expert generation.",
+      "human_playback_status": "pending",
+      "machine_reject_reasons": [],
+      "machine_status": "accept",
+      "machine_warnings": [],
+      "name": "t4_stand",
+      "raw": {
+        "frames": 150,
+        "hard_joint_limit_violation_count": 0,
+        "hard_joint_limit_violations_sample": [],
+        "mean_xy_speed": 0.0,
+        "min_joint_limit_margin": 0.261,
+        "near_joint_limit_hit_count": 0,
+        "near_joint_limit_hits_sample": [],
+        "nonfinite_count": 0,
+        "path": "legged_lab\\envs\\t4\\datasets\\motion_source\\t4_stand.csv",
+        "quat_norm_max": 1.0,
+        "quat_norm_min": 1.0,
+        "root_z_max": 0.85,
+        "root_z_min": 0.85,
+        "schema": "root_xyz(3)+root_quat_xyzw(4)+q27",
+        "width": 34,
+        "xy_displacement": 0.0
+      },
+      "visualization": {
+        "duration_s": 4.966666666666667,
+        "frame_duration": 0.03333333333333333,
+        "frame_width": 66,
+        "frames": 149,
+        "joint_order_matches_t4_constants": true,
+        "path": "legged_lab\\envs\\t4\\datasets\\motion_visualization\\t4_stand.txt",
+        "source_schema": "root_xyz + root_quat_xyzw + 27 T4 joints"
+      }
+    },
+    "t4_walk_forward": {
+      "category": "walk",
+      "human_playback_notes": "Must be checked in IsaacLab playback before AMP expert generation.",
+      "human_playback_status": "pending",
+      "machine_reject_reasons": [],
+      "machine_status": "accept",
+      "machine_warnings": [
+        "near_joint_limit_hits:10"
+      ],
+      "name": "t4_walk_forward",
+      "raw": {
+        "frames": 290,
+        "hard_joint_limit_violation_count": 0,
+        "hard_joint_limit_violations_sample": [],
+        "mean_xy_speed": 0.7169037593101826,
+        "min_joint_limit_margin": 0.00026165699958802247,
+        "near_joint_limit_hit_count": 10,
+        "near_joint_limit_hits_sample": [
+          {
+            "frame": 107,
+            "joint": "J_ankle_r_roll",
+            "lower": -0.261,
+            "margin": 0.018343024015426646,
+            "upper": 0.261,
+            "value": -0.24265697598457336
+          },
+          {
+            "frame": 108,
+            "joint": "J_ankle_r_roll",
+            "lower": -0.261,
+            "margin": 0.0136535987854004,
+            "upper": 0.261,
+            "value": -0.2473464012145996
+          },
+          {
+            "frame": 200,
+            "joint": "J_ankle_r_roll",
+            "lower": -0.261,
+            "margin": 0.012129597425460825,
+            "upper": 0.261,
+            "value": -0.24887040257453918
+          },
+          {
+            "frame": 201,
+            "joint": "J_ankle_r_roll",
+            "lower": -0.261,
+            "margin": 0.000408910274505625,
+            "upper": 0.261,
+            "value": -0.2605910897254944
+          },
+          {
+            "frame": 202,
+            "joint": "J_ankle_r_roll",
+            "lower": -0.261,
+            "margin": 0.00026165699958802247,
+            "upper": 0.261,
+            "value": -0.260738343000412
+          },
+          {
+            "frame": 203,
+            "joint": "J_ankle_r_roll",
+            "lower": -0.261,
+            "margin": 0.00047852849960328125,
+            "upper": 0.261,
+            "value": -0.26052147150039673
+          },
+          {
+            "frame": 204,
+            "joint": "J_ankle_r_roll",
+            "lower": -0.261,
+            "margin": 0.005890868663787852,
+            "upper": 0.261,
+            "value": -0.25510913133621216
+          },
+          {
+            "frame": 236,
+            "joint": "J_ankle_r_roll",
+            "lower": -0.261,
+            "margin": 0.013290353178977976,
+            "upper": 0.261,
+            "value": -0.24770964682102203
+          },
+          {
+            "frame": 237,
+            "joint": "J_ankle_r_roll",
+            "lower": -0.261,
+            "margin": 0.010567925930023203,
+            "upper": 0.261,
+            "value": -0.2504320740699768
+          },
+          {
+            "frame": 238,
+            "joint": "J_ankle_r_roll",
+            "lower": -0.261,
+            "margin": 0.011368386507034312,
+            "upper": 0.261,
+            "value": -0.2496316134929657
+          }
+        ],
+        "nonfinite_count": 0,
+        "path": "legged_lab\\envs\\t4\\datasets\\motion_source\\t4_walk_forward.csv",
+        "quat_norm_max": 1.0000000398905495,
+        "quat_norm_min": 0.9999999628280776,
+        "root_z_max": 0.8450620174407959,
+        "root_z_min": 0.7880396246910095,
+        "schema": "root_xyz(3)+root_quat_xyzw(4)+q27",
+        "width": 34,
+        "xy_displacement": 6.906172881354759
+      },
+      "visualization": {
+        "duration_s": 9.633333333333333,
+        "frame_duration": 0.03333333333333333,
+        "frame_width": 66,
+        "frames": 289,
+        "joint_order_matches_t4_constants": true,
+        "path": "legged_lab\\envs\\t4\\datasets\\motion_visualization\\t4_walk_forward.txt",
+        "source_schema": "root_xyz + root_quat_xyzw + 27 T4 joints"
+      }
+    },
+    "t4_walk_left": {
+      "category": "walk",
+      "human_playback_notes": "Must be checked in IsaacLab playback before AMP expert generation.",
+      "human_playback_status": "pending",
+      "machine_reject_reasons": [],
+      "machine_status": "accept",
+      "machine_warnings": [
+        "near_joint_limit_hits:167"
+      ],
+      "name": "t4_walk_left",
+      "raw": {
+        "frames": 373,
+        "hard_joint_limit_violation_count": 0,
+        "hard_joint_limit_violations_sample": [],
+        "mean_xy_speed": 0.13598485148984832,
+        "min_joint_limit_margin": -7.390975942378475e-09,
+        "near_joint_limit_hit_count": 167,
+        "near_joint_limit_hits_sample": [
+          {
+            "frame": 31,
+            "joint": "J_ankle_r_roll",
+            "lower": -0.261,
+            "margin": 0.01371598994731904,
+            "upper": 0.261,
+            "value": -0.24728401005268097
+          },
+          {
+            "frame": 32,
+            "joint": "J_ankle_l_roll",
+            "lower": -0.261,
+            "margin": 0.012629054546356211,
+            "upper": 0.261,
+            "value": 0.2483709454536438
+          },
+          {
+            "frame": 32,
+            "joint": "J_ankle_r_roll",
+            "lower": -0.261,
+            "margin": 0.0006398782730102637,
+            "upper": 0.261,
+            "value": -0.26036012172698975
+          },
+          {
+            "frame": 33,
+            "joint": "J_ankle_l_roll",
+            "lower": -0.261,
+            "margin": 0.01338133966922761,
+            "upper": 0.261,
+            "value": 0.2476186603307724
+          },
+          {
+            "frame": 33,
+            "joint": "J_ankle_r_roll",
+            "lower": -0.261,
+            "margin": 0.0008668527603149512,
+            "upper": 0.261,
+            "value": -0.26013314723968506
+          },
+          {
+            "frame": 34,
+            "joint": "J_ankle_l_roll",
+            "lower": -0.261,
+            "margin": 0.018688701152801523,
+            "upper": 0.261,
+            "value": 0.2423112988471985
+          },
+          {
+            "frame": 34,
+            "joint": "J_ankle_r_roll",
+            "lower": -0.261,
+            "margin": 0.008521430253982554,
+            "upper": 0.261,
+            "value": -0.25247856974601746
+          },
+          {
+            "frame": 63,
+            "joint": "J_ankle_l_roll",
+            "lower": -0.261,
+            "margin": 0.0004146919250488379,
+            "upper": 0.261,
+            "value": 0.26058530807495117
+          },
+          {
+            "frame": 64,
+            "joint": "J_ankle_l_roll",
+            "lower": -0.261,
+            "margin": 0.00039517140388489747,
+            "upper": 0.261,
+            "value": 0.2606048285961151
+          },
+          {
+            "frame": 65,
+            "joint": "J_ankle_l_roll",
+            "lower": -0.261,
+            "margin": 0.0005277619361877539,
+            "upper": 0.261,
+            "value": 0.26047223806381226
+          }
+        ],
+        "nonfinite_count": 0,
+        "path": "legged_lab\\envs\\t4\\datasets\\motion_source\\t4_walk_left.csv",
+        "quat_norm_max": 1.0000000369157565,
+        "quat_norm_min": 0.9999999595760072,
+        "root_z_max": 0.8532406091690063,
+        "root_z_min": 0.8006330728530884,
+        "schema": "root_xyz(3)+root_quat_xyzw(4)+q27",
+        "width": 34,
+        "xy_displacement": 1.6862121584741192
+      },
+      "visualization": {
+        "duration_s": 12.4,
+        "frame_duration": 0.03333333333333333,
+        "frame_width": 66,
+        "frames": 372,
+        "joint_order_matches_t4_constants": true,
+        "path": "legged_lab\\envs\\t4\\datasets\\motion_visualization\\t4_walk_left.txt",
+        "source_schema": "root_xyz + root_quat_xyzw + 27 T4 joints"
+      }
+    }
+  },
+  "schema_version": "t4_motion_audit.v1",
+  "summary": {
+    "human_playback_pending_count": 18,
+    "machine_accepted": [
+      "B10_-__Walk_turn_left_45_stageii",
+      "B13_-__Walk_turn_right_90_stageii",
+      "B14_-__Walk_turn_right_45_t2_stageii",
+      "B15_-__Walk_turn_around_stageii",
+      "B4_-_Stand_to_Walk_backwards_stageii",
+      "B9_-__Walk_turn_left_90_stageii",
+      "t4_jog_backward",
+      "t4_jog_forward",
+      "t4_jog_left",
+      "t4_jog_right",
+      "t4_left_rotate",
+      "t4_right_rotate",
+      "t4_side_left",
+      "t4_side_right",
+      "t4_stand",
+      "t4_walk_forward",
+      "t4_walk_left"
+    ],
+    "machine_accepted_count": 17,
+    "machine_rejected": [
+      "t4_run"
+    ],
+    "machine_rejected_count": 1,
+    "motion_count": 18
+  },
+  "task": "t4_loco_teacher"
+}

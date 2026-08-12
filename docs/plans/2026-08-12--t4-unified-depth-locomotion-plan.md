@@ -332,9 +332,14 @@ jog-ramp: selected low->high vx ramps after jog motions pass audit
 - [ ] M0：T4 资产、相机与 motion 事实闭环（当前）
   - scope: 扩展 spawn smoke，发现并冻结 joint/body/foot/hand/camera frame；逐条播放 18 个
     motion，生成机器审计与人工判定清单。
+  - progress: 已新增离线机器审计脚本并生成 `artifacts/eval/t4_motion_audit.json`；静态
+    MJCF facts 中 `forward_camera`、左右 foot/palm sites 均存在；18 条 motion 中机器审计
+    accept 17 条，`t4_run` 因 hard joint limit violations 与 holdout 规则 reject。所有 motion
+    的 `human_playback_status` 仍为 `pending`；已新增 IsaacLab headless playback 审计入口
+    `legged_lab/scripts/playback_t4_motions.py`，待 nubot 目标环境运行后才能生成仿真播放证据。
   - acceptance_criteria: 27DoF 顺序精确匹配；相机 frame 在 IsaacLab 与 MJCF 语义明确；
     每条 motion 有 accept/reject 和原因；穿地、限位、root height、方向/速度均有记录。
-  - verification_commands: `pytest -q tests/test_t4_asset_migration.py`; `tmux new-session -d -s t4-m0-spawn 'cd /home/ssy/桌面/TienKung-Lab && python legged_lab/scripts/smoke_t4_asset.py 2>&1 | tee /tmp/t4-m0-spawn.log'`; `tmux new-session -d -s t4-m0-motion-audit 'cd /home/ssy/桌面/TienKung-Lab && python legged_lab/scripts/audit_t4_motions.py --task t4_loco_teacher --output artifacts/eval/t4_motion_audit.json 2>&1 | tee /tmp/t4-m0-motion-audit.log'`
+  - verification_commands: `pytest -q tests/test_t4_asset_migration.py`; `tmux new-session -d -s t4-m0-spawn 'cd /home/nubot/phn_ws/t4_train/TienKung-Lab && python legged_lab/scripts/smoke_t4_asset.py 2>&1 | tee /tmp/t4-m0-spawn.log'`; `tmux new-session -d -s t4-m0-motion-audit 'cd /home/nubot/phn_ws/t4_train/TienKung-Lab && python legged_lab/scripts/audit_t4_motions.py --task t4_loco_teacher --output artifacts/eval/t4_motion_audit.json 2>&1 | tee /tmp/t4-m0-motion-audit.log'`; `tmux new-session -d -s t4-m0-playback 'cd /home/nubot/phn_ws/t4_train/TienKung-Lab && python legged_lab/scripts/playback_t4_motions.py --task t4_loco_teacher --output artifacts/eval/t4_motion_playback.json --sim-device cuda:0 2>&1 | tee /tmp/t4-m0-playback.log'`
   - success_definition: T4 资产与 motion 不再依赖文件名或静态 shape 推断，teacher/student
     训练输入集合有可复核的目标仿真证据。
 

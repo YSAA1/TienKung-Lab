@@ -2,7 +2,10 @@ from __future__ import annotations
 
 import ast
 import csv
+import json
 from pathlib import Path
+import subprocess
+import sys
 import xml.etree.ElementTree as ET
 
 
@@ -88,3 +91,56 @@ def test_t4_motion_converter_declares_xyzw_and_27dof_contract() -> None:
     assert "root_quat_xyzw" in source
     assert "T4_JOINT_NAMES" in source
     assert "FrameDuration" in source
+
+
+def test_t4_motion_audit_script_generates_m0_contract_report() -> None:
+    output = ROOT / "artifacts/test/t4_motion_audit.json"
+    output.parent.mkdir(parents=True, exist_ok=True)
+    if output.exists():
+        output.unlink()
+    script = ROOT / "legged_lab/scripts/audit_t4_motions.py"
+
+    subprocess.run(
+        [
+            sys.executable,
+            str(script),
+            "--task",
+            "t4_loco_teacher",
+            "--output",
+            str(output),
+        ],
+        cwd=ROOT,
+        check=True,
+    )
+
+    audit = json.loads(output.read_text())
+    assert audit["task"] == "t4_loco_teacher"
+    assert audit["schema_version"] == "t4_motion_audit.v1"
+    assert audit["asset"]["joint_names"] == list(EXPECTED_JOINT_ORDER)
+    assert audit["asset"]["mjcf_sites"]["forward_camera"]["pos"] == [0.085, 0.0, 0.42]
+    assert audit["asset"]["required_sites_present"] is True
+    assert len(audit["motions"]) == 18
+
+    stand = audit["motions"]["t4_stand"]
+    assert stand["machine_status"] == "accept"
+    assert stand["human_playback_status"] == "pending"
+    assert stand["raw"]["width"] == 34
+    assert stand["visualization"]["frame_width"] == 66
+
+    run = audit["motions"]["t4_run"]
+    assert run["machine_status"] == "reject"
+    assert any("holdout" in reason for reason in run["machine_reject_reasons"])
+
+
+def test_t4_motion_playback_script_declares_isaaclab_m0_contract() -> None:
+    script = ROOT / "legged_lab/scripts/playback_t4_motions.py"
+    source = script.read_text()
+    assert "SCHEMA_VERSION = \"t4_motion_playback.v1\"" in source
+    assert "T4_JOINT_NAMES" in source
+    assert "_xyzw_to_wxyz" in source
+    assert "write_root_pose_to_sim" in source
+    assert "write_joint_state_to_sim" in source
+    assert "human_playback_status" in source
+    assert "AppLauncher.add_app_launcher_args" in source
+    assert "--motion-dir" in source
+    assert "--max-frames" in source
