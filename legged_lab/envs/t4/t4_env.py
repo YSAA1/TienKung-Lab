@@ -40,6 +40,7 @@ from legged_lab.assets.t4.schemas import (
     proprio_field_slice,
 )
 from legged_lab.envs.t4.amp_features import T4AmpFeatureBuilder
+from legged_lab.envs.t4.curriculum import terrain_level_moves
 from legged_lab.envs.t4.teacher_cfg import T4LocoTeacherEnvCfg
 from legged_lab.utils.env_utils.scene import SceneCfg
 from rsl_rl.env import VecEnv
@@ -450,23 +451,14 @@ class T4LocoEnv(VecEnv):
         self.sim.forward()
 
     def update_terrain_levels(self, env_ids):
-        """Promote on a completed tile traversal; demote strictly below that bar.
-
-        Promotion keeps the "crossed the whole tile" semantics (half the tile size,
-        i.e. the full stair pyramid from the spawn platform to the tile edge), but it
-        is judged on the peak radial displacement reached during the episode, so an
-        env that climbs out over the stairs and wanders back still counts. Demotion
-        compares against the commanded distance capped below the promotion bar, so a
-        fast command can never demote an env that actually traversed its tile.
-        """
-        promote_dist = self.scene.terrain.cfg.terrain_generator.size[0] / 2
+        """Apply the frozen curriculum algebra; see :mod:`legged_lab.envs.t4.curriculum`."""
         max_dist = self.episode_max_radial_dist[env_ids]
-        move_up = max_dist > promote_dist
-        commanded_dist = (
-            torch.norm(self.command_generator.command[env_ids, :2], dim=1) * self.max_episode_length_s * 0.5
+        move_up, move_down = terrain_level_moves(
+            max_radial_dist=max_dist,
+            command_lin_vel_norm=torch.norm(self.command_generator.command[env_ids, :2], dim=1),
+            episode_length_s=self.max_episode_length_s,
+            tile_size=self.scene.terrain.cfg.terrain_generator.size[0],
         )
-        move_down = max_dist < torch.clamp(commanded_dist, max=promote_dist) * 0.5
-        move_down *= ~move_up
         self.scene.terrain.update_env_origins(env_ids, move_up, move_down)
         return {
             "Curriculum/terrain_levels": torch.mean(self.scene.terrain.terrain_levels.float()),
