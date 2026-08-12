@@ -10,6 +10,9 @@
 | `pip install -e .` | 安装根包 `LeggedLab`，需要已安装 Isaac Lab 的 Python 环境 |
 | `cd rsl_rl; pip install -e .` | 安装本仓库内置 `rsl_rl` |
 | `python -m pytest tests/test_t4_asset_migration.py` | 纯 Python T4 资产与 motion 合同测试 |
+| `python -m pytest tests/test_t4_observation_contracts.py tests/test_t4_walk_contracts.py` | T4 观测合同与 `t4_walk` Route W 合同 |
+| `python -m pytest tests/test_t4_terrain_curriculum.py` | Stage E 地形课程代数（无 Isaac） |
+| `bash scripts/zhuoqun_run.sh ...` | zhuoqun Isaac 入口；必须先导出 ISAACSIM_ROOT / ISAACLAB_ROOT / ISAACLAB_LIB_ENV，当前机器尚未发现 IsaacLab |
 | `python legged_lab/scripts/t4_csv_motion_conversion.py --input legged_lab/envs/t4/datasets/motion_source --output-dir legged_lab/envs/t4/datasets/motion_visualization --fps 30` | 重新生成 T4 motion visualization 文件 |
 | `pre-commit run --all-files` | 运行格式化和静态检查 |
 
@@ -17,7 +20,7 @@
 
 - `legged_lab/` - IsaacLab locomotion 环境、资产、脚本和 MDP 代码。
 - `legged_lab/assets/t4/` - T4 27DoF 资产；`constants.py::T4_JOINT_NAMES` 是唯一关节顺序真值。
-- `legged_lab/envs/t4/` - T4 迁移任务包；当前尚未注册正式训练任务。
+- `legged_lab/envs/t4/` - T4 迁移任务包；`t4_loco_teacher` 是 Stage E 特权专家，`t4_walk` 是 TienKung-native proprio-only 对照。
 - `legged_lab/envs/t4/datasets/motion_source/` - 原始 T4 CSV，schema 为 `root_xyz(3) + root_quat_xyzw(4) + q27`。
 - `legged_lab/envs/t4/datasets/motion_visualization/` - 转换后的 playback 中间数据，不是最终 AMP expert。
 - `rsl_rl/` - 仓库内置 RSL-RL 训练库。
@@ -43,8 +46,10 @@
 nubot@100.100.188.39 密码 一个空格 四个GPU
 zhuoqun@100.95.109.48 密码123456 四个GPU
 
-Isaac 运行时（nubot）：`bash scripts/nubot_run.sh <script.py> [args...]`，它会激活 conda env
-`isaaclab` 的 lib 路径并用 isaac-sim standalone 的 `python.sh` 启动。
+Isaac 运行时（nubot）：`bash scripts/nubot_run.sh <script.py> [args...]`。
+Isaac 运行时（zhuoqun）：`bash scripts/zhuoqun_run.sh <script.py> [args...]`，但必须显式提供 Isaac 路径。
+2026-08-13 探测结果：zhuoqun 没有 Isaac Sim `python.sh` / IsaacLab source；四卡正被
+`t4_stair_traversal` MjLab 任务占用。Route W 代码在 `t4-walk` worktree，开训被这道运行时缺口挡住。
 
 ## Style
 

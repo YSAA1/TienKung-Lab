@@ -20,6 +20,7 @@ from legged_lab.envs.base.base_env import BaseEnv
 from legged_lab.envs.base.base_env_config import BaseAgentCfg, BaseEnvCfg
 from legged_lab.envs.t4.t4_env import T4LocoEnv
 from legged_lab.envs.t4.teacher_cfg import T4LocoTeacherAgentCfg, T4LocoTeacherEnvCfg
+from legged_lab.envs.t4.walk_cfg import T4WalkAgentCfg, T4WalkEnvCfg
 from legged_lab.envs.tienkung.run_cfg import TienKungRunAgentCfg, TienKungRunFlatEnvCfg
 from legged_lab.envs.tienkung.run_with_sensor_cfg import (
     TienKungRunWithSensorAgentCfg,
@@ -45,3 +46,4 @@ task_registry.register(
     "run_with_sensor", TienKungEnv, TienKungRunWithSensorFlatEnvCfg(), TienKungRunWithSensorAgentCfg()
 )
 task_registry.register("t4_loco_teacher", T4LocoEnv, T4LocoTeacherEnvCfg(), T4LocoTeacherAgentCfg())
+task_registry.register("t4_walk", T4LocoEnv, T4WalkEnvCfg(), T4WalkAgentCfg())

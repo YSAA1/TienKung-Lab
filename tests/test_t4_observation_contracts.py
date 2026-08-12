@@ -108,6 +108,8 @@ def test_student_observation_rejects_privileged_fields():
     schemas.assert_no_privilege_leakage("teacher", ["teacher_scan", "base_ang_vel"])
     with pytest.raises(ValueError, match="leaks privileged fields"):
         schemas.assert_no_privilege_leakage("student", ["depth_history", "height_scan"])
+    with pytest.raises(ValueError, match="leaks privileged fields"):
+        schemas.assert_no_privilege_leakage("walk", ["teacher_scan"])
     with pytest.raises(ValueError, match="non-transferable"):
         schemas.assert_no_privilege_leakage("teacher", ["global_map"])
     with pytest.raises(ValueError, match="unknown policy role"):
@@ -121,6 +123,8 @@ def test_actor_observation_widths_follow_from_the_field_tables():
         schemas.TEACHER_ACTOR_OBS_DIM
         == schemas.PROPRIO_FRAME_DIM * schemas.PROPRIO_HISTORY_LENGTH + schemas.TEACHER_SCAN_DIM
     )
+    assert schemas.WALK_ACTOR_OBS_DIM == schemas.PROPRIO_FRAME_DIM * schemas.PROPRIO_HISTORY_LENGTH
+    assert schemas.WALK_ACTOR_OBS_DIM == schemas.TEACHER_ACTOR_OBS_DIM - schemas.TEACHER_SCAN_DIM
     depth_width = schemas.DEPTH_POLICY_SIZE[0] * schemas.DEPTH_POLICY_SIZE[1] * schemas.DEPTH_HISTORY_LENGTH
     assert schemas.STUDENT_ACTOR_OBS_DIM == schemas.PROPRIO_FRAME_DIM * schemas.PROPRIO_HISTORY_LENGTH + depth_width
 
@@ -152,6 +156,7 @@ def test_manifest_is_json_serializable_and_pins_the_joint_order():
     assert payload["amp"]["schema_version"] == schemas.AMP_SCHEMA_VERSION
     assert payload["teacher_terrain"]["dim"] == schemas.TEACHER_SCAN_DIM
     assert payload["actor_obs_dim"]["teacher"] == schemas.TEACHER_ACTOR_OBS_DIM
+    assert payload["actor_obs_dim"]["walk"] == schemas.WALK_ACTOR_OBS_DIM
 
 
 def _mjcf_body_offsets() -> dict[str, list[float]]:

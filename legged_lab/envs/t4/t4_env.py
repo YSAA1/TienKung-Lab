@@ -6,12 +6,15 @@
 # with additional modifications by the TienKung-Lab Project,
 # and is distributed under the BSD-3-Clause license.
 
-"""T4 27-DoF locomotion environment for the privileged teacher `pi_teacher`.
+"""T4 27-DoF locomotion environment for the privileged teacher and the
+TienKung-native walk baseline.
 
 The observation layout, the AMP state and the teacher terrain privilege are all
 read from :mod:`legged_lab.assets.t4.schemas`, and every policy-facing joint vector
 is expressed in ``T4_JOINT_NAMES`` order regardless of the simulator's internal
 joint ordering, so training, export and MuJoCo deployment share one contract.
+``policy_role="walk"`` is the proprio-only gravel baseline; it must not grow a
+height scanner.
 """
 
 from __future__ import annotations
@@ -36,6 +39,7 @@ from legged_lab.assets.t4.schemas import (
     TEACHER_SCAN_CLIP,
     TEACHER_SCAN_DIM,
     TEACHER_SCAN_INVALID_VALUE,
+    WALK_ACTOR_OBS_DIM,
     assert_no_privilege_leakage,
     proprio_field_slice,
 )
@@ -59,12 +63,15 @@ class T4LocoEnv(VecEnv):
         self.policy_role = self.cfg.policy_role
         self.seed(cfg.scene.seed)
 
-        if self.policy_role != "teacher":
+        if self.policy_role == "teacher":
+            assert_no_privilege_leakage(self.policy_role, ["teacher_scan"])
+        elif self.policy_role == "walk":
+            assert_no_privilege_leakage(self.policy_role, [])
+        else:
             raise NotImplementedError(
                 f"policy_role={self.policy_role!r} is frozen in schemas but not implemented yet; "
                 "the depth student arrives with Stage S"
             )
-        assert_no_privilege_leakage(self.policy_role, ["teacher_scan"])
 
         sim_cfg = sim_utils.SimulationCfg(
             device=cfg.device,
@@ -86,9 +93,13 @@ class T4LocoEnv(VecEnv):
 
         self.robot: Articulation = self.scene["robot"]
         self.contact_sensor: ContactSensor = self.scene.sensors["contact_sensor"]
-        if not self.cfg.scene.height_scanner.enable_height_scan:
-            raise ValueError("the T4 teacher requires the local terrain privilege; enable the height scanner")
-        self.height_scanner: RayCaster = self.scene.sensors["height_scanner"]
+        self.height_scanner: RayCaster | None = None
+        if self.policy_role == "teacher":
+            if not self.cfg.scene.height_scanner.enable_height_scan:
+                raise ValueError("the T4 teacher requires the local terrain privilege; enable the height scanner")
+            self.height_scanner = self.scene.sensors["height_scanner"]
+        elif self.cfg.scene.height_scanner.enable_height_scan:
+            raise ValueError(f"policy_role={self.policy_role!r} must not enable the height scanner")
 
         command_cfg = UniformVelocityCommandCfg(
             asset_name="robot",
@@ -248,9 +259,10 @@ class T4LocoEnv(VecEnv):
                 noise_vec[start:end] = scale
             self.noise_scale_vec = noise_vec
 
-            height_scan_noise_vec = torch.zeros(TEACHER_SCAN_DIM, dtype=torch.float, device=self.device)
-            height_scan_noise_vec[:] = noise_scales.height_scan * self.obs_scales.height_scan
-            self.height_scan_noise_vec = height_scan_noise_vec
+            if self.policy_role == "teacher":
+                height_scan_noise_vec = torch.zeros(TEACHER_SCAN_DIM, dtype=torch.float, device=self.device)
+                height_scan_noise_vec[:] = noise_scales.height_scan * self.obs_scales.height_scan
+                self.height_scan_noise_vec = height_scan_noise_vec
 
         self.actor_obs_buffer = CircularBuffer(
             max_len=self.cfg.robot.actor_obs_history_length, batch_size=self.num_envs, device=self.device
@@ -301,6 +313,8 @@ class T4LocoEnv(VecEnv):
 
     def compute_teacher_terrain_privilege(self):
         """Forward-asymmetric local height scan, clipped and invalid-filled."""
+        if self.height_scanner is None:
+            raise RuntimeError("teacher terrain privilege requested without a height scanner")
         height_scan = (
             self.height_scanner.data.pos_w[:, 2].unsqueeze(1)
             - self.height_scanner.data.ray_hits_w[..., 2]
@@ -330,11 +344,16 @@ class T4LocoEnv(VecEnv):
         actor_obs = self.actor_obs_buffer.buffer.reshape(self.num_envs, -1)
         critic_obs = self.critic_obs_buffer.buffer.reshape(self.num_envs, -1)
 
-        height_scan = self.compute_teacher_terrain_privilege()
-        critic_obs = torch.cat([critic_obs, height_scan], dim=-1)
-        if self.add_noise:
-            height_scan = height_scan + (2 * torch.rand_like(height_scan) - 1) * self.height_scan_noise_vec
-        actor_obs = torch.cat([actor_obs, height_scan], dim=-1)
+        if self.policy_role == "teacher":
+            height_scan = self.compute_teacher_terrain_privilege()
+            critic_obs = torch.cat([critic_obs, height_scan], dim=-1)
+            if self.add_noise:
+                height_scan = height_scan + (2 * torch.rand_like(height_scan) - 1) * self.height_scan_noise_vec
+            actor_obs = torch.cat([actor_obs, height_scan], dim=-1)
+        elif actor_obs.shape[-1] != WALK_ACTOR_OBS_DIM:
+            raise RuntimeError(
+                f"walk actor width {actor_obs.shape[-1]} does not match schema width {WALK_ACTOR_OBS_DIM}"
+            )
 
         actor_obs = torch.clip(actor_obs, -self.clip_obs, self.clip_obs)
         critic_obs = torch.clip(critic_obs, -self.clip_obs, self.clip_obs)

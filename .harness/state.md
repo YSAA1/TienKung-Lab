@@ -1,21 +1,13 @@
 # Current State
 
-- Planning surface: `docs/plans/2026-08-12--t4-unified-depth-locomotion-plan.md`
-- Approved Spec: `docs/specs/2026-08-12--t4-unified-depth-locomotion.md`
-- Active item: M1/M2 T4 观测合同与 Stage E teacher 任务落地（M0 仅剩人工视觉复核）
-- Verification path: `python -m pytest tests/test_t4_observation_contracts.py` 在任意机器可跑；IsaacLab/tmux gates verified on target nubot Linux GPU runtime via `scripts/nubot_run.sh`.
-- Next skill: `verify`
-- Long-running rule: 所有训练、GPU probe、批量 playback 和 evaluator 必须在 tmux 中运行。
-- Stop gate: 人工视觉复核通过前只允许 provisional AMP expert 做 smoke，不启动 Stage E 正式 lineage。
-- Frozen contracts: `legged_lab/assets/t4/schemas.py` 冻结 AMP 66D、teacher 前向不对称 scan（1.4x1.2m @0.1，offset x=0.9，前向 0.2-1.6m，15x13=195 维）、depth 预处理与 proprio 96 维/10 帧；teacher actor obs 1155 维。
-- Running lineage: `stage_e_prov1`，nubot tmux session `t4-stage-e`，commit `30211ff`，4x RTX 4090 分布式，每卡 1024 env（合计 4096），约 56k steps/s，日志 `logs/t4-stage-e-teacher.log`，checkpoint `logs/t4_loco_teacher/`。
-- Lineage caveat: `stage_e_prov1` 使用 provisional AMP expert（`artifacts/amp_expert_provisional/_manifest.json` 中 `human_playback_review=pending`），因此它不能作为正式能力声明的依据；人工复核通过后需要重生成 expert 并重开 lineage。
-- Stage E surface: 任务 `t4_loco_teacher`（`legged_lab/envs/t4/t4_env.py` + `teacher_cfg.py`），地形 `T4_STAGE_E_TERRAINS_CFG` 含上行/下行楼梯，AMP 系数按 terrain difficulty 线性衰减，gait 模式旋钮 `fixed_clock|command_conditioned|difficulty_relaxed`。
-- Latest M0 evidence: `artifacts/eval/t4_motion_audit.json` machine-audited 18 motions; 17 accepted, `t4_run` rejected for hard joint limit violations plus holdout rule.
-- Latest simulator evidence: nubot IsaacLab spawn smoke loaded T4 with 27 joints and 30 bodies; joint name set matches `T4_JOINT_NAMES`, runtime order differs and playback reorders by name.
-- Latest playback evidence: `artifacts/eval/t4_motion_playback_smoke.json` simulated `t4_stand` 5 frames with 0 rejects; `artifacts/eval/t4_motion_playback.json` simulated all 18 motions with 0 rejects and 18 human playback approvals still pending.
-- Current blocker: no machine blocker for M0 headless spawn/playback; human visual playback review is still pending before formal AMP expert generation.
-- New M0 simulator entrypoint: `legged_lab/scripts/playback_t4_motions.py` writes raw T4 frames into the IsaacLab T4 articulation and emits `artifacts/eval/t4_motion_playback.json` in the target nubot runtime.
-- Nubot target: `nubot@100.100.188.39:/home/nubot/phn_ws/t4_train/TienKung-Lab`; M0 headless spawn/playback evidence was collected on commit `dfb69d1` (`fix(t4): 按名称重排动作关节`).
-- Nubot runtime: use `/home/nubot/isaac-sim-standalone-5.1.0-linux-x86_64/python.sh` with IsaacLab source paths in `PYTHONPATH`; torch verified as `2.5.1+cu124`, CUDA visible on 4 GPUs.
-- Nubot caveat: GitHub fetch can fail with `GnuTLS recv error (-110)`; latest commits were synced through local git bundles over SSH when needed.
+- Planning surface: `docs/plans/2026-08-13--t4-tienkung-native-walk-plan.md`
+- Approved Spec: `docs/specs/2026-08-13--t4-tienkung-native-walk.md`
+- Active item: W2 zhuoqun Isaac 运行时发现（blocked）
+- Branch / worktree: `t4-walk` @ `D:\TienKung-Lab-t4-walk`，基线 commit `5c70898`
+- Verification path: 本机 `python -m pytest tests/test_t4_observation_contracts.py tests/test_t4_walk_contracts.py tests/test_t4_terrain_curriculum.py tests/test_t4_asset_migration.py` runnable；Isaac/tmux gates 在 zhuoqun **blocked**。
+- Next skill: 用户提供 Isaac 运行时后 `implement` W2/W3；否则 `harness-builder`
+- Long-running rule: 所有 TienKung-Lab 训练必须在 Isaac + tmux 中运行；禁止占用 nubot Stage E。
+- Parallel lineage (do not touch): nubot `stage_e_prov2`，session `t4-stage-e`，task `t4_loco_teacher`。
+- Route W frozen: task `t4_walk`，`policy_role=walk`，Actor = proprio history only，terrain = `GRAVEL_TERRAINS_CFG`（无课程），command resampling 10s，AMP coef 恒定 0.3，shank 接触终止。
+- W1 evidence: 35 passed on the four contract files (2026-08-13, worktree).
+- Current blocker: zhuoqun 无 Isaac Sim `python.sh` / IsaacLab source；四卡被 MjLab `t4_stair_traversal` 占用。未开训。

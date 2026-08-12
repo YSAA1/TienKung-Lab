@@ -1,10 +1,5 @@
-"""Versioned T4 observation contracts for the privileged teacher and depth student.
-
-This module lives in the pure-Python asset package, next to the joint-order truth
-it depends on, so offline tools and contract tests can import it without an
-IsaacLab runtime. Runtime code, the AMP expert generator, the evaluator and the
-export path must all read their shapes and orders from here instead of restating
-literals.
+"""Versioned T4 observation contracts for the privileged teacher, the
+TienKung-native walk baseline, and the depth student.
 """
 
 from __future__ import annotations
@@ -13,7 +8,7 @@ from legged_lab.assets.t4.constants import T4_JOINT_NAMES
 
 NUM_T4_JOINTS = len(T4_JOINT_NAMES)
 
-POLICY_ROLES = ("teacher", "student")
+POLICY_ROLES = ("teacher", "student", "walk")
 
 # ---------------------------------------------------------------------------
 # AMP state: q27 + dq27 + hands_root6 + feet_root6
@@ -215,6 +210,16 @@ TEACHER_ACTOR_OBS_DIM = PROPRIO_FRAME_DIM * PROPRIO_HISTORY_LENGTH + TEACHER_SCA
 STUDENT_ACTOR_OBS_DIM = (
     PROPRIO_FRAME_DIM * PROPRIO_HISTORY_LENGTH + DEPTH_POLICY_SIZE[0] * DEPTH_POLICY_SIZE[1] * DEPTH_HISTORY_LENGTH
 )
+# TienKung-native walk baseline: proprio history only, no scan and no depth.
+WALK_ACTOR_OBS_DIM = PROPRIO_FRAME_DIM * PROPRIO_HISTORY_LENGTH
+WALK_TASK_NAME = "t4_walk"
+WALK_EXPERIMENT_NAME = "t4_walk"
+WALK_COMMAND_RESAMPLING_S = 10.0
+WALK_AMP_TERRAIN_SCHEDULE_ENABLE = False
+WALK_GAIT_MODE = "fixed_clock"
+# Original TienKung walk resets on knee contact. Stage E leaves shank as a
+# penalty so stair clips do not end the episode; Route W must not inherit that.
+WALK_TERMINATE_CONTACTS = ("Trunk", "Shank_.*", "A[LR]2", "A[LR]4")
 
 
 def proprio_field_slice(name: str) -> tuple[int, int]:
@@ -239,7 +244,7 @@ def assert_no_privilege_leakage(role: str, field_names: tuple[str, ...] | list[s
     forbidden = set(TEACHER_FORBIDDEN_PRIVILEGE_FIELDS) | {"height_scan", "teacher_scan", "elevation_map"}
     leaked = [name for name in field_names if name in forbidden]
     if leaked:
-        raise ValueError(f"student observation schema leaks privileged fields: {sorted(leaked)}")
+        raise ValueError(f"{role} observation schema leaks privileged fields: {sorted(leaked)}")
 
 
 def observation_manifest() -> dict:
@@ -301,6 +306,7 @@ def observation_manifest() -> dict:
         "actor_obs_dim": {
             "teacher": TEACHER_ACTOR_OBS_DIM,
             "student": STUDENT_ACTOR_OBS_DIM,
+            "walk": WALK_ACTOR_OBS_DIM,
         },
         "critic_frame_dim": CRITIC_FRAME_DIM,
     }
