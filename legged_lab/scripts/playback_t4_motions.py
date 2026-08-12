@@ -15,6 +15,8 @@ from pathlib import Path
 
 from isaaclab.app import AppLauncher
 
+from legged_lab.scripts.isaaclab_runtime_compat import patch_physx_backward_compatibility_setting
+
 
 parser = argparse.ArgumentParser(description="Replay migrated T4 motions in IsaacLab.")
 parser.add_argument("--task", default="t4_loco_teacher")
@@ -30,6 +32,7 @@ parser.add_argument("--fps", type=float, default=30.0)
 parser.add_argument("--sim-dt", type=float, default=1.0 / 200.0)
 parser.add_argument("--sim-device", default="cuda:0")
 parser.add_argument("--max-frames", type=int, default=None)
+patch_physx_backward_compatibility_setting(AppLauncher)
 AppLauncher.add_app_launcher_args(parser)
 args_cli = parser.parse_args()
 args_cli.headless = True

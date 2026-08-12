@@ -141,6 +141,15 @@ def test_t4_motion_playback_script_declares_isaaclab_m0_contract() -> None:
     assert "write_root_pose_to_sim" in source
     assert "write_joint_state_to_sim" in source
     assert "human_playback_status" in source
+    assert "patch_physx_backward_compatibility_setting(AppLauncher)" in source
     assert "AppLauncher.add_app_launcher_args" in source
     assert "--motion-dir" in source
     assert "--max-frames" in source
+
+
+def test_t4_isaaclab_smoke_script_applies_runtime_compat_patch() -> None:
+    source = (ROOT / "legged_lab/scripts/smoke_t4_asset.py").read_text()
+    compat_source = (ROOT / "legged_lab/scripts/isaaclab_runtime_compat.py").read_text()
+
+    assert "patch_physx_backward_compatibility_setting(AppLauncher)" in source
+    assert "SETTING_BACKWARD_COMPATIBILITY" in compat_source

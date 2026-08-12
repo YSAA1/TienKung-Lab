@@ -5,7 +5,10 @@ from pathlib import Path
 
 from isaaclab.app import AppLauncher
 
+from legged_lab.scripts.isaaclab_runtime_compat import patch_physx_backward_compatibility_setting
 
+
+patch_physx_backward_compatibility_setting(AppLauncher)
 app = AppLauncher(headless=True).app
 
 import isaaclab.sim as sim_utils  # noqa: E402
