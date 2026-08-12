@@ -247,7 +247,10 @@ class T4LocoTeacherEnvCfg:
         height_scan_offset=TEACHER_SCAN_HEIGHT_OFFSET,
     )
     commands: CommandsCfg = CommandsCfg(
-        resampling_time_range=(10.0, 10.0),
+        # One command per 20s episode: the terrain curriculum judges promotion on a
+        # completed tile traversal, so the episode must be a single traversal attempt
+        # instead of two random-heading legs that cancel each other's displacement.
+        resampling_time_range=(20.0, 20.0),
         rel_standing_envs=0.2,
         rel_heading_envs=1.0,
         heading_command=True,

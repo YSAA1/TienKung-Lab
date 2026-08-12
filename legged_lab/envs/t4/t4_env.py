@@ -211,6 +211,12 @@ class T4LocoEnv(VecEnv):
             device=self.device,
         ).repeat(self.num_envs, 1)
         self.gait_reward_scale = torch.ones(self.num_envs, dtype=torch.float, device=self.device, requires_grad=False)
+        # Peak radial displacement from the terrain origin within the current episode.
+        # The terrain curriculum judges traversal on this instead of the final position,
+        # so walking across the stairs and returning still counts as a completed crossing.
+        self.episode_max_radial_dist = torch.zeros(
+            self.num_envs, dtype=torch.float, device=self.device, requires_grad=False
+        )
 
         self.action = torch.zeros(
             self.num_envs, self.num_actions, dtype=torch.float, device=self.device, requires_grad=False
@@ -376,6 +382,8 @@ class T4LocoEnv(VecEnv):
             self.sim.render()
 
         self.episode_length_buf += 1
+        radial_dist = torch.norm(self.robot.data.root_pos_w[:, :2] - self.scene.env_origins[:, :2], dim=1)
+        self.episode_max_radial_dist = torch.maximum(self.episode_max_radial_dist, radial_dist)
         self._update_gait()
 
         self.command_generator.compute(self.step_dt)
@@ -435,20 +443,35 @@ class T4LocoEnv(VecEnv):
         self.critic_obs_buffer.reset(env_ids)
         self.action_buffer.reset(env_ids)
         self.episode_length_buf[env_ids] = 0
+        self.episode_max_radial_dist[env_ids] = 0.0
         self.gait_time[env_ids] = 0.0
 
         self.scene.write_data_to_sim()
         self.sim.forward()
 
     def update_terrain_levels(self, env_ids):
-        distance = torch.norm(self.robot.data.root_pos_w[env_ids, :2] - self.scene.env_origins[env_ids, :2], dim=1)
-        move_up = distance > self.scene.terrain.cfg.terrain_generator.size[0] / 2
-        move_down = (
-            distance < torch.norm(self.command_generator.command[env_ids, :2], dim=1) * self.max_episode_length_s * 0.5
+        """Promote on a completed tile traversal; demote strictly below that bar.
+
+        Promotion keeps the "crossed the whole tile" semantics (half the tile size,
+        i.e. the full stair pyramid from the spawn platform to the tile edge), but it
+        is judged on the peak radial displacement reached during the episode, so an
+        env that climbs out over the stairs and wanders back still counts. Demotion
+        compares against the commanded distance capped below the promotion bar, so a
+        fast command can never demote an env that actually traversed its tile.
+        """
+        promote_dist = self.scene.terrain.cfg.terrain_generator.size[0] / 2
+        max_dist = self.episode_max_radial_dist[env_ids]
+        move_up = max_dist > promote_dist
+        commanded_dist = (
+            torch.norm(self.command_generator.command[env_ids, :2], dim=1) * self.max_episode_length_s * 0.5
         )
+        move_down = max_dist < torch.clamp(commanded_dist, max=promote_dist) * 0.5
         move_down *= ~move_up
         self.scene.terrain.update_env_origins(env_ids, move_up, move_down)
-        return {"Curriculum/terrain_levels": torch.mean(self.scene.terrain.terrain_levels.float())}
+        return {
+            "Curriculum/terrain_levels": torch.mean(self.scene.terrain.terrain_levels.float()),
+            "Curriculum/episode_max_radial_dist": torch.mean(max_dist),
+        }
 
     """
     Curriculum-coupled schedules.
