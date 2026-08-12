@@ -1,9 +1,10 @@
-# Spec - T4 统一深度感知 Locomotion
+# Spec - T4 特权专家到深度学生 Locomotion
 
 > 状态 / Status: user-approved
 > Owner: user / agent
 > Date: 2026-08-12
-> 来源请求 / Source request: 基于 TienKung-Lab 训练 T4 高质量统一 locomotion policy 的讨论
+> Revision: teacher-student route
+> 来源请求 / Source request: 基于 TienKung-Lab 训练 T4 高质量统一 locomotion policy，并改为“特权专家 + adaptive curriculum + 深度蒸馏”的正式路线
 
 ## 背景
 
@@ -16,48 +17,78 @@ MuJoCo Sim2Sim 链路，但原始实现的 `walk` 与 `run` 是两个独立任�
 并未解决单策略连续走跑。现有 sensor 任务也只是将原始深度图直接拼入 MLP，不能视为
 已经验证的感知 locomotion 架构；现有 Sim2Sim 仍绑定原机器人 20DoF 且没有深度输入。
 
-本 Spec 定义从 TienKung-Lab 主干出发构建一个 T4 原生、深度感知、可累积扩展的统一
-locomotion policy，以及证明该策略有效所需的行为 Gate。本文在 T4 感知与训练路线方面
-取代 `PROJECT_CONTEXT.md` 中“HeightScan 或深度感知”“第一阶段 Actor 仅本体观测”等旧
-表述；该背景文档应在 Spec 批准后的执行阶段同步更新。
+本 Spec 采用更成熟的感知 locomotion 组织方式：先训练一个可使用局部特权地形观测的
+统一 locomotion 专家 `pi_teacher`，用 adaptive curriculum 在一个专家 lineage 中学习
+站立、走、慢跑、强 rough、上下楼梯和局部组合能力；再把该专家蒸馏为最终部署的
+深度学生 `pi_loco`。最终导出策略仍然只能使用深度相机、本体历史、局部速度命令和
+上一动作，不携带 HeightScan、高程图、接触真值或路线进度真值。
+
+本文取代此前“从第一阶段开始直接训练 depth Actor 的累积式 PPO 路线”。`PROJECT_CONTEXT.md`
+中关于第一阶段/第二阶段的旧表述应在执行阶段同步更新。
 
 ## 目标
 
-- 交付一个统一的 T4 27DoF locomotion Actor，而不是站立、行走、跑步、楼梯或障碍
+- 交付一个统一的 T4 27DoF 部署 Actor `pi_loco`，而不是站立、行走、跑步、楼梯或障碍
   specialist 的集合。
-- Actor 以深度相机、本体历史、局部速度命令和上一动作作为唯一部署输入，输出 27DoF
-  动作。
-- 先复现并验证高质量 T4 基础行走，再在同一 Actor 合同下累积扩展慢跑、强 rough、
-  上下楼梯和路线型穿越能力。
+- `pi_loco` 以深度相机、本体历史、局部速度命令和上一动作作为唯一部署输入，输出
+  27DoF 动作。
+- 第一阶段训练 `pi_teacher`：允许 teacher actor 使用局部 HeightScan / elevation scan
+  等可由深度近似推断的特权地形观测，配合 PPO+AMP 和 adaptive curriculum 学出统一
+  locomotion 能力。
+- 第二阶段训练 `pi_loco`：通过 depth student distillation / DAgger / 必要的短 PPO
+  fine-tune，把 teacher 行为迁移到 depth-only Actor。
 - 保留 TienKung-Lab 已验证的 PPO+AMP 主干：task MDP 决定运动目标和任务成功，AMP
   只提供自然运动 prior。
-- 为每一阶段建立固定、可复现、能识别 command collapse、滑步和绕障等伪成功的
-  evaluator。
-- 同一导出策略必须在 IsaacLab 和 MuJoCo 中通过相应行为 Gate。
+- 为 teacher 和 student 分别建立固定 evaluator；最终能力声明只以 student 的
+  IsaacLab/MuJoCo evaluator 和连续回放为准。
 
 ## 非目标（Non-goals）
 
 - 本 Spec 不要求完成真机部署或真机安全验收。
-- 不使用 HeightScan、高程图、接触真值或地形真值作为部署 Actor 输入。
+- 不把 HeightScan、高程图、接触真值、地形参数或 route progress 真值放入最终导出
+  `pi_loco` Actor。
+- 不把 `pi_teacher` 当作部署策略；teacher 只是训练期专家和监督信号来源。
 - 不训练多个运行时 specialist，不使用 MoE 或技能 ID 选择站立、行走、跑步或楼梯策略。
 - 不让 locomotion Actor 同时承担全局路线规划。
-- 不从第一轮训练开始同时加入全速跑、完整楼梯状态机和路线型障碍。
+- 不用五次正式长训分别堆出 walk、jog、rough、stairs 和 route；这些是课程/evaluator
+  milestones，不是默认独立 lineage。
 - 不把总奖励、episode length、训练存活、loss 下降或 checkpoint 存在当作行为成功。
-- 不承诺未经仿真播放和性能 probe 验证的相机频率、图像分辨率或速度上限。
+- 不承诺未经仿真播放和性能 probe 验证的相机频率、图像分辨率、速度上限或楼梯参数。
 
 ## 用户 / 调用者（Users / Callers）
 
-- 训练人员通过 TienKung-Lab 训练入口启动 IsaacLab PPO+AMP 训练。
-- 评估人员通过固定 evaluator 和 IsaacLab playback 检查各 command/terrain bucket。
-- MuJoCo Sim2Sim runner 加载同一导出 policy，提供深度、本体状态和局部速度命令。
-- 路线任务的 route/gate manager 仅向 locomotion Actor 提供局部速度命令。
-- 后续真机部署可以复用同一 Actor 输入合同，但不属于本 Spec 验收范围。
+- 训练人员通过 TienKung-Lab 训练入口启动 IsaacLab PPO+AMP teacher 训练，以及后续
+  depth student distillation / fine-tune。
+- 评估人员通过固定 evaluator 和 IsaacLab playback 检查 teacher 与 student 的各
+  command/terrain/task bucket。
+- MuJoCo Sim2Sim runner 加载最终导出的 `pi_loco`，提供深度、本体状态和局部速度命令。
+- 路线任务的 route/gate manager 仅向 `pi_loco` 提供局部速度命令。
+- 后续真机部署可以复用同一 `pi_loco` 输入合同，但不属于本 Spec 验收范围。
 
 ## 行为规格（Behavior Spec）
 
-### Actor 与 Critic 边界
+### 策略拓扑
 
-部署 Actor 的固定输入为：
+训练和部署使用两个明确区分的策略角色：
+
+```text
+pi_teacher:
+    privileged local terrain + proprio history + local velocity command + previous action
+        -> privileged locomotion actor
+        -> 27DoF action
+
+pi_loco:
+    depth history + proprio history + local velocity command + previous action
+        -> depth encoder + locomotion actor
+        -> 27DoF action
+```
+
+`pi_teacher` 只存在于训练和评估中；`pi_loco` 是唯一允许导出的部署 Actor。二者共享
+27DoF 动作顺序、action scale、control frequency、command 语义和基础 safety limits。
+
+### Actor / Critic / Privilege 边界
+
+`pi_loco` 的固定部署输入为：
 
 ```text
 短深度历史 + proprio history + local velocity command + previous action
@@ -66,12 +97,15 @@ locomotion policy，以及证明该策略有效所需的行为 Gate。本文在 
 Actor 输出固定 27DoF 动作，关节顺序以
 `legged_lab/assets/t4/constants.py::T4_JOINT_NAMES` 为唯一真值。
 
-深度图必须经过确定性的裁剪、无效值处理、归一化和下采样，再由轻量 CNN 编码。CNN
-与 locomotion policy 端到端训练并包含在导出 policy 中。不得把原始 `480 x 270` 深度图
-直接 flatten 后拼入普通 MLP。
+`pi_teacher` actor 可以使用局部特权地形观测，例如以机器人为中心的 HeightScan /
+elevation scan、台阶局部几何和地形类别 curriculum id。此类输入必须满足两个限制：
 
-训练期 Critic 可以额外使用真实 base velocity、接触、地形参数或地形状态。此类特权
-信息不得进入 Actor、导出签名或 MuJoCo Actor 输入。
+- 只描述局部可见/可由深度近似推断的几何，不包含未来 gate 真值、完整路线进度、全局地图、
+  成功标签或人为答案。
+- 字段、坐标系、范围、分辨率和历史顺序进入 versioned teacher observation schema。
+
+训练期 Critic 可以额外使用真实 base velocity、接触、terrain state、terrain params 等
+特权信息。Critic 特权不得进入 `pi_loco` Actor、导出签名或 MuJoCo Actor 输入。
 
 ### AMP 职责
 
@@ -88,24 +122,25 @@ expert transition 和 policy transition 均由同一字段定义和坐标系生�
 transition 输入为 132 维。AMP 只判断运动是否属于自然 T4 运动分布，不读取 velocity
 command，也不负责决定去向、速度、楼梯成功或路线成功。
 
-第一阶段使用经 IsaacLab T4 播放核验通过的站立、行走、后退、侧移和转向 motion。
+第一阶段使用经 IsaacLab T4 播放核验通过的站立、行走、后退、侧移、转向和慢跑 motion。
 `t4_run` 在关节限位和动作质量审核前保持 hold out。动作文件数量不得隐式决定行为类别
 权重；AMP 数据采样需要按实际纳入的运动类别显式记录。
 
-### 累积式训练课程
+### Stage E：特权专家训练
 
-训练始终维护同一个 Actor 合同，按以下能力顺序累积扩展：
+`pi_teacher` 通过一个正式 PPO+AMP lineage 训练。能力顺序用 adaptive curriculum 和
+evaluator buckets 表达，不拆成五次长训：
 
-1. 基础 depth-aware walk：零速站立、前后行走、左右侧移、原地转向、移动转弯，地形为
-   flat + 轻 rough。
-2. jog / 走跑过渡：在基础 checkpoint 上加入经核验的慢跑 motion 和连续速度能力。
-3. 强 rough：提高不平整度、摩擦变化和扰动，要求策略使用深度保持稳定与低滑移。
-4. 上下楼梯：同一 traversal task 同时覆盖上楼和下楼，要求提前调整落脚，而不是碰撞后
-   补偿、滑落或坠落。
-5. route composition：在 corridor 和 ordered gates 中组合既有 locomotion 能力。
+1. 基础 locomotion：零速站立、前后行走、左右侧移、原地转向、移动转弯。
+2. jog / 走跑过渡：加入经核验的慢跑 motion、高速 forward 和 command ramp。
+3. 强 rough：提高不平整度、摩擦变化、box、wave、斜坡和扰动。
+4. 上下楼梯：同一 traversal task 覆盖上楼和下楼，要求提前调整落脚，而不是碰撞后补偿、
+   滑落或坠落。
+5. 局部组合：转弯接 rough / stairs、短 corridor 和 ordered local gates，用于验证
+   locomotion 能力组合，不让 actor 承担全局规划。
 
-进入新阶段时仍需采样已通过的旧 command/terrain buckets，并运行固定回归 evaluator。
-旧能力发生不可接受退化时不得晋级。
+curriculum 晋级必须由固定 evaluator 和行为回放决定，不由训练 reward 或地形 level
+单独决定。旧 buckets 需持续采样并回归；旧能力发生不可接受退化时不得晋级。
 
 第一阶段 command 范围以原框架范围作为初始候选：
 
@@ -119,13 +154,33 @@ yaw rate: [-1.57, 1.57] rad/s
 可达范围并冻结后续数值阈值。零速站立必须作为显式 bucket 采样，不能依赖连续分布偶然
 采到。
 
+### Stage S：深度学生蒸馏
+
+`pi_loco` 从 teacher rollout 中学习。训练数据至少包含：
+
+- student 输入：depth history、proprio history、local velocity command、previous action；
+- teacher 目标：teacher action mean / action sample、必要时包含 teacher value 或短 horizon
+  行为统计；
+- 对齐元数据：teacher checkpoint、terrain bucket、command bucket、depth preprocessing
+  schema、seed 和 simulator。
+
+默认训练顺序：
+
+1. teacher rollout 数据集生成，覆盖全部已通过 teacher buckets 和边界场景。
+2. supervised behavior cloning / policy distillation，让 `pi_loco` 复现 teacher action。
+3. DAgger 或在线数据聚合：student 进入自己状态分布，teacher 对同状态给动作监督。
+4. 必要时进行短 PPO fine-tune；Actor 仍只看 student 输入，Critic 可继续使用训练期特权。
+
+蒸馏成功不是 loss 下降，而是 student 在冻结 evaluator 中达到 teacher 行为阈值，并在
+depth 消融中表现出合理的感知依赖。
+
 ### Depth 时间合同
 
 - control/policy 频率沿用原框架 50 Hz 作为目标合同。
 - 深度允许以较低固定频率更新，policy 中间步骤复用最新帧。
 - Actor 使用短深度历史以抵抗遮挡、dropout 和单帧歧义。
 - 约 15 Hz、最近 3 帧仅作为性能 probe 起点，不是冻结参数。
-- 训练必须覆盖帧保持、有限随机延迟、噪声和 dropout；具体范围在相机与并行性能
+- 训练和蒸馏必须覆盖帧保持、有限随机延迟、噪声和 dropout；具体范围在相机与并行性能
   baseline 后冻结。
 - IsaacLab、MuJoCo 和最终导出运行时必须共享相机内参、安装位姿、裁剪范围、预处理、
   下采样、帧顺序和无效值编码。
@@ -137,7 +192,7 @@ yaw rate: [-1.57, 1.57] rad/s
 ```text
 route/gate manager
     -> local velocity command
-depth-aware T4 locomotion Actor
+pi_loco
     -> 27DoF action
 ```
 
@@ -146,6 +201,9 @@ route manager 不输出关节动作，不切换 locomotion specialist。路线�
 全部 required gates、保持在 corridor 内、无跌倒或禁止接触，并通过出口；从侧面绕开
 障碍不得计为成功。
 
+route 默认是最终验收层，不默认作为第三次正式长训。只有当 `pi_loco` 已通过 locomotion
+buckets、但局部组合 route 系统性失败时，才允许短 fine-tune，并必须创建新 lineage。
+
 ### 边界情况（Edge Cases）
 
 - 零速命令下冻结或正确处理步态相位，不能强迫机器人原地倒脚，也不能靠长时间存活刷
@@ -153,10 +211,12 @@ route manager 不输出关节动作，不切换 locomotion specialist。路线�
 - velocity command 变化时不得出现由离散 walk/run 模式切换造成的明显动作跳变。
 - reward 或 tracking 上升但 requested/generated/achieved velocity、实际位移或任务成功下降
   时，必须判定为 command collapse 或 reward gaming，而非训练进步。
-- 深度全零、打乱、冻结、延迟或大面积 dropout 时，evaluator 必须能观察并记录能力变化；
-  策略不得依赖未声明的特权输入蒙混通过感知任务。
-- 观测、动作、深度预处理、网络结构或 AMP state 合同改变后，不得无条件续训旧
-  checkpoint。
+- `pi_teacher` 不能依赖 student 无法从深度推断的作弊字段；否则必须修改 teacher
+  observation 或降低对 student 的可迁移声明。
+- 深度全零、打乱、冻结、延迟或大面积 dropout 时，student evaluator 必须能观察并记录
+  能力变化；`pi_loco` 不得依赖未声明的特权输入蒙混通过感知任务。
+- 观测、动作、深度预处理、teacher privileged schema、网络结构或 AMP state 合同改变后，
+  不得无条件续训旧 checkpoint。
 - 若仅部分加载旧权重，必须记录 loaded/skipped 范围并创建真实的新 lineage；不得宣称
   完整无损 resume。
 - 楼梯到达终点后应立即结束 episode 或进入下一有效段，不能停在终点持续积累主要奖励。
@@ -165,13 +225,15 @@ route manager 不输出关节动作，不切换 locomotion specialist。路线�
 
 - T4 资产合同：`legged_lab/assets/t4/`。
 - T4 motion 源与生成数据：`legged_lab/envs/t4/datasets/`。
-- 训练任务应提供唯一的 T4 locomotion 注册入口；课程阶段是该任务的训练状态，不是多个
-  部署 task/policy。
-- 导出 policy 必须包含 depth encoder 和 locomotion Actor，并带有可机器检查的输入输出
-  shape/顺序说明。
-- evaluator 输出结构化结果，至少包含 lineage、seed、checkpoint、command bucket、terrain
-  bucket、requested/generated/achieved motion、实际 progress、tracking error、跌倒、滑移、
-  禁止接触、关节限位和 strict success。
+- 训练任务应提供唯一 T4 locomotion 任务族；teacher/student 是训练角色，不是多个运行时
+  specialist。
+- teacher checkpoint、student checkpoint、teacher rollout dataset 和 final export manifest
+  必须记录 lineage 关系。
+- 导出 policy 只包含 depth encoder、student locomotion Actor 和 normalization/preprocessing
+  常量，并带有可机器检查的输入输出 shape/顺序说明。
+- evaluator 输出结构化结果，至少包含 lineage、seed、checkpoint、policy_role、command
+  bucket、terrain bucket、requested/generated/achieved motion、实际 progress、tracking
+  error、跌倒、滑移、禁止接触、关节限位和 strict success。
 - MuJoCo runner 必须使用 T4 MJCF、27DoF 映射和深度 renderer，不得复用现有 20DoF
   `sim2sim.py` 合同冒充 T4 验证。
 
@@ -179,7 +241,7 @@ route manager 不输出关节动作，不切换 locomotion specialist。路线�
 
 - 训练和长时间运行必须在 tmux 中执行。
 - 第一版优先复用现有 PPO+AMP runner、reward/terrain 基础设施、导出链路和成熟依赖，只做
-  T4 与统一深度 Actor 所必需的改动。
+  T4、teacher privileged observation、depth student 和 evaluator 所必需的改动。
 - 不保留旧机器人 20DoF/52D 的兼容层；AMP loader 应直接泛化为显式 schema。
 - 不为未来可能的传感器或多策略需求预建插件、MoE、第二 discriminator 或复杂配置层。
 - 只有出现可复现的 AMP 风格冲突时，才讨论 command/style conditioning 或多个
@@ -188,37 +250,42 @@ route manager 不输出关节动作，不切换 locomotion specialist。路线�
   expert/runtime 一致性。
 - T4 MJCF 的 `forward_camera` site 可作为相机位姿起点，但 IsaacLab URDF 转换不会自动
   保留该 site；最终相机 frame 必须在两个仿真器中显式核对。
-- observation/action/AMP 合同变化时禁止延续不兼容 optimizer state。
+- observation/action/AMP/teacher privileged/depth preprocessing 合同变化时禁止延续不兼容
+  optimizer state。
 - 正式训练只能在短 probe 通过数值健康、资源容量和关键行为信号后启动。
 
 ## 选定方案（Chosen Approach）
 
-采用“原框架主干 + T4 原生合同 + 累积式单策略课程”：
+采用“TienKung-Lab PPO+AMP 主干 + T4 原生合同 + 特权专家 + 深度学生蒸馏”：
 
-- 复用 TienKung-Lab 的 velocity tracking、PPO+AMP、训练循环和导出结构。
-- 先忠实建立 T4 walk 闭环，而不是把原项目独立 walk/run 两套配置直接拼接。
-- 使用一个 depth CNN Actor 和 asymmetric Critic，从第一阶段起冻结最终 Actor 输入/输出
-  接口。
-- 通过累积课程扩展能力，每次保留旧 buckets 和回归 Gate。
-- 路线规划保持在 Actor 外，以局部 velocity command 连接唯一 locomotion policy。
-- 同步建设 T4 depth MuJoCo runner，使 Sim2Sim 成为每阶段的硬证据，而不是最终补做项。
+- 先建立 T4 资产、动作、AMP、teacher privileged observation、depth preprocessing、
+  evaluator 和 MuJoCo depth parity 的合同闭环。
+- Stage E 训练 `pi_teacher`：使用局部 HeightScan/elevation scan 和 adaptive curriculum，
+  在一个专家 lineage 中学出 walk、jog、strong rough、up/down stairs 和局部组合能力。
+- Stage S 训练 `pi_loco`：用 teacher rollout 做 depth student distillation / DAgger，必要时
+  进行短 PPO fine-tune。
+- 最终部署只导出 `pi_loco`，不导出 teacher，不导出 HeightScan 或其他特权输入。
+- route/gate manager 保持在 Actor 外，以局部 velocity command 连接唯一 locomotion policy。
+- 同步建设 T4 depth MuJoCo runner，使最终 student 的 Sim2Sim 成为硬证据，而不是最终补做项。
 
-此方案最大化复用原框架已验证部分，同时明确隔离原框架尚未解决的统一走跑、深度编码和
-T4 Sim2Sim 问题。
+此方案把“先学会运动”和“再用深度复现运动”分开，降低直接 depth PPO 中感知噪声、地形
+课程和动力学 reward 同时耦合造成的失败归因难度。
 
 ## 拒绝方案（Rejected Options）
 
 - **原样保留 walk/run 两个 policy**：与最终统一 Actor 目标冲突，运行时需要隐藏的策略
   切换，也无法自然扩展为统一楼梯与 route policy。
-- **一次性联合训练 walk、run、rough、stairs 和 route**：失败归因困难，AMP、动作合同、
-  感知和任务 MDP 会相互掩盖，无法快速获得可信行为 baseline。
+- **五次正式长训 walk -> jog -> rough -> stairs -> route**：把 evaluator milestones 当成
+  lineage 边界，流程成本高，且与成熟 teacher-student 感知 locomotion 路线不匹配。
+- **直接从第一阶段训练 depth Actor 作为默认主线**：可行但失败归因更难，depth 噪声、
+  遮挡、延迟、地形课程和 locomotion reward 会相互掩盖；当前将其降为 fallback。
 - **原始深度图直接 flatten 进入 MLP**：参数量和并行渲染成本过高，现有实现也没有提供
   已验证的感知 locomotion 证据。
-- **HeightScan Actor 或 HeightScan teacher-to-student 作为默认路线**：违反用户明确选择的
-  depth-only 感知边界，并增加当前目标不需要的训练系统。
+- **Teacher 使用不可迁移的作弊特权**：例如全局路线真值、未来 gate、成功标签或完整地形
+  地图；这会让 student 蒸馏不可达。
 - **Actor 同时负责全局路线规划**：扩大问题边界，混淆规划、感知和关节控制失败原因。
-- **多个 specialist 最后蒸馏**：增加 lineage、训练与验证复杂度，当前没有证据表明直接
-  累积单策略路线不可行。
+- **多个 specialist 最后蒸馏**：增加 lineage、训练与验证复杂度，当前没有证据表明统一
+  teacher 不可行。
 
 ## 验证策略（Verification Strategy）
 
@@ -237,9 +304,13 @@ T4 Sim2Sim 问题。
 - AMP schema 测试：66D shape、字段顺序、坐标系、expert/runtime 共用生成函数、transition
   shape 132D。
 - motion loader 测试：多文件/类别采样、维度不匹配 fail-fast、无旧 20DoF 常量依赖。
+- teacher privileged observation 测试：local terrain scan shape、坐标、范围、无 route/global
+  cheating 字段。
 - depth 预处理测试：裁剪、无效值、归一化、下采样、历史顺序、IsaacLab/MuJoCo 数值一致。
-- Actor/Critic 边界测试：Actor 不包含 privileged state；导出 signature 与训练 signature
-  一致。
+- Actor/Critic 边界测试：student Actor 不包含 privileged state；导出 signature 与训练
+  signature 一致。
+- distillation dataset 测试：teacher/student obs-action 对齐、schema 版本、seed、bucket 和
+  checkpoint lineage 可追踪。
 - checkpoint lineage 测试：合同不兼容时拒绝完整 resume，部分加载显式报告。
 - evaluator 合同测试：固定 buckets、strict success、ordered gates、绕行失败和结构化输出。
 - targeted lint/format、相关 pytest 和 `git diff --check`。
@@ -248,16 +319,22 @@ T4 Sim2Sim 问题。
 
 - 1-env T4 spawn 和 motion playback smoke。
 - 最小 AMP expert 生成与 runtime observation 对照 smoke。
-- 小环境数、少 iteration 的数值健康 probe：finite observation/action/loss/gradient/parameter，
-  无 CUDA/OOM/NaN，reward 分量和 command 指标可读。
+- teacher privileged observation smoke：height/elevation scan 随地形变化，且坐标与机器人
+  base frame 一致。
+- 小环境数、少 iteration 的 teacher PPO 数值健康 probe：finite observation/action/loss/
+  gradient/parameter，无 CUDA/OOM/NaN，reward 分量和 command 指标可读。
 - depth pipeline 容量 probe，用于冻结图像尺寸、历史长度、更新频率和最大并行环境数。
-- 固定 command bucket 的 IsaacLab playback：站立、前进、后退、侧移、转向。
-- 同一导出 policy 的 T4 MuJoCo depth Sim2Sim bucket playback。
-- 后续阶段分别执行 rough、上楼、下楼和 route 连续回放。
+- teacher rollout dataset 生成 smoke，确认可被 student loader 消费。
+- student BC / DAgger 小批量 smoke，确认 loss、action scale、normalizer 和导出路径可用。
+- 固定 command bucket 的 IsaacLab playback：站立、前进、后退、侧移、转向、jog ramp。
+- teacher IsaacLab rough/stairs playback。
+- 同一最终 student export 的 T4 MuJoCo depth Sim2Sim bucket playback。
 
 ### 负向 / 边界检查（Negative / Boundary Checks）
 
-- 零策略、随机策略和训练早期 checkpoint 作为 evaluator 负基线。
+- 零策略、随机策略、早期 teacher checkpoint 和早期 student checkpoint 作为 evaluator 负基线。
+- teacher cheating audit：移除或打乱不可迁移特权字段时，确认这些字段没有出现在 student
+  export 或 student observation schema 中。
 - depth-zero、depth-shuffle、depth-freeze、延迟和 dropout 消融。
 - requested command 固定但 generated/achieved velocity 下降的 command-collapse 场景。
 - 高 tracking reward 但低实际 progress、站立不动或滑步的 reward-gaming 场景。
@@ -267,19 +344,20 @@ T4 Sim2Sim 问题。
 
 ### 文档 / 状态检查（Documentation / State Checks）
 
-- Spec 批准后同步 `PROJECT_CONTEXT.md`，删除 HeightScan/第一阶段 proprio-only 等冲突表述。
+- Spec 批准后同步 `PROJECT_CONTEXT.md`，删除旧的 direct-depth-first 训练路线表述。
 - `README.md` 只在真实 T4 训练/评估入口可运行后增加命令，不提前宣称能力。
 - `AGENTS.md` 保持为稳定规则与入口，不写训练进度和临时阈值。
-- git status 中仅处理本任务显式路径，不覆盖用户现有 `an.txt` 或其他 dirty 文件。
+- git status 中仅处理本任务显式路径，不覆盖用户现有 dirty 文件。
 
 ### 完成前所需 fresh evidence
 
 - 重新运行相关自动测试、lint 和 `git diff --check`。
-- 重新核对 checkpoint、配置、导出 policy、evaluator 结果和 MuJoCo run 使用同一 lineage。
-- 每一阶段必须产生最新固定 evaluator 结构化结果和连续行为回放；训练日志和 checkpoint
-  只能作为辅助证据。
-- 声明阶段通过前，必须重新扫描 NaN/Inf、CUDA/OOM、hard-limit、禁止接触和 evaluator
-  失败项。
+- 重新核对 teacher checkpoint、student checkpoint、distillation dataset、配置、导出 policy、
+  evaluator 结果和 MuJoCo run 的 lineage。
+- 每一项能力声明必须产生最新固定 evaluator 结构化结果和连续行为回放；训练日志和
+  checkpoint 只能作为辅助证据。
+- 声明阶段通过前，必须重新扫描 NaN/Inf、CUDA/OOM、hard-limit、禁止接触、teacher
+  cheating audit 和 evaluator 失败项。
 
 ## 能力缺口（Capability Gaps）
 
@@ -287,7 +365,10 @@ T4 Sim2Sim 问题。
   需在 tmux 中运行 spawn、渲染和容量 probe。
 - 18 条 T4 motion 尚未在目标 IsaacLab 资产上逐条视觉核验；该步骤需要人工查看回放，
   自动 shape 检查不能替代。
-- 现有 RSL-RL policy 没有 depth CNN Actor，需要新增最小模块并验证导出能力。
+- 现有 RSL-RL policy 没有 teacher/student 双角色模块、depth CNN Actor 或 distillation
+  dataset/loader，需要新增最小模块并验证导出能力。
+- 现有 terrain observation 需要明确 teacher privileged schema，避免把不可迁移 route/global
+  信息喂给 teacher actor。
 - 现有 MuJoCo runner 只有原机器人 20DoF 本体观测，需要 T4 27DoF、相机 renderer、
   预处理与 observation parity 实现。
 - 当前没有 T4 行为 baseline，因此绝对成功率、tracking error、滑移和延迟阈值尚不能可靠
@@ -302,27 +383,29 @@ T4 Sim2Sim 问题。
 - T4 在 IsaacLab 正确 spawn，27DoF/body/质量/碰撞/初始站姿和相机 frame 已核对。
 - 纳入 AMP 的所有 motion 已通过目标 T4 回放审核；不合格 motion 被排除并记录原因。
 - expert/runtime AMP observation 在 shape、字段顺序、坐标系和数值定义上完全一致。
-- depth Actor、asymmetric Critic、导出 policy 和 MuJoCo 输入合同一致，Actor 无特权泄漏。
-- 短 probe 数值健康且容量可承受后，才允许启动正式训练。
+- teacher privileged schema、student depth schema、Actor/Critic 边界、导出 policy 和 MuJoCo
+  输入合同一致，student Actor 无特权泄漏。
+- 短 probe 数值健康且容量可承受后，才允许启动正式 teacher 训练或 student 蒸馏。
 
-### 每阶段行为 Gate
+### Teacher 行为 Gate
 
+- `pi_teacher` 在固定 evaluator 中通过基础 walk、jog ramp、强 rough、上楼、下楼和局部
+  组合 buckets。
 - evaluator、command/terrain buckets、禁止项和输出 schema 在查看正式训练结果前冻结。
-- 首个可运行 baseline 后冻结数值阈值；阈值修改必须创建新的 evaluator 版本并说明原因，
-  不得静默迁就结果。
 - 每个 bucket 独立报告，不能用全局均值掩盖某个方向或地形失败。
 - requested、generated、achieved motion 和实际 progress 一致可追踪；不存在 command
   collapse。
 - nonfinite action、joint hard-limit violation 和禁止接触为零。
-- 跌倒、脚滑、tracking error 和 strict success 相对零策略/早期 baseline 达到冻结阈值。
-- 新阶段通过时，所有已通过旧 buckets 仍满足其冻结回归阈值。
-- IsaacLab 通过后，同一导出 policy 在 MuJoCo 对应 buckets 也达到冻结阈值。
+- 上楼和下楼分别统计并通过；提前调整落脚，不以撞击后补偿、滑落或坠落计为成功。
 
-### 感知、楼梯与路线 Gate
+### Student / 感知 / Sim2Sim Gate
 
+- `pi_loco` 在相同冻结 buckets 中达到 teacher-derived 阈值；允许指标略低于 teacher，但
+  必须超过冻结成功阈值。
 - depth 消融造成与地形相关且可解释的能力下降，证明策略在感知任务中实际使用深度；
   正常 depth 输入下能力达到冻结阈值。
-- 上楼和下楼分别统计并通过；提前调整落脚，不以撞击后补偿、滑落或坠落计为成功。
+- student export 不包含 teacher privileged modules、HeightScan 输入或 Critic。
+- 同一最终导出 `pi_loco` 在 IsaacLab 与 MuJoCo 对应 buckets 均达到冻结阈值。
 - route 必须按顺序通过全部 required gates；越界、跳 gate、逆序或侧绕的成功率为零。
 - 每一项能力声明都有结构化 evaluator 结果和连续行为回放，不以训练曲线代替。
 
@@ -330,29 +413,33 @@ T4 Sim2Sim 问题。
 
 - T4 motion 的速度方向或坐标定义可能与 command frame 不一致；先播放和测量，再冻结
   command bucket，避免仅凭文件名配置训练。
+- Teacher privileged observation 若过强，会产生 student 无法蒸馏的行为；必须持续做
+  cheating audit 和 teacher/student gap 分析。
 - 一个未做 command conditioning 的 discriminator 可能在 walk/jog 或楼梯风格之间发生
   冲突。默认先用单 discriminator；只有固定 evaluator 复现风格压制后才升级设计。
-- 固定 gait clock 可能限制连续走跑或楼梯适应。第一阶段先对齐 walk baseline；后续是否
-  使用 command-conditioned gait schedule 必须由走跑过渡 probe 决定。
+- 固定 gait clock 可能限制连续走跑或楼梯适应。第一阶段先用现有 gait reward 建 baseline；
+  后续是否使用 command-conditioned gait schedule 必须由走跑过渡 probe 决定。
 - depth 渲染可能显著降低并行环境数。通过下采样、较低传感器更新频率和容量 probe 控制，
   不以牺牲输入合同为代价盲目维持 4096 env。
 - IsaacLab 与 MuJoCo renderer 存在深度定义和图像坐标差异；必须通过合成场景 golden
   parity 检查，而不是只比较 shape。
-- 累积课程仍可能发生灾难性遗忘；旧 bucket 回归 Gate 是晋级硬条件，但不能保证一次训练
-  即收敛。
+- Student 蒸馏可能出现 covariate shift；DAgger 和短 fine-tune 是默认修复路径，但不能
+  通过降低 evaluator Gate 掩盖问题。
 
 ## Plan 交接（Plan Handoff）
 
 - 当前切片 / Active slice: 建立训练前 T4 合同闭环：spawn/body discovery、共享 66D AMP
-  observation、schema 化 loader、motion playback/expert 生成，以及最小 depth Actor 输入
-  合同；在这些 Gate 通过前不启动长训练。
-- 建议下一 skill / Suggested next skill: plan
-- 计划提示 / Planning notes: 先验证资产与数据，再实现共享 AMP schema；随后完成 depth
-  预处理/Actor 和最小 `t4_loco` 注册；最后补 evaluator 与 T4 MuJoCo parity，所有训练和
-  长运行进入 tmux。
+  observation、schema 化 loader、motion playback/expert 生成，以及 teacher privileged
+  observation 与 student depth 输入合同；在这些 Gate 通过前不启动长训练。
+- 建议下一 skill / Suggested next skill: implement
+- 计划提示 / Planning notes: 先验证资产与数据，再实现共享 AMP schema；随后完成
+  teacher privileged observation、depth preprocessing、teacher/student policy contracts、
+  最小 `t4_loco` 任务、固定 evaluator、T4 depth MuJoCo parity 和 distillation dataset
+  loader；所有训练和长运行进入 tmux。
 - 建议里程碑 / Suggested milestones: M0 资产与 motion 事实闭环；M1 AMP schema/expert；
-  M2 depth Actor 与最小训练任务；M3 固定 evaluator + T4 depth Sim2Sim；M4 基础 walk；
-  M5 jog 过渡；M6 强 rough/stairs；M7 route composition。
+  M2 teacher/student 观测与导出合同；M3 evaluator + T4 depth Sim2Sim；M4 privileged
+  teacher adaptive curriculum；M5 depth student distillation；M6 final student route acceptance。
 - 里程碑验收提示 / Per-milestone acceptance hints: M0/M1 以合同和 playback 为准；M2/M3
-  以数值、shape、parity 和负向测试为准；M4-M7 均需固定 buckets、旧能力回归、IsaacLab
-  与 MuJoCo 同 lineage evaluator 及连续行为证据。
+  以数值、shape、parity、cheating audit 和负向测试为准；M4 以 teacher evaluator 为准；
+  M5/M6 以最终 student 的固定 buckets、depth 消融、IsaacLab 与 MuJoCo 同 lineage evaluator
+  及连续行为证据为准。
