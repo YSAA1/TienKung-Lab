@@ -1,7 +1,9 @@
 # T4 高质量 Locomotion 迁移背景与当前任务
 
-状态：当前唯一 living work surface。本文说明为什么把 T4 locomotion 路线迁移到
-TienKung-Lab、已经具备什么、还缺什么，以及后续实现和训练不得破坏的合同。
+状态：T4 路线的 living context。已批准的行为与架构合同见
+`docs/specs/2026-08-12--t4-unified-depth-locomotion.md`，当前可执行工作面见
+`docs/plans/2026-08-12--t4-unified-depth-locomotion-plan.md`。本文保留迁移背景与现状，
+若与已批准 Spec 冲突，以 Spec 为准。
 
 ## 1. 项目背景
 
@@ -31,7 +33,7 @@ T4 基础走跑策略，再在该基础上加入 rough、楼梯和路线型越�
 - 前进、后退、侧移、原地转向和转弯；
 - 从走路连续过渡到慢跑/跑步；
 - rough terrain 上保持稳定和低滑移；
-- 使用 HeightScan 或深度感知提前调整落脚，稳定上楼和下楼；
+- 使用深度相机提前调整落脚，稳定上楼和下楼；
 - 在路线型障碍任务中不能从障碍侧面绕开。
 
 优先级是快速得到真实行为结果，不做不必要的多策略、MoE、多阶段复杂系统或大规模
@@ -137,19 +139,22 @@ TienKung 的硬编码 20DoF/52D loader，也不能离线复制其他机器人末
 
 ## 7. 训练任务设计
 
-### 第一阶段：统一基础 loco
+### 第一阶段：统一 depth-aware 基础 loco
 
-- 使用一个 policy 覆盖站、走、慢跑、前后侧移和转向；
-- Actor 使用本体观测和速度 command；
+- 使用一个 policy 覆盖站立、前后侧移、转向和基础行走，慢跑在该 checkpoint 通过后累积
+  加入；
+- Actor 从第一阶段起固定使用深度历史、本体历史、速度 command 和上一动作；深度图经
+  轻量 CNN 编码，不直接 flatten 进入 MLP；
 - task reward 负责速度/角速度跟踪、姿态、安全、低滑移和能耗；
-- AMP 使用候选走跑转向数据提供较弱的动作自然度 prior；
+- AMP 首轮使用审核通过的站立、行走、后退、侧移和转向数据提供较弱的动作自然度 prior；
 - `t4_run` 首轮不加入，稳定后再单独评估是否纳入；
 - 第一轮先在 flat + 轻量 rough 上训练，避免同时引入完整楼梯状态机。
 
 ### 第二阶段：rough + 上下楼梯
 
-- 保持同一个 policy 和 checkpoint 合同；
-- 加入 HeightScan/深度感知，让 Actor 看见前方台阶；
+- 保持同一个 Actor observation/action/network 合同；
+- 提高深度感知地形难度，让 Actor 看见前方台阶；HeightScan、高程图和接触真值不得进入
+  Actor 或导出接口；
 - rough 用于摩擦、落脚和扰动鲁棒性，不替代楼梯专用任务信号；
 - 上下楼梯作为一个统一 traversal task，episode 同时包含上楼和下楼；
 - 成功后立即结束 episode 或进入下一段，不在终点持续站着刷高奖励。
@@ -196,12 +201,12 @@ TienKung 的硬编码 20DoF/52D loader，也不能离线复制其他机器人末
 本次只完成了机器人资产、原始动作和 visualization 数据迁移；尚未注册 T4 训练任务，
 也尚未生成最终 AMP expert，更没有训练结果或行为能力声明。
 
-下一步唯一 active slice 是：
+下一步唯一 active slice 是 M0 资产、相机与 motion 事实闭环：
 
-1. 在 TienKung-Lab 中实现 T4 env 的关节/body discovery；
-2. 用共享函数定义 66D T4 AMP observation；
-3. 扩展/泛化 AMP loader，去掉 20DoF/52D 硬编码；
-4. 让 16 条候选动作在 IsaacLab 播放并生成最终 expert；
-5. 注册最小 `t4_loco` flat+轻rough 任务，短 probe 通过后再开始正式训练。
+1. 在真实 IsaacLab 环境完成 T4 joint/body/foot/hand/camera discovery；
+2. 逐条播放 18 条 motion，记录 accept/reject、限位、穿地、root height、方向和速度；
+3. M0 通过后再实现共享 66D AMP observation、schema loader 和正式 expert；
+4. 随后实现 depth CNN Actor、最小 `t4_loco`、固定 evaluator 与 T4 depth MuJoCo parity；
+5. 所有训练前 Gate 通过后，才进入基础 walk 正式训练。
 
 在以上步骤完成前，不应直接启动长训练。
