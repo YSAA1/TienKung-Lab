@@ -5,7 +5,10 @@ from pathlib import Path
 
 from isaaclab.app import AppLauncher
 
-from legged_lab.scripts.isaaclab_runtime_compat import patch_physx_backward_compatibility_setting
+from legged_lab.scripts.isaaclab_runtime_compat import (
+    patch_missing_physx_material_attributes,
+    patch_physx_backward_compatibility_setting,
+)
 
 
 patch_physx_backward_compatibility_setting(AppLauncher)
@@ -16,6 +19,8 @@ from isaaclab.assets import Articulation  # noqa: E402
 
 from legged_lab.assets.t4.constants import T4_JOINT_NAMES  # noqa: E402
 from legged_lab.assets.t4.t4 import T4_CFG  # noqa: E402
+
+patch_missing_physx_material_attributes()
 
 
 def main() -> None:
