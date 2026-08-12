@@ -41,11 +41,11 @@ def patch_missing_physx_material_attributes() -> None:
     original_safe_set_attribute = sim_utils_module.safe_set_attribute_on_usd_schema
 
     def patched_safe_set_attribute(schema_api, name, value, camel_case):
+        if name == "improve_patch_friction":
+            return None
         try:
             return original_safe_set_attribute(schema_api, name, value, camel_case)
         except TypeError:
-            if name == "improve_patch_friction":
-                return None
             raise
 
     sim_utils_module.safe_set_attribute_on_usd_schema = patched_safe_set_attribute
