@@ -2,11 +2,13 @@
 
 - Planning surface: `docs/plans/2026-08-12--t4-unified-depth-locomotion-plan.md`
 - Approved Spec: `docs/specs/2026-08-12--t4-unified-depth-locomotion.md`
-- Active item: M0 T4 资产、相机与 motion 事实闭环
-- Verification path: offline M0 audit runnable in current Windows shell; IsaacLab/tmux gates verified on target nubot Linux GPU runtime.
+- Active item: M1/M2 T4 观测合同与 Stage E teacher 任务落地（M0 仅剩人工视觉复核）
+- Verification path: `python -m pytest tests/test_t4_observation_contracts.py` 在任意机器可跑；IsaacLab/tmux gates verified on target nubot Linux GPU runtime via `scripts/nubot_run.sh`.
 - Next skill: `verify`
 - Long-running rule: 所有训练、GPU probe、批量 playback 和 evaluator 必须在 tmux 中运行。
-- Stop gate: M0 未通过前不生成正式 AMP expert，不启动长训练。
+- Stop gate: 人工视觉复核通过前只允许 provisional AMP expert 做 smoke，不启动 Stage E 正式 lineage。
+- Frozen contracts: `legged_lab/assets/t4/schemas.py` 冻结 AMP 66D、teacher 前向不对称 scan（1.4x1.2m @0.1，offset x=0.9，前向 0.2-1.6m，15x13=195 维）、depth 预处理与 proprio 96 维/10 帧；teacher actor obs 1155 维。
+- Stage E surface: 任务 `t4_loco_teacher`（`legged_lab/envs/t4/t4_env.py` + `teacher_cfg.py`），地形 `T4_STAGE_E_TERRAINS_CFG` 含上行/下行楼梯，AMP 系数按 terrain difficulty 线性衰减，gait 模式旋钮 `fixed_clock|command_conditioned|difficulty_relaxed`。
 - Latest M0 evidence: `artifacts/eval/t4_motion_audit.json` machine-audited 18 motions; 17 accepted, `t4_run` rejected for hard joint limit violations plus holdout rule.
 - Latest simulator evidence: nubot IsaacLab spawn smoke loaded T4 with 27 joints and 30 bodies; joint name set matches `T4_JOINT_NAMES`, runtime order differs and playback reorders by name.
 - Latest playback evidence: `artifacts/eval/t4_motion_playback_smoke.json` simulated `t4_stand` 5 frames with 0 rejects; `artifacts/eval/t4_motion_playback.json` simulated all 18 motions with 0 rejects and 18 human playback approvals still pending.

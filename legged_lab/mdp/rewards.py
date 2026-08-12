@@ -203,13 +203,16 @@ def hip_yaw_action(env: TienKungEnv) -> torch.Tensor:
     return torch.sum(torch.abs(env.action[:, [env.left_leg_ids[2], env.right_leg_ids[2]]]), dim=1)
 
 
-def feet_y_distance(env: TienKungEnv) -> torch.Tensor:
-    """Penalize foot y-distance when the commanded y-velocity is low, to maintain a reasonable spacing."""
+def feet_y_distance(env: TienKungEnv, target: float = 0.299) -> torch.Tensor:
+    """Penalize foot y-distance when the commanded y-velocity is low, to maintain a reasonable spacing.
+
+    ``target`` is the robot's nominal lateral foot spacing and must be set per robot.
+    """
     leftfoot = env.robot.data.body_pos_w[:, env.feet_body_ids[0], :] - env.robot.data.root_link_pos_w[:, :]
     rightfoot = env.robot.data.body_pos_w[:, env.feet_body_ids[1], :] - env.robot.data.root_link_pos_w[:, :]
     leftfoot_b = math_utils.quat_apply(math_utils.quat_conjugate(env.robot.data.root_link_quat_w[:, :]), leftfoot)
     rightfoot_b = math_utils.quat_apply(math_utils.quat_conjugate(env.robot.data.root_link_quat_w[:, :]), rightfoot)
-    y_distance_b = torch.abs(leftfoot_b[:, 1] - rightfoot_b[:, 1] - 0.299)
+    y_distance_b = torch.abs(leftfoot_b[:, 1] - rightfoot_b[:, 1] - target)
     y_vel_flag = torch.abs(env.command_generator.command[:, 1]) < 0.1
     return y_distance_b * y_vel_flag
 
@@ -265,13 +268,22 @@ def gait_clock(phase, air_ratio, delta_t):
     return I_frc, I_spd
 
 
+def gait_reward_scale(env: BaseEnv | TienKungEnv) -> torch.Tensor | float:
+    """Per-env weight on the periodic gait rewards.
+
+    Envs that relax the gait clock on hard terrain expose ``gait_reward_scale``;
+    envs on a strictly fixed clock do not and keep the full weight.
+    """
+    return getattr(env, "gait_reward_scale", 1.0)
+
+
 def gait_feet_frc_perio(env: TienKungEnv, delta_t: float = 0.02) -> torch.Tensor:
     """Penalize foot force during the swing phase of the gait."""
     left_frc_swing_mask = gait_clock(env.gait_phase[:, 0], env.phase_ratio[:, 0], delta_t)[0]
     right_frc_swing_mask = gait_clock(env.gait_phase[:, 1], env.phase_ratio[:, 1], delta_t)[0]
     left_frc_score = left_frc_swing_mask * (torch.exp(-200 * torch.square(env.avg_feet_force_per_step[:, 0])))
     right_frc_score = right_frc_swing_mask * (torch.exp(-200 * torch.square(env.avg_feet_force_per_step[:, 1])))
-    return left_frc_score + right_frc_score
+    return (left_frc_score + right_frc_score) * gait_reward_scale(env)
 
 
 def gait_feet_spd_perio(env: TienKungEnv, delta_t: float = 0.02) -> torch.Tensor:
@@ -280,7 +292,7 @@ def gait_feet_spd_perio(env: TienKungEnv, delta_t: float = 0.02) -> torch.Tensor
     right_spd_support_mask = gait_clock(env.gait_phase[:, 1], env.phase_ratio[:, 1], delta_t)[1]
     left_spd_score = left_spd_support_mask * (torch.exp(-100 * torch.square(env.avg_feet_speed_per_step[:, 0])))
     right_spd_score = right_spd_support_mask * (torch.exp(-100 * torch.square(env.avg_feet_speed_per_step[:, 1])))
-    return left_spd_score + right_spd_score
+    return (left_spd_score + right_spd_score) * gait_reward_scale(env)
 
 
 def gait_feet_frc_support_perio(env: TienKungEnv, delta_t: float = 0.02) -> torch.Tensor:
@@ -289,4 +301,4 @@ def gait_feet_frc_support_perio(env: TienKungEnv, delta_t: float = 0.02) -> torc
     right_frc_support_mask = gait_clock(env.gait_phase[:, 1], env.phase_ratio[:, 1], delta_t)[1]
     left_frc_score = left_frc_support_mask * (1 - torch.exp(-10 * torch.square(env.avg_feet_force_per_step[:, 0])))
     right_frc_score = right_frc_support_mask * (1 - torch.exp(-10 * torch.square(env.avg_feet_force_per_step[:, 1])))
-    return left_frc_score + right_frc_score
+    return (left_frc_score + right_frc_score) * gait_reward_scale(env)

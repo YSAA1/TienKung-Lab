@@ -103,6 +103,9 @@ elevation scan、台阶局部几何和地形类别 curriculum id。此类输入�
 - 只描述局部可见/可由深度近似推断的几何，不包含未来 gate 真值、完整路线进度、全局地图、
   成功标签或人为答案。
 - 字段、坐标系、范围、分辨率和历史顺序进入 versioned teacher observation schema。
+- scan 窗口必须前向不对称（前向延伸约 `1.0-1.5 m`，覆盖提前落脚决策区），并与 depth
+  相机可视区域大致对齐；不得沿用原框架 pelvis 居中 `(1.6, 1.0)` 默认形状，否则 teacher
+  的决策依据超出 student 深度可见范围，蒸馏不可达。
 
 训练期 Critic 可以额外使用真实 base velocity、接触、terrain state、terrain params 等
 特权信息。Critic 特权不得进入 `pi_loco` Actor、导出签名或 MuJoCo Actor 输入。
@@ -126,6 +129,11 @@ command，也不负责决定去向、速度、楼梯成功或路线成功。
 `t4_run` 在关节限位和动作质量审核前保持 hold out。动作文件数量不得隐式决定行为类别
 权重；AMP 数据采样需要按实际纳入的运动类别显式记录。
 
+AMP expert 全部来自平地动作，而楼梯与强 rough 要求策略偏离该分布（高抬腿、躯干前倾、
+非常规步幅）。为避免 discriminator 在课程后段持续惩罚正确的地形步态，AMP reward 系数
+必须支持按 terrain difficulty 显式调度（随难度衰减或按地形分组配置）；该调度旋钮属于
+Stage E 冻结合同，在正式开训前定案，不作为训中临时补丁。
+
 ### Stage E：特权专家训练
 
 `pi_teacher` 通过一个正式 PPO+AMP lineage 训练。能力顺序用 adaptive curriculum 和
@@ -139,8 +147,10 @@ evaluator buckets 表达，不拆成五次长训：
 5. 局部组合：转弯接 rough / stairs、短 corridor 和 ordered local gates，用于验证
    locomotion 能力组合，不让 actor 承担全局规划。
 
-curriculum 晋级必须由固定 evaluator 和行为回放决定，不由训练 reward 或地形 level
-单独决定。旧 buckets 需持续采样并回归；旧能力发生不可接受退化时不得晋级。
+curriculum 分两层语义：env 级 terrain level 按行进距离自动升降，是 IsaacLab 训练内
+机制，照常允许，不需要 evaluator 介入；课程里程碑声明（宣称某能力通过、解锁下一
+课程段）必须由固定 evaluator 和行为回放决定，不由训练 reward 或地形 level 单独决定。
+旧 buckets 需持续采样并回归；旧能力发生不可接受退化时不得晋级。
 
 第一阶段 command 范围以原框架范围作为初始候选：
 
@@ -244,7 +254,8 @@ buckets、但局部组合 route 系统性失败时，才允许短 fine-tune，�
   T4、teacher privileged observation、depth student 和 evaluator 所必需的改动。
 - 不保留旧机器人 20DoF/52D 的兼容层；AMP loader 应直接泛化为显式 schema。
 - 不为未来可能的传感器或多策略需求预建插件、MoE、第二 discriminator 或复杂配置层。
-- 只有出现可复现的 AMP 风格冲突时，才讨论 command/style conditioning 或多个
+- AMP 与地形步态的冲突优先用开训前冻结的 terrain-difficulty 系数调度解决；只有调度
+  旋钮不足以消除可复现风格压制时，才升级讨论 command/style conditioning 或多个
   discriminator。
 - 训练启动前必须验证 T4 spawn、27DoF/body 顺序、质量/碰撞/站姿、动作播放和 AMP
   expert/runtime 一致性。
@@ -417,8 +428,9 @@ buckets、但局部组合 route 系统性失败时，才允许短 fine-tune，�
   cheating audit 和 teacher/student gap 分析。
 - 一个未做 command conditioning 的 discriminator 可能在 walk/jog 或楼梯风格之间发生
   冲突。默认先用单 discriminator；只有固定 evaluator 复现风格压制后才升级设计。
-- 固定 gait clock 可能限制连续走跑或楼梯适应。第一阶段先用现有 gait reward 建 baseline；
-  后续是否使用 command-conditioned gait schedule 必须由走跑过渡 probe 决定。
+- 固定 gait clock 可能限制连续走跑或楼梯适应。gait 表示（固定 clock、command-conditioned
+  相位或楼梯段放松周期约束）必须在 Stage E 正式开训前由短 probe 定案并冻结进配置；
+  gait reward 属于 MDP 实质部分，训中变更即新建 lineage。
 - depth 渲染可能显著降低并行环境数。通过下采样、较低传感器更新频率和容量 probe 控制，
   不以牺牲输入合同为代价盲目维持 4096 env。
 - IsaacLab 与 MuJoCo renderer 存在深度定义和图像坐标差异；必须通过合成场景 golden

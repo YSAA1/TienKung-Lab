@@ -106,3 +106,71 @@ ROUGH_TERRAINS_CFG = TerrainGeneratorCfg(
         # )
     },
 )
+
+# Stage E terrain for the T4 privileged teacher. Sub-terrain difficulty is
+# interpolated across rows, so the same config covers the flat -> rough ->
+# stairs curriculum; only the per-env terrain level moves.
+#
+# Traversal direction follows the IsaacLab origin convention: the robot spawns on
+# the central platform, so an inverted pyramid puts it at the bottom of the
+# stairs (ascending) and a pyramid puts it on top (descending). Both directions
+# must be generated; a single variant only ever trains one of them.
+T4_STAGE_E_TERRAINS_CFG = TerrainGeneratorCfg(
+    curriculum=True,
+    size=(8.0, 8.0),
+    border_width=20.0,
+    num_rows=10,
+    num_cols=20,
+    horizontal_scale=0.1,
+    vertical_scale=0.005,
+    slope_threshold=0.75,
+    use_cache=False,
+    sub_terrains={
+        "flat": terrain_gen.MeshPlaneTerrainCfg(proportion=0.10),
+        "random_rough": terrain_gen.HfRandomUniformTerrainCfg(
+            proportion=0.20, noise_range=(-0.02, 0.08), noise_step=0.02, border_width=0.25
+        ),
+        "boxes": terrain_gen.MeshRandomGridTerrainCfg(
+            proportion=0.15, grid_width=0.45, grid_height_range=(0.0, 0.15), platform_width=2.0
+        ),
+        "wave": terrain_gen.HfWaveTerrainCfg(proportion=0.10, amplitude_range=(0.0, 0.2), num_waves=5.0),
+        "slope_up": terrain_gen.HfInvertedPyramidSlopedTerrainCfg(
+            proportion=0.05, slope_range=(0.0, 0.3), platform_width=2.0, border_width=0.25
+        ),
+        "slope_down": terrain_gen.HfPyramidSlopedTerrainCfg(
+            proportion=0.05, slope_range=(0.0, 0.3), platform_width=2.0, border_width=0.25
+        ),
+        "stairs_up_30": terrain_gen.MeshInvertedPyramidStairsTerrainCfg(
+            proportion=0.0875,
+            step_height_range=(0.0, 0.20),
+            step_width=0.30,
+            platform_width=3.0,
+            border_width=1.0,
+            holes=False,
+        ),
+        "stairs_up_34": terrain_gen.MeshInvertedPyramidStairsTerrainCfg(
+            proportion=0.0875,
+            step_height_range=(0.0, 0.20),
+            step_width=0.34,
+            platform_width=3.0,
+            border_width=1.0,
+            holes=False,
+        ),
+        "stairs_down_30": terrain_gen.MeshPyramidStairsTerrainCfg(
+            proportion=0.0875,
+            step_height_range=(0.0, 0.18),
+            step_width=0.30,
+            platform_width=3.0,
+            border_width=1.0,
+            holes=False,
+        ),
+        "stairs_down_34": terrain_gen.MeshPyramidStairsTerrainCfg(
+            proportion=0.0875,
+            step_height_range=(0.0, 0.18),
+            step_width=0.34,
+            platform_width=3.0,
+            border_width=1.0,
+            holes=False,
+        ),
+    },
+)

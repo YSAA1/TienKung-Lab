@@ -173,11 +173,18 @@ MuJoCo 中均有结构化结果和连续回放证据。
 - expert 与 runtime 必须调用相同的 feature builder 或同一可数值对照的实现。
 - AMP 不接收 velocity command，不负责任务成功。
 - motion 类别权重显式配置，不能由文件数隐式决定。
+- AMP expert 全部为平地动作，而楼梯/强 rough 需要偏离该分布的步态；AMP reward 系数
+  必须支持按 terrain difficulty 显式调度（衰减或按地形分组配置），该旋钮在 Stage E
+  开训前冻结进配置，不作为训中临时补丁。仅当调度旋钮不足以解决可复现风格压制时，
+  才升级讨论 conditioning / 多 discriminator。
 
 ### Depth / Terrain 合同
 
 - Teacher local terrain privilege 初始候选：base-frame height/elevation scan，分辨率、范围、
   height offset、invalid value 和历史顺序进入 versioned schema。
+- Teacher scan 不得沿用原框架 pelvis 居中 `(1.6, 1.0)` 默认形状；必须使用前向不对称窗口
+  （前向延伸约 `1.0-1.5 m`，覆盖提前落脚决策区），且覆盖范围与 depth 相机可视区域大致
+  对齐，否则 Stage S 蒸馏时 student 无法从深度观测到 teacher 的决策依据。
 - 相机位姿从 T4 `forward_camera` site 起步，在 IsaacLab 和 MuJoCo 中显式校准。
 - 原始 D455 `480 x 270` 只作为传感器参考，不直接进入 MLP。
 - clipping、invalid value、normalization、resize、history order 和 update cadence 进入 versioned
@@ -285,6 +292,12 @@ jog-ramp: selected low->high vx ramps after jog motions pass audit
 - Critic 输入：Actor 输入外可加入 base velocity、contact、terrain params/state 等训练期特权。
 - 地形课程：flat/轻 rough -> jog command/ramp -> strong rough/boxes/wave/slope -> up/down
   stairs -> short local composition；旧 buckets 持续采样。
+- 课程两层语义：env 级 terrain level 按行进距离自动升降（IsaacLab 训练内机制，照常允许）；
+  课程里程碑声明（如宣称 stairs 能力、解锁 local composition 段）必须由固定 evaluator +
+  行为回放决定，不由 terrain level 或训练 reward 单独决定。
+- gait 表示在正式开训前由短 probe 定案并冻结：固定 clock、command-conditioned 相位或
+  楼梯段放松周期约束三者择一写入 Stage E 配置；gait reward 属于 MDP 实质部分，训中
+  变更即新建 lineage。
 - command：显式 stand + forward/backward/lateral/turn/curved/jog-ramp buckets。
 - AMP：使用通过审核的 stand/walk/backward/lateral/turn/jog motions；`t4_run` hold out，除非
   独立审核通过。
@@ -354,7 +367,8 @@ jog-ramp: selected low->high vx ramps after jog motions pass audit
 - [ ] M2：Teacher privilege、Depth preprocessing、Student Actor 与导出合同
   - scope: 实现 versioned teacher local terrain schema、student depth schema、短 depth history、
     轻量 CNN student Actor、teacher/student policy role 和导出签名。
-  - acceptance_criteria: teacher privilege 只含局部可迁移几何；不直接 flatten 480x270；
+  - acceptance_criteria: teacher privilege 只含局部可迁移几何；teacher scan 为前向不对称
+    窗口（前向约 `1.0-1.5 m`）且与 depth 相机可视区域大致对齐；不直接 flatten 480x270；
     student Actor 无特权输入；JIT/ONNX 只导出 student encoder+actor；preprocessing golden
     tests 通过；输入 shape/顺序 manifest 可机器检查。
   - verification_commands: `pytest -q tests/test_t4_teacher_privilege.py tests/test_t4_depth_preprocessing.py tests/test_t4_depth_actor.py tests/test_t4_policy_export.py`; `python -m compileall -q rsl_rl/rsl_rl/modules legged_lab/envs/t4`; `git diff --check`
@@ -373,10 +387,13 @@ jog-ramp: selected low->high vx ramps after jog motions pass audit
 
 - [ ] M4：Stage E privileged teacher adaptive curriculum
   - scope: 1/128 env health gates、teacher capacity probe、Stage E 正式 lineage、基础/jog/
-    rough/up-down stairs/local composition buckets。
+    rough/up-down stairs/local composition buckets；stairs 地形同时包含上行与下行两个方向。
+    按 IsaacLab origin 约定，机器人生成在中心平台上，因此 `MeshInvertedPyramidStairsTerrainCfg`
+    对应上行起步，`MeshPyramidStairsTerrainCfg` 对应下行起步，两类必须同时配置。
   - acceptance_criteria: finite 全路径；正式 env 数有显存证据；teacher 在全部冻结 buckets
     通过；无 command collapse、持续滑步、撞击后补偿、滑落和 hard violation；teacher
-    privilege schema 无作弊字段。
+    privilege schema 无作弊字段；AMP terrain-difficulty 调度旋钮与 gait 表示已按开训前
+    冻结合同配置；楼梯 traversal 的 episode 时长在 evaluator 冻结前随任务设计确定。
   - verification_commands: `tmux new-session -d -s t4-teacher-capacity 'cd /home/ssy/桌面/TienKung-Lab && bash scripts/probe_t4_teacher_capacity.sh 2>&1 | tee /tmp/t4-teacher-capacity.log'`; `tmux new-session -d -s t4-teacher-formal 'cd /home/ssy/桌面/TienKung-Lab && bash scripts/train_t4_loco_stage.sh teacher 2>&1 | tee /tmp/t4-teacher-formal.log'`; `python legged_lab/scripts/eval_t4_loco.py --role teacher --stage all --checkpoint <teacher-checkpoint> --output <json>`
   - success_definition: `pi_teacher` 已在统一 adaptive curriculum 中学出可蒸馏的 T4 locomotion
     专家行为。

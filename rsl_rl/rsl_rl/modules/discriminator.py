@@ -99,7 +99,7 @@ class Discriminator(nn.Module):
         grad_pen = lambda_ * (grad.norm(2, dim=1) - 0).pow(2).mean()
         return grad_pen
 
-    def predict_amp_reward(self, state, next_state, task_reward, normalizer=None):
+    def predict_amp_reward(self, state, next_state, task_reward, normalizer=None, coef_scale=None):
         """
         Predict the AMP reward given current and next states, optionally interpolated with a task reward.
 
@@ -108,6 +108,9 @@ class Discriminator(nn.Module):
             next_state (torch.Tensor): Next state tensor.
             task_reward (torch.Tensor): Task-specific reward tensor.
             normalizer (optional): Normalizer object to normalize input states before prediction.
+            coef_scale (torch.Tensor, optional): Per-environment multiplier on ``amp_reward_coef``,
+                shape (batch_size,) or (batch_size, 1). Used to schedule the style weight when the
+                expert distribution does not cover the current terrain.
 
         Returns:
             tuple:
@@ -122,6 +125,10 @@ class Discriminator(nn.Module):
 
             d = self.amp_linear(self.trunk(torch.cat([state, next_state], dim=-1)))
             reward = self.amp_reward_coef * torch.clamp(1 - (1 / 4) * torch.square(d - 1), min=0)
+            if coef_scale is not None:
+                if coef_scale.dim() == 1:
+                    coef_scale = coef_scale.unsqueeze(-1)
+                reward = reward * coef_scale
             if self.task_reward_lerp > 0:
                 reward = self._lerp_reward(reward, task_reward.unsqueeze(-1))
             self.train()

@@ -26,16 +26,25 @@
 
 ## Current T4 Boundary
 
-- 当前 active slice 是 M0：T4 asset、camera、joint/body discovery 和 18 条 motion playback 事实闭环。
-- M0 未通过前，不生成正式 AMP expert，不启动 teacher 长训练，不启动 student 蒸馏。
+- M0 机器审计与 nubot playback 已通过，人工视觉复核仍是正式 AMP expert 的前置 gate。
+- 人工复核通过前只允许生成 provisional AMP expert 做 smoke，不启动 teacher 长训练，不启动 student 蒸馏。
 - 最终目标是单个 T4 depth student `pi_loco`；`pi_teacher` 只用于训练期 privileged expert。
 - 最终导出 Actor 不得包含 HeightScan、高程图、接触真值、terrain truth、route progress 或 teacher-only module。
 
 ## Testing And Verification
 
 - 代码改动后先跑最窄测试；T4 资产/motion 合同优先跑 `python -m pytest tests/test_t4_asset_migration.py`。
+- T4 观测合同改动跑 `python -m pytest tests/test_t4_observation_contracts.py`。
 - 所有训练、GPU probe、批量 playback、evaluator、teacher rollout 采集等长运行命令必须用 tmux。
 - 不能用 reward、episode length、checkpoint 存在或 loss 下降替代行为验收；能力声明必须有 evaluator JSON、lineage manifest 和连续回放证据。
+
+## 服务器信息
+
+nubot@100.100.188.39 密码 一个空格 四个GPU
+zhuoqun@100.95.109.48 密码123456 四个GPU
+
+Isaac 运行时（nubot）：`bash scripts/nubot_run.sh <script.py> [args...]`，它会激活 conda env
+`isaaclab` 的 lib 路径并用 isaac-sim standalone 的 `python.sh` 启动。
 
 ## Style
 

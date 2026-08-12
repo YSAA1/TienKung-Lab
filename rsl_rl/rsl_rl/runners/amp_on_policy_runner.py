@@ -110,9 +110,11 @@ class AmpOnPolicyRunner:
         amp_data = AMPLoader(
             device,
             time_between_frames=self.env.step_dt,
+            frame_dim=train_cfg["amp_frame_dim"],
+            motion_files=train_cfg["amp_motion_files"],
             preload_transitions=True,
             num_preload_transitions=train_cfg["amp_num_preload_transitions"],
-            motion_files=train_cfg["amp_motion_files"],
+            expected_joint_order=train_cfg.get("amp_joint_order"),
         )
         amp_normalizer = Normalizer(amp_data.observation_dim)
         discriminator = Discriminator(
@@ -170,6 +172,10 @@ class AmpOnPolicyRunner:
         self.tot_time = 0
         self.current_learning_iteration = 0
         self.git_status_repos = [rsl_rl.__file__]
+        # Envs may schedule the AMP style weight per environment, e.g. by terrain
+        # difficulty. `None` keeps the frozen scalar coefficient.
+        self.amp_reward_coef_scale_fn = getattr(self.env, "amp_reward_coef_scale", None)
+        self.mean_amp_reward_coef_scale = 1.0
 
     def learn(self, num_learning_iterations: int, init_at_random_ep_len: bool = False):  # noqa: C901
         # initialize writer
@@ -268,8 +274,17 @@ class AmpOnPolicyRunner:
                     terminal_amp_states = self.env.get_amp_obs_for_expert_trans()[reset_env_ids]
                     next_amp_obs_with_term[reset_env_ids] = terminal_amp_states
 
+                    if self.amp_reward_coef_scale_fn is not None:
+                        coef_scale = self.amp_reward_coef_scale_fn().to(self.device)
+                        self.mean_amp_reward_coef_scale = coef_scale.mean().item()
+                    else:
+                        coef_scale = None
                     rewards = self.alg.discriminator.predict_amp_reward(
-                        amp_obs, next_amp_obs_with_term, rewards, normalizer=self.alg.amp_normalizer
+                        amp_obs,
+                        next_amp_obs_with_term,
+                        rewards,
+                        normalizer=self.alg.amp_normalizer,
+                        coef_scale=coef_scale,
                     )[0]
                     amp_obs = torch.clone(next_amp_obs)
                     self.alg.process_env_step(rewards, dones, infos, next_amp_obs_with_term)
@@ -384,6 +399,10 @@ class AmpOnPolicyRunner:
 
         # -- Policy
         self.writer.add_scalar("Policy/mean_noise_std", mean_std.item(), locs["it"])
+
+        # -- AMP style weight schedule
+        if self.amp_reward_coef_scale_fn is not None:
+            self.writer.add_scalar("Amp/mean_reward_coef_scale", self.mean_amp_reward_coef_scale, locs["it"])
 
         # -- Performance
         self.writer.add_scalar("Perf/total_fps", fps, locs["it"])

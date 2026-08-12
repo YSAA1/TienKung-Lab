@@ -83,7 +83,9 @@ class SceneCfg(InteractiveSceneCfg):
         if config.height_scanner.enable_height_scan:
             self.height_scanner = RayCasterCfg(
                 prim_path="{ENV_REGEX_NS}/Robot/" + config.height_scanner.prim_body_name,
-                offset=RayCasterCfg.OffsetCfg(pos=(0.0, 0.0, 20.0)),
+                offset=RayCasterCfg.OffsetCfg(
+                    pos=(config.height_scanner.offset[0], config.height_scanner.offset[1], 20.0)
+                ),
                 attach_yaw_only=True,
                 pattern_cfg=patterns.GridPatternCfg(
                     resolution=config.height_scanner.resolution, size=config.height_scanner.size

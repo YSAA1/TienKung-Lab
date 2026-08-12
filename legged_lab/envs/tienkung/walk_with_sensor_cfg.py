@@ -341,6 +341,7 @@ class TienKungWalkWithSensorAgentCfg(RslRlOnPolicyRunnerCfg):
 
     # amp parameter
     amp_reward_coef = 0.3
+    amp_frame_dim = 52  # 20 joint pos + 20 joint vel + 12 end-effector positions
     amp_motion_files = ["legged_lab/envs/tienkung/datasets/motion_amp_expert/walk.txt"]
     amp_num_preload_transitions = 200000
     amp_task_reward_lerp = 0.7

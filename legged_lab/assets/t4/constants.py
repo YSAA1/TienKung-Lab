@@ -29,3 +29,7 @@ T4_JOINT_NAMES: tuple[str, ...] = (
     "J_ankle_r_pitch",
     "J_ankle_r_roll",
 )
+
+# Nominal lateral foot spacing in the neutral pose, i.e. twice the summed hip
+# pitch and hip roll y-offsets of the T4 MJCF.
+T4_NOMINAL_FEET_Y_DISTANCE: float = 0.233
