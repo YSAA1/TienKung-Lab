@@ -197,7 +197,6 @@ def _audit_motion(
 def main() -> None:
     device = torch.device(args_cli.sim_device)
     sim = sim_utils.SimulationContext(sim_utils.SimulationCfg(dt=args_cli.sim_dt, device=args_cli.sim_device))
-    sim_utils.spawn_ground_plane("/World/ground", sim_utils.GroundPlaneCfg())
     robot = Articulation(T4_CFG.replace(prim_path="/World/T4"))
     sim.reset()
 

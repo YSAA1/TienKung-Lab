@@ -27,7 +27,6 @@ def main() -> None:
     stage_path = Path("/tmp/t4_asset_smoke_stage.txt")
     stage_path.write_text("simulation_context\n")
     sim = sim_utils.SimulationContext(sim_utils.SimulationCfg(dt=0.002, device="cpu"))
-    sim_utils.spawn_ground_plane("/World/ground", sim_utils.GroundPlaneCfg())
     stage_path.write_text("articulation_constructor\n")
     robot = Articulation(T4_CFG.replace(prim_path="/World/T4"))
     stage_path.write_text("simulation_reset\n")

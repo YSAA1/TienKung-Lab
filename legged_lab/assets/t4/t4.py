@@ -13,6 +13,24 @@ from .constants import T4_JOINT_NAMES
 T4_ASSET_DIR = Path(__file__).resolve().parent
 T4_URDF_PATH = T4_ASSET_DIR / "urdf" / "t4_std.urdf"
 
+T4_STANDING_JOINT_POS = dict.fromkeys(T4_JOINT_NAMES, 0.0)
+T4_STANDING_JOINT_POS.update(
+    {
+        "J_arm_l_01": 0.20,
+        "J_arm_l_02": 0.13,
+        "J_arm_l_04": -0.43,
+        "J_arm_r_01": 0.20,
+        "J_arm_r_02": -0.13,
+        "J_arm_r_04": -0.43,
+        "J_hip_l_pitch": -0.20,
+        "J_knee_l_pitch": 0.42,
+        "J_ankle_l_pitch": -0.24,
+        "J_hip_r_pitch": -0.20,
+        "J_knee_r_pitch": 0.42,
+        "J_ankle_r_pitch": -0.24,
+    }
+)
+
 T4_CFG = ArticulationCfg(
     spawn=sim_utils.UrdfFileCfg(
         asset_path=str(T4_URDF_PATH),
@@ -45,21 +63,7 @@ T4_CFG = ArticulationCfg(
     ),
     init_state=ArticulationCfg.InitialStateCfg(
         pos=(0.0, 0.0, 0.85),
-        joint_pos={
-            ".*": 0.0,
-            "J_arm_l_01": 0.20,
-            "J_arm_l_02": 0.13,
-            "J_arm_l_04": -0.43,
-            "J_arm_r_01": 0.20,
-            "J_arm_r_02": -0.13,
-            "J_arm_r_04": -0.43,
-            "J_hip_l_pitch": -0.20,
-            "J_knee_l_pitch": 0.42,
-            "J_ankle_l_pitch": -0.24,
-            "J_hip_r_pitch": -0.20,
-            "J_knee_r_pitch": 0.42,
-            "J_ankle_r_pitch": -0.24,
-        },
+        joint_pos=T4_STANDING_JOINT_POS,
         joint_vel={".*": 0.0},
     ),
     soft_joint_pos_limit_factor=0.9,

@@ -54,6 +54,10 @@ def _literal_assignment(path: Path, name: str):
     raise AssertionError(f"missing assignment {name} in {path}")
 
 
+def _module_ast(path: Path) -> ast.Module:
+    return ast.parse(path.read_text())
+
+
 def test_t4_asset_bundle_is_self_contained() -> None:
     urdf_path = T4_ASSET / "urdf/t4_std.urdf"
     assert urdf_path.is_file()
@@ -73,6 +77,23 @@ def test_t4_joint_order_matches_27dof_motion_columns() -> None:
     with stand.open(newline="") as stream:
         row = next(csv.reader(stream))
     assert len(row) == 7 + len(joint_order)
+
+
+def test_t4_initial_joint_pose_has_unique_isaaclab_match_rules() -> None:
+    tree = _module_ast(T4_ASSET / "t4.py")
+    names = [
+        target.id
+        for node in tree.body
+        if isinstance(node, ast.Assign)
+        for target in node.targets
+        if isinstance(target, ast.Name)
+    ]
+    assert "T4_STANDING_JOINT_POS" in names
+
+    source = (T4_ASSET / "t4.py").read_text()
+    assert '"."*' not in source
+    assert '" .*"' not in source
+    assert 'joint_pos=T4_STANDING_JOINT_POS' in source
 
 
 def test_all_migrated_t4_motion_files_share_the_raw_contract() -> None:
@@ -144,6 +165,7 @@ def test_t4_motion_playback_script_declares_isaaclab_m0_contract() -> None:
     assert "patch_physx_backward_compatibility_setting(AppLauncher)" in source
     assert "patch_missing_physx_material_attributes()" in source
     assert "AppLauncher.add_app_launcher_args" in source
+    assert "spawn_ground_plane" not in source
     assert "--motion-dir" in source
     assert "--max-frames" in source
 
@@ -154,5 +176,6 @@ def test_t4_isaaclab_smoke_script_applies_runtime_compat_patch() -> None:
 
     assert "patch_physx_backward_compatibility_setting(AppLauncher)" in source
     assert "patch_missing_physx_material_attributes()" in source
+    assert "spawn_ground_plane" not in source
     assert "SETTING_BACKWARD_COMPATIBILITY" in compat_source
     assert "improve_patch_friction" in compat_source
