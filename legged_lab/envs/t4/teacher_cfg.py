@@ -71,8 +71,8 @@ class T4GaitCfg:
       as the per-env terrain level rises, so stairs are not forced onto the
       flat-ground rhythm.
 
-    In every mode the periodic gait terms are also multiplied by commanded
-    planar speed (zero when standing) so marching in place cannot farm them.
+    In every mode the periodic gait terms are multiplied by planar velocity
+    tracking accuracy (zero when standing) so marching in place cannot farm them.
     """
 
     mode: str = "fixed_clock"
@@ -85,6 +85,8 @@ class T4GaitCfg:
     slow_gait_cycle: float = 0.95
     fast_gait_cycle: float = 0.70
     reference_max_speed: float = 1.0
+    # Same kernel std as track_lin_vel_xy_exp; gait pays only when this tracking is good.
+    tracking_std: float = 0.5
     # difficulty_relaxed only.
     min_gait_reward_scale: float = 0.3
     gait_relax_start_difficulty: float = 0.4

@@ -20,8 +20,8 @@ The semantics are frozen with the Stage E MDP:
   an env that nearly or actually traversed its tile.
 - Standing envs (near-zero command) neither promote nor demote; standing is a
   capability bucket, not a traversal attempt.
-- Periodic gait rewards scale with commanded planar speed and drop to zero for
-  standing commands, so marching in place cannot farm the gait terms.
+- Periodic gait rewards scale with planar velocity-tracking accuracy and drop
+  to zero for standing commands, so marching in place cannot farm the gait terms.
 """
 
 from __future__ import annotations
@@ -67,19 +67,31 @@ def terrain_level_moves(
     return move_up, move_down
 
 
-def gait_command_speed_scale(
-    command_lin_vel_norm,
-    reference_max_speed: float,
+def gait_tracking_scale(
+    command_lin_vel_xy,
+    actual_lin_vel_xy,
+    tracking_std: float = 0.5,
     standing_threshold: float = STANDING_COMMAND_THRESHOLD,
 ):
-    """Scale periodic gait rewards by commanded planar speed.
+    """Scale periodic gait rewards by planar velocity-tracking accuracy.
 
-    Standing commands (norm at or below ``standing_threshold``) get zero so the
-    gait clock cannot pay for marching in place. Moving commands scale linearly
-    up to ``reference_max_speed`` and clip at 1.
+    Standing commands get zero. Moving commands use the same exponential kernel
+    as ``track_lin_vel_xy_exp`` (``exp(-||v_cmd - v_act||^2 / std^2)``), so a
+    fast command that is ignored yields ~0 gait reward and a matched command
+    yields 1.
 
-    Works on torch tensors and numpy arrays.
+    ``command_lin_vel_xy`` and ``actual_lin_vel_xy`` are ``(N, 2)`` arrays in the
+    same yaw frame. Works on torch tensors and numpy arrays.
     """
-    moving = command_lin_vel_norm > standing_threshold
-    scale = (command_lin_vel_norm / max(1.0e-6, reference_max_speed)).clip(0.0, 1.0)
-    return scale * moving
+    cmd_sq = (command_lin_vel_xy * command_lin_vel_xy).sum(-1)
+    moving = cmd_sq**0.5 > standing_threshold
+    err = command_lin_vel_xy - actual_lin_vel_xy
+    err_sq = (err * err).sum(-1)
+    scale = err_sq / max(1.0e-6, tracking_std * tracking_std)
+    if type(scale).__module__.startswith("torch"):
+        tracking = (-scale).exp()
+    else:
+        import numpy as np
+
+        tracking = np.exp(-np.asarray(scale))
+    return tracking * moving

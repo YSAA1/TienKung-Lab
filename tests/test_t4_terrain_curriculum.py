@@ -29,7 +29,7 @@ _spec.loader.exec_module(_curriculum)
 
 STANDING_COMMAND_THRESHOLD = _curriculum.STANDING_COMMAND_THRESHOLD
 terrain_level_moves = _curriculum.terrain_level_moves
-gait_command_speed_scale = _curriculum.gait_command_speed_scale
+gait_tracking_scale = _curriculum.gait_tracking_scale
 
 # Stage E values (teacher_cfg.py / T4_STAGE_E_TERRAINS_CFG).
 EPISODE_LENGTH_S = 20.0
@@ -111,12 +111,20 @@ def test_early_falls_still_drain_to_easy_terrain():
 
 
 def test_standing_command_zeros_gait_scale():
-    cmd_norm = np.array([0.0, 0.05, STANDING_COMMAND_THRESHOLD])
-    scale = gait_command_speed_scale(cmd_norm, reference_max_speed=1.0)
+    cmd = np.zeros((3, 2))
+    actual = np.array([[0.0, 0.0], [1.0, 0.0], [0.5, 0.0]])
+    scale = gait_tracking_scale(cmd, actual, tracking_std=0.5)
     assert np.all(scale == 0.0)
 
 
-def test_gait_scale_is_linear_in_commanded_speed():
-    cmd_norm = np.array([0.25, 0.5, 1.0, 1.5])
-    scale = gait_command_speed_scale(cmd_norm, reference_max_speed=1.0)
-    np.testing.assert_allclose(scale, np.array([0.25, 0.5, 1.0, 1.0]))
+def test_perfect_tracking_gives_full_gait_scale():
+    cmd = np.array([[0.3, 0.0], [1.0, 0.0], [0.4, 0.3]])
+    scale = gait_tracking_scale(cmd, cmd, tracking_std=0.5)
+    np.testing.assert_allclose(scale, np.ones(3))
+
+
+def test_still_robot_on_fast_command_near_zero_gait_scale():
+    cmd = np.array([[1.0, 0.0]])
+    actual = np.zeros((1, 2))
+    scale = gait_tracking_scale(cmd, actual, tracking_std=0.5)
+    assert scale[0] < 0.05

@@ -27,7 +27,7 @@ from isaaclab.managers.scene_entity_cfg import SceneEntityCfg
 from isaaclab.scene import InteractiveScene
 from isaaclab.sensors import ContactSensor, RayCaster
 from isaaclab.sim import PhysxCfg, SimulationContext
-from isaaclab.utils.buffers import CircularBuffer, DelayBuffer
+from isaaclab.utils.math import quat_rotate_inverse, yaw_quat
 
 from legged_lab.assets.t4.constants import T4_JOINT_NAMES
 from legged_lab.assets.t4.schemas import (
@@ -42,7 +42,7 @@ from legged_lab.assets.t4.schemas import (
 from legged_lab.envs.t4.amp_features import T4AmpFeatureBuilder
 from legged_lab.envs.t4.curriculum import (
     STANDING_COMMAND_THRESHOLD,
-    gait_command_speed_scale,
+    gait_tracking_scale,
     terrain_level_moves,
 )
 from legged_lab.envs.t4.teacher_cfg import T4LocoTeacherEnvCfg
@@ -504,10 +504,22 @@ class T4LocoEnv(VecEnv):
             raise NotImplementedError(f"unsupported AMP terrain schedule mode {schedule.mode!r}")
         return self._decay_scale(self.terrain_difficulty(), schedule.decay_start_difficulty, schedule.min_scale)
 
+    def _planar_vel_yaw(self):
+        """Root planar velocity in the yaw frame, matching track_lin_vel_xy_exp."""
+        vel_yaw = quat_rotate_inverse(yaw_quat(self.robot.data.root_quat_w), self.robot.data.root_lin_vel_w[:, :3])
+        return vel_yaw[:, :2]
+
+    def _gait_tracking_scale(self):
+        return gait_tracking_scale(
+            self.command_generator.command[:, :2],
+            self._planar_vel_yaw(),
+            tracking_std=self.cfg.gait.tracking_std,
+        )
+
     def _update_gait(self) -> None:
         gait = self.cfg.gait
         cmd_speed = torch.norm(self.command_generator.command[:, :2], dim=1)
-        speed_scale = gait_command_speed_scale(cmd_speed, gait.reference_max_speed)
+        tracking_scale = self._gait_tracking_scale()
         moving = cmd_speed > STANDING_COMMAND_THRESHOLD
 
         if gait.mode == "command_conditioned":
@@ -526,7 +538,7 @@ class T4LocoEnv(VecEnv):
             terrain_scale = self._decay_scale(
                 self.terrain_difficulty(), gait.gait_relax_start_difficulty, gait.min_gait_reward_scale
             )
-        self.gait_reward_scale = speed_scale * terrain_scale
+        self.gait_reward_scale = tracking_scale * terrain_scale
 
     def command_provenance_log(self) -> dict:
         """Log what actually reached the reward, not just what was requested."""
@@ -539,11 +551,7 @@ class T4LocoEnv(VecEnv):
             "Curriculum/terrain_difficulty": torch.mean(self.terrain_difficulty()),
             "Curriculum/amp_reward_coef_scale": torch.mean(self.amp_reward_coef_scale()),
             "Curriculum/gait_reward_scale": torch.mean(self.gait_reward_scale),
-            "Curriculum/gait_command_speed_scale": torch.mean(
-                gait_command_speed_scale(
-                    torch.norm(command[:, :2], dim=1), self.cfg.gait.reference_max_speed
-                )
-            ),
+            "Curriculum/gait_tracking_scale": torch.mean(self._gait_tracking_scale()),
         }
 
     @staticmethod
