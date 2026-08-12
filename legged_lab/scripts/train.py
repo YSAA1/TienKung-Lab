@@ -81,6 +81,9 @@ def train():
     env_cfg.scene.seed = agent_cfg.seed
 
     if args_cli.distributed:
+        # The env reads `env_cfg.device`; setting only `sim.device` leaves every rank
+        # building its buffers on cuda:0 and cross-device ops then fail.
+        env_cfg.device = f"cuda:{app_launcher.local_rank}"
         env_cfg.sim.device = f"cuda:{app_launcher.local_rank}"
         agent_cfg.device = f"cuda:{app_launcher.local_rank}"
 
