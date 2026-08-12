@@ -6,6 +6,9 @@
 
 # TienKung-Lab: Direct IsaacLab Workflow for TienKung
 
+> 本地 T4 27DoF 迁移路线的背景、数据合同、任务目标与当前边界见
+> [PROJECT_CONTEXT.md](PROJECT_CONTEXT.md)。该文件是当前 T4 工作的 living source of truth。
+
 [![IsaacSim](https://img.shields.io/badge/IsaacSim-4.5.0-silver.svg)](https://docs.omniverse.nvidia.com/isaacsim/latest/overview.html)
 [![Isaac Lab](https://img.shields.io/badge/IsaacLab-2.1.0-silver)](https://isaac-sim.github.io/IsaacLab)
 [![RSL_RK](https://img.shields.io/badge/RSL_RL-2.3.1-silver)](https://github.com/leggedrobotics/rsl_rl)
@@ -211,4 +214,3 @@ In some VsCode versions, the indexing of part of the extensions is missing. In t
 If you're interested in TienKung-Lab, welcome to join our WeChat group for discussions.
 
 <img src="./docs/qrcode.png" border=0 width=40%>
-
