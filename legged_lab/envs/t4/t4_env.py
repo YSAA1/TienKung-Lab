@@ -40,7 +40,11 @@ from legged_lab.assets.t4.schemas import (
     proprio_field_slice,
 )
 from legged_lab.envs.t4.amp_features import T4AmpFeatureBuilder
-from legged_lab.envs.t4.curriculum import terrain_level_moves
+from legged_lab.envs.t4.curriculum import (
+    STANDING_COMMAND_THRESHOLD,
+    gait_command_speed_scale,
+    terrain_level_moves,
+)
 from legged_lab.envs.t4.teacher_cfg import T4LocoTeacherEnvCfg
 from legged_lab.utils.env_utils.scene import SceneCfg
 from rsl_rl.env import VecEnv
@@ -502,23 +506,27 @@ class T4LocoEnv(VecEnv):
 
     def _update_gait(self) -> None:
         gait = self.cfg.gait
+        cmd_speed = torch.norm(self.command_generator.command[:, :2], dim=1)
+        speed_scale = gait_command_speed_scale(cmd_speed, gait.reference_max_speed)
+        moving = cmd_speed > STANDING_COMMAND_THRESHOLD
+
         if gait.mode == "command_conditioned":
-            speed = torch.norm(self.command_generator.command[:, :2], dim=1)
-            blend = (speed / max(1.0e-6, gait.reference_max_speed)).clamp(0.0, 1.0)
+            blend = (cmd_speed / max(1.0e-6, gait.reference_max_speed)).clamp(0.0, 1.0)
             self.gait_cycle = gait.slow_gait_cycle + blend * (gait.fast_gait_cycle - gait.slow_gait_cycle)
-            self.gait_time += self.step_dt / self.gait_cycle
-        elif gait.mode in ("fixed_clock", "difficulty_relaxed"):
-            self.gait_time = self.episode_length_buf * self.step_dt / self.gait_cycle
-        else:
+        elif gait.mode not in ("fixed_clock", "difficulty_relaxed"):
             raise NotImplementedError(f"unsupported gait mode {gait.mode!r}")
 
+        # Freeze the clock on standing commands so the policy is not forced to march.
+        self.gait_time = self.gait_time + (self.step_dt / self.gait_cycle) * moving.float()
         self.gait_phase[:, 0] = (self.gait_time + self.phase_offset[:, 0]) % 1.0
         self.gait_phase[:, 1] = (self.gait_time + self.phase_offset[:, 1]) % 1.0
 
+        terrain_scale = torch.ones(self.num_envs, dtype=torch.float, device=self.device)
         if gait.mode == "difficulty_relaxed":
-            self.gait_reward_scale = self._decay_scale(
+            terrain_scale = self._decay_scale(
                 self.terrain_difficulty(), gait.gait_relax_start_difficulty, gait.min_gait_reward_scale
             )
+        self.gait_reward_scale = speed_scale * terrain_scale
 
     def command_provenance_log(self) -> dict:
         """Log what actually reached the reward, not just what was requested."""
@@ -531,6 +539,11 @@ class T4LocoEnv(VecEnv):
             "Curriculum/terrain_difficulty": torch.mean(self.terrain_difficulty()),
             "Curriculum/amp_reward_coef_scale": torch.mean(self.amp_reward_coef_scale()),
             "Curriculum/gait_reward_scale": torch.mean(self.gait_reward_scale),
+            "Curriculum/gait_command_speed_scale": torch.mean(
+                gait_command_speed_scale(
+                    torch.norm(command[:, :2], dim=1), self.cfg.gait.reference_max_speed
+                )
+            ),
         }
 
     @staticmethod

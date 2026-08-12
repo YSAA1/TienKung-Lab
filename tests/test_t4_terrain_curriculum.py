@@ -29,6 +29,7 @@ _spec.loader.exec_module(_curriculum)
 
 STANDING_COMMAND_THRESHOLD = _curriculum.STANDING_COMMAND_THRESHOLD
 terrain_level_moves = _curriculum.terrain_level_moves
+gait_command_speed_scale = _curriculum.gait_command_speed_scale
 
 # Stage E values (teacher_cfg.py / T4_STAGE_E_TERRAINS_CFG).
 EPISODE_LENGTH_S = 20.0
@@ -107,3 +108,15 @@ def test_early_falls_still_drain_to_easy_terrain():
     move_up, move_down = terrain_level_moves(max_dist, cmd_norm, EPISODE_LENGTH_S, TILE_SIZE)
     assert not move_up.any()
     assert move_down.all()
+
+
+def test_standing_command_zeros_gait_scale():
+    cmd_norm = np.array([0.0, 0.05, STANDING_COMMAND_THRESHOLD])
+    scale = gait_command_speed_scale(cmd_norm, reference_max_speed=1.0)
+    assert np.all(scale == 0.0)
+
+
+def test_gait_scale_is_linear_in_commanded_speed():
+    cmd_norm = np.array([0.25, 0.5, 1.0, 1.5])
+    scale = gait_command_speed_scale(cmd_norm, reference_max_speed=1.0)
+    np.testing.assert_allclose(scale, np.array([0.25, 0.5, 1.0, 1.0]))

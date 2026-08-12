@@ -20,6 +20,8 @@ The semantics are frozen with the Stage E MDP:
   an env that nearly or actually traversed its tile.
 - Standing envs (near-zero command) neither promote nor demote; standing is a
   capability bucket, not a traversal attempt.
+- Periodic gait rewards scale with commanded planar speed and drop to zero for
+  standing commands, so marching in place cannot farm the gait terms.
 """
 
 from __future__ import annotations
@@ -63,3 +65,21 @@ def terrain_level_moves(
     move_down = (max_radial_dist < demote_dist) & moving & ~move_up
 
     return move_up, move_down
+
+
+def gait_command_speed_scale(
+    command_lin_vel_norm,
+    reference_max_speed: float,
+    standing_threshold: float = STANDING_COMMAND_THRESHOLD,
+):
+    """Scale periodic gait rewards by commanded planar speed.
+
+    Standing commands (norm at or below ``standing_threshold``) get zero so the
+    gait clock cannot pay for marching in place. Moving commands scale linearly
+    up to ``reference_max_speed`` and clip at 1.
+
+    Works on torch tensors and numpy arrays.
+    """
+    moving = command_lin_vel_norm > standing_threshold
+    scale = (command_lin_vel_norm / max(1.0e-6, reference_max_speed)).clip(0.0, 1.0)
+    return scale * moving

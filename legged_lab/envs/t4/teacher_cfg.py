@@ -70,6 +70,9 @@ class T4GaitCfg:
     - ``difficulty_relaxed``: fixed clock, but the periodic gait rewards fade out
       as the per-env terrain level rises, so stairs are not forced onto the
       flat-ground rhythm.
+
+    In every mode the periodic gait terms are also multiplied by commanded
+    planar speed (zero when standing) so marching in place cannot farm them.
     """
 
     mode: str = "fixed_clock"
@@ -332,8 +335,8 @@ class T4LocoTeacherAgentCfg(RslRlOnPolicyRunnerCfg):
     seed = 42
     device = "cuda:0"
     num_steps_per_env = 24
-    # Plan budget ceiling for Stage E; it is a resource plan, not a pass criterion.
-    max_iterations = 100000
+    # Stage E resource budget for this lineage; not a pass criterion.
+    max_iterations = 40000
     empirical_normalization = False
     policy = RslRlPpoActorCriticCfg(
         class_name="ActorCritic",
