@@ -1,0 +1,183 @@
+{
+  "amp_schema_version": "t4_amp.v1",
+  "fps": 30.0,
+  "frame_dim": 66,
+  "held_out_motions": [
+    "t4_run"
+  ],
+  "human_playback_pending": [
+    "B10_-__Walk_turn_left_45_stageii",
+    "B13_-__Walk_turn_right_90_stageii",
+    "B14_-__Walk_turn_right_45_t2_stageii",
+    "B15_-__Walk_turn_around_stageii",
+    "B4_-_Stand_to_Walk_backwards_stageii",
+    "B9_-__Walk_turn_left_90_stageii",
+    "t4_jog_backward",
+    "t4_jog_forward",
+    "t4_jog_left",
+    "t4_jog_right",
+    "t4_left_rotate",
+    "t4_right_rotate",
+    "t4_side_left",
+    "t4_side_right",
+    "t4_stand",
+    "t4_walk_forward",
+    "t4_walk_left"
+  ],
+  "human_playback_review": "pending",
+  "joint_order": [
+    "J_arm_l_01",
+    "J_arm_l_02",
+    "J_arm_l_03",
+    "J_arm_l_04",
+    "J_arm_l_05",
+    "J_arm_l_06",
+    "J_arm_l_07",
+    "J_arm_r_01",
+    "J_arm_r_02",
+    "J_arm_r_03",
+    "J_arm_r_04",
+    "J_arm_r_05",
+    "J_arm_r_06",
+    "J_arm_r_07",
+    "J_waist_yaw",
+    "J_hip_l_pitch",
+    "J_hip_l_roll",
+    "J_hip_l_yaw",
+    "J_knee_l_pitch",
+    "J_ankle_l_pitch",
+    "J_ankle_l_roll",
+    "J_hip_r_pitch",
+    "J_hip_r_roll",
+    "J_hip_r_yaw",
+    "J_knee_r_pitch",
+    "J_ankle_r_pitch",
+    "J_ankle_r_roll"
+  ],
+  "kinematics_response": 0.1325126737356186,
+  "motions": {
+    "B10_-__Walk_turn_left_45_stageii": {
+      "foot_feature_travel": 21.97882366925478,
+      "frame_duration": 0.03333333333333333,
+      "frames": 178,
+      "motion_class": "turn",
+      "motion_weight": 0.1142857142857143
+    },
+    "B13_-__Walk_turn_right_90_stageii": {
+      "foot_feature_travel": 22.716398926451802,
+      "frame_duration": 0.03333333333333333,
+      "frames": 167,
+      "motion_class": "turn",
+      "motion_weight": 0.1142857142857143
+    },
+    "B14_-__Walk_turn_right_45_t2_stageii": {
+      "foot_feature_travel": 24.058882428333163,
+      "frame_duration": 0.03333333333333333,
+      "frames": 173,
+      "motion_class": "turn",
+      "motion_weight": 0.1142857142857143
+    },
+    "B15_-__Walk_turn_around_stageii": {
+      "foot_feature_travel": 27.473315324634314,
+      "frame_duration": 0.03333333333333333,
+      "frames": 224,
+      "motion_class": "turn",
+      "motion_weight": 0.1142857142857143
+    },
+    "B4_-_Stand_to_Walk_backwards_stageii": {
+      "foot_feature_travel": 15.099169183522463,
+      "frame_duration": 0.03333333333333333,
+      "frames": 137,
+      "motion_class": "walk_backward",
+      "motion_weight": 0.6
+    },
+    "B9_-__Walk_turn_left_90_stageii": {
+      "foot_feature_travel": 19.57689905166626,
+      "frame_duration": 0.03333333333333333,
+      "frames": 150,
+      "motion_class": "turn",
+      "motion_weight": 0.1142857142857143
+    },
+    "t4_jog_backward": {
+      "foot_feature_travel": 18.83473763987422,
+      "frame_duration": 0.03333333333333333,
+      "frames": 170,
+      "motion_class": "jog",
+      "motion_weight": 0.15
+    },
+    "t4_jog_forward": {
+      "foot_feature_travel": 20.362371020019054,
+      "frame_duration": 0.03333333333333333,
+      "frames": 151,
+      "motion_class": "jog",
+      "motion_weight": 0.15
+    },
+    "t4_jog_left": {
+      "foot_feature_travel": 35.40204186923802,
+      "frame_duration": 0.03333333333333333,
+      "frames": 206,
+      "motion_class": "jog",
+      "motion_weight": 0.15
+    },
+    "t4_jog_right": {
+      "foot_feature_travel": 36.37198936752975,
+      "frame_duration": 0.03333333333333333,
+      "frames": 226,
+      "motion_class": "jog",
+      "motion_weight": 0.15
+    },
+    "t4_left_rotate": {
+      "foot_feature_travel": 5.6253746300935745,
+      "frame_duration": 0.03333333333333333,
+      "frames": 231,
+      "motion_class": "turn",
+      "motion_weight": 0.1142857142857143
+    },
+    "t4_right_rotate": {
+      "foot_feature_travel": 3.7798238510731608,
+      "frame_duration": 0.03333333333333333,
+      "frames": 193,
+      "motion_class": "turn",
+      "motion_weight": 0.1142857142857143
+    },
+    "t4_side_left": {
+      "foot_feature_travel": 5.9711046032607555,
+      "frame_duration": 0.03333333333333333,
+      "frames": 137,
+      "motion_class": "walk_lateral",
+      "motion_weight": 0.26666666666666666
+    },
+    "t4_side_right": {
+      "foot_feature_travel": 5.5372556410729885,
+      "frame_duration": 0.03333333333333333,
+      "frames": 150,
+      "motion_class": "walk_lateral",
+      "motion_weight": 0.26666666666666666
+    },
+    "t4_stand": {
+      "foot_feature_travel": 0.0,
+      "frame_duration": 0.03333333333333333,
+      "frames": 149,
+      "motion_class": "stand",
+      "motion_weight": 1.0
+    },
+    "t4_walk_forward": {
+      "foot_feature_travel": 25.014807503670454,
+      "frame_duration": 0.03333333333333333,
+      "frames": 289,
+      "motion_class": "walk_forward",
+      "motion_weight": 1.0
+    },
+    "t4_walk_left": {
+      "foot_feature_travel": 44.3795837238431,
+      "frame_duration": 0.03333333333333333,
+      "frames": 372,
+      "motion_class": "walk_lateral",
+      "motion_weight": 0.26666666666666666
+    }
+  },
+  "sim_dt": 0.005,
+  "simulator": "isaaclab",
+  "status": "provisional",
+  "transition_dim": 132
+}
