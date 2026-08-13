@@ -2,22 +2,25 @@
 # All rights reserved.
 # Modifications are licensed under the BSD-3-Clause license.
 
-"""MuJoCo sim2sim playback of the T4 teacher policy with a viser web viewer.
+"""MuJoCo sim2sim playback of the T4 teacher policy.
 
 Loads an rsl_rl AMP checkpoint (``model_*.pt``), rebuilds the actor MLP, and
 runs it in MuJoCo on flat ground. The observation contract mirrors
 :mod:`legged_lab.envs.t4.t4_env` exactly: 10-frame proprio history (oldest
-first) + 195-dim flat-ground height scan, all obs scales 1.0. Commands are set
-interactively from the viser GUI.
+first) + 195-dim flat-ground height scan, all obs scales 1.0.
 
 Usage:
-    python legged_lab/scripts/play_t4_teacher_viser.py \
-        --checkpoint artifacts/checkpoints/prov5_model_4500.pt
+    python legged_lab/scripts/play_t4_teacher_viser.py \\
+        --checkpoint logs/t4_loco_teacher/<run>/model_3500.pt
+    python legged_lab/scripts/play_t4_teacher_viser.py \\
+        --checkpoint logs/t4_loco_teacher/<run>/model_3500.pt \\
+        --record artifacts/eval/t4_play.mp4 --duration 12
 """
 
 from __future__ import annotations
 
 import argparse
+import math
 import sys
 import time
 from collections import deque
@@ -26,9 +29,6 @@ from pathlib import Path
 import mujoco
 import numpy as np
 import torch
-import viser
-import yourdfpy
-from viser.extras import ViserUrdf
 
 from legged_lab.assets.t4.constants import T4_JOINT_NAMES
 from legged_lab.assets.t4.schemas import (
@@ -233,13 +233,79 @@ class T4MujocoRunner:
         return self.data.qpos[2] < 0.35 or gravity_z > -0.5
 
 
+def _root_yaw_wxyz(quat_wxyz: np.ndarray) -> float:
+    w, x, y, z = quat_wxyz
+    return math.atan2(2.0 * (w * z + x * y), 1.0 - 2.0 * (y * y + z * z))
+
+
+def record_video(
+    runner: T4MujocoRunner,
+    output: Path,
+    duration_s: float,
+    fps: float,
+    vx: float,
+    vy: float,
+    wz: float,
+) -> None:
+    import imageio.v2 as imageio
+
+    runner.command[:] = [vx, vy, wz]
+    step_dt = PHYSICS_DT * DECIMATION
+    n_steps = max(1, int(round(duration_s / step_dt)))
+    record_every = max(1, int(round((1.0 / fps) / step_dt)))
+
+    width, height = 640, 480
+    renderer = mujoco.Renderer(runner.model, height=height, width=width)
+    cameras = []
+    for elevation, yaw_offset, distance in ((-10.0, 145.0, 2.6), (-4.0, -90.0, 2.6)):
+        camera = mujoco.MjvCamera()
+        mujoco.mjv_defaultCamera(camera)
+        camera.type = mujoco.mjtCamera.mjCAMERA_FREE
+        camera.elevation = elevation
+        camera.distance = distance
+        cameras.append((camera, yaw_offset))
+
+    frames: list[np.ndarray] = []
+    for i in range(n_steps):
+        runner.step()
+        if i % record_every == 0:
+            qpos = runner.data.qpos
+            yaw = math.degrees(_root_yaw_wxyz(qpos[3:7]))
+            views = []
+            for camera, yaw_offset in cameras:
+                camera.azimuth = yaw + yaw_offset
+                camera.lookat[:] = [qpos[0], qpos[1], 0.55]
+                renderer.update_scene(runner.data, camera=camera)
+                views.append(renderer.render().copy())
+            frames.append(np.hstack(views))
+        if runner.fallen:
+            break
+
+    output.parent.mkdir(parents=True, exist_ok=True)
+    imageio.mimwrite(output, frames, fps=fps, quality=8, macro_block_size=1)
+    print(f"wrote {output} ({len(frames)} frames, fallen={runner.fallen}, t={runner.data.time:.2f}s)")
+
+
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--checkpoint", required=True, help="rsl_rl model_*.pt checkpoint path")
     parser.add_argument("--port", type=int, default=8080)
+    parser.add_argument("--record", type=Path, default=None, help="Write an MP4 instead of opening the viser GUI.")
+    parser.add_argument("--duration", type=float, default=12.0, help="Recorded seconds.")
+    parser.add_argument("--fps", type=float, default=30.0)
+    parser.add_argument("--vx", type=float, default=0.6)
+    parser.add_argument("--vy", type=float, default=0.0)
+    parser.add_argument("--wz", type=float, default=0.0)
     args = parser.parse_args()
 
     runner = T4MujocoRunner(args.checkpoint)
+    if args.record is not None:
+        record_video(runner, args.record, args.duration, args.fps, args.vx, args.vy, args.wz)
+        return
+
+    import viser
+    import yourdfpy
+    from viser.extras import ViserUrdf
 
     server = viser.ViserServer(port=args.port)
     server.scene.add_grid("/ground", width=20.0, height=20.0, cell_size=0.5)
