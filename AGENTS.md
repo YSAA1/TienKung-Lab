@@ -11,6 +11,7 @@
 | `cd rsl_rl; pip install -e .` | 安装本仓库内置 `rsl_rl` |
 | `python -m pytest tests/test_t4_asset_migration.py` | 纯 Python T4 资产与 motion 合同测试 |
 | `python legged_lab/scripts/t4_csv_motion_conversion.py --input legged_lab/envs/t4/datasets/motion_source --output-dir legged_lab/envs/t4/datasets/motion_visualization --fps 30` | 重新生成 T4 motion visualization 文件 |
+| `python -m legged_lab.scripts.render_t4_motions --output-dir artifacts/motion_review` | 用 MuJoCo 把 motion 渲染成三视角回放视频与足底接触指标，供人工复核；加 `--metrics-only` 只刷新指标，加 `--interactive` 开交互 viewer |
 | `pre-commit run --all-files` | 运行格式化和静态检查 |
 
 ## Architecture
@@ -24,12 +25,6 @@
 - `docs/specs/`、`docs/plans/` - 已批准 Spec 和可执行计划。
 - `.harness/` - 当前 active slice、验证路径和恢复入口。
 
-## Current T4 Boundary
-
-- M0 机器审计与 nubot playback 已通过，人工视觉复核仍是正式 AMP expert 的前置 gate。
-- 人工复核通过前只允许生成 provisional AMP expert 做 smoke，不启动 teacher 长训练，不启动 student 蒸馏。
-- 最终目标是单个 T4 depth student `pi_loco`；`pi_teacher` 只用于训练期 privileged expert。
-- 最终导出 Actor 不得包含 HeightScan、高程图、接触真值、terrain truth、route progress 或 teacher-only module。
 
 ## Testing And Verification
 

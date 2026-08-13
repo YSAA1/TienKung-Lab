@@ -198,15 +198,19 @@ TienKung 的硬编码 20DoF/52D loader，也不能离线复制其他机器人末
 
 ## 9. 当前边界与下一步
 
-本次只完成了机器人资产、原始动作和 visualization 数据迁移；尚未注册 T4 训练任务，
-也尚未生成最终 AMP expert，更没有训练结果或行为能力声明。
+M0 资产、相机与 motion 事实闭环已于 2026-08-12 全部通过：nubot IsaacLab 上完成
+joint/body/foot/hand/camera discovery 与 18 条 motion headless playback（0 reject），
+人工视觉复核基于 `artifacts/motion_review/` 的三视角回放裁定通过，accept 17 条，
+`t4_run` 因 hard joint limit violations 继续 held out。已接受的缺陷是 clip 不对齐地面、
+接触时序不可用；66D AMP feature 只含关节量与 root 相对量，不受该缺陷影响。
 
-下一步唯一 active slice 是 M0 资产、相机与 motion 事实闭环：
+已注册 teacher 任务 `t4_loco_teacher`（`legged_lab/envs/t4/`），Stage E teacher 训练正在
+nubot 四卡上以 lineage `stage_e_prov1` 运行。目前仍没有任何行为能力声明：evaluator 尚未
+建立并通过。
 
-1. 在真实 IsaacLab 环境完成 T4 joint/body/foot/hand/camera discovery；
-2. 逐条播放 18 条 motion，记录 accept/reject、限位、穿地、root height、方向和速度；
-3. M0 通过后再实现共享 66D AMP observation、schema loader 和正式 expert；
-4. 随后实现 depth CNN Actor、最小 `t4_loco`、固定 evaluator 与 T4 depth MuJoCo parity；
-5. 所有训练前 Gate 通过后，才进入基础 walk 正式训练。
+下一步：
 
-在以上步骤完成前，不应直接启动长训练。
+1. 把 provisional AMP expert 提升为 formal 并补 lineage 记录；
+2. 建立 teacher 固定 evaluator，跑通基础 walk/jog/rough/上下楼 buckets；
+3. teacher evaluator 通过后再实现 depth CNN student、distillation 与 T4 depth MuJoCo parity；
+4. 全部 Gate 通过后才允许对外声明 locomotion 能力。

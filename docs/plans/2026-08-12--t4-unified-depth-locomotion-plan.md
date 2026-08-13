@@ -38,9 +38,10 @@ depth history + proprio history + local velocity command + previous action
 
 ## Active Slice
 
-当前只执行训练前合同闭环 M0：在真实 IsaacLab 环境验证 T4 spawn、body/joint/camera
-frame 和全部 motion playback，生成结构化审计结果。M0 未通过前不实现正式 AMP expert、
-不启动 teacher 长训练，也不启动 student 蒸馏。
+训练前合同闭环 M0 已于 2026-08-12 全部通过（机器审计 + nubot playback + 人工视觉复核）。
+当前 active slice 转入 M1/M2：66D AMP schema/loader/expert 与 teacher privilege、depth
+预处理、student Actor 导出合同，并在 Stage E teacher 任务上验证。student 蒸馏仍要等
+teacher evaluator 通过后才启动。
 
 ## Non-goals
 
@@ -105,8 +106,8 @@ frame 和全部 motion playback，生成结构化审计结果。M0 未通过前�
 
 `runnable`
 
-代码、测试和仿真入口都可在本仓库内建设。当前 GPU/IsaacLab runtime、motion 人工视觉
-审核、teacher 收敛、student 蒸馏和最终 Sim2Sim 尚未通过，但它们是计划内的显式 Gate，
+代码、测试和仿真入口都可在本仓库内建设。GPU/IsaacLab runtime 与 motion 人工视觉审核
+已通过；teacher 收敛、student 蒸馏和最终 Sim2Sim 尚未通过，但它们是计划内的显式 Gate，
 不构成无法规划的外部阻塞。
 
 ## Required Capabilities
@@ -342,21 +343,28 @@ jog-ramp: selected low->high vx ramps after jog motions pass audit
 
 ## 工作项
 
-- [ ] M0：T4 资产、相机与 motion 事实闭环（当前）
+- [x] M0：T4 资产、相机与 motion 事实闭环（2026-08-12 通过）
   - scope: 扩展 spawn smoke，发现并冻结 joint/body/foot/hand/camera frame；逐条播放 18 个
     motion，生成机器审计与人工判定清单。
-  - progress: 已新增离线机器审计脚本并生成 `artifacts/eval/t4_motion_audit.json`；静态
-    MJCF facts 中 `forward_camera`、左右 foot/palm sites 均存在；18 条 motion 中机器审计
-    accept 17 条，`t4_run` 因 hard joint limit violations 与 holdout 规则 reject。所有 motion
-    的 `human_playback_status` 仍为 `pending`；已新增 IsaacLab headless playback 审计入口
-    `legged_lab/scripts/playback_t4_motions.py`，待 nubot 目标环境运行后才能生成仿真播放证据。
+  - progress: 离线机器审计生成 `artifacts/eval/t4_motion_audit.json`；静态 MJCF facts 中
+    `forward_camera`、左右 foot/palm sites 均存在；18 条 motion 中机器审计 accept 17 条，
+    `t4_run` 因 hard joint limit violations 与 holdout 规则 reject。nubot 上
+    `legged_lab/scripts/playback_t4_motions.py` 完成 18 条 IsaacLab headless playback，0 reject。
+    人工视觉复核以 `legged_lab/scripts/render_t4_motions.py` 渲染的三视角回放（前 3/4、
+    侧视、足部特写）完成，证据在 `artifacts/motion_review/`，2026-08-12 裁定通过。
+  - accepted_defect: 除 `t4_stand`（足底 +1.4mm）外全部 clip 未对齐地面，stance sole p05 在
+    `-57.6mm` 到 `-11.1mm` 之间，`t4_jog_backward` 整段悬空 `+43.1mm`；按 p05 归一后 contact
+    frame fraction 仅 0.07-0.15，接触时序不可用。66D AMP frame 只含 `q27+dq27+hands_root6+
+    feet_root6`，不含绝对 root 高度，因此 expert 数值不受影响；绝对高度与接触相位不得取自
+    这些 clip。`artifacts/eval/*.json` 中的 `human_playback_status` 由脚本恒置 `pending`，
+    人工裁定以本工作项与 `.harness/state.md` 为准。
   - acceptance_criteria: 27DoF 顺序精确匹配；相机 frame 在 IsaacLab 与 MJCF 语义明确；
     每条 motion 有 accept/reject 和原因；穿地、限位、root height、方向/速度均有记录。
-  - verification_commands: `pytest -q tests/test_t4_asset_migration.py`; `tmux new-session -d -s t4-m0-spawn 'cd /home/nubot/phn_ws/t4_train/TienKung-Lab && python legged_lab/scripts/smoke_t4_asset.py 2>&1 | tee /tmp/t4-m0-spawn.log'`; `tmux new-session -d -s t4-m0-motion-audit 'cd /home/nubot/phn_ws/t4_train/TienKung-Lab && python legged_lab/scripts/audit_t4_motions.py --task t4_loco_teacher --output artifacts/eval/t4_motion_audit.json 2>&1 | tee /tmp/t4-m0-motion-audit.log'`; `tmux new-session -d -s t4-m0-playback 'cd /home/nubot/phn_ws/t4_train/TienKung-Lab && python legged_lab/scripts/playback_t4_motions.py --task t4_loco_teacher --output artifacts/eval/t4_motion_playback.json --sim-device cuda:0 2>&1 | tee /tmp/t4-m0-playback.log'`
+  - verification_commands: `pytest -q tests/test_t4_asset_migration.py`; `tmux new-session -d -s t4-m0-spawn 'cd /home/nubot/phn_ws/t4_train/TienKung-Lab && python legged_lab/scripts/smoke_t4_asset.py 2>&1 | tee /tmp/t4-m0-spawn.log'`; `tmux new-session -d -s t4-m0-motion-audit 'cd /home/nubot/phn_ws/t4_train/TienKung-Lab && python legged_lab/scripts/audit_t4_motions.py --task t4_loco_teacher --output artifacts/eval/t4_motion_audit.json 2>&1 | tee /tmp/t4-m0-motion-audit.log'`; `tmux new-session -d -s t4-m0-playback 'cd /home/nubot/phn_ws/t4_train/TienKung-Lab && python legged_lab/scripts/playback_t4_motions.py --task t4_loco_teacher --output artifacts/eval/t4_motion_playback.json --sim-device cuda:0 2>&1 | tee /tmp/t4-m0-playback.log'`; `python -m legged_lab.scripts.render_t4_motions --output-dir artifacts/motion_review`
   - success_definition: T4 资产与 motion 不再依赖文件名或静态 shape 推断，teacher/student
     训练输入集合有可复核的目标仿真证据。
 
-- [ ] M1：66D AMP schema、loader 与 expert 生成
+- [ ] M1：66D AMP schema、loader 与 expert 生成（当前）
   - scope: 建立共享 feature builder，泛化 loader，使用已通过 M0 的 motion 生成 expert。
   - acceptance_criteria: expert/runtime 66D 字段、顺序、坐标系一致；132D transition 正确；
     loader 无 20DoF/52D 常量；坏维度、错 joint order、nonfinite fail-fast；motion 类别权重
@@ -452,6 +460,9 @@ jog-ramp: selected low->high vx ramps after jog motions pass audit
   定义并做 golden scene 校准。
 - motion 文件名和原始 root velocity 方向可能不等同于 T4 command frame，必须以 playback
   和测量结果决定纳入类别。
+- 已纳入的 motion 除 `t4_stand` 外都不对齐地面（足底 -57.6mm 到 +43.1mm），接触时序不可用；
+  奖励、初始状态、evaluator 或 gait 相位若要取绝对高度或接触相位，必须另有来源，不得回退
+  到这些 clip。
 - Teacher local terrain privilege 若过强，会产生 student 无法蒸馏的行为；必须做 cheating
   audit 和 student-teacher gap 分析。
 - 单 discriminator 可能在 walk/jog/stairs 风格间冲突；只有固定 evaluator 复现后才升级。
@@ -471,7 +482,7 @@ jog-ramp: selected low->high vx ramps after jog motions pass audit
 每次恢复工作先执行：
 
 ```bash
-cd /home/ssy/桌面/TienKung-Lab
+# 本地 checkout：D:\TienKung-Lab；nubot 训练 checkout：/home/nubot/phn_ws/t4_train/TienKung-Lab
 git status --short --branch
 sed -n '1,120p' .harness/state.md
 rg -n '^[-] \[[ x]\]' docs/plans/2026-08-12--t4-unified-depth-locomotion-plan.md

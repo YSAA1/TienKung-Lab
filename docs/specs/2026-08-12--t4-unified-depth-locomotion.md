@@ -374,8 +374,10 @@ buckets、但局部组合 route 系统性失败时，才允许短 fine-tune，�
 
 - 当前机器的 IsaacLab/GPU 可用性、相机并行性能和最大安全环境数尚未在本轮实测；执行时
   需在 tmux 中运行 spawn、渲染和容量 probe。
-- 18 条 T4 motion 尚未在目标 IsaacLab 资产上逐条视觉核验；该步骤需要人工查看回放，
-  自动 shape 检查不能替代。
+- （已关闭，2026-08-12）18 条 T4 motion 的逐条视觉核验已完成：nubot IsaacLab headless
+  playback 0 reject，人工复核基于 `artifacts/motion_review/` 的三视角回放通过，accept 17 条，
+  `t4_run` 继续 held out。已接受的缺陷是 clip 不对齐地面、接触时序不可用；66D AMP feature
+  不含绝对 root 高度，故 expert 不受影响。
 - 现有 RSL-RL policy 没有 teacher/student 双角色模块、depth CNN Actor 或 distillation
   dataset/loader，需要新增最小模块并验证导出能力。
 - 现有 terrain observation 需要明确 teacher privileged schema，避免把不可迁移 route/global
