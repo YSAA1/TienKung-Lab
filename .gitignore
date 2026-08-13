@@ -3,6 +3,7 @@
 .vscode
 outputs
 logs
+VITAL_Lab/
 artifacts/test
 artifacts/motion_review/*.mp4
 artifacts/motion_review/*.png

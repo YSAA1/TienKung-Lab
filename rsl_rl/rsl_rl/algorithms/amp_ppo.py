@@ -64,6 +64,11 @@ class AMPPPO:
         symmetry_cfg: dict | None = None,
         # Distributed training parameters
         multi_gpu_cfg: dict | None = None,
+        # isaaclab_rl >= 0.5.1 compatibility (accepted and ignored: this fork
+        # hardcodes the Adam optimizer, and the teacher policy uses a plain MLP
+        # rather than CNN encoders)
+        optimizer: str | None = None,
+        share_cnn_encoders: bool = False,
     ):
         # device-related parameters
         self.device = device

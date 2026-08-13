@@ -49,7 +49,7 @@ T4_CFG = ArticulationCfg(
             max_depenetration_velocity=1.0,
         ),
         articulation_props=sim_utils.ArticulationRootPropertiesCfg(
-            enabled_self_collisions=False,
+            enabled_self_collisions=True,
             solver_position_iteration_count=8,
             solver_velocity_iteration_count=4,
             fix_root_link=False,
@@ -100,12 +100,15 @@ T4_CFG = ArticulationCfg(
             damping=4.0,
             armature=0.0625,
         ),
+        # Ankle gains follow the VITAL T4_27 asset that trained this robot
+        # successfully on rough/stair terrain; the previous 10/0.5 left the
+        # ankles effectively passive (~2.5 Nm per unit action on a 35 kg robot).
         "ankles": ImplicitActuatorCfg(
             joint_names_expr=["J_ankle_[lr]_(pitch|roll)"],
             effort_limit_sim=72.0,
             velocity_limit_sim={"J_ankle_[lr]_pitch": 18.8, "J_ankle_[lr]_roll": 12.4},
-            stiffness=10.0,
-            damping=0.5,
+            stiffness={"J_ankle_[lr]_pitch": 80.0, "J_ankle_[lr]_roll": 20.0},
+            damping={"J_ankle_[lr]_pitch": 4.0, "J_ankle_[lr]_roll": 1.0},
             armature=0.0472,
         ),
     },

@@ -217,6 +217,31 @@ def feet_y_distance(env: TienKungEnv, target: float = 0.299) -> torch.Tensor:
     return y_distance_b * y_vel_flag
 
 
+def foot_touchdown_impact_penalty(
+    env: BaseEnv | TienKungEnv,
+    sensor_cfg: SceneEntityCfg,
+    asset_cfg: SceneEntityCfg,
+    force_threshold: float = 20.0,
+    safe_downward_speed: float = 0.25,
+    contact_time_window: float = 0.04,
+) -> torch.Tensor:
+    """Penalize excessive downward foot velocity only at fresh foot contact.
+
+    Ported from the VITAL T4_27 task: it teaches soft touchdowns on stairs and
+    drops without punishing normal stance loading.
+    """
+    contact_sensor: ContactSensor = env.scene.sensors[sensor_cfg.name]
+    asset: Articulation = env.scene[asset_cfg.name]
+    net_forces = contact_sensor.data.net_forces_w_history[:, :, sensor_cfg.body_ids, :]
+    contact_force = torch.norm(net_forces, dim=-1).amax(dim=1)
+    in_contact = contact_force > force_threshold
+    contact_time = contact_sensor.data.current_contact_time[:, sensor_cfg.body_ids]
+    fresh_touchdown = in_contact & (contact_time > 0.0) & (contact_time <= contact_time_window)
+    foot_vz = asset.data.body_lin_vel_w[:, asset_cfg.body_ids, 2]
+    downward_excess = (-foot_vz - safe_downward_speed).clamp(min=0.0)
+    return torch.sum(fresh_touchdown.float() * downward_excess.square(), dim=1)
+
+
 # Periodic gait-based reward function
 def gait_clock(phase, air_ratio, delta_t):
     """

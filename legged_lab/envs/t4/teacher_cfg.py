@@ -23,6 +23,7 @@ from isaaclab_rl.rsl_rl import (
     RslRlOnPolicyRunnerCfg,
     RslRlPpoActorCriticCfg,
     RslRlPpoAlgorithmCfg,
+    RslRlSymmetryCfg,
 )
 
 import legged_lab.mdp as mdp
@@ -109,9 +110,12 @@ class T4AmpTerrainScheduleCfg:
 
 @configclass
 class T4TeacherRewardCfg:
-    track_lin_vel_xy_exp = RewTerm(func=mdp.track_lin_vel_xy_yaw_frame_exp, weight=1.0, params={"std": 0.5})
+    # Task/penalty weights follow the VITAL T4_27 task that trained this robot on
+    # rough/stair terrain: stronger velocity tracking, a mild vertical-velocity
+    # penalty (stairs require root z motion), and no hip roll/yaw action penalty.
+    track_lin_vel_xy_exp = RewTerm(func=mdp.track_lin_vel_xy_yaw_frame_exp, weight=2.0, params={"std": 0.5})
     track_ang_vel_z_exp = RewTerm(func=mdp.track_ang_vel_z_world_exp, weight=1.0, params={"std": 0.5})
-    lin_vel_z_l2 = RewTerm(func=mdp.lin_vel_z_l2, weight=-1.0)
+    lin_vel_z_l2 = RewTerm(func=mdp.lin_vel_z_l2, weight=-0.15)
     ang_vel_xy_l2 = RewTerm(func=mdp.ang_vel_xy_l2, weight=-0.05)
     energy = RewTerm(func=mdp.energy, weight=-1e-3)
     dof_acc_l2 = RewTerm(func=mdp.joint_acc_l2, weight=-2.5e-7)
@@ -120,7 +124,17 @@ class T4TeacherRewardCfg:
         func=mdp.undesired_contacts,
         weight=-1.0,
         params={
-            "sensor_cfg": SceneEntityCfg("contact_sensor", body_names=["Shank_.*", "A[LR]2", "A[LR]4", "Trunk"]),
+            "sensor_cfg": SceneEntityCfg("contact_sensor", body_names=["A[LR]2", "A[LR]4", "Trunk"]),
+            "threshold": 1.0,
+        },
+    )
+    # A knee brushing a stair riser is expected on the up-stairs curriculum, so
+    # shank contact is penalized more mildly than arm/trunk contact.
+    shank_contacts = RewTerm(
+        func=mdp.undesired_contacts,
+        weight=-0.3,
+        params={
+            "sensor_cfg": SceneEntityCfg("contact_sensor", body_names=["Shank_.*"]),
             "threshold": 1.0,
         },
     )
@@ -154,6 +168,17 @@ class T4TeacherRewardCfg:
         func=mdp.feet_stumble,
         weight=-2.0,
         params={"sensor_cfg": SceneEntityCfg("contact_sensor", body_names=[".*_foot_link"])},
+    )
+    foot_touchdown_impact = RewTerm(
+        func=mdp.foot_touchdown_impact_penalty,
+        weight=-0.08,
+        params={
+            "sensor_cfg": SceneEntityCfg("contact_sensor", body_names=[".*_foot_link"]),
+            "asset_cfg": SceneEntityCfg("robot", body_names=[".*_foot_link"]),
+            "force_threshold": 20.0,
+            "safe_downward_speed": 0.20,
+            "contact_time_window": 0.04,
+        },
     )
     dof_pos_limits = RewTerm(func=mdp.joint_pos_limits, weight=-2.0)
     joint_deviation_hip = RewTerm(
@@ -195,8 +220,6 @@ class T4TeacherRewardCfg:
 
     ankle_torque = RewTerm(func=mdp.ankle_torque, weight=-0.0005)
     ankle_action = RewTerm(func=mdp.ankle_action, weight=-0.001)
-    hip_roll_action = RewTerm(func=mdp.hip_roll_action, weight=-1.0)
-    hip_yaw_action = RewTerm(func=mdp.hip_yaw_action, weight=-1.0)
     feet_y_distance = RewTerm(func=mdp.feet_y_distance, weight=-2.0, params={"target": T4_NOMINAL_FEET_Y_DISTANCE})
 
 
@@ -363,7 +386,15 @@ class T4LocoTeacherAgentCfg(RslRlOnPolicyRunnerCfg):
         desired_kl=0.01,
         max_grad_norm=1.0,
         normalize_advantage_per_mini_batch=False,
-        symmetry_cfg=None,
+        # Sagittal mirror augmentation + mirror loss, following the VITAL T4_27
+        # recipe (mirror_loss_coeff=5.0). The mirror plan is frozen with the
+        # observation schema in legged_lab/envs/t4/symmetry.py.
+        symmetry_cfg=RslRlSymmetryCfg(
+            use_data_augmentation=True,
+            use_mirror_loss=True,
+            data_augmentation_func="legged_lab.envs.t4.symmetry:get_symmetric_states",
+            mirror_loss_coeff=5.0,
+        ),
         rnd_cfg=None,
     )
     clip_actions = None

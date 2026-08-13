@@ -180,3 +180,84 @@ def test_nominal_feet_y_distance_matches_the_hip_chain():
     offsets = _mjcf_body_offsets()
     hip_y = offsets["Hip_Pitch_Left"][1] + offsets["Hip_Roll_Left"][1]
     assert T4_NOMINAL_FEET_Y_DISTANCE == pytest.approx(2 * hip_y, abs=1e-6)
+
+
+# ---------------------------------------------------------------------------
+# Sagittal mirror symmetry (legged_lab/envs/t4/symmetry.py)
+# ---------------------------------------------------------------------------
+
+import importlib.util  # noqa: E402
+
+import numpy as np  # noqa: E402
+
+# Load straight from the file: importing through the package would execute
+# `legged_lab.envs.__init__`, which needs IsaacLab.
+_SYMMETRY_PATH = ROOT / "legged_lab" / "envs" / "t4" / "symmetry.py"
+_spec = importlib.util.spec_from_file_location("t4_symmetry", _SYMMETRY_PATH)
+_symmetry = importlib.util.module_from_spec(_spec)
+_spec.loader.exec_module(_symmetry)
+
+_ACTOR_WIDTH = schemas.PROPRIO_FRAME_DIM * schemas.PROPRIO_HISTORY_LENGTH + schemas.TEACHER_SCAN_DIM
+_CRITIC_WIDTH = schemas.CRITIC_FRAME_DIM * schemas.PROPRIO_HISTORY_LENGTH + schemas.TEACHER_SCAN_DIM
+
+
+def test_mirror_is_an_involution_on_actor_critic_obs_and_actions():
+    rng = np.random.default_rng(0)
+    actor_obs = rng.normal(size=(4, _ACTOR_WIDTH))
+    critic_obs = rng.normal(size=(4, _CRITIC_WIDTH))
+    actions = rng.normal(size=(4, len(T4_JOINT_NAMES)))
+    assert np.allclose(
+        _symmetry.mirror_observations(_symmetry.mirror_observations(actor_obs, False), False), actor_obs
+    )
+    assert np.allclose(
+        _symmetry.mirror_observations(_symmetry.mirror_observations(critic_obs, True), True), critic_obs
+    )
+    assert np.allclose(_symmetry.mirror_actions(_symmetry.mirror_actions(actions)), actions)
+
+
+def test_mirror_negates_lateral_command_and_keeps_forward_command():
+    obs = np.zeros((1, _ACTOR_WIDTH))
+    start, _ = schemas.proprio_field_slice("velocity_command")
+    obs[0, start : start + 3] = [0.7, 0.4, 0.3]  # vx, vy, wz
+    mirrored = _symmetry.mirror_observations(obs, False)
+    assert mirrored[0, start : start + 3] == pytest.approx([0.7, -0.4, -0.3])
+
+
+def test_mirror_swaps_leg_joints_with_axis_correct_signs():
+    joints = list(T4_JOINT_NAMES)
+    start, _ = schemas.proprio_field_slice("joint_pos")
+    obs = np.zeros((1, _ACTOR_WIDTH))
+    obs[0, start + joints.index("J_hip_l_pitch")] = 0.5
+    obs[0, start + joints.index("J_hip_l_roll")] = 0.2
+    obs[0, start + joints.index("J_arm_l_02")] = 0.3
+    obs[0, start + joints.index("J_waist_yaw")] = 0.1
+    mirrored = _symmetry.mirror_observations(obs, False)
+    # Pitch-like joints swap sides with sign +1; roll/yaw-like joints negate.
+    assert mirrored[0, start + joints.index("J_hip_r_pitch")] == pytest.approx(0.5)
+    assert mirrored[0, start + joints.index("J_hip_r_roll")] == pytest.approx(-0.2)
+    assert mirrored[0, start + joints.index("J_arm_r_02")] == pytest.approx(-0.3)
+    assert mirrored[0, start + joints.index("J_waist_yaw")] == pytest.approx(-0.1)
+    assert mirrored[0, start + joints.index("J_hip_l_pitch")] == pytest.approx(0.0)
+
+
+def test_mirror_flips_the_scan_laterally_and_keeps_forward_axis():
+    num_x, num_y = schemas.TEACHER_SCAN_SHAPE
+    scan_start = schemas.PROPRIO_FRAME_DIM * schemas.PROPRIO_HISTORY_LENGTH
+    obs = np.zeros((1, _ACTOR_WIDTH))
+    iy, ix = 0, 3  # one lateral edge, fixed forward position
+    obs[0, scan_start + iy * num_x + ix] = 1.0
+    mirrored = _symmetry.mirror_observations(obs, False)
+    assert mirrored[0, scan_start + (num_y - 1) * num_x + ix] == pytest.approx(1.0)
+    assert mirrored[0, scan_start + iy * num_x + ix] == pytest.approx(0.0)
+
+
+def test_get_symmetric_states_returns_original_first_then_mirrored():
+    rng = np.random.default_rng(1)
+    obs = rng.normal(size=(3, _ACTOR_WIDTH))
+    actions = rng.normal(size=(3, len(T4_JOINT_NAMES)))
+    aug_obs, aug_actions = _symmetry.get_symmetric_states(obs=obs, actions=actions, obs_type="policy")
+    assert aug_obs.shape == (6, _ACTOR_WIDTH)
+    assert aug_actions.shape == (6, len(T4_JOINT_NAMES))
+    assert np.allclose(aug_obs[:3], obs)
+    assert np.allclose(aug_obs[3:], _symmetry.mirror_observations(obs, False))
+    assert np.allclose(aug_actions[3:], _symmetry.mirror_actions(actions))
