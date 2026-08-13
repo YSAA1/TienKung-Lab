@@ -4,6 +4,8 @@
 outputs
 logs
 artifacts/test
+artifacts/motion_review/*.mp4
+artifacts/motion_review/*.png
 run_bash.sh
 wandb
 MUJOCO_LOG.TXT
