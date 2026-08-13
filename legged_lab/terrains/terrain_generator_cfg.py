@@ -25,8 +25,76 @@ inherit from ``isaaclab.terrains.terrains_cfg.TerrainConfig`` and define the fol
   and the configuration parameters and return a `tuple with the `trimesh`` mesh object and terrain origin.
 """
 
+import numpy as np
+import trimesh
+
 import isaaclab.terrains as terrain_gen
+from isaaclab.terrains.sub_terrain_cfg import SubTerrainBaseCfg
 from isaaclab.terrains.terrain_generator_cfg import TerrainGeneratorCfg
+from isaaclab.terrains.trimesh.utils import make_plane
+from isaaclab.utils import configclass
+
+from .hurdle_layout import (
+    T4_HURDLE_BAR_HEIGHT_RANGE,
+    T4_HURDLE_BAR_THICKNESS,
+    T4_HURDLE_BORDER_WIDTH,
+    T4_HURDLE_PLATFORM_WIDTH,
+    T4_HURDLE_SPACING_RANGE,
+    hurdle_bar_height,
+    hurdle_ring_half_widths,
+)
+
+
+def hurdle_rings_terrain(difficulty, cfg):
+    """Flat tile with concentric square hurdle rings around the spawn platform.
+
+    Bars are thin boxes merged into the static tile mesh, so the existing
+    contact MDP (stumble/shank/trunk penalties, fall termination) and the
+    height scan see them like any other terrain. Bar height follows the
+    difficulty row; ring spacing is sampled per tile. Layout math lives in
+    ``hurdle_layout.py`` (pure Python) so contract tests and the future
+    strict-contact evaluator share one truth.
+    """
+    spacing = float(np.random.uniform(*cfg.spacing_range))
+    bar_height = hurdle_bar_height(difficulty, cfg.bar_height_range)
+    half_widths = hurdle_ring_half_widths(
+        spacing,
+        tile_size=min(cfg.size),
+        platform_width=cfg.platform_width,
+        border_width=cfg.border_width,
+    )
+    meshes = [make_plane(cfg.size, height=0.0, center_zero=False)]
+    cx, cy = 0.5 * cfg.size[0], 0.5 * cfg.size[1]
+    thickness = cfg.bar_thickness
+    for radius in half_widths:
+        span = 2.0 * radius + thickness
+        for side in (-1.0, 1.0):
+            meshes.append(
+                trimesh.creation.box(
+                    (thickness, span, bar_height),
+                    trimesh.transformations.translation_matrix((cx + side * radius, cy, bar_height / 2.0)),
+                )
+            )
+            meshes.append(
+                trimesh.creation.box(
+                    (span, thickness, bar_height),
+                    trimesh.transformations.translation_matrix((cx, cy + side * radius, bar_height / 2.0)),
+                )
+            )
+    return meshes, np.array([cx, cy, 0.0])
+
+
+@configclass
+class MeshHurdleRingsTerrainCfg(SubTerrainBaseCfg):
+    """Hurdle-ring sub-terrain (100m obstacle #2 as a Stage E curriculum bucket)."""
+
+    function = hurdle_rings_terrain
+
+    platform_width: float = T4_HURDLE_PLATFORM_WIDTH
+    border_width: float = T4_HURDLE_BORDER_WIDTH
+    spacing_range: tuple[float, float] = T4_HURDLE_SPACING_RANGE
+    bar_height_range: tuple[float, float] = T4_HURDLE_BAR_HEIGHT_RANGE
+    bar_thickness: float = T4_HURDLE_BAR_THICKNESS
 
 GRAVEL_TERRAINS_CFG = TerrainGeneratorCfg(
     curriculum=False,
@@ -126,14 +194,15 @@ T4_STAGE_E_TERRAINS_CFG = TerrainGeneratorCfg(
     slope_threshold=0.75,
     use_cache=False,
     sub_terrains={
-        "flat": terrain_gen.MeshPlaneTerrainCfg(proportion=0.10),
+        "flat": terrain_gen.MeshPlaneTerrainCfg(proportion=0.08),
         "random_rough": terrain_gen.HfRandomUniformTerrainCfg(
-            proportion=0.20, noise_range=(-0.02, 0.08), noise_step=0.02, border_width=0.25
+            proportion=0.16, noise_range=(-0.02, 0.08), noise_step=0.02, border_width=0.25
         ),
         "boxes": terrain_gen.MeshRandomGridTerrainCfg(
             proportion=0.15, grid_width=0.45, grid_height_range=(0.0, 0.15), platform_width=2.0
         ),
-        "wave": terrain_gen.HfWaveTerrainCfg(proportion=0.10, amplitude_range=(0.0, 0.2), num_waves=5.0),
+        "wave": terrain_gen.HfWaveTerrainCfg(proportion=0.06, amplitude_range=(0.0, 0.2), num_waves=5.0),
+        "hurdles": MeshHurdleRingsTerrainCfg(proportion=0.10),
         "slope_up": terrain_gen.HfInvertedPyramidSlopedTerrainCfg(
             proportion=0.05, slope_range=(0.0, 0.3), platform_width=2.0, border_width=0.25
         ),
