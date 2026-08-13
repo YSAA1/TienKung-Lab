@@ -8,12 +8,13 @@
 - Long-running rule: 所有训练、GPU probe、批量 playback 和 evaluator 必须在 tmux 中运行。
 - Stop gate: M0 人工视觉复核已于 2026-08-12 通过，正式 AMP expert 与 Stage E 正式 lineage 解锁；后续 gate 变为 teacher evaluator 通过前不启动 student 蒸馏。
 - Frozen contracts: `legged_lab/assets/t4/schemas.py` 冻结 AMP 66D、teacher 前向不对称 scan（1.4x1.2m @0.1，offset x=0.9，前向 0.2-1.6m，15x13=195 维）、depth 预处理与 proprio 96 维/10 帧；teacher actor obs 1155 维。
-- Pending MDP change (2026-08-13, 未提交): 对照成功参照 VITAL_Lab T4_27 做了四项变更，任何一项都要求开新 lineage、从零训练，不得从 prov3/prov4 checkpoint 续：
+- Running lineage: `stage_e_prov5`（commit `4d4e088`，从零训练，nubot tmux `t4-stage-e`，4x RTX 4090，每卡 1024 env，40000 iter 预算，日志 `logs/t4-stage-e-teacher.log`，TensorBoard tmux `t4-tb` 端口 8000）。启动于 2026-08-13 13:26，iter ~260 时 ~53k steps/s，`Mean symmetry loss` 正常输出。
+- MDP change (2026-08-13, commit `4d4e088`): 对照成功参照 VITAL_Lab T4_27 做了四项变更，任何一项都要求开新 lineage、从零训练，不得从 prov3/prov4 checkpoint 续：
   1. `legged_lab/assets/t4/t4.py`: 踝关节增益 10/0.5 → pitch 80/4、roll 20/1（旧值近似被动踝，无真值来源；VITAL 同机器人训成功的值），并打开 self-collisions。
   2. `teacher_cfg.py` 奖励再平衡: track_lin 1.0→2.0、lin_vel_z -1.0→-0.15、删 hip_roll/yaw_action(-1.0)、Shank 接触从 undesired_contacts(-1.0) 拆出为 -0.3、新增 foot_touchdown_impact(-0.08, `mdp.foot_touchdown_impact_penalty`)。
   3. 周期步态奖励保留（bf06c0a 的 tracking 门控不变）。
   4. 对称性: AMPPPO `symmetry_cfg`（augmentation + mirror loss 5.0），镜像计划 `legged_lab/envs/t4/symmetry.py`（arm 01-07 符号 +--+-+-，来自 MJCF 轴向；scan 沿 y 翻转），合同测试在 `tests/test_t4_observation_contracts.py`。
-- Stale lineage: `stage_e_prov4`（从 `stage_e_prov3` 的 `model_2000.pt` 续训，nubot tmux `t4-stage-e`，commit `bf06c0a`，4x RTX 4090，每卡 1024 env，日志 `logs/t4-stage-e-teacher.log`）——诊断结论：课程钉 0 的根因是基础行走能力（降到 level 0 平地后 episode_max_radial_dist 均值仍 ≤1.38m < promote 4m），而非课程代数；见上面的 MDP 变更。
+- Terminated lineage: `stage_e_prov4`（从 `stage_e_prov3` 的 `model_2000.pt` 续训，commit `bf06c0a`，2026-08-13 13:2x 手动中断于 iter ~2900，旧日志 `logs/t4-stage-e-teacher.stage_e_prov4.log`）——诊断结论：课程钉 0 的根因是基础行走能力（降到 level 0 平地后 episode_max_radial_dist 均值仍 ≤1.38m < promote 4m），而非课程代数；见上面的 MDP 变更。
 - Terminated lineage: `stage_e_prov3`（commit `38a3e12`）于 iter ~2248 停止续写：TB 显示 mean_reward 平台 55–59、terrain_levels 从 ~350 钉 0、episode_max_radial_dist 全程 ≤1.38m、lin tracking 在 0.3–0.7 波动。`stage_e_prov2`/`prov1` 见下。旧日志 `logs/t4-stage-e-teacher.stage_e_prov3.log`。
 - Gait fix（commit `bf06c0a`）: 周期步态奖励改为 `moving * exp(-||v_cmd-v_act||^2 / 0.5^2)`（与 track_lin_vel_xy_exp 同核），站立仍为 0 并冻结时钟；日志 `Curriculum/gait_tracking_scale`。高速命令蹲着时步态分应接近 0。
 - Curriculum watch: 续训后看 `gait_tracking_scale` 是否明显低于原先 ~0.42 的命令速度缩放、径向是否离开 1.2m、lin tracking 是否随 gait 被关掉而上升。
