@@ -1,0 +1,26 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Harness Manifest",
+  "type": "object",
+  "required": [
+    "version",
+    "recommendation_matrix"
+  ],
+  "properties": {
+    "version": {
+      "type": [
+        "integer",
+        "string"
+      ]
+    },
+    "recommendation_matrix": {
+      "type": "object"
+    },
+    "packs": {
+      "type": "object"
+    },
+    "installed": {
+      "type": "object"
+    }
+  }
+}

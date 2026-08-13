@@ -1,0 +1,11 @@
+---
+description: Alias for review — use when a concrete ready claim needs fresh evidence; routes to the merged review ready gate.
+globs:
+alwaysApply: false
+---
+
+# Verify (Alias)
+
+Canonical source: `skills/verify/SKILL.md` → execute `skills/review/SKILL.md`.
+
+`verify` is not an independent workflow lane. Ready claims, final checks, smoke, and evidence mapping run inside `review`.
