@@ -31,9 +31,9 @@ G3 合并 + transition（单一策略）
 
 ## Active Slice
 
-V0 参考动作入库与纯 Python 数据合同：把 zip 内 `overbox_1m_t4_mjcf_fps50.npz`
-原件入库 `legged_lab/envs/t4/datasets/motion_tracking/`，新增按关节名重排到
-`T4_JOINT_NAMES` 的离线加载器与 manifest，合同测试全绿。零训练代码面，本机可验证。
+V4 G1 正式训练挂机监控（zhuoqun tmux `t4_vault_g1`，4096 env / 30000 iter /
+seed 42 / CUDA 0），并行补齐 V2 corridor 场景与 strict evaluator。V0/V1/V3 已完成
+（执行顺序按用户「立马开训」指令重排为 V1→V3→V4，V2 挂机期间补）。
 
 ## Non-goals
 
@@ -86,8 +86,9 @@ zhuoqun 是计划内显式 V3 gate，不构成无法规划的外部阻塞。G3 �
 
 ## Required Capabilities
 
-- nubot 4 卡（Stage E 专属）+ zhuoqun 4 卡（技能侧，V3 preflight 后）+ 本机 1 卡
-  （渲染/调试）；tmux。
+- nubot 4 卡（Stage E 专属）+ zhuoqun 4 卡（技能侧，V3 preflight 后；2026-08-13
+  用户裁定与跨栏 skill 对半分：vault 2 卡 + 跨栏 2 卡，见
+  `docs/plans/2026-08-13--t4-hurdle-skill-plan.md`）+ 本机 1 卡（渲染/调试）；tmux。
 - 仓库内置 `rsl_rl` 扩展：多组 DAgger runner、per-group reward/termination、critic
   组别 one-hot、AMP 双判别器相位切换（V5 代码工作）。
 - LeggedLab 扩展：1m 箱 corridor 地形、transition 三区域 reset、strict evaluator
@@ -99,7 +100,8 @@ zhuoqun 是计划内显式 V3 gate，不构成无法规划的外部阻塞。G3 �
 无可替代最终行为 gate 的 fallback。
 
 - zhuoqun 不可用时，V4/V6 可临时排队 nubot 空闲窗口或本机小规模 probe，但正式
-  lineage 与 gate 证据必须在 4 卡级 runtime 产出。
+  lineage 与 gate 证据必须在目标 zhuoqun runtime 产出（2026-08-13 用户裁定：与
+  跨栏 skill 对半分后，2 卡正式 lineage 可接受，原「4 卡级」要求放宽）。
 - 本机无 IsaacLab 时，V1/V2 的合同测试先行，IsaacLab smoke 在 nubot 补齐；未补齐
   前对应工作项不得标记完成。
 
@@ -146,19 +148,27 @@ zhuoqun 是计划内显式 V3 gate，不构成无法规划的外部阻塞。G3 �
     `python -m pytest tests/test_t4_observation_contracts.py -q`
   - success_definition: G1 任务可通过唯一加载器消费重排后的参考动作，数据 lineage 可机器复核。
 
-- [ ] V1：G1 mimic 任务移植（下一步）
+- [x] V1：G1 mimic 任务移植（2026-08-13 完成）
   - scope: 在 LeggedLab 新增 tracking 任务（建议名 `t4_vault_mimic`）：固定 1m 箱
     场景、RSI（参考状态初始化）、全局 anchor 与 wrist/feet 跟踪奖励、
     `anchor/foot/wrist` 偏差终止语义（移植 PHP 配方，plant 用 Stage E 现值）；150D
     tracking 观测合同只存在于任务内部。
+  - progress: `legged_lab/envs/t4/vault_mimic/`（mdp 五模块 + env cfg + agents +
+    rsl_rl_compat + gym 注册）+ `train_t4_vault_mimic.py` 入口；URDF 并入 PHP
+    spherehand 手部碰撞（`half_sphere.obj`）；合同测试并入
+    `tests/test_t4_asset_migration.py`（15 项全绿）而非单独文件；smoke 在 zhuoqun
+    docker（目标 runtime，强于原 nubot 方案）通过：policy 150D / critic 276D /
+    action 27D / RSI 生效 / 50 步零动作全有限 / 双手碰撞 prim 存活 USD 转换
+    （`/tmp/t4_vault_smoke_result.json`）。场景地面因 Nucleus 云资产在国内不可达
+    改为程序化 800m 长方体（顶面 z=0），headless 容器下 visual_material 一律 None。
   - acceptance_criteria: 任务注册可被 train 入口解析；观测/动作维度合同测试通过
-    （27D action、scale 0.25）；nubot 2-env 2-iter smoke 无 NaN/Inf/OOM 且 RSI 生效
+    （27D action、scale 0.25）；目标 runtime 2-env smoke 无 NaN/Inf/OOM 且 RSI 生效
     （episode 从参考帧姿态起步）。
-  - verification_commands: `python -m pytest tests/test_t4_vault_mimic_contracts.py -q`;
-    `tmux new-session -d -s t4-vault-smoke 'cd <nubot-checkout> && bash scripts/nubot_run.sh legged_lab/scripts/train.py --task=t4_vault_mimic --headless --num_envs=2 --max_iterations=2 2>&1 | tee /tmp/t4-vault-smoke.log'`
+  - verification_commands: `python -m pytest tests/test_t4_asset_migration.py -q`;
+    `ssh zhuoqun 'CUDA_VISIBLE_DEVICES=0 ./scripts/zhuoqun_run.sh legged_lab/scripts/smoke_t4_vault_task.py'`
   - success_definition: G1 训练环境在目标 runtime 端到端可跑，合同由测试锁定。
 
-- [ ] V2：1m 箱 corridor 场景与 strict evaluator
+- [ ] V2：1m 箱 corridor 场景与 strict evaluator（V4 训练挂机期间并行补齐）
   - scope: corridor + ordered gates 的箱体评估场景；strict evaluator（crossing
     sustained + stable landing + 禁止接触/hard-limit 计数 + 固定 checkpoint 输入 +
     lineage 字段）；RED case：未训练/零策略 checkpoint 产出完整 JSON 且判失败。
@@ -169,17 +179,26 @@ zhuoqun 是计划内显式 V3 gate，不构成无法规划的外部阻塞。G3 �
     `tmux new-session -d -s t4-vault-red 'cd <nubot-checkout> && bash scripts/nubot_run.sh legged_lab/scripts/eval_t4_vault.py --policy zero --output artifacts/eval/t4_vault_red.json 2>&1 | tee /tmp/t4-vault-red.log'`
   - success_definition: G1/G2 gate 的证据机器可产出、失败可分类，评估语义先于训练冻结。
 
-- [ ] V3：zhuoqun runtime preflight
-  - scope: 参照 zip `tools/preflight.py` 思路写 LeggedLab 版 preflight（Python/torch/
-    CUDA/IsaacLab 导入、T4 资产、数据 SHA、1-env spawn）；在 zhuoqun 跑通；失败则
-    先部署 IsaacLab runtime 再重跑。
+- [x] V3：zhuoqun runtime preflight（2026-08-13 完成，docker 路线）
+  - progress: 用户提供 docker 环境；runtime = 容器 `t4-isaac-jammy:v2`（在用户
+    原镜像上补 `libxt6`——缺它导致 kit GPU foundation 全灭——及 vulkan-tools/
+    zenity）+ host bind-mount isaac-sim 5.1 standalone / IsaacLab / 本仓库，入口
+    `scripts/zhuoqun_run.sh`（默认 v2 镜像、PYTHONUNBUFFERED、GPU/cache 挂载）。
+    preflight 证据：容器内 torch CUDA 4 卡可见、vulkaninfo 枚举 4×RTX 4090、
+    IsaacLab 可导入、`t4_vault_mimic` 2-env spawn + 50 步全有限（即 V1 smoke）。
+    坑已记录：Nucleus 云资产不可达（场景禁用外部 USD/材质）、instanceable USD
+    需 TraverseInstanceProxies 遍历、`SimulationApp.close()` 容器内会吞 traceback
+    且挂死（入口已加 watchdog 强制退出）。
   - acceptance_criteria: preflight 在 zhuoqun 全 PASS（含 CUDA 4 卡可见、IsaacLab
-    可导入、t4_vault_mimic 1-env spawn）；结果记录进 `.harness/state.md`。
-  - verification_commands: `ssh zhuoqun@100.95.109.48 'tmux new-session -d -s t4-preflight "cd <zhuoqun-checkout> && <isaaclab-python> legged_lab/scripts/preflight_t4_vault.py 2>&1 | tee /tmp/t4-preflight.log"'`
+    可导入、t4_vault_mimic spawn）；结果记录进 `.harness/state.md`。
+  - verification_commands: `ssh zhuoqun 'CUDA_VISIBLE_DEVICES=0 ./scripts/zhuoqun_run.sh legged_lab/scripts/smoke_t4_vault_task.py'`
   - success_definition: 技能侧训练资源就绪，G1 正式 lineage 有明确落点。
-  - blocker 备注: Route W 记录 zhuoqun 当前无 IsaacLab；预期先走部署分支。
 
-- [ ] V4：G1 正式训练与 gate + skill AMP clips 入库
+- [ ] V4：G1 正式训练与 gate + skill AMP clips 入库（训练已启动 2026-08-13）
+  - progress: zhuoqun tmux `t4_vault_g1`，CUDA 0，4096 env / 30000 iter / seed 42，
+    日志 `/tmp/t4_vault_g1_train.log` + 仓库 `logs/t4_vault_mimic/<ts>`；启动即
+    正式 lineage，前几百 iter 的数值健康检查兼作 probe（异常即杀重来）；evaluator
+    gate 待 V2 补齐后执行。
   - scope: 短 probe（数值健康 + 关键行为信号）→ 正式 lineage（预算 ~20000 iter，
     多卡，tmux）→ G1 strict evaluator（≥95%，≥100 trials）→ 成功 rollout 提取 66D
     skill AMP clips 入库（`legged_lab/envs/t4/datasets/` 下新目录 + manifest）→
@@ -267,5 +286,5 @@ tmux ls
 
 `implement`
 
-Reason: V0 active slice、文件面与验证路径清楚且本机可验证；V1 起需要 nubot/zhuoqun
-runtime 时再按各自 gate 推进。
+Reason: V4 训练挂机中（数值健康监控 + 定期 checkpoint 检查），V2 evaluator 是
+当前唯一待实现代码面；G1 gate 需要 V2 产物，挂机窗口内完成。

@@ -90,5 +90,19 @@ def train():
 
 
 if __name__ == "__main__":
-    train()
-    simulation_app.close()
+    # SimulationApp.close() can swallow tracebacks and hang in the headless
+    # container; print failures first and force the exit code via a watchdog.
+    exit_code = 0
+    try:
+        train()
+    except BaseException:
+        import traceback
+
+        traceback.print_exc()
+        exit_code = 1
+    finally:
+        import threading
+
+        threading.Timer(120.0, os._exit, args=(exit_code,)).start()
+        simulation_app.close()
+        os._exit(exit_code)

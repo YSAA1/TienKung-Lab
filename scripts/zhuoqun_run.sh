@@ -15,7 +15,8 @@ REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 ISAACSIM_ROOT="${ISAACSIM_ROOT:-$HOME/isaac-sim-standalone-5.1.0-linux-x86_64}"
 ISAACLAB_ROOT="${ISAACLAB_ROOT:-$HOME/IsaacLab}"
 ISAACLAB_LIB_DIR="${ISAACLAB_LIB_DIR:-$HOME/isaaclab-libs/lib}"
-DOCKER_IMAGE="${DOCKER_IMAGE:-t4-isaac-jammy}"
+# v2 adds libxt6 (MaterialX/GPU-foundation dependency), vulkan-tools, zenity.
+DOCKER_IMAGE="${DOCKER_IMAGE:-t4-isaac-jammy:v2}"
 CACHE_ROOT="${CACHE_ROOT:-$HOME/docker/isaac-sim}"
 
 if [ ! -x "$ISAACSIM_ROOT/python.sh" ]; then
@@ -51,6 +52,7 @@ docker_args=(
   -e ACCEPT_EULA=Y
   -e PRIVACY_CONSENT=Y
   -e OMNI_KIT_ACCEPT_EULA=YES
+  -e PYTHONUNBUFFERED=1
   -e "LD_LIBRARY_PATH=$ISAACLAB_LIB_DIR"
   -e "PYTHONPATH=$python_path"
   -v "$ISAACSIM_ROOT:$ISAACSIM_ROOT"

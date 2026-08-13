@@ -19,7 +19,6 @@ from isaaclab.managers import SceneEntityCfg
 from isaaclab.managers import TerminationTermCfg as DoneTerm
 from isaaclab.scene import InteractiveSceneCfg
 from isaaclab.sensors import ContactSensorCfg
-from isaaclab.terrains import TerrainImporterCfg
 from isaaclab.utils import configclass
 from isaaclab.utils.noise import AdditiveUniformNoiseCfg as Unoise
 
@@ -56,21 +55,34 @@ VELOCITY_RANGE = {
 # Penalize contact on every body except the vault support surfaces (feet, wrists).
 UNDESIRED_CONTACT_REGEX = r"^(?!(?:" + "|".join(T4_VAULT_END_EFFECTOR_BODY_NAMES) + r")$).+$"
 
+# Procedural ground material; also installed as the sim default material.
+GROUND_PHYSICS_MATERIAL = sim_utils.RigidBodyMaterialCfg(
+    friction_combine_mode="multiply",
+    restitution_combine_mode="multiply",
+    static_friction=1.0,
+    dynamic_friction=1.0,
+)
+
 
 @configclass
 class VaultSceneCfg(InteractiveSceneCfg):
     """Flat ground, the 1 m box from the reference scene, and the T4 robot."""
 
-    terrain = TerrainImporterCfg(
+    # A procedural cuboid slab instead of TerrainImporter's ground plane: the
+    # default GroundPlaneCfg references a Nucleus-hosted USD that is not
+    # reachable from the training hosts. Top surface sits at z=0 and the
+    # 800 m extent covers the env-origin grid at 4096 envs x 8 m spacing.
+    # visual_material is intentionally None: PreviewSurface material creation
+    # needs kit material extensions that fail in the headless container.
+    ground = AssetBaseCfg(
         prim_path="/World/ground",
-        terrain_type="plane",
-        collision_group=-1,
-        physics_material=sim_utils.RigidBodyMaterialCfg(
-            friction_combine_mode="multiply",
-            restitution_combine_mode="multiply",
-            static_friction=1.0,
-            dynamic_friction=1.0,
+        spawn=sim_utils.CuboidCfg(
+            size=(800.0, 800.0, 2.0),
+            collision_props=sim_utils.CollisionPropertiesCfg(),
+            physics_material=GROUND_PHYSICS_MATERIAL,
+            visual_material=None,
         ),
+        init_state=AssetBaseCfg.InitialStateCfg(pos=(0.0, 0.0, -1.0)),
     )
     robot: ArticulationCfg = T4_CFG.replace(prim_path="{ENV_REGEX_NS}/Robot")
     box = AssetBaseCfg(
@@ -78,7 +90,7 @@ class VaultSceneCfg(InteractiveSceneCfg):
         spawn=sim_utils.CuboidCfg(
             size=T4_VAULT_BOX_SIZE,
             collision_props=sim_utils.CollisionPropertiesCfg(),
-            visual_material=sim_utils.PreviewSurfaceCfg(diffuse_color=(0.2, 0.6, 0.2)),
+            visual_material=None,
         ),
         init_state=AssetBaseCfg.InitialStateCfg(pos=T4_VAULT_BOX_POS, rot=T4_VAULT_BOX_ROT),
     )
@@ -328,7 +340,7 @@ class T4VaultMimicEnvCfg(ManagerBasedRLEnvCfg):
         self.episode_length_s = 10.0
         self.sim.dt = 0.005
         self.sim.render_interval = self.decimation
-        self.sim.physics_material = self.scene.terrain.physics_material
+        self.sim.physics_material = GROUND_PHYSICS_MATERIAL
         self.sim.physx.gpu_max_rigid_patch_count = 10 * 2**15
 
 

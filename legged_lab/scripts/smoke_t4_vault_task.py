@@ -38,15 +38,21 @@ def _collision_prim_paths(stage, root_path: str) -> list[str]:
     root = stage.GetPrimAtPath(root_path)
     if not root.IsValid():
         return []
-    return [str(prim.GetPath()) for prim in Usd.PrimRange(root) if prim.HasAPI(UsdPhysics.CollisionAPI)]
+    # The converted robot USD is instanceable; plain traversal skips instance
+    # proxies and would miss every robot collision prim.
+    prim_range = Usd.PrimRange(root, Usd.TraverseInstanceProxies())
+    return [str(prim.GetPath()) for prim in prim_range if prim.HasAPI(UsdPhysics.CollisionAPI)]
 
 
 def main() -> None:
     env_cfg = T4VaultMimicEnvCfg()
     env_cfg.scene.num_envs = 2
+    print("[VAULT_SMOKE] creating env", flush=True)
     env = ManagerBasedRLEnv(cfg=env_cfg)
+    print("[VAULT_SMOKE] env created", flush=True)
 
     obs_dict, _ = env.reset()
+    print("[VAULT_SMOKE] reset done", flush=True)
     policy_obs = obs_dict["policy"]
     critic_obs = obs_dict["critic"]
     assert policy_obs.shape[1] == EXPECTED_POLICY_DIM, f"policy obs {policy_obs.shape} != {EXPECTED_POLICY_DIM}"
@@ -55,10 +61,14 @@ def main() -> None:
     assert action_dim == EXPECTED_ACTION_DIM, f"action dim {action_dim} != {EXPECTED_ACTION_DIM}"
 
     robot = env.scene["robot"]
-    import isaacsim.core.utils.stage as stage_utils
-
-    stage = stage_utils.get_current_stage()
+    stage = env.scene.stage
     collision_paths = _collision_prim_paths(stage, "/World/envs/env_0/Robot")
+    if not collision_paths:
+        env_prim = stage.GetPrimAtPath("/World/envs/env_0")
+        children = [str(p.GetPath()) for p in env_prim.GetChildren()] if env_prim.IsValid() else "<invalid>"
+        print(f"[VAULT_SMOKE] /World/envs/env_0 children: {children}", flush=True)
+        collision_paths = [str(prim.GetPath()) for prim in stage.Traverse() if prim.HasAPI(UsdPhysics.CollisionAPI)]
+        print(f"[VAULT_SMOKE] stage-wide collision prims: {len(collision_paths)}", flush=True)
     hand_collision = {
         "left": [p for p in collision_paths if "sphere_hand" in p.lower() or "/AL7" in p],
         "right": [p for p in collision_paths if "sphere_hand" in p.lower() or "/AR7" in p],
@@ -91,7 +101,22 @@ def main() -> None:
 
 
 if __name__ == "__main__":
+    # SimulationApp.close() can terminate the process with exit code 0 before a
+    # pending traceback is printed, so surface the failure explicitly first.
+    # It can also hang forever in the headless container, so a watchdog forces
+    # the real exit code after a grace period.
+    exit_code = 0
     try:
         main()
+    except BaseException:
+        import traceback
+
+        traceback.print_exc()
+        exit_code = 1
     finally:
+        import os
+        import threading
+
+        threading.Timer(60.0, os._exit, args=(exit_code,)).start()
         app.close()
+        os._exit(exit_code)

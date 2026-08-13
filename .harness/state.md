@@ -2,10 +2,13 @@
 
 - Planning surface: `docs/plans/2026-08-13--t4-vault-loco-merge-plan.md`
 - Approved Spec: `docs/specs/2026-08-13--t4-vault-loco-merge.md`（user-approved 2026-08-13）
-- Active item: V1 G1 mimic 任务移植（V0 参考动作入库与数据合同已于 2026-08-13 完成：32 项合同测试绿 + 对抗审查 ready-yes）
-- Verification path: `python -m pytest tests/test_t4_asset_migration.py -q` 与 `tests/test_t4_observation_contracts.py` 在任意机器可跑；IsaacLab/tmux gates verified on target nubot Linux GPU runtime via `scripts/nubot_run.sh`；zhuoqun 待 V3 preflight（Route W 已证当前无 IsaacLab）。
-- Next skill: `implement`（V1）
+- Active item: V4 G1 正式训练挂机监控（zhuoqun tmux `t4_vault_g1`，4096 env / 30000 iter / seed 42 / CUDA 0，日志 `/tmp/t4_vault_g1_train.log` + 仓库 `logs/t4_vault_mimic/<ts>`）+ V2 evaluator 并行补齐。V0/V1/V3 已完成（2026-08-13）。
+- Verification path: `python -m pytest tests/test_t4_asset_migration.py -q`（15 项，含 vault 合同）与 `tests/test_t4_observation_contracts.py` 在任意机器可跑；nubot gates via `scripts/nubot_run.sh`；zhuoqun gates via `scripts/zhuoqun_run.sh`（docker `t4-isaac-jammy:v2`）。
+- zhuoqun runtime 事实（V3 preflight 2026-08-13 PASS）: 容器 `t4-isaac-jammy:v2`（原镜像缺 `libxt6` 导致 kit GPU foundation 全灭，v2 已补）+ bind-mount isaac-sim 5.1 / IsaacLab / 仓库（`~/workspace/TienKung-Lab`，分支 t4-train）；torch CUDA 4 卡 + vulkaninfo 4×RTX 4090；坑：Nucleus 云资产不可达（场景不得引用外部 USD/材质）、instanceable USD 遍历需 TraverseInstanceProxies、`SimulationApp.close()` 会吞 traceback 且挂死（入口已加 watchdog）。vault 任务 smoke：policy 150D / critic 276D / action 27D / 50 步全有限 / 双手 sphere 碰撞 prim 存活（`/tmp/t4_vault_smoke_result.json`）。
+- Next skill: `implement`（V2 evaluator；V4 挂机监控中）
 - Parallel surface: Stage E teacher（`docs/plans/2026-08-12--t4-unified-depth-locomotion-plan.md`，M1/M2 与 `stage_e_prov5` nubot 训练中；下方 Stage E lineage/MDP 记录继续有效）
+- Hurdle surface: `docs/plans/2026-08-13--t4-hurdle-skill-plan.md`（Spec `docs/specs/2026-08-13--t4-hurdle-skill.md` user-approved 2026-08-13）：100m 障碍赛障碍 #2 连续跨栏，reward-only + warm-start 自 `prov5` 行走 checkpoint（optimizer/判别器重置，新 lineage），strict zero-contact，gate = 10 栏 @1.1m/0.3m/corridor 2.4m ≥90% @500 trials + 后退负例 0/100；H0（布局真值纯 Python 合同）待开工；开训 gate = zhuoqun preflight（共享 vault V3）+ prov5 稳定行走 checkpoint 搬运。
+- GPU 分配裁定（2026-08-13 用户）: zhuoqun 4 卡对半分——vault 2 卡（建议 CUDA 0,1）+ 跨栏 2 卡（建议 CUDA 2,3）并行；两侧正式 lineage 2 卡可接受（放宽 vault plan「4 卡级 runtime」条款）；nubot 4 卡仍 Stage E 专属；本机 1 卡渲染/调试。
 - Vault 数据事实: 参考动作 `overbox_1m_t4_mjcf_fps50.npz`（SHA256 `67dde158…130e0a0`，346 帧 @50Hz，27 关节 MJCF BFS 序，32 body）入库 `legged_lab/envs/t4/datasets/motion_tracking/`；PHP tracking 14 body 全部存在于 URDF；箱体 1m³ @ pos (0.38, 0.2, 0.5)；zip 内 depth student 证据无效（0% 成功率），`model_29999` 只作配方参考。
 - Long-running rule: 所有训练、GPU probe、批量 playback 和 evaluator 必须在 tmux 中运行。
 - Stop gate: M0 人工视觉复核已于 2026-08-12 通过，正式 AMP expert 与 Stage E 正式 lineage 解锁；后续 gate 变为 teacher evaluator 通过前不启动 student 蒸馏——该 gate 同样硬前置 vault-merge 的 G3（V7）。
