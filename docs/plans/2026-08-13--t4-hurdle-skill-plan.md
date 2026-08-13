@@ -26,9 +26,9 @@ hurdle-ring sub-terrain（环形细杆，间距/杆高随机，占比 0.10）
 
 ## Active Slice
 
-H2 prov7 lineage 启动与稳定性监控：nubot 双卡 torchrun 启动
-`stage_e_prov7_hurdle`，确认显存 / 吞吐 / episode length / 无 NaN 后停掉本机
-`stage_e_prov6_local`（产物保留）。
+H2 已完成（2026-08-14 01:10 prov7 于 nubot 启动，起步健康）；下一片 H3
+corridor evaluator + RED case，待开工指令。本机 `stage_e_prov6_local`（无跨栏）
+继续运行作为对照组（2026-08-14 用户裁定，不停止）。
 
 ## Non-goals
 
@@ -54,7 +54,7 @@ H2 prov7 lineage 启动与稳定性监控：nubot 双卡 torchrun 启动
 ```text
 H0 布局真值纯 Python 合同（本机 pytest，已绿）
   -> H1 hurdle sub-terrain 接入 Stage E 地形 + 本机 64-env smoke（已交付）
-  -> H2 prov7 nubot 双卡启动 + 稳定性监控 + 停 prov6_local（当前）
+  -> H2 prov7 nubot 双卡启动 + 稳定性监控（当前；prov6_local 留作对照组不停）
   -> H3 corridor evaluator + RED case（零策略完整 JSON 判失败；复用 vault V2 骨架）
   -> H4 gate 评估（≥90% @500 + 负例 + 报告项）+ 连续回放人工复核
 ```
@@ -71,7 +71,8 @@ H0/H1 本机已验证；H2 依赖 nubot 4 卡空闲（2026-08-14 已核实：pro
 
 ## Required Capabilities
 
-- nubot 2 张卡（CUDA 0,1）跑 prov7；其余 2 卡留空；本机 1 卡渲染 / 调试；tmux。
+- nubot 2 张卡（CUDA 0,1）跑 prov7；其余 2 卡留空；本机 1 卡跑 prov6_local
+  对照组（渲染 / 调试与其共存，显存允许时）；tmux。
 - zhuoqun 不再为跨栏保留 2 卡配额（原 2026-08-13 的 2+2 裁定中跨栏侧取消；
   vault 是否回收 4 卡由 vault surface 裁定）。
 - nubot 代码同步：GitHub fetch 不可靠时走 git bundle over SSH 惯例。
@@ -82,8 +83,8 @@ H0/H1 本机已验证；H2 依赖 nubot 4 卡空闲（2026-08-14 已核实：pro
 
 无可替代最终行为 gate 的 fallback。
 
-- nubot 不可用时 fallback 本机单卡 4096 env（显存风险，OOM 降 2048）；lineage
-  语义不变。
+- nubot 不可用时 fallback 本机单卡 4096 env（显存风险，OOM 降 2048；需用户裁定
+  是否让出 prov6 对照组的卡）；lineage 语义不变。
 - 课程在 hurdle 高难度行卡住：先渲染回放诊断（贴地犁杆 vs 不敢进杆区），再裁定
   课程 / AMP 旋钮调整；任何 MDP 合同变更 = 再开 lineage。
 
@@ -123,17 +124,20 @@ checkpoint 上通过跨栏 corridor gate（10 栏 ≥90% @500、零碰栏、后�
   - acceptance_criteria: 本机 64-env 3-iter smoke 无异常（地形生成成功、无 NaN）。
   - verification_commands: 本机 tmux `t4-hurdle-smoke`，日志 `/tmp/t4_hurdle_smoke.log`。
 
-- [ ] H2：prov7 lineage 启动与稳定性监控（当前）
+- [x] H2：prov7 lineage 启动与稳定性监控（2026-08-14 完成）
   - scope: 提交代码（lineage 锚定 commit）→ git bundle 同步 nubot → tmux
     `t4-stage-e` 双卡启动 `stage_e_prov7_hurdle`（CUDA_VISIBLE_DEVICES=0,1，
     torchrun nproc=2，每进程 2048 env，25000 iter）→ 监控起步（显存 / steps/s /
-    episode length / 无 NaN）→ 确认稳定后停本机 `t4-stage-e-local`
-    （prov6 产物保留）→ `.harness/state.md` 记 lineage。
+    episode length / 无 NaN）→ `.harness/state.md` 记 lineage。本机
+    `stage_e_prov6_local` 继续运行作对照组（2026-08-14 用户裁定，不停止）。
   - acceptance_criteria: prov7 跑过起步阶段无 OOM/NaN，日志与 TB 就位；prov6
-    checkpoint / 日志 / TB 完整保留。
+    对照组不受影响。
   - verification_commands: `tmux ls`（nubot）；`nvidia-smi`；
     `tail -f logs/t4-stage-e-teacher.stage_e_prov7_hurdle.log`
   - success_definition: Stage E 主线切换到含跨栏课程的 prov7。
+  - evidence（2026-08-14 01:14）: commit `e9f46fb` 同步 nubot（bundle ff）；
+    iter ~100 时 iteration time ~2.27s、显存 ~7.2GB/卡、mean reward 3.6→4.1、
+    episode length ~190→198 上行，无 NaN/OOM；prov6_local 对照组未受影响。
 
 - [ ] H3：corridor evaluator + RED case
   - scope: corridor 2.4 m + ordered gates 跨栏评估场景（gates 与零碰杆判定消费

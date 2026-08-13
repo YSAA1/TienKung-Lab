@@ -86,9 +86,9 @@
 - 算力（2026-08-14 用户指示）：prov7 用 **nubot 2 张卡、每卡 2048 env（合计
   4096），25000 iter 预算**；nubot 其余 2 卡留空闲；zhuoqun 4 卡不再为跨栏保留
   配额（原 2+2 裁定中跨栏侧取消，vault 是否回收 4 卡由 vault surface 裁定）；
-  本机 1 卡渲染 / 调试。
-- 地形分布变更 = 新 lineage 从零；`stage_e_prov6_local` 停止但产物保留（checkpoint
-  / 日志 / TB 不删），作为「无跨栏」对照与渲染素材。
+  本机 1 卡继续跑 prov6_local 对照组。
+- 地形分布变更 = 新 lineage 从零；`stage_e_prov6_local`（无跨栏地形）**继续在
+  本机运行作为对照组**（2026-08-14 用户裁定，不因 prov7 启动停止），产物保留。
 - 训练预算是上限不是成功标准；验收不得以 reward 曲线替代行为证据。
 - 代码遵循仓库 Black 120 / pre-commit；改动小而准。
 
