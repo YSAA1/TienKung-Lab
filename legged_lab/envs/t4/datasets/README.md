@@ -21,3 +21,11 @@ python legged_lab/scripts/t4_csv_motion_conversion.py \
 这些文件用于后续 T4 动作播放与生成 AMP expert。它们不能直接作为正式
 AMP 数据：手脚末端位置必须在 IsaacLab 中使用迁移后的 T4 模型重新计算，
 并与运行时 T4 AMP observation 使用同一个字段生成函数。
+
+`motion_tracking/` 保存 1m 翻箱 tracking 参考动作（vault-loco merge 切片，
+来源见目录内 `_manifest.json`）。npz 在磁盘上保持来源（PHP/MJCF BFS）关节序
+以保证字节级 lineage；一切消费必须经
+`legged_lab.assets.t4.tracking_motion.load_t4_tracking_motion` 按名重排到
+`T4_JOINT_NAMES`。body 世界量来自 PHP MJCF spherehand plant 前向仿真，在
+Stage E URDF plant 上仅作 RSI 初始化与奖励目标参考。合同测试在
+`tests/test_t4_asset_migration.py`。

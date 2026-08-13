@@ -1,0 +1,54 @@
+{
+  "schema_version": "t4_tracking_motion_manifest.v1",
+  "consumer": "legged_lab.assets.t4.tracking_motion.load_t4_tracking_motion",
+  "joint_order_policy": "npz 保持来源（PHP/MJCF BFS）关节序以保证字节级 lineage；一切消费必须经加载器按名重排到 T4_JOINT_NAMES",
+  "motions": {
+    "overbox_1m_t4_mjcf_fps50": {
+      "file": "overbox_1m_t4_mjcf_fps50.npz",
+      "sha256": "67dde1586388656a192fdba5f57ec4760df6bec6342a474b8313e6880130e0a0",
+      "num_frames": 346,
+      "fps": 50.0,
+      "num_joints": 27,
+      "num_bodies": 32,
+      "provenance": {
+        "archive": "t4_vault_student_minimal_20260812.zip",
+        "archive_path": "PHP-main/whole_body_tracking/Datasets/t4_dataset/overbox_1m_t4_mjcf_fps50.npz",
+        "generator": "PHP whole_body_tracking（MJCF spherehand plant），已退役为配方与数据来源",
+        "teacher_lineage": "t4_climb_teacher/2026-08-03_14-43-32_full_mjcf_4096env_30000it_seed42_20260803_scale05_gpu1"
+      },
+      "scene": {
+        "box_size_xyz": [1.0, 1.0, 1.0],
+        "box_pos_w": [0.38, 0.2, 0.5],
+        "box_quat_wxyz": [1.0, 0.0, 0.0, 0.0]
+      },
+      "tracking_contract": {
+        "anchor_body": "Trunk",
+        "foot_bodies": ["left_foot_link", "right_foot_link"],
+        "wrist_bodies": ["AL7", "AR7"],
+        "tracking_bodies": [
+          "Trunk",
+          "Hip_Roll_Left",
+          "Shank_Left",
+          "left_foot_link",
+          "Hip_Roll_Right",
+          "Shank_Right",
+          "right_foot_link",
+          "Waist_yaw",
+          "AL2",
+          "AL4",
+          "AL7",
+          "AR2",
+          "AR4",
+          "AR7"
+        ]
+      },
+      "bodies_missing_in_urdf": [
+        "left_sphere_hand_link",
+        "right_sphere_hand_link",
+        "left_sphere_hand_tip_link",
+        "right_sphere_hand_tip_link"
+      ],
+      "plant_caveat": "body_pos_w/body_quat_w/body_*_vel_w 来自 PHP MJCF spherehand plant 前向仿真；在 Stage E URDF plant 上仅作 RSI 初始化与奖励目标参考，关节角/速度可直接作为 mimic 参考。"
+    }
+  }
+}

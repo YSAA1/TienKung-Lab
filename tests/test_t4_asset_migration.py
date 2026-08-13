@@ -2,16 +2,22 @@ from __future__ import annotations
 
 import ast
 import csv
+import hashlib
 import json
-from pathlib import Path
 import subprocess
 import sys
 import xml.etree.ElementTree as ET
+from pathlib import Path
 
+import numpy as np
+import pytest
+
+from legged_lab.assets.t4.tracking_motion import body_indices, load_t4_tracking_motion
 
 ROOT = Path(__file__).resolve().parents[1]
 T4_ASSET = ROOT / "legged_lab/assets/t4"
 T4_DATA = ROOT / "legged_lab/envs/t4/datasets/motion_source"
+MOTION_TRACKING = ROOT / "legged_lab/envs/t4/datasets/motion_tracking"
 
 
 EXPECTED_JOINT_ORDER = (
@@ -93,7 +99,7 @@ def test_t4_initial_joint_pose_has_unique_isaaclab_match_rules() -> None:
     source = (T4_ASSET / "t4.py").read_text()
     assert '"."*' not in source
     assert '" .*"' not in source
-    assert 'joint_pos=T4_STANDING_JOINT_POS' in source
+    assert "joint_pos=T4_STANDING_JOINT_POS" in source
 
 
 def test_all_migrated_t4_motion_files_share_the_raw_contract() -> None:
@@ -156,7 +162,7 @@ def test_t4_motion_audit_script_generates_m0_contract_report() -> None:
 def test_t4_motion_playback_script_declares_isaaclab_m0_contract() -> None:
     script = ROOT / "legged_lab/scripts/playback_t4_motions.py"
     source = script.read_text()
-    assert "SCHEMA_VERSION = \"t4_motion_playback.v1\"" in source
+    assert 'SCHEMA_VERSION = "t4_motion_playback.v1"' in source
     assert "T4_JOINT_NAMES" in source
     assert "_xyzw_to_wxyz" in source
     assert "_motion_to_sim_joint_indices" in source
@@ -182,3 +188,122 @@ def test_t4_isaaclab_smoke_script_applies_runtime_compat_patch() -> None:
     assert "set(robot.joint_names)" in source
     assert "SETTING_BACKWARD_COMPATIBILITY" in compat_source
     assert "improve_patch_friction" in compat_source
+
+
+def _tracking_manifest() -> dict:
+    return json.loads((MOTION_TRACKING / "_manifest.json").read_text())
+
+
+def test_t4_tracking_motion_npz_matches_manifest() -> None:
+    manifest = _tracking_manifest()
+    assert manifest["schema_version"] == "t4_tracking_motion_manifest.v1"
+    assert set(manifest["motions"]) == {"overbox_1m_t4_mjcf_fps50"}
+
+    entry = manifest["motions"]["overbox_1m_t4_mjcf_fps50"]
+    npz_path = MOTION_TRACKING / entry["file"]
+    assert npz_path.is_file()
+    assert hashlib.sha256(npz_path.read_bytes()).hexdigest() == entry["sha256"]
+
+    motion = load_t4_tracking_motion(npz_path)
+    assert motion["fps"] == entry["fps"] == 50.0
+    assert motion["num_frames"] == entry["num_frames"] == 346
+    assert len(motion["joint_names"]) == entry["num_joints"] == 27
+    assert len(motion["body_names"]) == entry["num_bodies"] == 32
+    assert entry["scene"]["box_size_xyz"] == [1.0, 1.0, 1.0]
+
+
+def test_t4_tracking_motion_loader_reorders_to_t4_joint_names() -> None:
+    entry = _tracking_manifest()["motions"]["overbox_1m_t4_mjcf_fps50"]
+    npz_path = MOTION_TRACKING / entry["file"]
+    motion = load_t4_tracking_motion(npz_path)
+    assert motion["joint_names"] == EXPECTED_JOINT_ORDER
+    # The npz keeps the MJCF BFS source order, so the reorder must be non-trivial.
+    assert motion["source_joint_names"] != motion["joint_names"]
+
+    with np.load(npz_path, allow_pickle=False) as raw:
+        raw_names = [str(name) for name in raw["joint_names"]]
+        raw_joint_pos = np.asarray(raw["joint_pos"])
+        raw_joint_vel = np.asarray(raw["joint_vel"])
+    for target_index, name in enumerate(EXPECTED_JOINT_ORDER):
+        source_index = raw_names.index(name)
+        assert np.array_equal(motion["joint_pos"][:, target_index], raw_joint_pos[:, source_index])
+        assert np.array_equal(motion["joint_vel"][:, target_index], raw_joint_vel[:, source_index])
+
+
+def test_t4_tracking_motion_bodies_cover_php_tracking_contract() -> None:
+    entry = _tracking_manifest()["motions"]["overbox_1m_t4_mjcf_fps50"]
+    motion = load_t4_tracking_motion(MOTION_TRACKING / entry["file"])
+
+    contract = entry["tracking_contract"]
+    tracked = contract["tracking_bodies"]
+    # Pin the PHP recipe facts so a silent manifest edit cannot weaken the G1 contract.
+    assert contract["anchor_body"] == "Trunk"
+    assert contract["foot_bodies"] == ["left_foot_link", "right_foot_link"]
+    assert contract["wrist_bodies"] == ["AL7", "AR7"]
+    assert tracked == [
+        "Trunk",
+        "Hip_Roll_Left",
+        "Shank_Left",
+        "left_foot_link",
+        "Hip_Roll_Right",
+        "Shank_Right",
+        "right_foot_link",
+        "Waist_yaw",
+        "AL2",
+        "AL4",
+        "AL7",
+        "AR2",
+        "AR4",
+        "AR7",
+    ]
+    assert contract["anchor_body"] in tracked
+    assert set(contract["foot_bodies"] + contract["wrist_bodies"]) <= set(tracked)
+
+    urdf_links = {link.attrib["name"] for link in ET.parse(T4_ASSET / "urdf/t4_std.urdf").getroot().findall("link")}
+    assert set(tracked) <= set(motion["body_names"])
+    assert set(tracked) <= urdf_links
+    assert set(entry["bodies_missing_in_urdf"]) == set(motion["body_names"]) - urdf_links
+
+    assert len(body_indices(motion, tracked)) == len(tracked)
+    with pytest.raises(KeyError):
+        body_indices(motion, ["not_a_body"])
+
+    quat_norm = np.linalg.norm(motion["body_quat_w"], axis=-1)
+    assert np.allclose(quat_norm, 1.0, atol=1e-3)
+
+
+def test_t4_tracking_motion_loader_fails_fast_on_contract_drift(tmp_path) -> None:
+    entry = _tracking_manifest()["motions"]["overbox_1m_t4_mjcf_fps50"]
+    with np.load(MOTION_TRACKING / entry["file"], allow_pickle=False) as raw:
+        arrays = {key: np.asarray(raw[key]) for key in raw.files}
+
+    missing_key = {key: value for key, value in arrays.items() if key != "joint_vel"}
+    path = tmp_path / "missing_key.npz"
+    np.savez(path, **missing_key)
+    with pytest.raises(ValueError, match="missing required keys"):
+        load_t4_tracking_motion(path)
+
+    renamed = dict(arrays)
+    joint_names = renamed["joint_names"].copy()
+    joint_names[0] = "J_not_a_joint"
+    renamed["joint_names"] = joint_names
+    path = tmp_path / "renamed_joint.npz"
+    np.savez(path, **renamed)
+    with pytest.raises(ValueError, match="bijection"):
+        load_t4_tracking_motion(path)
+
+    poisoned = dict(arrays)
+    joint_pos = poisoned["joint_pos"].copy()
+    joint_pos[0, 0] = np.nan
+    poisoned["joint_pos"] = joint_pos
+    path = tmp_path / "nonfinite.npz"
+    np.savez(path, **poisoned)
+    with pytest.raises(ValueError, match="non-finite"):
+        load_t4_tracking_motion(path)
+
+    bad_fps = dict(arrays)
+    bad_fps["fps"] = np.asarray([np.nan])
+    path = tmp_path / "bad_fps.npz"
+    np.savez(path, **bad_fps)
+    with pytest.raises(ValueError, match="fps must be positive and finite"):
+        load_t4_tracking_motion(path)

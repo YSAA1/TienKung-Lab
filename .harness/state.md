@@ -1,12 +1,14 @@
 # Current State
 
-- Planning surface: `docs/plans/2026-08-12--t4-unified-depth-locomotion-plan.md`
-- Approved Spec: `docs/specs/2026-08-12--t4-unified-depth-locomotion.md`
-- Active item: M1/M2 T4 观测合同与 Stage E teacher 任务落地（M0 已全部通过，含人工视觉复核）
-- Verification path: `python -m pytest tests/test_t4_observation_contracts.py` 在任意机器可跑；IsaacLab/tmux gates verified on target nubot Linux GPU runtime via `scripts/nubot_run.sh`.
-- Next skill: `verify`
+- Planning surface: `docs/plans/2026-08-13--t4-vault-loco-merge-plan.md`
+- Approved Spec: `docs/specs/2026-08-13--t4-vault-loco-merge.md`（user-approved 2026-08-13）
+- Active item: V1 G1 mimic 任务移植（V0 参考动作入库与数据合同已于 2026-08-13 完成：32 项合同测试绿 + 对抗审查 ready-yes）
+- Verification path: `python -m pytest tests/test_t4_asset_migration.py -q` 与 `tests/test_t4_observation_contracts.py` 在任意机器可跑；IsaacLab/tmux gates verified on target nubot Linux GPU runtime via `scripts/nubot_run.sh`；zhuoqun 待 V3 preflight（Route W 已证当前无 IsaacLab）。
+- Next skill: `implement`（V1）
+- Parallel surface: Stage E teacher（`docs/plans/2026-08-12--t4-unified-depth-locomotion-plan.md`，M1/M2 与 `stage_e_prov5` nubot 训练中；下方 Stage E lineage/MDP 记录继续有效）
+- Vault 数据事实: 参考动作 `overbox_1m_t4_mjcf_fps50.npz`（SHA256 `67dde158…130e0a0`，346 帧 @50Hz，27 关节 MJCF BFS 序，32 body）入库 `legged_lab/envs/t4/datasets/motion_tracking/`；PHP tracking 14 body 全部存在于 URDF；箱体 1m³ @ pos (0.38, 0.2, 0.5)；zip 内 depth student 证据无效（0% 成功率），`model_29999` 只作配方参考。
 - Long-running rule: 所有训练、GPU probe、批量 playback 和 evaluator 必须在 tmux 中运行。
-- Stop gate: M0 人工视觉复核已于 2026-08-12 通过，正式 AMP expert 与 Stage E 正式 lineage 解锁；后续 gate 变为 teacher evaluator 通过前不启动 student 蒸馏。
+- Stop gate: M0 人工视觉复核已于 2026-08-12 通过，正式 AMP expert 与 Stage E 正式 lineage 解锁；后续 gate 变为 teacher evaluator 通过前不启动 student 蒸馏——该 gate 同样硬前置 vault-merge 的 G3（V7）。
 - Frozen contracts: `legged_lab/assets/t4/schemas.py` 冻结 AMP 66D、teacher 前向不对称 scan（1.4x1.2m @0.1，offset x=0.9，前向 0.2-1.6m，15x13=195 维）、depth 预处理与 proprio 96 维/10 帧；teacher actor obs 1155 维。
 - Running lineage: `stage_e_prov5`（commit `4d4e088`，从零训练，nubot tmux `t4-stage-e`，4x RTX 4090，每卡 1024 env，40000 iter 预算，日志 `logs/t4-stage-e-teacher.log`，TensorBoard tmux `t4-tb` 端口 8000）。启动于 2026-08-13 13:26，iter ~260 时 ~53k steps/s，`Mean symmetry loss` 正常输出。
 - MDP change (2026-08-13, commit `4d4e088`): 对照成功参照 VITAL_Lab T4_27 做了四项变更，任何一项都要求开新 lineage、从零训练，不得从 prov3/prov4 checkpoint 续：
