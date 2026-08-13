@@ -4,6 +4,7 @@ import ast
 import csv
 import hashlib
 import json
+import re
 import subprocess
 import sys
 import xml.etree.ElementTree as ET
@@ -12,6 +13,7 @@ from pathlib import Path
 import numpy as np
 import pytest
 
+from legged_lab.assets.t4 import vault_contract
 from legged_lab.assets.t4.tracking_motion import body_indices, load_t4_tracking_motion
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -68,7 +70,7 @@ def test_t4_asset_bundle_is_self_contained() -> None:
     urdf_path = T4_ASSET / "urdf/t4_std.urdf"
     assert urdf_path.is_file()
     assert (T4_ASSET / "mjcf/t4_std.xml").is_file()
-    assert len(list((T4_ASSET / "meshes").glob("*"))) == 33
+    assert len(list((T4_ASSET / "meshes").glob("*"))) == 34
     urdf = ET.parse(urdf_path).getroot()
     mesh_paths = [urdf_path.parent / mesh.attrib["filename"] for mesh in urdf.findall(".//mesh")]
     assert mesh_paths
@@ -307,3 +309,69 @@ def test_t4_tracking_motion_loader_fails_fast_on_contract_drift(tmp_path) -> Non
     np.savez(path, **bad_fps)
     with pytest.raises(ValueError, match="fps must be positive and finite"):
         load_t4_tracking_motion(path)
+
+
+def test_t4_vault_contract_matches_manifest_and_stage_e_plant() -> None:
+    entry = _tracking_manifest()["motions"]["overbox_1m_t4_mjcf_fps50"]
+    contract = entry["tracking_contract"]
+    assert vault_contract.T4_VAULT_ANCHOR_BODY_NAME == contract["anchor_body"]
+    assert list(vault_contract.T4_VAULT_FOOT_BODY_NAMES) == contract["foot_bodies"]
+    assert list(vault_contract.T4_VAULT_WRIST_BODY_NAMES) == contract["wrist_bodies"]
+    assert list(vault_contract.T4_VAULT_TRACKING_BODY_NAMES) == contract["tracking_bodies"]
+    assert vault_contract.T4_VAULT_END_EFFECTOR_BODY_NAMES == (
+        vault_contract.T4_VAULT_FOOT_BODY_NAMES + vault_contract.T4_VAULT_WRIST_BODY_NAMES
+    )
+
+    scene = entry["scene"]
+    assert list(vault_contract.T4_VAULT_BOX_SIZE) == scene["box_size_xyz"]
+    assert list(vault_contract.T4_VAULT_BOX_POS) == scene["box_pos_w"]
+    assert list(vault_contract.T4_VAULT_BOX_ROT) == scene["box_quat_wxyz"]
+
+    assert vault_contract.T4_VAULT_MOTION_FILE == MOTION_TRACKING / entry["file"]
+    assert vault_contract.T4_VAULT_MOTION_FILE.is_file()
+
+    # The mimic teacher must share the frozen Stage E 0.25 action scale.
+    teacher_source = (ROOT / "legged_lab/envs/t4/teacher_cfg.py").read_text()
+    match = re.search(r"action_scale=([0-9.]+)", teacher_source)
+    assert match is not None
+    assert vault_contract.T4_VAULT_ACTION_SCALE == float(match.group(1)) == 0.25
+
+
+def test_t4_urdf_carries_php_sphere_hand_collision() -> None:
+    root = ET.parse(T4_ASSET / "urdf/t4_std.urdf").getroot()
+    links = {link.attrib["name"]: link for link in root.findall("link")}
+    joints = {joint.attrib["name"]: joint for joint in root.findall("joint")}
+
+    for side, parent in (("left", "AL7"), ("right", "AR7")):
+        hand = links[f"{side}_sphere_hand_link"]
+        collisions = hand.findall("collision")
+        assert len(collisions) == 1
+        mesh = collisions[0].find("geometry/mesh")
+        assert mesh is not None
+        mesh_path = (T4_ASSET / "urdf" / mesh.attrib["filename"]).resolve()
+        assert mesh_path == (T4_ASSET / "meshes/half_sphere.obj").resolve()
+        assert mesh_path.is_file()
+        assert links[f"{side}_sphere_hand_tip_link"].find("collision") is not None
+
+        palm = joints[f"{side}_hand_palm_joint"]
+        assert palm.attrib["type"] == "fixed"
+        assert palm.find("parent").attrib["link"] == parent
+        assert palm.find("origin").attrib["xyz"] == "0 0 -0.031"
+
+        # Hand mass restores the reference plant's arm inertia after merging.
+        mass = hand.find("inertial/mass")
+        assert mass is not None and float(mass.attrib["value"]) == 0.124
+
+
+def test_t4_vault_mimic_env_cfg_consumes_the_contract() -> None:
+    source = (ROOT / "legged_lab/envs/t4/vault_mimic/vault_env_cfg.py").read_text()
+    assert "from legged_lab.assets.t4.t4 import T4_CFG" in source
+    assert "robot: ArticulationCfg = T4_CFG.replace" in source
+    assert "scale=T4_VAULT_ACTION_SCALE" in source
+    assert "motion_file=str(T4_VAULT_MOTION_FILE)" in source
+    assert "wrist_body_pos" in source
+    assert '"std": 0.15' in source
+    # Vendored MotionLoader must keep the fail-fast named reorder.
+    commands_source = (ROOT / "legged_lab/envs/t4/vault_mimic/mdp/commands.py").read_text()
+    assert "reorder_named_axis" in commands_source
+    assert "Named motion joints require robot_joint_names" in commands_source

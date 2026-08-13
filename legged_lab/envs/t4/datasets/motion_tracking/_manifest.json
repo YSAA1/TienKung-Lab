@@ -42,12 +42,7 @@
           "AR7"
         ]
       },
-      "bodies_missing_in_urdf": [
-        "left_sphere_hand_link",
-        "right_sphere_hand_link",
-        "left_sphere_hand_tip_link",
-        "right_sphere_hand_tip_link"
-      ],
+      "bodies_missing_in_urdf": [],
       "plant_caveat": "body_pos_w/body_quat_w/body_*_vel_w 来自 PHP MJCF spherehand plant 前向仿真；在 Stage E URDF plant 上仅作 RSI 初始化与奖励目标参考，关节角/速度可直接作为 mimic 参考。"
     }
   }
