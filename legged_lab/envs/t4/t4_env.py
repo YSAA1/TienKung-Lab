@@ -223,6 +223,17 @@ class T4LocoEnv(VecEnv):
         self.episode_max_radial_dist = torch.zeros(
             self.num_envs, dtype=torch.float, device=self.device, requires_grad=False
         )
+        # Evaluators need the terminal state before ``reset()`` overwrites the
+        # just-finished environment with its initial pose.
+        self.last_step_root_pos_w = torch.zeros(
+            self.num_envs, 3, dtype=torch.float, device=self.device, requires_grad=False
+        )
+        self.last_step_root_quat_w = torch.zeros(
+            self.num_envs, 4, dtype=torch.float, device=self.device, requires_grad=False
+        )
+        self.last_step_episode_max_radial_dist = torch.zeros(
+            self.num_envs, dtype=torch.float, device=self.device, requires_grad=False
+        )
 
         self.action = torch.zeros(
             self.num_envs, self.num_actions, dtype=torch.float, device=self.device, requires_grad=False
@@ -398,6 +409,9 @@ class T4LocoEnv(VecEnv):
 
         self.reset_buf, self.time_out_buf = self.check_reset()
         reward_buf = self.reward_manager.compute(self.step_dt)
+        self.last_step_root_pos_w.copy_(self.robot.data.root_pos_w)
+        self.last_step_root_quat_w.copy_(self.robot.data.root_quat_w)
+        self.last_step_episode_max_radial_dist.copy_(self.episode_max_radial_dist)
         self.reset_env_ids = self.reset_buf.nonzero(as_tuple=False).flatten()
         self.reset(self.reset_env_ids)
 

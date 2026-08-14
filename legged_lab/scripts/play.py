@@ -48,6 +48,12 @@ parser.add_argument(
     default=0.85,
     help="Fixed terrain difficulty in [0, 1] when --terrain is set.",
 )
+parser.add_argument(
+    "--terrain_types",
+    type=str,
+    default=None,
+    help="Comma-separated sub-terrain names to keep when --terrain is set (e.g. 'stairs_up_30,hurdles').",
+)
 parser.add_argument("--record", type=str, default=None, help="Write an MP4 and exit instead of looping the GUI.")
 parser.add_argument("--duration", type=float, default=12.0, help="Recorded seconds when --record is set.")
 
@@ -74,7 +80,19 @@ from isaaclab_tasks.utils import get_checkpoint_path
 from legged_lab.envs import *  # noqa:F401, F403
 from legged_lab.utils.cli_args import update_rsl_rl_cfg
 
+import gymnasium as gym  # noqa: E402
+import legged_lab.envs.t4.vault_mimic  # noqa: F401, E402
+import legged_lab.envs.t4.vault_skill  # noqa: F401, E402
+from legged_lab.envs.t4.vault_mimic.rsl_rl_compat import RslRlVecEnvWrapper  # noqa: E402
+
 patch_missing_physx_material_attributes()
+
+
+def _gym_play_task_name(task: str) -> str:
+    play_name = f"{task}_play"
+    if play_name in gym.registry and not task.endswith(("_play", "_eval")):
+        return play_name
+    return task
 
 
 def play():
@@ -82,6 +100,9 @@ def play():
     env_cfg: BaseEnvCfg  # noqa:F405
 
     env_class_name = args_cli.task
+    if env_class_name not in task_registry.train_cfgs:
+        _play_gym_manager_task(env_class_name)
+        return
     env_cfg, agent_cfg = task_registry.get_cfgs(env_class_name)
 
     env_cfg.noise.add_noise = False
@@ -105,6 +126,15 @@ def play():
         env_cfg.scene.terrain_generator.num_rows = 5
         env_cfg.scene.terrain_generator.num_cols = 5
         env_cfg.scene.terrain_generator.curriculum = False
+        if args_cli.terrain_types:
+            keep = [name.strip() for name in args_cli.terrain_types.split(",") if name.strip()]
+            sub_terrains = env_cfg.scene.terrain_generator.sub_terrains
+            missing = [name for name in keep if name not in sub_terrains]
+            if missing:
+                raise ValueError(f"unknown sub-terrains {missing}; available: {sorted(sub_terrains)}")
+            env_cfg.scene.terrain_generator.sub_terrains = {name: sub_terrains[name] for name in keep}
+            for sub_cfg in env_cfg.scene.terrain_generator.sub_terrains.values():
+                sub_cfg.proportion = 1.0 / len(keep)
 
     if args_cli.num_envs is not None:
         env_cfg.scene.num_envs = args_cli.num_envs
@@ -152,6 +182,41 @@ def play():
             obs, _, _, _ = env.step(actions)
 
 
+def _play_gym_manager_task(task: str) -> None:
+    """Play G1/G2 vault tasks registered through gym, not task_registry."""
+    gym_task = _gym_play_task_name(task)
+    if gym_task not in gym.registry:
+        known = sorted(list(task_registry.train_cfgs) + [k for k in gym.registry if k.startswith("t4_")])
+        raise KeyError(f"unknown task {task!r}; known: {known}")
+    spec = gym.spec(gym_task)
+    env_cfg = spec.kwargs["env_cfg_entry_point"]()
+    agent_cfg = spec.kwargs["rsl_rl_cfg_entry_point"]()
+    if args_cli.num_envs is not None:
+        env_cfg.scene.num_envs = args_cli.num_envs
+    else:
+        env_cfg.scene.num_envs = 1
+    agent_cfg = update_rsl_rl_cfg(agent_cfg, args_cli)
+    env_cfg.seed = agent_cfg.seed
+    env_cfg.sim.device = args_cli.device if args_cli.device is not None else agent_cfg.device
+    env = RslRlVecEnvWrapper(gym.make(gym_task, cfg=env_cfg))
+
+    log_root_path = os.path.abspath(os.path.join("logs", agent_cfg.experiment_name))
+    print(f"[INFO] Loading experiment from directory: {log_root_path}")
+    resume_path = get_checkpoint_path(log_root_path, agent_cfg.load_run, agent_cfg.load_checkpoint)
+    runner = OnPolicyRunner(env, agent_cfg.to_dict(), log_dir=os.path.dirname(resume_path), device=env.device)
+    runner.load(resume_path, load_optimizer=False)
+    policy = runner.get_inference_policy(device=env.device)
+    obs, _ = env.get_observations()
+    print(f"[INFO] playing gym task {gym_task} from {resume_path}", flush=True)
+    if args_cli.record:
+        _record_play_video(env, policy, obs, args_cli.record, args_cli.duration)
+        return
+    while simulation_app.is_running():
+        with torch.inference_mode():
+            actions = policy(obs)
+            obs, _, _, _ = env.step(actions)
+
+
 def _record_play_video(env, policy, obs, output_path: str, duration_s: float) -> None:
     import imageio.v2 as imageio
     import isaaclab.sim as sim_utils
@@ -177,7 +242,11 @@ def _record_play_video(env, policy, obs, output_path: str, duration_s: float) ->
     camera._initialize_callback(None)
     camera.reset()
 
-    n_steps = max(1, int(round(duration_s / env.step_dt)))
+    step_dt = getattr(env, "step_dt", None) or env.unwrapped.step_dt
+    robot = getattr(env, "robot", None)
+    if robot is None:
+        robot = env.unwrapped.scene["robot"]
+    n_steps = max(1, int(round(duration_s / step_dt)))
     frames: list = []
     look_offset = torch.tensor([0.0, 0.0, 0.45], device=env.device)
     eye_offset = torch.tensor([-2.8, -2.2, 1.6], device=env.device)
@@ -186,23 +255,25 @@ def _record_play_video(env, policy, obs, output_path: str, duration_s: float) ->
         with torch.inference_mode():
             actions = policy(obs)
             obs, _, _, _ = env.step(actions)
-        root = env.robot.data.root_pos_w[0]
+        root = robot.data.root_pos_w[0]
         camera.set_world_poses_from_view(
             eyes=(root + eye_offset).unsqueeze(0),
             targets=(root + look_offset).unsqueeze(0),
         )
-        env.sim.render()
-        camera.update(dt=env.step_dt)
+        sim = getattr(env, "sim", None) or env.unwrapped.sim
+        sim.render()
+        camera.update(dt=step_dt)
         rgb = camera.data.output["rgb"][0, ..., :3].cpu().numpy()
         if rgb.size:
             frames.append(rgb.copy())
 
     os.makedirs(os.path.dirname(os.path.abspath(output_path)) or ".", exist_ok=True)
-    imageio.mimwrite(output_path, frames, fps=max(1, int(round(1.0 / env.step_dt))), quality=8, macro_block_size=1)
+    imageio.mimwrite(output_path, frames, fps=max(1, int(round(1.0 / step_dt))), quality=8, macro_block_size=1)
     print(f"[INFO] wrote {output_path} ({len(frames)} frames)")
 
 
 if __name__ == "__main__":
     play()
-    if not args_cli.record:
-        simulation_app.close()
+    if args_cli.record:
+        os._exit(0)
+    simulation_app.close()
