@@ -18,11 +18,13 @@ Usage (from the repo root so the vendored packages resolve):
 
     python -m legged_lab.scripts.sim2sim_t4_depth_student                 # auto-pick latest local checkpoint
     python -m legged_lab.scripts.sim2sim_t4_depth_student \
-        --checkpoint path/to/model_1000.pt                                 # interactive
+        --checkpoint path/to/model_1000.pt                                 # interactive, depth preview included
     python -m legged_lab.scripts.sim2sim_t4_depth_student \
         --checkpoint path/to/model_1000.pt --record out.mp4 --duration 20
     python -m legged_lab.scripts.sim2sim_t4_depth_student \
         --checkpoint path/to/model_1000.pt --hurdles      # hurdle course
+    python -m legged_lab.scripts.sim2sim_t4_depth_student \
+        --checkpoint path/to/model_1000.pt --rule-contract # 100m obstacle course
 """
 
 from __future__ import annotations
@@ -34,6 +36,7 @@ import sys
 import tempfile
 from pathlib import Path
 
+import cv2
 import mujoco
 import numpy as np
 import torch
@@ -196,8 +199,431 @@ DEPTH_CAM_POS = (0.10, 0.0, 0.03)
 SPAWN_Z = 0.85
 
 
-def build_model_xml(hurdles: bool) -> str:
-    """Return a patched MJCF: camera on Trunk, optional hurdle boxes, all world geoms collision-active."""
+def _xml_body_block(
+    name: str,
+    pos: tuple[float, float, float],
+    geoms: list[str],
+    quat: tuple[float, float, float, float] | None = None,
+) -> str:
+    attrs = [f'name="{name}"', f'pos="{" ".join(f"{value:.4f}" for value in pos)}"']
+    if quat is not None:
+        attrs.append(f'quat="{" ".join(f"{value:.4f}" for value in quat)}"')
+    lines = [f"\n    <body {' '.join(attrs)}>"]
+    lines.extend(f"\n      {geom}" for geom in geoms)
+    lines.append("\n    </body>")
+    return "".join(lines)
+
+
+def _xml_box_geom(
+    name: str,
+    size: tuple[float, float, float],
+    *,
+    pos: tuple[float, float, float] = (0.0, 0.0, 0.0),
+    quat: tuple[float, float, float, float] | None = None,
+    rgba: tuple[float, float, float, float] | None = None,
+    density: float = 0.0,
+) -> str:
+    attrs = [f'name="{name}"', 'type="box"', f'size="{" ".join(f"{value:.4f}" for value in size)}"']
+    if pos != (0.0, 0.0, 0.0):
+        attrs.append(f'pos="{" ".join(f"{value:.4f}" for value in pos)}"')
+    if quat is not None:
+        attrs.append(f'quat="{" ".join(f"{value:.4f}" for value in quat)}"')
+    if rgba is not None:
+        attrs.append(f'rgba="{" ".join(f"{value:.4f}" for value in rgba)}"')
+    attrs.append(f'density="{density:.1f}"')
+    return f"<geom {' '.join(attrs)}/>"
+
+
+def _xml_cylinder_geom(
+    name: str,
+    size: tuple[float, float],
+    *,
+    pos: tuple[float, float, float] = (0.0, 0.0, 0.0),
+    quat: tuple[float, float, float, float] | None = None,
+    rgba: tuple[float, float, float, float] | None = None,
+    density: float = 0.0,
+) -> str:
+    attrs = [f'name="{name}"', 'type="cylinder"', f'size="{" ".join(f"{value:.4f}" for value in size)}"']
+    if pos != (0.0, 0.0, 0.0):
+        attrs.append(f'pos="{" ".join(f"{value:.4f}" for value in pos)}"')
+    if quat is not None:
+        attrs.append(f'quat="{" ".join(f"{value:.4f}" for value in quat)}"')
+    if rgba is not None:
+        attrs.append(f'rgba="{" ".join(f"{value:.4f}" for value in rgba)}"')
+    attrs.append(f'density="{density:.1f}"')
+    return f"<geom {' '.join(attrs)}/>"
+
+
+def _quat_from_axis_angle(axis: tuple[float, float, float], angle_deg: float) -> tuple[float, float, float, float]:
+    axis_vec = np.asarray(axis, dtype=np.float64)
+    norm = np.linalg.norm(axis_vec)
+    if norm == 0:
+        raise ValueError("axis must be non-zero")
+    axis_vec = axis_vec / norm
+    half = math.radians(angle_deg) * 0.5
+    s = math.sin(half)
+    return (math.cos(half), float(axis_vec[0] * s), float(axis_vec[1] * s), float(axis_vec[2] * s))
+
+
+def _add_step_ramp(
+    parts: list[str],
+    *,
+    prefix: str,
+    x_start: float,
+    length: float,
+    width: float,
+    z_start: float,
+    height: float,
+    steps: int,
+    rgba: tuple[float, float, float, float],
+) -> float:
+    step_length = length / steps
+    step_height = abs(height) / steps
+    direction = 1.0 if height >= 0.0 else -1.0
+    for idx in range(steps):
+        parts.append(
+            _xml_body_block(
+                f"{prefix}_{idx}",
+                (x_start + (idx + 0.5) * step_length, 0.0, z_start + direction * (idx + 0.5) * step_height),
+                [
+                    _xml_box_geom(
+                        f"{prefix}_{idx}_geom",
+                        (step_length * 0.5, width * 0.5, step_height * 0.5),
+                        rgba=rgba,
+                    )
+                ],
+            )
+        )
+    return x_start + length
+
+
+def _add_ramp(
+    parts: list[str],
+    *,
+    name: str,
+    x_start: float,
+    length: float,
+    width: float,
+    angle_deg: float,
+    z_start: float,
+    axis: str = "y",
+    thickness: float = 0.06,
+    rgba: tuple[float, float, float, float] = (0.7, 0.7, 0.7, 1.0),
+) -> float:
+    quat = _quat_from_axis_angle((0.0, 1.0, 0.0) if axis == "y" else (1.0, 0.0, 0.0), angle_deg)
+    center = (
+        x_start + 0.5 * length * math.cos(math.radians(angle_deg)) if axis == "y" else x_start + 0.5 * length,
+        0.0,
+        z_start + 0.5 * length * math.sin(math.radians(angle_deg)) + 0.5 * thickness,
+    )
+    parts.append(
+        _xml_body_block(
+            name,
+            center,
+            [
+                _xml_box_geom(
+                    f"{name}_geom",
+                    (length * 0.5, width * 0.5, thickness * 0.5),
+                    quat=quat,
+                    rgba=rgba,
+                )
+            ],
+        )
+    )
+    return x_start + length
+
+
+def build_rule_contract_course() -> str:
+    """Build a conservative 100 m obstacle course from the local rule contract."""
+    parts: list[str] = []
+    x = 2.0
+
+    parts.append("\n    <!-- 1. continuous slope -->")
+    x = _add_ramp(
+        parts,
+        name="obstacle_1_slope",
+        x_start=x,
+        length=7.4,
+        width=2.4,
+        angle_deg=15.0,
+        z_start=0.0,
+        axis="y",
+        thickness=0.08,
+        rgba=(0.72, 0.72, 0.72, 1.0),
+    )
+
+    parts.append("\n    <!-- 2. continuous hurdles -->")
+    hurdle_start = x + 2.0
+    for idx in range(10):
+        bar_x = hurdle_start + idx * 1.1
+        parts.append(
+            _xml_body_block(
+                f"obstacle_2_hurdle_{idx + 1}",
+                (bar_x, 0.0, 0.15),
+                [
+                    _xml_box_geom(
+                        f"obstacle_2_hurdle_{idx + 1}_geom",
+                        (0.025, 1.2, 0.15),
+                        rgba=(0.88, 0.49, 0.12, 1.0),
+                    )
+                ],
+            )
+        )
+    x = hurdle_start + 9 * 1.1 + 0.2
+
+    parts.append("\n    <!-- 3. cross slope -->")
+    parts.append(
+        _xml_body_block(
+            "obstacle_3_cross_slope",
+            (x + 3.0, 0.0, 0.0),
+            [
+                _xml_box_geom(
+                    "obstacle_3_cross_slope_geom",
+                    (3.0, 1.5, 0.06),
+                    quat=_quat_from_axis_angle((1.0, 0.0, 0.0), 15.0),
+                    rgba=(0.64, 0.64, 0.76, 1.0),
+                )
+            ],
+        )
+    )
+    x += 6.0
+
+    parts.append("\n    <!-- 4. weave poles -->")
+    pole_y = [0.7, -0.7, 0.7, -0.7, 0.7]
+    for idx, y in enumerate(pole_y):
+        parts.append(
+            _xml_body_block(
+                f"obstacle_4_pole_{idx + 1}",
+                (x + idx * 1.1, y, 0.75),
+                [
+                    _xml_cylinder_geom(
+                        f"obstacle_4_pole_{idx + 1}_geom",
+                        (0.015, 0.75),
+                        rgba=(0.93, 0.80, 0.18, 1.0),
+                    )
+                ],
+            )
+        )
+    x += 5.0
+
+    parts.append("\n    <!-- 5. symmetric slope -->")
+    x = _add_ramp(
+        parts,
+        name="obstacle_5_up_slope",
+        x_start=x,
+        length=1.5,
+        width=3.5,
+        angle_deg=20.0,
+        z_start=0.0,
+        axis="y",
+        thickness=0.08,
+        rgba=(0.69, 0.69, 0.69, 1.0),
+    )
+    parts.append(
+        _xml_body_block(
+            "obstacle_5_peak",
+            (x + 0.15, 0.0, 0.54),
+            [
+                _xml_box_geom(
+                    "obstacle_5_peak_geom",
+                    (0.15, 1.75, 0.04),
+                    rgba=(0.69, 0.69, 0.69, 1.0),
+                )
+            ],
+        )
+    )
+    x = _add_ramp(
+        parts,
+        name="obstacle_5_down_slope",
+        x_start=x + 0.15,
+        length=1.5,
+        width=3.5,
+        angle_deg=-20.0,
+        z_start=0.54,
+        axis="y",
+        thickness=0.08,
+        rgba=(0.69, 0.69, 0.69, 1.0),
+    )
+
+    parts.append("\n    <!-- 6. stairs -->")
+    x = _add_step_ramp(
+        parts,
+        prefix="obstacle_6_stair",
+        x_start=x + 1.0,
+        length=5.04,
+        width=3.0,
+        z_start=0.0,
+        height=0.9,
+        steps=6,
+        rgba=(0.58, 0.50, 0.42, 1.0),
+    )
+    x = _add_step_ramp(
+        parts,
+        prefix="obstacle_6_down",
+        x_start=x,
+        length=5.04,
+        width=3.0,
+        z_start=0.9,
+        height=-0.9,
+        steps=6,
+        rgba=(0.58, 0.50, 0.42, 1.0),
+    )
+
+    parts.append("\n    <!-- 7. S bridge -->")
+    bridge_segments = [
+        (2.0, 0.0, 0.10, 0.0),
+        (2.0, 0.15, 0.10, 8.0),
+        (2.0, -0.15, 0.10, -8.0),
+        (2.0, 0.15, 0.10, 8.0),
+        (2.0, 0.0, 0.10, 0.0),
+    ]
+    bridge_x = x + 1.0
+    for idx, (seg_len, offset_y, height, angle_deg) in enumerate(bridge_segments):
+        quat = _quat_from_axis_angle((0.0, 0.0, 1.0), angle_deg)
+        parts.append(
+            _xml_body_block(
+                f"obstacle_7_bridge_{idx + 1}",
+                (bridge_x + seg_len * 0.5, offset_y, height),
+                [
+                    _xml_box_geom(
+                        f"obstacle_7_bridge_{idx + 1}_deck",
+                        (seg_len * 0.5, 0.25, 0.04),
+                        quat=quat,
+                        rgba=(0.34, 0.49, 0.74, 1.0),
+                    ),
+                    _xml_box_geom(
+                        f"obstacle_7_bridge_{idx + 1}_rail_l",
+                        (seg_len * 0.5, 0.03, 0.10),
+                        pos=(0.0, 0.28, 0.10),
+                        quat=quat,
+                        rgba=(0.28, 0.40, 0.62, 1.0),
+                    ),
+                    _xml_box_geom(
+                        f"obstacle_7_bridge_{idx + 1}_rail_r",
+                        (seg_len * 0.5, 0.03, 0.10),
+                        pos=(0.0, -0.28, 0.10),
+                        quat=quat,
+                        rgba=(0.28, 0.40, 0.62, 1.0),
+                    ),
+                ],
+            )
+        )
+        bridge_x += seg_len
+    x = bridge_x + 1.0
+
+    parts.append("\n    <!-- 8. jump platform -->")
+    parts.append(
+        _xml_body_block(
+            "obstacle_8_platform",
+            (x + 1.2, 0.0, 0.5),
+            [
+                _xml_box_geom(
+                    "obstacle_8_platform_geom",
+                    (1.2, 1.2, 0.5),
+                    rgba=(0.45, 0.31, 0.23, 1.0),
+                )
+            ],
+        )
+    )
+    x += 4.0
+
+    parts.append("\n    <!-- 9. crawl tunnel -->")
+    tunnel_x = x + 0.5
+    parts.append(
+        _xml_body_block(
+            "obstacle_9_tunnel",
+            (tunnel_x + 3.0, 0.0, 0.0),
+            [
+                _xml_box_geom(
+                    "obstacle_9_tunnel_floor",
+                    (3.0, 1.0, 0.025),
+                    pos=(0.0, 0.0, 0.025),
+                    rgba=(0.58, 0.58, 0.58, 1.0),
+                ),
+                _xml_box_geom(
+                    "obstacle_9_tunnel_roof",
+                    (3.0, 1.0, 0.025),
+                    pos=(0.0, 0.0, 0.525),
+                    rgba=(0.36, 0.36, 0.36, 1.0),
+                ),
+                _xml_box_geom(
+                    "obstacle_9_tunnel_wall_l",
+                    (3.0, 0.05, 0.25),
+                    pos=(0.0, 1.0, 0.25),
+                    rgba=(0.42, 0.42, 0.42, 1.0),
+                ),
+                _xml_box_geom(
+                    "obstacle_9_tunnel_wall_r",
+                    (3.0, 0.05, 0.25),
+                    pos=(0.0, -1.0, 0.25),
+                    rgba=(0.42, 0.42, 0.42, 1.0),
+                ),
+            ],
+        )
+    )
+    x = tunnel_x + 6.0
+
+    parts.append("\n    <!-- 10. narrow L turn -->")
+    l_x = x + 0.5
+    parts.append(
+        _xml_body_block(
+            "obstacle_10_l_turn_x",
+            (l_x + 1.75, 0.0, 0.02),
+            [
+                _xml_box_geom(
+                    "obstacle_10_l_turn_x_floor",
+                    (1.75, 0.30, 0.02),
+                    rgba=(0.52, 0.52, 0.52, 1.0),
+                ),
+                _xml_box_geom(
+                    "obstacle_10_l_turn_x_wall_l",
+                    (1.75, 0.03, 0.60),
+                    pos=(0.0, 0.33, 0.60),
+                    rgba=(0.35, 0.35, 0.35, 1.0),
+                ),
+                _xml_box_geom(
+                    "obstacle_10_l_turn_x_wall_r",
+                    (1.75, 0.03, 0.60),
+                    pos=(0.0, -0.33, 0.60),
+                    rgba=(0.35, 0.35, 0.35, 1.0),
+                ),
+            ],
+        )
+    )
+    parts.append(
+        _xml_body_block(
+            "obstacle_10_l_turn_corner",
+            (l_x + 3.5, -1.25, 0.02),
+            [
+                _xml_box_geom(
+                    "obstacle_10_l_turn_corner_floor",
+                    (0.30, 1.25, 0.02),
+                    rgba=(0.52, 0.52, 0.52, 1.0),
+                ),
+                _xml_box_geom(
+                    "obstacle_10_l_turn_corner_wall_l",
+                    (0.03, 1.25, 0.60),
+                    pos=(0.33, 0.0, 0.60),
+                    rgba=(0.35, 0.35, 0.35, 1.0),
+                ),
+                _xml_box_geom(
+                    "obstacle_10_l_turn_corner_wall_r",
+                    (0.03, 1.25, 0.60),
+                    pos=(-0.33, 0.0, 0.60),
+                    rgba=(0.35, 0.35, 0.35, 1.0),
+                ),
+            ],
+            quat=_quat_from_axis_angle((0.0, 0.0, 1.0), -90.0),
+        )
+    )
+    x = l_x + 4.0
+
+    parts.append(_xml_body_block("obstacle_10_finish", (100.0, 0.0, 0.01), [_xml_box_geom("obstacle_10_finish_geom", (0.05, 1.5, 0.01), rgba=(0.20, 0.74, 0.34, 1.0))]))
+    return "".join(parts)
+
+
+def build_model_xml(hurdles: bool, rule_contract: bool) -> str:
+    """Return a patched MJCF: camera on Trunk, optional obstacle course, all world geoms collision-active."""
     xml = MJCF.read_text()
     # The patched XML lives in the temp dir, so pin the mesh dir to an
     # absolute path (the original uses a relative `meshdir`).
@@ -222,6 +648,8 @@ def build_model_xml(hurdles: bool) -> str:
     world_anchor = xml.index("<worldbody>")
     world_end = xml.index("</worldbody>")
     extras = ""
+    if rule_contract:
+        extras += build_rule_contract_course()
     if hurdles:
         # Stage E hurdle course: 0.3 m tall, 0.4 m deep boxes every 2 m for 20 m.
         for step in range(1, 11):
@@ -244,8 +672,8 @@ def build_model_xml(hurdles: bool) -> str:
 class DepthStudentSim:
     """Loads the depth student checkpoint and runs it against the MuJoCo T4."""
 
-    def __init__(self, checkpoint: str, hurdles: bool):
-        xml_path = build_model_xml(hurdles)
+    def __init__(self, checkpoint: str, hurdles: bool, rule_contract: bool):
+        xml_path = build_model_xml(hurdles, rule_contract)
         self.model = mujoco.MjModel.from_xml_path(xml_path)
         self.model.opt.timestep = SIM_DT
         self.data = mujoco.MjData(self.model)
@@ -290,6 +718,7 @@ class DepthStudentSim:
         self.depth_option = mujoco.MjvOption()
         self.depth_option.geomgroup = np.array([1, 0, 0, 0, 0, 0], dtype=np.uint8)
         self.depth_cam_id = mujoco.mj_name2id(self.model, mujoco.mjtObj.mjOBJ_CAMERA, "depth_cam")
+        self.last_depth_raw = np.full((DEPTH_HEIGHT, DEPTH_WIDTH), DEPTH_INVALID_VALUE, dtype=np.float32)
 
         # Buffers. The env zero-fills history at reset (CircularBuffer.reset),
         # so start zeroed rather than repeating the first frame.
@@ -339,11 +768,36 @@ class DepthStudentSim:
         # beyond the D455 max range they must fill the raw invalid value like
         # the IsaacLab stream does (raw 1.0 -> normalized 0.286).
         raw = np.where((depth < 0) | (depth > DEPTH_MAX_RANGE), DEPTH_INVALID_VALUE, depth)
+        self.last_depth_raw = raw
         raw = np.clip(raw, DEPTH_CLIP_RANGE[0], DEPTH_CLIP_RANGE[1])
         normalized = (raw - DEPTH_CLIP_RANGE[0]) / (DEPTH_CLIP_RANGE[1] - DEPTH_CLIP_RANGE[0])
         tensor = torch.from_numpy(normalized).unsqueeze(0).unsqueeze(0)
         resized = F.interpolate(tensor, size=DEPTH_POLICY_SIZE, mode="area").squeeze(0).squeeze(0)
         return resized.numpy()
+
+    def depth_preview_image(self) -> np.ndarray:
+        """Return a color-mapped depth preview for the live GUI."""
+        depth = np.nan_to_num(
+            self.last_depth_raw,
+            nan=DEPTH_INVALID_VALUE,
+            posinf=DEPTH_INVALID_VALUE,
+            neginf=DEPTH_CLIP_RANGE[0],
+        )
+        depth = np.clip(depth, DEPTH_CLIP_RANGE[0], DEPTH_CLIP_RANGE[1])
+        normalized = (depth - DEPTH_CLIP_RANGE[0]) / (DEPTH_CLIP_RANGE[1] - DEPTH_CLIP_RANGE[0])
+        preview = (normalized * 255.0).astype(np.uint8)
+        preview = cv2.applyColorMap(preview, cv2.COLORMAP_TURBO)
+        cv2.putText(
+            preview,
+            "depth_cam 0.2-3.0m",
+            (12, 24),
+            cv2.FONT_HERSHEY_SIMPLEX,
+            0.6,
+            (255, 255, 255),
+            2,
+            cv2.LINE_AA,
+        )
+        return preview
 
     def _update_depth_history(self) -> None:
         frame = self._read_depth()
@@ -449,19 +903,19 @@ def interactive_run(sim: DepthStudentSim, duration: float) -> dict:
         viewer.cam.type = mujoco.mjtCamera.mjCAMERA_FREE
         viewer.cam.fixedcamid = -1
         viewer.cam.trackbodyid = -1
-        viewer.cam.distance = 4.2
+        viewer.cam.distance = 5.8
         viewer.cam.azimuth = 140.0
-        viewer.cam.elevation = -15.0
-        viewer.cam.lookat[:] = [sim.data.qpos[0], sim.data.qpos[1], 0.55]
+        viewer.cam.elevation = -20.0
+        viewer.cam.lookat[:] = [sim.data.qpos[0], sim.data.qpos[1], 0.82]
 
-    # GLFW key codes. Support both laptop-friendly keys and numpad keys.
+    # GLFW key codes. Keep off WASD to avoid collisions with existing bindings.
     moves = {
-        87: (0, 0.2),  # W
-        83: (0, -0.2),  # S
-        81: (1, 0.2),  # Q
-        69: (1, -0.2),  # E
-        65: (2, 0.2),  # A
-        68: (2, -0.2),  # D
+        73: (0, 0.2),  # I
+        75: (0, -0.2),  # K
+        85: (1, 0.2),  # U
+        79: (1, -0.2),  # O
+        74: (2, 0.2),  # J
+        76: (2, -0.2),  # L
         88: (0, 0.0),  # X: stop
         32: (0, 0.0),  # Space: stop
         328: (0, 0.2),  # KP_8
@@ -485,7 +939,11 @@ def interactive_run(sim: DepthStudentSim, duration: float) -> dict:
         sim.model, sim.data, key_callback=key_callback, show_left_ui=False, show_right_ui=False
     )
     reset_view(viewer)
-    print("[INFO] controls: W/S vx, Q/E vy, A/D yaw, Space/X stop, numpad 8/2/4/6/7/9")
+    depth_window = "T4 depth preview"
+    cv2.namedWindow(depth_window, cv2.WINDOW_NORMAL)
+    cv2.resizeWindow(depth_window, 960, 540)
+    print("[INFO] controls: I/K vx, U/O vy, J/L yaw, Space/X stop, numpad 8/2/4/6/7/9")
+    print("[INFO] depth preview: live depth_cam window is open")
 
     steps = 0
     start = time.time()
@@ -496,6 +954,9 @@ def interactive_run(sim: DepthStudentSim, duration: float) -> dict:
             obs, info = sim.step()
             sim.act(obs)
             reset_view(viewer)
+            depth_preview = cv2.resize(sim.depth_preview_image(), (960, 540), interpolation=cv2.INTER_NEAREST)
+            cv2.imshow(depth_window, depth_preview)
+            cv2.waitKey(1)
             viewer.sync()
             steps += 1
             if steps % 250 == 0:
@@ -504,6 +965,7 @@ def interactive_run(sim: DepthStudentSim, duration: float) -> dict:
                     f"v={info['root_lin_vel'][:2]}"
                 )
     finally:
+        cv2.destroyWindow(depth_window)
         viewer.close()
     return {"steps": steps, "wall_seconds": time.time() - start}
 
@@ -558,7 +1020,13 @@ def parse_args() -> argparse.Namespace:
             "Defaults to artifacts/checkpoints/t4_depth_student_latest.pt, then the newest local run."
         ),
     )
-    parser.add_argument("--hurdles", action="store_true", help="Add the Stage E hurdle course")
+    scene = parser.add_mutually_exclusive_group()
+    scene.add_argument("--hurdles", action="store_true", help="Add the Stage E hurdle course")
+    scene.add_argument(
+        "--rule-contract",
+        action="store_true",
+        help="Build the conservative 100m obstacle course from docs/research/100m-obstacle-rule-contract.md",
+    )
     parser.add_argument("--duration", type=float, default=60.0)
     parser.add_argument("--record", type=Path, default=None, help="Write an MP4 and exit instead of opening the GUI")
     parser.add_argument(
@@ -575,7 +1043,7 @@ def main() -> None:
     args = parse_args()
     checkpoint = resolve_checkpoint(args.checkpoint)
     print(f"[INFO] using checkpoint {checkpoint}")
-    sim = DepthStudentSim(str(checkpoint), args.hurdles)
+    sim = DepthStudentSim(str(checkpoint), args.hurdles, args.rule_contract)
     if args.record is not None:
         recorded_run(sim, str(args.record), args.duration, args.script)
     else:
