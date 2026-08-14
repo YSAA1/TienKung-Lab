@@ -122,6 +122,13 @@ class Distillation:
             self.policy.reset(hidden_states=self.last_hidden_states)
             self.policy.detach_hidden_states()
             for obs, _, _, privileged_actions, dones in self.storage.generator():
+                # Rollout collection runs under ``torch.inference_mode``.  The
+                # stored tensors therefore carry inference-mode metadata, but
+                # the student forward below must save activations for backward.
+                # Clone at the update boundary to materialize regular tensors.
+                with torch.inference_mode(False):
+                    obs = obs.clone()
+                    privileged_actions = privileged_actions.clone()
 
                 # inference the student for gradient computation
                 actions = self.policy.act_inference(obs)

@@ -22,6 +22,7 @@ from .motion_loader import AMPLoader
 from .motion_loader_for_display import AMPLoaderDisplay
 from .utils import (
     Normalizer,
+    filter_init_kwargs,
     resolve_nn_activation,
     split_and_pad_trajectories,
     store_code_state,

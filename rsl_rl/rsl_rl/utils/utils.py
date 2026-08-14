@@ -211,3 +211,22 @@ def string_to_callable(name: str) -> Callable:
             f" 'module:attribute_name'\nWhile processing input '{name}', received the error:\n {e}."
         )
         raise ValueError(msg)
+
+
+def filter_init_kwargs(fn: Callable, cfg: dict) -> dict:
+    """Drop keys that ``fn`` cannot accept.
+
+    Isaac Lab 2.3 ``to_dict()`` adds PPO fields such as ``optimizer`` that the
+    vendored rsl-rl (pre-4.0) constructor rejects.
+    """
+    import inspect
+
+    params = inspect.signature(fn).parameters
+    if any(param.kind == inspect.Parameter.VAR_KEYWORD for param in params.values()):
+        return dict(cfg)
+    allowed = {
+        name
+        for name, param in params.items()
+        if name != "self" and param.kind != inspect.Parameter.VAR_POSITIONAL
+    }
+    return {key: value for key, value in cfg.items() if key in allowed}

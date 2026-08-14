@@ -28,7 +28,7 @@ from isaaclab.scene import InteractiveScene
 from isaaclab.sensors import ContactSensor, RayCaster
 from isaaclab.sim import PhysxCfg, SimulationContext
 from isaaclab.utils.buffers import CircularBuffer, DelayBuffer
-from isaaclab.utils.math import quat_rotate_inverse, yaw_quat
+from isaaclab.utils.math import euler_xyz_from_quat, quat_rotate_inverse, yaw_quat
 
 from legged_lab.assets.t4.constants import T4_JOINT_NAMES
 from legged_lab.assets.t4.schemas import (
@@ -417,6 +417,15 @@ class T4LocoEnv(VecEnv):
         )
         time_out_buf = self.episode_length_buf >= self.max_episode_length
         reset_buf |= time_out_buf
+
+        # Orientation fall termination (VITAL parity): the URDF keeps collision
+        # geometry only on the feet/hands, so trunk-contact termination can never
+        # fire and falls would otherwise run out the full episode.
+        roll, pitch, _ = euler_xyz_from_quat(self.robot.data.root_quat_w)
+        roll = torch.atan2(torch.sin(roll), torch.cos(roll))
+        pitch = torch.atan2(torch.sin(pitch), torch.cos(pitch))
+        reset_buf |= (torch.abs(pitch) > 1.0) | (torch.abs(roll) > 0.8)
+
         return reset_buf, time_out_buf
 
     def reset(self, env_ids):

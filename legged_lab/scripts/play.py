@@ -37,6 +37,19 @@ parser = argparse.ArgumentParser(description="Train an RL agent with RSL-RL.")
 parser.add_argument("--task", type=str, default=None, help="Name of the task.")
 parser.add_argument("--num_envs", type=int, default=None, help="Number of environments to simulate.")
 parser.add_argument("--seed", type=int, default=None, help="Seed used for the environment")
+parser.add_argument(
+    "--terrain",
+    action="store_true",
+    help="Keep the task terrain generator instead of flattening to a plane.",
+)
+parser.add_argument(
+    "--difficulty",
+    type=float,
+    default=0.85,
+    help="Fixed terrain difficulty in [0, 1] when --terrain is set.",
+)
+parser.add_argument("--record", type=str, default=None, help="Write an MP4 and exit instead of looping the GUI.")
+parser.add_argument("--duration", type=float, default=12.0, help="Recorded seconds when --record is set.")
 
 # append RSL-RL cli arguments
 cli_args.add_rsl_rl_args(parser)
@@ -47,6 +60,9 @@ args_cli, hydra_args = parser.parse_known_args()
 # Start camera rendering
 if "sensor" in args_cli.task:
     args_cli.enable_cameras = True
+if args_cli.record:
+    args_cli.enable_cameras = True
+    args_cli.headless = True
 
 # launch omniverse app
 app_launcher = AppLauncher(args_cli)
@@ -74,18 +90,21 @@ def play():
     env_cfg.scene.num_envs = 50
     env_cfg.scene.env_spacing = 2.5
     env_cfg.commands.rel_standing_envs = 0.0
-    env_cfg.commands.ranges.lin_vel_x = (1.0, 1.0)
+    env_cfg.commands.ranges.lin_vel_x = (0.6, 0.6)
     env_cfg.commands.ranges.lin_vel_y = (0.0, 0.0)
     env_cfg.scene.height_scanner.drift_range = (0.0, 0.0)
 
-    env_cfg.scene.terrain_generator = None
-    env_cfg.scene.terrain_type = "plane"
+    if args_cli.terrain:
+        env_cfg.scene.terrain_generator.curriculum = False
+        env_cfg.scene.terrain_generator.difficulty_range = (args_cli.difficulty, args_cli.difficulty)
+    else:
+        env_cfg.scene.terrain_generator = None
+        env_cfg.scene.terrain_type = "plane"
 
     if env_cfg.scene.terrain_generator is not None:
         env_cfg.scene.terrain_generator.num_rows = 5
         env_cfg.scene.terrain_generator.num_cols = 5
         env_cfg.scene.terrain_generator.curriculum = False
-        env_cfg.scene.terrain_generator.difficulty_range = (0.4, 0.4)
 
     if args_cli.num_envs is not None:
         env_cfg.scene.num_envs = args_cli.num_envs
@@ -108,11 +127,12 @@ def play():
 
     policy = runner.get_inference_policy(device=env.device)
 
-    export_model_dir = os.path.join(os.path.dirname(resume_path), "exported")
-    export_policy_as_jit(runner.alg.policy, runner.obs_normalizer, path=export_model_dir, filename="policy.pt")
-    export_policy_as_onnx(
-        runner.alg.policy, normalizer=runner.obs_normalizer, path=export_model_dir, filename="policy.onnx"
-    )
+    if not args_cli.record:
+        export_model_dir = os.path.join(os.path.dirname(resume_path), "exported")
+        export_policy_as_jit(runner.alg.policy, runner.obs_normalizer, path=export_model_dir, filename="policy.pt")
+        export_policy_as_onnx(
+            runner.alg.policy, normalizer=runner.obs_normalizer, path=export_model_dir, filename="policy.onnx"
+        )
 
     if not args_cli.headless:
         from legged_lab.utils.keyboard import Keyboard
@@ -121,6 +141,10 @@ def play():
 
     obs, _ = env.get_observations()
 
+    if args_cli.record:
+        _record_play_video(env, policy, obs, args_cli.record, args_cli.duration)
+        return
+
     while simulation_app.is_running():
 
         with torch.inference_mode():
@@ -128,6 +152,57 @@ def play():
             obs, _, _, _ = env.step(actions)
 
 
+def _record_play_video(env, policy, obs, output_path: str, duration_s: float) -> None:
+    import imageio.v2 as imageio
+    import isaaclab.sim as sim_utils
+    from isaaclab.sensors import Camera, CameraCfg
+
+    camera = Camera(
+        CameraCfg(
+            prim_path="/World/play_cam",
+            update_period=0.0,
+            height=480,
+            width=960,
+            data_types=["rgb"],
+            spawn=sim_utils.PinholeCameraCfg(
+                focal_length=24.0,
+                focus_distance=400.0,
+                horizontal_aperture=20.955,
+                clipping_range=(0.08, 40.0),
+            ),
+        )
+    )
+    # Play.py creates the camera after the timeline is already playing, so the
+    # SensorBase PLAY callback never fires. Initialize it explicitly.
+    camera._initialize_callback(None)
+    camera.reset()
+
+    n_steps = max(1, int(round(duration_s / env.step_dt)))
+    frames: list = []
+    look_offset = torch.tensor([0.0, 0.0, 0.45], device=env.device)
+    eye_offset = torch.tensor([-2.8, -2.2, 1.6], device=env.device)
+
+    for _ in range(n_steps):
+        with torch.inference_mode():
+            actions = policy(obs)
+            obs, _, _, _ = env.step(actions)
+        root = env.robot.data.root_pos_w[0]
+        camera.set_world_poses_from_view(
+            eyes=(root + eye_offset).unsqueeze(0),
+            targets=(root + look_offset).unsqueeze(0),
+        )
+        env.sim.render()
+        camera.update(dt=env.step_dt)
+        rgb = camera.data.output["rgb"][0, ..., :3].cpu().numpy()
+        if rgb.size:
+            frames.append(rgb.copy())
+
+    os.makedirs(os.path.dirname(os.path.abspath(output_path)) or ".", exist_ok=True)
+    imageio.mimwrite(output_path, frames, fps=max(1, int(round(1.0 / env.step_dt))), quality=8, macro_block_size=1)
+    print(f"[INFO] wrote {output_path} ({len(frames)} frames)")
+
+
 if __name__ == "__main__":
     play()
-    simulation_app.close()
+    if not args_cli.record:
+        simulation_app.close()

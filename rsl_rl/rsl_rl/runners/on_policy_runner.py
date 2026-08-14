@@ -34,8 +34,9 @@ from rsl_rl.modules import (
     EmpiricalNormalization,
     StudentTeacher,
     StudentTeacherRecurrent,
+    DepthStudentTeacher,
 )
-from rsl_rl.utils import store_code_state
+from rsl_rl.utils import filter_init_kwargs, store_code_state
 
 
 class OnPolicyRunner:
@@ -83,8 +84,9 @@ class OnPolicyRunner:
 
         # evaluate the policy class
         policy_class = eval(self.policy_cfg.pop("class_name"))
+        policy_kwargs = filter_init_kwargs(policy_class.__init__, self.policy_cfg)
         policy: ActorCritic | ActorCriticRecurrent | StudentTeacher | StudentTeacherRecurrent = policy_class(
-            num_obs, num_privileged_obs, self.env.num_actions, **self.policy_cfg
+            num_obs, num_privileged_obs, self.env.num_actions, **policy_kwargs
         ).to(self.device)
 
         # resolve dimension of rnd gated state
@@ -108,7 +110,10 @@ class OnPolicyRunner:
         # initialize algorithm
         alg_class = eval(self.alg_cfg.pop("class_name"))
         self.alg: PPO | Distillation = alg_class(
-            policy, device=self.device, **self.alg_cfg, multi_gpu_cfg=self.multi_gpu_cfg
+            policy,
+            device=self.device,
+            **filter_init_kwargs(alg_class.__init__, self.alg_cfg),
+            multi_gpu_cfg=self.multi_gpu_cfg,
         )
 
         # store training configuration
