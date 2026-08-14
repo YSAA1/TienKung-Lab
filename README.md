@@ -155,6 +155,17 @@ Exported_policy/ contains pretrained policies provided by the project. When usin
 python legged_lab/scripts/sim2sim.py --task walk --policy Exported_policy/walk.pt --duration 100
 ```
 
+### T4 Depth Student Sim2Sim
+
+Run the depth student checkpoint in the migrated T4 MuJoCo model from the
+`pytorch` env.
+
+```bash
+D:\anaconda\envs\pytorch\python.exe -m legged_lab.scripts.sim2sim_t4_depth_student
+D:\anaconda\envs\pytorch\python.exe -m legged_lab.scripts.sim2sim_t4_depth_student --checkpoint artifacts/checkpoints/t4_depth_student_latest.pt
+D:\anaconda\envs\pytorch\python.exe -m legged_lab.scripts.sim2sim_t4_depth_student --checkpoint latest --hurdles --record artifacts/eval/t4_depth_student.mp4
+```
+
 ### Sim2Real
 The results of the TienKung-Lab have been successfully verified on the real **TienKung** robot.
 

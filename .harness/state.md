@@ -38,3 +38,4 @@
 - Nubot target: `nubot@100.100.188.39:/home/nubot/phn_ws/t4_train/TienKung-Lab`; M0 headless spawn/playback evidence was collected on commit `dfb69d1` (`fix(t4): 按名称重排动作关节`).
 - Nubot runtime: use `/home/nubot/isaac-sim-standalone-5.1.0-linux-x86_64/python.sh` with IsaacLab source paths in `PYTHONPATH`; torch verified as `2.5.1+cu124`, CUDA visible on 4 GPUs.
 - Nubot caveat: GitHub fetch can fail with `GnuTLS recv error (-110)`; latest commits were synced through local git bundles over SSH when needed.
+- Local depth student sim2sim entrypoint: `legged_lab/scripts/sim2sim_t4_depth_student.py`; it accepts an explicit checkpoint or `latest`, prefers `artifacts/checkpoints/t4_depth_student_latest.pt`, and falls back to the newest `logs/t4_loco_depth_student` run.
