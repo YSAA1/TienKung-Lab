@@ -61,6 +61,7 @@ class BaseSceneCfg:
     height_scanner: HeightScannerCfg = HeightScannerCfg()
     lidar: LidarCfg = LidarCfg()
     depth_camera: TiledCameraCfg = TiledCameraCfg()
+    disable_visual_assets: bool = False
 
 
 @configclass

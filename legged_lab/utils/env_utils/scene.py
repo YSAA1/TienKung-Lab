@@ -26,7 +26,6 @@ from isaaclab.terrains.terrain_importer_cfg import TerrainImporterCfg
 from isaaclab.utils import configclass
 from isaaclab.utils.assets import ISAAC_NUCLEUS_DIR, ISAACLAB_NUCLEUS_DIR
 
-from legged_lab.sensors.camera import TiledCameraCfg
 from legged_lab.terrains.ray_caster_cfg import RayCasterCfg
 
 if TYPE_CHECKING:
@@ -52,7 +51,9 @@ class SceneCfg(InteractiveSceneCfg):
                 static_friction=1.0,
                 dynamic_friction=1.0,
             ),
-            visual_material=sim_utils.MdlFileCfg(
+            visual_material=None
+            if config.disable_visual_assets
+            else sim_utils.MdlFileCfg(
                 mdl_path=f"{ISAACLAB_NUCLEUS_DIR}/Materials/TilesMarbleSpiderWhiteBrickBondHoned/TilesMarbleSpiderWhiteBrickBondHoned.mdl",
                 project_uvw=True,
                 texture_scale=(0.25, 0.25),
@@ -66,19 +67,22 @@ class SceneCfg(InteractiveSceneCfg):
             prim_path="{ENV_REGEX_NS}/Robot/.*", history_length=3, track_air_time=True, update_period=physics_dt
         )
 
-        self.light = AssetBaseCfg(
-            prim_path="/World/light",
-            spawn=sim_utils.DistantLightCfg(color=(0.75, 0.75, 0.75), intensity=3000.0),
-        )
-        self.sky_light = AssetBaseCfg(
-            prim_path="/World/skyLight",
-            spawn=sim_utils.DomeLightCfg(
-                intensity=750.0,
-                texture_file=(
-                    f"{ISAAC_NUCLEUS_DIR}/Materials/Textures/Skies/PolyHaven/kloofendal_43d_clear_puresky_4k.hdr"
+        self.light = None
+        self.sky_light = None
+        if not config.disable_visual_assets:
+            self.light = AssetBaseCfg(
+                prim_path="/World/light",
+                spawn=sim_utils.DistantLightCfg(color=(0.75, 0.75, 0.75), intensity=3000.0),
+            )
+            self.sky_light = AssetBaseCfg(
+                prim_path="/World/skyLight",
+                spawn=sim_utils.DomeLightCfg(
+                    intensity=750.0,
+                    texture_file=(
+                        f"{ISAACLAB_NUCLEUS_DIR}/Materials/Textures/Skies/PolyHaven/kloofendal_43d_clear_puresky_4k.hdr"
+                    ),
                 ),
-            ),
-        )
+            )
 
         if config.height_scanner.enable_height_scan:
             self.height_scanner = RayCasterCfg(
@@ -108,13 +112,10 @@ class SceneCfg(InteractiveSceneCfg):
             )
 
         if config.depth_camera.enable_depth_camera:
-            self.depth_camera = TiledCameraCfg(
+            # Preserve the configured sensor class (regular Camera vs tiled
+            # Camera). Rebuilding every sensor as TiledCamera silently breaks
+            # depth-only tasks that intentionally use one render product per env.
+            self.depth_camera = config.depth_camera.replace(
                 prim_path="{ENV_REGEX_NS}/Robot/" + config.depth_camera.prim_body_name,
-                offset=config.depth_camera.offset,
-                height=config.depth_camera.height,
-                width=config.depth_camera.width,
-                data_types=config.depth_camera.data_types,
-                spawn=config.depth_camera.spawn,
-                debug_vis=config.depth_camera.debug_vis,
-                visualizer_cfg=config.depth_camera.visualizer_cfg,
+                update_period=step_dt,
             )
