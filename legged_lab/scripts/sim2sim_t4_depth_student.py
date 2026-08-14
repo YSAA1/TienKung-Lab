@@ -4,9 +4,9 @@ Replicates the Stage S deployment contract on the migrated T4 MJCF:
 
 - proprio: 96-dim frame x 10-step history, exactly ``schemas.PROPRIO_FIELDS``
 - depth: 3-frame history of 48x64 planar depth, D455-style torso camera
-  (87 deg HFOV, 35 deg downward pitch, 270x480 -> 48x64 area resize,
+  (87 deg HFOV, training CameraCfg offset, 270x480 -> 48x64 area resize,
   clip (0.2, 3.0) m, no-hit pixels fill the raw invalid value 1.0)
-- PD position control with the same gains and effort limits the IsaacLab
+- MuJoCo position servo with the same gains and effort limits the IsaacLab
   asset uses (``legged_lab/assets/t4/t4.py``)
 - gait clock: ``gait_time += step_dt / cycle`` only while moving, phase
   offsets 0.38 / 0.88, air ratio 0.38 / 0.38
@@ -103,6 +103,17 @@ def pd_group(name: str) -> tuple[float, float]:
     raise KeyError(name)
 
 
+def quat_rotate_inverse_wxyz(quat: np.ndarray, vec: np.ndarray) -> np.ndarray:
+    """Rotate a world vector into the floating-base frame."""
+    w, x, y, z = quat
+    quat_vec = np.array([x, y, z])
+    return (
+        vec * (2.0 * w * w - 1.0)
+        - np.cross(quat_vec, vec) * w * 2.0
+        + quat_vec * np.dot(quat_vec, vec) * 2.0
+    )
+
+
 def _checkpoint_iteration(path: Path) -> int:
     match = re.search(r"model_(\d+)\.pt$", path.name)
     return int(match.group(1)) if match else -1
@@ -169,19 +180,20 @@ ACTION_SCALE = 0.25
 CLIP_ACTIONS = 100.0
 CLIP_OBS = 100.0
 COMMAND_RANGES = {"vx": (-0.6, 1.0), "vy": (-0.5, 0.5), "yaw": (-1.57, 1.57)}
+# T4GaitCfg defaults to fixed_clock; standing commands freeze the clock.
 GAIT_CYCLE = 0.85
+STANDING_COMMAND_THRESHOLD = 0.1
 GAIT_AIR_RATIO = np.array([0.38, 0.38])
 GAIT_PHASE_OFFSET = np.array([0.38, 0.88])
 
-# D455-style depth camera (d455_depth_config.py + schemas.py).
+# D455-style depth camera (d455_depth_config.py).
 DEPTH_HFOV_DEG = 87.0
-DEPTH_CAMERA_PITCH_DEG = 35.0
 DEPTH_WIDTH, DEPTH_HEIGHT = 480, 270
+DEPTH_MAX_RANGE = 15.0  # D455 max_range; farther pixels are no-hit in IsaacLab
 DEPTH_FOVY = math.degrees(2 * math.atan(math.tan(math.radians(DEPTH_HFOV_DEG / 2)) * DEPTH_HEIGHT / DEPTH_WIDTH))
-DEPTH_CAM_POS = (0.085, 0.0, 0.42)
+DEPTH_CAM_POS = (0.10, 0.0, 0.03)
 
 SPAWN_Z = 0.85
-SETTLE_SECONDS = 0.6
 
 
 def build_model_xml(hurdles: bool) -> str:
@@ -198,15 +210,12 @@ def build_model_xml(hurdles: bool) -> str:
     anchor = '<body name="Trunk"'
     index = xml.index(anchor)
     index = xml.index(">", index) + 1
-    # MuJoCo cameras look along -Z of their frame. The D455 looks forward and
-    # 35 deg down; its "up" tilts with the look direction (like a head bowing
-    # to look at the ground). An euler-Y pitch would leave "up" horizontal and
-    # roll the image 90 deg, so pin the frame with explicit xyaxes: X = right
-    # (robot-right = -Y world when facing +X), Y = forward-up.
-    cos_p, sin_p = math.cos(math.radians(DEPTH_CAMERA_PITCH_DEG)), math.sin(math.radians(DEPTH_CAMERA_PITCH_DEG))
+    # D455CameraCfg offset is pos=(0.10, 0.0, 0.03), rot=(0.707, 0, 0.707, 0)
+    # with convention="ros". MuJoCo cameras look along -Z, so this pins a
+    # level forward-looking camera without pulling in IsaacLab at import time.
     camera = (
         f'\n      <camera name="depth_cam" pos="{" ".join(map(str, DEPTH_CAM_POS))}" '
-        f'xyaxes="0 -1 0 {cos_p:.6f} 0 {sin_p:.6f}" fovy="{DEPTH_FOVY:.4f}" mode="fixed"/>\n    '
+        f'xyaxes="0 0 1 0 -1 0" fovy="{DEPTH_FOVY:.4f}" mode="fixed"/>\n    '
     )
     xml = xml[:index] + camera + xml[index:]
 
@@ -256,6 +265,7 @@ class DepthStudentSim:
         # jnt_actfrcrange); the actuator-level forcerange is unset (zero).
         self.effort_limit = np.asarray(self.model.jnt_actfrcrange[self.joint_ids, 1])
         self.trunk_id = mujoco.mj_name2id(self.model, mujoco.mjtObj.mjOBJ_BODY, "Trunk")
+        self._configure_position_servos()
 
         # Policy: reconstruct DepthStudentTeacher and load the rsl-rl state dict.
         self.policy = DepthStudentTeacher(
@@ -272,10 +282,9 @@ class DepthStudentSim:
         self.policy.eval()
         print(f"[INFO] loaded checkpoint {checkpoint} (iter {state.get('iter')})")
 
-        # Depth renderer at the native sensor resolution. Training runs with
-        # disable_visual_assets (the D455 sees collision geometry only: terrain
-        # plus the robot's own collision prims), so hide group-1 visual meshes
-        # via a custom scene option. The buffer comes back top-down like RGB.
+        # Depth renderer at the native sensor resolution. Training keeps the
+        # depth stream self-contained by disabling visual assets, so mirror the
+        # collision-only view here.
         self.renderer = mujoco.Renderer(self.model, height=DEPTH_HEIGHT, width=DEPTH_WIDTH)
         self.renderer.enable_depth_rendering()
         self.depth_option = mujoco.MjvOption()
@@ -295,7 +304,6 @@ class DepthStudentSim:
         self.qvel = self.data.qvel
 
         self._reset_pose()
-        self._settle()
 
     def _reset_pose(self) -> None:
         mujoco.mj_resetData(self.model, self.data)
@@ -303,38 +311,34 @@ class DepthStudentSim:
         self.qpos[self.qpos_adr] = STANDING_POS
         mujoco.mj_forward(self.model, self.data)
 
-    def _settle(self) -> None:
-        """Hold the standing pose with PD for a moment so the robot settles on the ground."""
-        steps = int(SETTLE_SECONDS / SIM_DT)
-        for _ in range(steps):
-            self._apply_pd(STANDING_POS)
-            mujoco.mj_step(self.model, self.data)
+    def _configure_position_servos(self) -> None:
+        """Mirror PhysX implicit joint drives with MuJoCo position servos."""
+        for i, actuator_id in enumerate(self.actuator_ids):
+            self.model.actuator_gaintype[actuator_id] = mujoco.mjtGain.mjGAIN_FIXED
+            self.model.actuator_gainprm[actuator_id, :] = 0.0
+            self.model.actuator_gainprm[actuator_id, 0] = self.kp[i]
+            self.model.actuator_biastype[actuator_id] = mujoco.mjtBias.mjBIAS_AFFINE
+            self.model.actuator_biasprm[actuator_id, :] = 0.0
+            self.model.actuator_biasprm[actuator_id, 1] = -self.kp[i]
+            self.model.actuator_ctrllimited[actuator_id] = 0
+            self.model.actuator_forcelimited[actuator_id] = 1
+            self.model.actuator_forcerange[actuator_id] = (-self.effort_limit[i], self.effort_limit[i])
+            self.model.dof_damping[self.dof_adr[i]] += self.kd[i]
 
-    def _apply_pd(self, targets: np.ndarray) -> None:
-        torque = self.kp * (targets - self.qpos[self.qpos_adr]) - self.kd * self.qvel[self.dof_adr]
-        torque = np.clip(torque, -self.effort_limit, self.effort_limit)
-        self.data.ctrl[self.actuator_ids] = torque
-
-    def _trunk_pose(self) -> tuple[np.ndarray, np.ndarray]:
-        """Return (R_b, p_b): trunk rotation in world and trunk position."""
-        xquat = self.data.xquat[self.trunk_id]  # w x y z
-        w, x, y, z = xquat
-        rot = np.zeros((3, 3))
-        rot[0, 0] = 1 - 2 * (y * y + z * z)
-        rot[0, 1] = 2 * (x * y - w * z)
-        rot[0, 2] = 2 * (x * z + w * y)
-        rot[1, 0] = 2 * (x * y + w * z)
-        rot[1, 1] = 1 - 2 * (x * x + z * z)
-        rot[1, 2] = 2 * (y * z - w * x)
-        rot[2, 0] = 2 * (x * z - w * y)
-        rot[2, 1] = 2 * (y * z + w * x)
-        rot[2, 2] = 1 - 2 * (x * x + y * y)
-        return rot, self.data.xpos[self.trunk_id].copy()
+    def _apply_position_targets(self, targets: np.ndarray) -> None:
+        self.data.ctrl[self.actuator_ids] = targets
 
     def _read_depth(self) -> np.ndarray:
         self.renderer.update_scene(self.data, camera=self.depth_cam_id, scene_option=self.depth_option)
-        depth = self.renderer.render()  # (H, W) planar depth in camera frame, top-down; -1 where nothing hit
-        raw = np.where(depth < 0, DEPTH_INVALID_VALUE, depth)
+        depth = self.renderer.render()  # (H, W) planar depth in camera frame; -1 where nothing hit
+        # MuJoCo's image x-axis runs opposite to the IsaacLab sensor frame;
+        # the server dump shows the ground band on the right, MuJoCo on the
+        # left, so mirror horizontally.
+        depth = np.ascontiguousarray(depth[:, ::-1])
+        # No-hit pixels come back as a large sentinel (not -1) in MuJoCo 3;
+        # beyond the D455 max range they must fill the raw invalid value like
+        # the IsaacLab stream does (raw 1.0 -> normalized 0.286).
+        raw = np.where((depth < 0) | (depth > DEPTH_MAX_RANGE), DEPTH_INVALID_VALUE, depth)
         raw = np.clip(raw, DEPTH_CLIP_RANGE[0], DEPTH_CLIP_RANGE[1])
         normalized = (raw - DEPTH_CLIP_RANGE[0]) / (DEPTH_CLIP_RANGE[1] - DEPTH_CLIP_RANGE[0])
         tensor = torch.from_numpy(normalized).unsqueeze(0).unsqueeze(0)
@@ -351,10 +355,8 @@ class DepthStudentSim:
         self.depth_counter += 1
 
     def _proprio_frame(self) -> np.ndarray:
-        rot, _ = self._trunk_pose()
-        ang_vel_w = self.data.cvel[self.trunk_id][3:6]
-        ang_vel_b = rot.T @ ang_vel_w
-        gravity_b = rot.T @ np.array([0.0, 0.0, -1.0])
+        ang_vel_b = self.qvel[3:6]
+        gravity_b = quat_rotate_inverse_wxyz(self.qpos[3:7], np.array([0.0, 0.0, -1.0]))
         joint_pos = self.qpos[self.qpos_adr] - STANDING_POS
         joint_vel = self.qvel[self.dof_adr]
         phase = (self.gait_time + GAIT_PHASE_OFFSET) % 1.0
@@ -375,25 +377,51 @@ class DepthStudentSim:
     def step(self) -> tuple[np.ndarray, dict]:
         """Advance one policy step (decimation sim steps); return (obs, info)."""
         for _ in range(DECIMATION):
-            self._apply_pd(self.targets)
+            self._apply_position_targets(self.targets)
             mujoco.mj_step(self.model, self.data)
+
+        if np.linalg.norm(self.command[:2]) > STANDING_COMMAND_THRESHOLD:
+            self.gait_time += STEP_DT / GAIT_CYCLE
 
         frame = self._proprio_frame()
         self.proprio_history = np.roll(self.proprio_history, shift=-PROPRIO_FRAME_DIM)
         self.proprio_history[-PROPRIO_FRAME_DIM:] = frame
         self._update_depth_history()
 
-        moving = float(np.linalg.norm(self.command) > 0.0)
-        self.gait_time += (STEP_DT / GAIT_CYCLE) * moving
-
         obs = np.concatenate([self.proprio_history, self.depth_history.reshape(-1)]).astype(np.float32)
         obs = np.clip(obs, -CLIP_OBS, CLIP_OBS)
 
         info = {
             "trunk_height": self.data.xpos[self.trunk_id][2],
-            "root_lin_vel": self.data.cvel[self.trunk_id][0:3].copy(),
+            "root_lin_vel": self.qvel[:3].copy(),
         }
         return obs, info
+
+    def observe(self) -> np.ndarray:
+        """Build the current policy observation without stepping physics."""
+        ang_vel_b = self.qvel[3:6]
+        gravity_b = quat_rotate_inverse_wxyz(self.qpos[3:7], np.array([0.0, 0.0, -1.0]))
+        joint_pos = self.qpos[self.qpos_adr] - STANDING_POS
+        joint_vel = self.qvel[self.dof_adr]
+        phase = np.zeros(2)
+        frame = np.concatenate(
+            [
+                ang_vel_b,
+                gravity_b,
+                self.command,
+                joint_pos,
+                joint_vel,
+                self.previous_action,
+                np.sin(2 * np.pi * phase),
+                np.cos(2 * np.pi * phase),
+                GAIT_AIR_RATIO,
+            ]
+        ).astype(np.float32)
+        self.proprio_history = np.roll(self.proprio_history, shift=-PROPRIO_FRAME_DIM)
+        self.proprio_history[-PROPRIO_FRAME_DIM:] = frame
+        self._update_depth_history()
+        obs = np.concatenate([self.proprio_history, self.depth_history.reshape(-1)]).astype(np.float32)
+        return np.clip(obs, -CLIP_OBS, CLIP_OBS)
 
     def act(self, obs: np.ndarray) -> None:
         """Run the policy on obs and store the PD targets."""
@@ -442,6 +470,8 @@ def interactive_run(sim: DepthStudentSim, duration: float) -> dict:
     steps = 0
     start = time.time()
     try:
+        obs = sim.observe()
+        sim.act(obs)
         while steps < int(duration / STEP_DT) and viewer.is_running():
             obs, info = sim.step()
             sim.act(obs)
@@ -478,6 +508,9 @@ def recorded_run(sim: DepthStudentSim, output: str, duration: float, script: str
 
     writer = imageio.get_writer(output, fps=int(1 / STEP_DT))
     steps = int(duration / STEP_DT)
+    sim.command[:] = command_fn(0.0)
+    obs = sim.observe()
+    sim.act(obs)
     for step in range(steps):
         t = step * STEP_DT
         sim.command[:] = command_fn(t)
