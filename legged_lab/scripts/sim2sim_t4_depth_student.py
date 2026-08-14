@@ -433,25 +433,43 @@ class DepthStudentSim:
 
 
 def interactive_run(sim: DepthStudentSim, duration: float) -> dict:
-    """Keyboard-commanded run; returns metrics. Numpad 8/2/4/6/7/9 adjust commands.
+    """Keyboard-commanded run; returns metrics.
 
     Uses MuJoCo's bundled passive viewer (works on Windows where mujoco-viewer
     has no wheels); commands come through the viewer key callback.
     """
     import time
+    import mujoco.viewer
 
     def adjust(index: int, delta: float) -> None:
         bounds = (COMMAND_RANGES["vx"], COMMAND_RANGES["vy"], COMMAND_RANGES["yaw"])[index]
         sim.command[index] = float(np.clip(sim.command[index] + delta, bounds[0], bounds[1]))
 
-    # GLFW numpad key codes.
+    def reset_view(viewer) -> None:
+        viewer.cam.type = mujoco.mjtCamera.mjCAMERA_FREE
+        viewer.cam.fixedcamid = -1
+        viewer.cam.trackbodyid = -1
+        viewer.cam.distance = 4.2
+        viewer.cam.azimuth = 140.0
+        viewer.cam.elevation = -15.0
+        viewer.cam.lookat[:] = [sim.data.qpos[0], sim.data.qpos[1], 0.55]
+
+    # GLFW key codes. Support both laptop-friendly keys and numpad keys.
     moves = {
+        87: (0, 0.2),  # W
+        83: (0, -0.2),  # S
+        81: (1, 0.2),  # Q
+        69: (1, -0.2),  # E
+        65: (2, 0.2),  # A
+        68: (2, -0.2),  # D
+        88: (0, 0.0),  # X: stop
+        32: (0, 0.0),  # Space: stop
         328: (0, 0.2),  # KP_8
         330: (0, -0.2),  # KP_2
-        331: (1, -0.2),  # KP_4
-        333: (1, 0.2),  # KP_6
-        327: (2, -0.2),  # KP_7
-        329: (2, 0.2),  # KP_9
+        331: (1, 0.2),  # KP_4
+        333: (1, -0.2),  # KP_6
+        327: (2, 0.2),  # KP_7
+        329: (2, -0.2),  # KP_9
         336: (0, 0.0),  # KP_0: stop
     }
 
@@ -466,6 +484,8 @@ def interactive_run(sim: DepthStudentSim, duration: float) -> dict:
     viewer = mujoco.viewer.launch_passive(
         sim.model, sim.data, key_callback=key_callback, show_left_ui=False, show_right_ui=False
     )
+    reset_view(viewer)
+    print("[INFO] controls: W/S vx, Q/E vy, A/D yaw, Space/X stop, numpad 8/2/4/6/7/9")
 
     steps = 0
     start = time.time()
@@ -475,6 +495,7 @@ def interactive_run(sim: DepthStudentSim, duration: float) -> dict:
         while steps < int(duration / STEP_DT) and viewer.is_running():
             obs, info = sim.step()
             sim.act(obs)
+            reset_view(viewer)
             viewer.sync()
             steps += 1
             if steps % 250 == 0:
