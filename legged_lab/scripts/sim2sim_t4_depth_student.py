@@ -637,11 +637,11 @@ def build_model_xml(hurdles: bool, rule_contract: bool) -> str:
     index = xml.index(anchor)
     index = xml.index(">", index) + 1
     # D455CameraCfg offset is pos=(0.10, 0.0, 0.03), rot=(0.707, 0, 0.707, 0)
-    # with convention="ros". MuJoCo cameras look along -Z, so this pins a
-    # level forward-looking camera without pulling in IsaacLab at import time.
+    # with convention="ros". MuJoCo cameras look along -Z, so this xyaxes
+    # choice points the camera forward along +X instead of back into the trunk.
     camera = (
         f'\n      <camera name="depth_cam" pos="{" ".join(map(str, DEPTH_CAM_POS))}" '
-        f'xyaxes="0 0 1 0 -1 0" fovy="{DEPTH_FOVY:.4f}" mode="fixed"/>\n    '
+        f'xyaxes="0 0 -1 0 -1 0" fovy="{DEPTH_FOVY:.4f}" mode="fixed"/>\n    '
     )
     xml = xml[:index] + camera + xml[index:]
 
@@ -775,8 +775,8 @@ class DepthStudentSim:
         resized = F.interpolate(tensor, size=DEPTH_POLICY_SIZE, mode="area").squeeze(0).squeeze(0)
         return resized.numpy()
 
-    def depth_preview_image(self) -> np.ndarray:
-        """Return a color-mapped depth preview for the live GUI."""
+    def raw_depth_preview_image(self) -> np.ndarray:
+        """Return a color-mapped raw camera preview for debugging."""
         depth = np.nan_to_num(
             self.last_depth_raw,
             nan=DEPTH_INVALID_VALUE,
@@ -793,6 +793,30 @@ class DepthStudentSim:
             (12, 24),
             cv2.FONT_HERSHEY_SIMPLEX,
             0.6,
+            (255, 255, 255),
+            2,
+            cv2.LINE_AA,
+        )
+        return preview
+
+    def policy_depth_preview_image(self) -> np.ndarray:
+        """Return the exact processed depth frame fed to the policy."""
+        frame = np.nan_to_num(
+            self.depth_history[-1],
+            nan=0.0,
+            posinf=1.0,
+            neginf=0.0,
+        )
+        frame = np.clip(frame, 0.0, 1.0)
+        preview = (frame * 255.0).astype(np.uint8)
+        preview = cv2.applyColorMap(preview, cv2.COLORMAP_TURBO)
+        preview = cv2.resize(preview, (256, 192), interpolation=cv2.INTER_NEAREST)
+        cv2.putText(
+            preview,
+            "policy depth input 48x64",
+            (10, 22),
+            cv2.FONT_HERSHEY_SIMPLEX,
+            0.55,
             (255, 255, 255),
             2,
             cv2.LINE_AA,
@@ -886,7 +910,7 @@ class DepthStudentSim:
         self.previous_action = action.copy()
 
 
-def interactive_run(sim: DepthStudentSim, duration: float) -> dict:
+def interactive_run(sim: DepthStudentSim, duration: float, auto_command: tuple[float, float, float] | None = None) -> dict:
     """Keyboard-commanded run; returns metrics.
 
     Uses MuJoCo's bundled passive viewer (works on Windows where mujoco-viewer
@@ -939,24 +963,32 @@ def interactive_run(sim: DepthStudentSim, duration: float) -> dict:
         sim.model, sim.data, key_callback=key_callback, show_left_ui=False, show_right_ui=False
     )
     reset_view(viewer)
-    depth_window = "T4 depth preview"
-    cv2.namedWindow(depth_window, cv2.WINDOW_NORMAL)
-    cv2.resizeWindow(depth_window, 960, 540)
+    depth_viewport = mujoco.MjrRect(16, 16, 256, 192)
     print("[INFO] controls: I/K vx, U/O vy, J/L yaw, Space/X stop, numpad 8/2/4/6/7/9")
-    print("[INFO] depth preview: live depth_cam window is open")
+    print("[INFO] depth preview: embedded policy depth input in MuJoCo viewer")
 
     steps = 0
     start = time.time()
     try:
+        if auto_command is not None:
+            sim.command[:] = auto_command
         obs = sim.observe()
         sim.act(obs)
         while steps < int(duration / STEP_DT) and viewer.is_running():
+            if auto_command is not None:
+                sim.command[:] = auto_command
             obs, info = sim.step()
             sim.act(obs)
             reset_view(viewer)
-            depth_preview = cv2.resize(sim.depth_preview_image(), (960, 540), interpolation=cv2.INTER_NEAREST)
-            cv2.imshow(depth_window, depth_preview)
-            cv2.waitKey(1)
+            viewer.set_images((depth_viewport, sim.policy_depth_preview_image()))
+            viewer.set_texts(
+                (
+                    mujoco.mjtFontScale.mjFONTSCALE_150,
+                    mujoco.mjtGridPos.mjGRID_TOPLEFT,
+                    "policy depth: embedded inset",
+                    f"cmd={sim.command[0]:.2f},{sim.command[1]:.2f},{sim.command[2]:.2f}",
+                ),
+            )
             viewer.sync()
             steps += 1
             if steps % 250 == 0:
@@ -965,7 +997,8 @@ def interactive_run(sim: DepthStudentSim, duration: float) -> dict:
                     f"v={info['root_lin_vel'][:2]}"
                 )
     finally:
-        cv2.destroyWindow(depth_window)
+        viewer.clear_images()
+        viewer.clear_texts()
         viewer.close()
     return {"steps": steps, "wall_seconds": time.time() - start}
 
@@ -1025,7 +1058,7 @@ def parse_args() -> argparse.Namespace:
     scene.add_argument(
         "--rule-contract",
         action="store_true",
-        help="Build the conservative 100m obstacle course from docs/research/100m-obstacle-rule-contract.md",
+        help="Build the conservative 100m obstacle course and auto-forward route",
     )
     parser.add_argument("--duration", type=float, default=60.0)
     parser.add_argument("--record", type=Path, default=None, help="Write an MP4 and exit instead of opening the GUI")
@@ -1047,7 +1080,10 @@ def main() -> None:
     if args.record is not None:
         recorded_run(sim, str(args.record), args.duration, args.script)
     else:
-        metrics = interactive_run(sim, args.duration)
+        auto_command = (0.6, 0.0, 0.0) if args.rule_contract else None
+        if auto_command is not None:
+            print("[INFO] auto route: forward command enabled for rule-contract scene")
+        metrics = interactive_run(sim, args.duration, auto_command=auto_command)
         print(f"[DONE] {metrics['steps']} steps in {metrics['wall_seconds']:.1f}s "
               f"({metrics['steps'] * STEP_DT / metrics['wall_seconds']:.1f}x realtime)")
 
