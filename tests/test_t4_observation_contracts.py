@@ -7,6 +7,7 @@ any machine, not only on the GPU runtime.
 from __future__ import annotations
 
 import json
+import math
 import xml.etree.ElementTree as ET
 from pathlib import Path
 
@@ -142,6 +143,18 @@ def test_depth_preprocessing_contract_is_self_consistent():
     assert schemas.DEPTH_UPDATE_DECIMATION >= 1
     assert schemas.DEPTH_POLICY_SIZE[0] < schemas.DEPTH_SENSOR_SIZE[0]
     assert schemas.DEPTH_POLICY_SIZE[1] < schemas.DEPTH_SENSOR_SIZE[1]
+
+
+def test_depth_camera_is_head_height_and_pitched_down():
+    right, down, look = schemas.depth_camera_ros_axes()
+    pitch = math.radians(schemas.DEPTH_CAMERA_PITCH_DEG)
+    assert schemas.DEPTH_CAMERA_SITE_POS[2] == pytest.approx(0.42)
+    assert look[0] == pytest.approx(math.cos(pitch))
+    assert look[2] == pytest.approx(-math.sin(pitch))
+    assert right == pytest.approx((0.0, -1.0, 0.0))
+    xyaxes = schemas.depth_camera_mujoco_xyaxes()
+    assert xyaxes[:3] == pytest.approx(right)
+    assert xyaxes[3:] == pytest.approx((-down[0], -down[1], -down[2]))
 
 
 def test_manifest_is_json_serializable_and_pins_the_joint_order():

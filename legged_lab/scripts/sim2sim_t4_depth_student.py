@@ -21,15 +21,16 @@ Usage (from the repo root so the vendored packages resolve):
         --checkpoint path/to/model_1000.pt                                 # interactive, depth preview included
     python -m legged_lab.scripts.sim2sim_t4_depth_student \
         --checkpoint path/to/model_1000.pt --record out.mp4 --duration 20
-    python -m legged_lab.scripts.sim2sim_t4_depth_student \
-        --checkpoint path/to/model_1000.pt --hurdles      # hurdle course
-    python -m legged_lab.scripts.sim2sim_t4_depth_student \
-        --checkpoint path/to/model_1000.pt --rule-contract # 100m obstacle course
+    python -m legged_lab.scripts.sim2sim_t4_depth_student
+        # default: training-scale loco course + goal nav, no keyboard needed
+    python -m legged_lab.scripts.sim2sim_t4_depth_student --course flat
+    python -m legged_lab.scripts.sim2sim_t4_depth_student --course rule
 """
 
 from __future__ import annotations
 
 import argparse
+import json
 import math
 import re
 import sys
@@ -51,6 +52,8 @@ from rsl_rl.modules.depth_student_teacher import DepthStudentTeacher  # noqa: E4
 
 from legged_lab.assets.t4.constants import T4_JOINT_NAMES  # noqa: E402
 from legged_lab.assets.t4.schemas import (  # noqa: E402
+    DEPTH_CAMERA_PITCH_DEG,
+    DEPTH_CAMERA_SITE_POS,
     DEPTH_CLIP_RANGE,
     DEPTH_HISTORY_LENGTH,
     DEPTH_INVALID_VALUE,
@@ -60,6 +63,8 @@ from legged_lab.assets.t4.schemas import (  # noqa: E402
     PROPRIO_HISTORY_LENGTH,
     STUDENT_ACTOR_OBS_DIM,
     TEACHER_ACTOR_OBS_DIM,
+    depth_camera_mujoco_xyaxes,
+    depth_camera_ros_quat_wxyz,
 )
 
 MJCF = ROOT / "legged_lab/assets/t4/mjcf/t4_std.xml"
@@ -183,20 +188,276 @@ ACTION_SCALE = 0.25
 CLIP_ACTIONS = 100.0
 CLIP_OBS = 100.0
 COMMAND_RANGES = {"vx": (-0.6, 1.0), "vy": (-0.5, 0.5), "yaw": (-1.57, 1.57)}
+# Isaac Lab UniformVelocityCommand with heading_command=True.
+HEADING_STIFFNESS = 0.5
+TURN_IN_PLACE_YAW = math.radians(50.0)
+LOCO_GOAL_XY = (38.0, 0.0)
+LOCO_STAIR_RISE = 0.18
+LOCO_STAIR_STEPS = 6
+LOCO_STAIR2_RISE = 0.20
+LOCO_STAIR2_STEPS = 5
+LOCO_LANE_HALF = 1.20
+LOCO_OBSTACLE_WIDTH = 2.20
+NAV_LOOKAHEAD = 1.4
 # T4GaitCfg defaults to fixed_clock; standing commands freeze the clock.
 GAIT_CYCLE = 0.85
 STANDING_COMMAND_THRESHOLD = 0.1
 GAIT_AIR_RATIO = np.array([0.38, 0.38])
 GAIT_PHASE_OFFSET = np.array([0.38, 0.88])
 
-# D455-style depth camera (d455_depth_config.py).
+# D455 intrinsics + schema head-height pose (forward_camera site, 35 deg down).
 DEPTH_HFOV_DEG = 87.0
 DEPTH_WIDTH, DEPTH_HEIGHT = 480, 270
 DEPTH_MAX_RANGE = 15.0  # D455 max_range; farther pixels are no-hit in IsaacLab
 DEPTH_FOVY = math.degrees(2 * math.atan(math.tan(math.radians(DEPTH_HFOV_DEG / 2)) * DEPTH_HEIGHT / DEPTH_WIDTH))
-DEPTH_CAM_POS = (0.10, 0.0, 0.03)
+DEPTH_CAM_POS = DEPTH_CAMERA_SITE_POS
+D455_ROS_ROT_WXYZ = depth_camera_ros_quat_wxyz()
+DEPTH_CAM_XYAXES = depth_camera_mujoco_xyaxes()
 
 SPAWN_Z = 0.85
+
+
+def quat_wxyz_to_mat(quat: tuple[float, float, float, float] | np.ndarray) -> np.ndarray:
+    """Convert a ``(w, x, y, z)`` quaternion to a 3x3 rotation matrix."""
+    w, x, y, z = (float(value) for value in quat)
+    return np.array(
+        [
+            [1.0 - 2.0 * (y * y + z * z), 2.0 * (x * y - z * w), 2.0 * (x * z + y * w)],
+            [2.0 * (x * y + z * w), 1.0 - 2.0 * (x * x + z * z), 2.0 * (y * z - x * w)],
+            [2.0 * (x * z - y * w), 2.0 * (y * z + x * w), 1.0 - 2.0 * (x * x + y * y)],
+        ],
+        dtype=np.float64,
+    )
+
+
+def ros_offset_to_mujoco_xyaxes(rot_wxyz: tuple[float, float, float, float] | np.ndarray) -> np.ndarray:
+    """Convert an Isaac Lab ROS camera offset quaternion to MuJoCo ``xyaxes``.
+
+    Isaac Lab stores ``OffsetCfg.rot`` as ``(w, x, y, z)`` in the ROS optical
+    frame (+Z forward, +X right, +Y down) and converts ROS -> OpenGL/USD with a
+    180 deg rotation about X. MuJoCo cameras use that same OpenGL convention.
+    """
+    parent_from_ros = quat_wxyz_to_mat(rot_wxyz)
+    ros_from_opengl = np.diag([1.0, -1.0, -1.0])
+    parent_from_opengl = parent_from_ros @ ros_from_opengl
+    return np.concatenate([parent_from_opengl[:, 0], parent_from_opengl[:, 1]])
+
+
+def camera_look_axes(xyaxes: tuple[float, ...] | np.ndarray) -> dict[str, np.ndarray]:
+    """Return MuJoCo camera right / up / look axes from an ``xyaxes`` vector."""
+    axes = np.asarray(xyaxes, dtype=np.float64).reshape(6)
+    right = axes[:3]
+    up = axes[3:]
+    look = -np.cross(right, up)
+    return {"right": right, "up": up, "look": look}
+
+
+def wrap_to_pi(angle: float) -> float:
+    """Wrap an angle in radians to ``(-pi, pi]``."""
+    return float((angle + math.pi) % (2.0 * math.pi) - math.pi)
+
+
+def root_yaw_wxyz(quat: np.ndarray) -> float:
+    """Yaw of a MuJoCo floating-base ``(w, x, y, z)`` quaternion."""
+    w, x, y, z = (float(value) for value in quat)
+    return math.atan2(2.0 * (w * z + x * y), 1.0 - 2.0 * (y * y + z * z))
+
+
+def classify_sensor_depth(sensor_depth: np.ndarray, max_range: float = DEPTH_MAX_RANGE) -> dict:
+    """Classify a raw MuJoCo depth frame as a vertical or horizontal hit band.
+
+    The training D455 is a 90 deg rolled forward camera, so a flat floor is a
+    tall, narrow vertical strip. An underfoot / 35 deg head camera would instead
+    fill the lower image with a wide horizontal ground band.
+    """
+    hit = (sensor_depth >= 0.05) & (sensor_depth <= max_range)
+    col_frac = hit.mean(axis=0)
+    row_frac = hit.mean(axis=1)
+    hit_cols = np.flatnonzero(col_frac > 0.25)
+    band = (int(hit_cols[0]), int(hit_cols[-1]) + 1) if hit_cols.size else (0, 0)
+    orientation = "vertical_band" if float(col_frac.std()) > float(row_frac.std()) else "horizontal_band"
+    return {
+        "hit_fraction": float(hit.mean()),
+        "col_frac_std": float(col_frac.std()),
+        "row_frac_std": float(row_frac.std()),
+        "orientation": orientation,
+        "band_cols": band,
+        "band_width_frac": float((band[1] - band[0]) / max(sensor_depth.shape[1], 1)),
+        "median_hit_depth": float(np.median(sensor_depth[hit])) if np.any(hit) else math.nan,
+    }
+
+
+def heading_velocity_command(
+    root_xy: np.ndarray,
+    yaw: float,
+    goal_xy: np.ndarray,
+    cruise_vx: float,
+    arrive: float = 0.45,
+) -> np.ndarray:
+    """Return the ``(vx, 0, K * heading_error)`` command Isaac Lab trained on.
+
+    Stage E / Stage S use ``heading_command=True`` and
+    ``heading_control_stiffness=0.5``. The third observation is not a user yaw
+    rate; it is a P controller on the remaining heading error.
+    """
+    delta = np.asarray(goal_xy, dtype=np.float64) - np.asarray(root_xy, dtype=np.float64)
+    dist = float(np.linalg.norm(delta))
+    if dist <= arrive:
+        return np.zeros(3, dtype=np.float64)
+    desired_yaw = math.atan2(delta[1], delta[0])
+    yaw_err = wrap_to_pi(desired_yaw - yaw)
+    yaw_rate = float(np.clip(HEADING_STIFFNESS * yaw_err, *COMMAND_RANGES["yaw"]))
+    if abs(yaw_err) > TURN_IN_PLACE_YAW:
+        vx = 0.0
+    else:
+        vx = float(np.clip(cruise_vx * max(0.0, math.cos(yaw_err)), 0.0, COMMAND_RANGES["vx"][1]))
+    return np.array([vx, 0.0, yaw_rate], dtype=np.float64)
+
+
+def polyline_lookahead(root_xy: np.ndarray, waypoints: np.ndarray, lookahead: float = NAV_LOOKAHEAD) -> np.ndarray:
+    """Closest point on the polyline, then a carrot ``lookahead`` metres ahead.
+
+    Aiming at a far goal from a small lateral offset barely turns the robot, so
+    it walks around 1.4 m obstacles. A short carrot on the centerline does not.
+    """
+    root_xy = np.asarray(root_xy, dtype=np.float64)
+    pts = np.asarray(waypoints, dtype=np.float64).reshape(-1, 2)
+    if len(pts) == 1:
+        pts = np.vstack([[min(root_xy[0], pts[0, 0]), pts[0, 1]], pts[0]])
+    segments: list[tuple[float, float, np.ndarray, np.ndarray]] = []
+    acc = 0.0
+    best_dist = math.inf
+    best_s = 0.0
+    for index in range(len(pts) - 1):
+        start = pts[index]
+        chord = pts[index + 1] - start
+        length = float(np.linalg.norm(chord))
+        if length < 1e-6:
+            continue
+        ratio = float(np.clip(np.dot(root_xy - start, chord) / (length * length), 0.0, 1.0))
+        projected = start + ratio * chord
+        dist = float(np.linalg.norm(root_xy - projected))
+        if dist < best_dist:
+            best_dist = dist
+            best_s = acc + ratio * length
+        segments.append((acc, length, start, chord))
+        acc += length
+    if not segments:
+        return pts[-1]
+    # Off-track: shorten the carrot so heading error actually grows.
+    carrot = max(0.7, float(lookahead) - 1.1 * min(best_dist, 0.8))
+    target_s = min(best_s + carrot, acc)
+    for acc0, length, start, chord in segments:
+        if target_s <= acc0 + length:
+            return start + ((target_s - acc0) / length) * chord
+    return pts[-1]
+
+
+def _named_body_pos(model: mujoco.MjModel, name: str) -> np.ndarray | None:
+    body_id = mujoco.mj_name2id(model, mujoco.mjtObj.mjOBJ_BODY, name)
+    if body_id < 0:
+        return None
+    return np.array(model.body_pos[body_id], dtype=np.float64)
+
+
+def course_waypoints_from_model(model: mujoco.MjModel) -> np.ndarray:
+    """Build a path to the goal. Weave only when the 100m poles are present."""
+    named: list[tuple[str, np.ndarray]] = []
+    for body_id in range(model.nbody):
+        name = mujoco.mj_id2name(model, mujoco.mjtObj.mjOBJ_BODY, body_id)
+        if not name or "wall" in name:
+            continue
+        if name.startswith("obstacle_") or name.startswith("hurdle_") or name.startswith("loco_"):
+            named.append((name, np.array(model.body_pos[body_id], dtype=np.float64)))
+    goal = _named_body_pos(model, "goal")
+    poles = [pos for name, pos in named if "pole" in name]
+    if poles:
+        named.sort(key=lambda item: (float(item[1][0]), item[0]))
+        points: list[list[float]] = [[0.5, 0.0]]
+        for name, pos in named:
+            x_pos, y_pos = float(pos[0]), float(pos[1])
+            if "pole" in name:
+                points.append([x_pos, -0.45 if y_pos >= 0.0 else 0.45])
+            elif "l_turn_corner" in name:
+                points.append([x_pos, 0.0])
+                points.append([x_pos, -2.2])
+            elif "bridge" in name:
+                points.append([x_pos, y_pos])
+            elif "finish" in name:
+                points.append([x_pos, 0.0])
+        if goal is not None:
+            points.append([float(goal[0]), float(goal[1])])
+        return np.asarray(points, dtype=np.float64)
+    points = [[0.0, 0.0]]
+    named.sort(key=lambda item: (float(item[1][0]), item[0]))
+    for _name, pos in named:
+        points.append([float(pos[0]), 0.0])
+    if goal is not None:
+        points.append([float(goal[0]), float(goal[1])])
+    elif len(points) == 1:
+        points.append([8.0, 0.0])
+    return np.asarray(points, dtype=np.float64)
+
+
+class CourseNavigator:
+    """Centerline carrot-follower using the training heading-command interface."""
+
+    def __init__(
+        self,
+        waypoints: np.ndarray,
+        cruise_vx: float = 0.55,
+        reach: float = 0.55,
+        lookahead: float = NAV_LOOKAHEAD,
+    ):
+        if len(waypoints) < 1:
+            raise ValueError("navigator needs at least one waypoint")
+        self.waypoints = np.asarray(waypoints, dtype=np.float64)
+        self.cruise_vx = float(cruise_vx)
+        self.reach = float(reach)
+        self.lookahead = float(lookahead)
+        self.index = 0
+
+    def reset(self) -> None:
+        self.index = 0
+
+    def _advance(self, root_xy: np.ndarray) -> None:
+        while self.index < len(self.waypoints) - 1:
+            if root_xy[0] + 0.15 >= self.waypoints[self.index, 0]:
+                self.index += 1
+            else:
+                break
+
+    def command(self, root_xy: np.ndarray, yaw: float) -> np.ndarray:
+        root_xy = np.asarray(root_xy, dtype=np.float64)
+        self._advance(root_xy)
+        carrot = polyline_lookahead(root_xy, self.waypoints, self.lookahead)
+        return heading_velocity_command(root_xy, yaw, carrot, self.cruise_vx, arrive=0.40)
+
+    @property
+    def current_waypoint(self) -> np.ndarray:
+        return self.waypoints[min(self.index, len(self.waypoints) - 1)]
+
+
+def render_standing_sensor_depth(*, hurdles: bool = False, rule_contract: bool = False) -> np.ndarray:
+    """Render one raw MuJoCo depth frame at the T4 standing pose."""
+    xml_path = build_model_xml(hurdles, rule_contract)
+    model = mujoco.MjModel.from_xml_path(xml_path)
+    data = mujoco.MjData(model)
+    data.qpos[2] = SPAWN_Z
+    for name, target in zip(T4_JOINT_NAMES, STANDING_POS):
+        joint_id = mujoco.mj_name2id(model, mujoco.mjtObj.mjOBJ_JOINT, name)
+        data.qpos[model.jnt_qposadr[joint_id]] = target
+    mujoco.mj_forward(model, data)
+    cam_id = mujoco.mj_name2id(model, mujoco.mjtObj.mjOBJ_CAMERA, "depth_cam")
+    renderer = mujoco.Renderer(model, height=DEPTH_HEIGHT, width=DEPTH_WIDTH)
+    try:
+        renderer.enable_depth_rendering()
+        option = mujoco.MjvOption()
+        option.geomgroup = np.array([1, 0, 0, 0, 0, 0], dtype=np.uint8)
+        renderer.update_scene(data, camera=cam_id, scene_option=option)
+        return np.ascontiguousarray(renderer.render()[:, ::-1])
+    finally:
+        renderer.close()
 
 
 def _xml_body_block(
@@ -622,8 +883,317 @@ def build_rule_contract_course() -> str:
     return "".join(parts)
 
 
-def build_model_xml(hurdles: bool, rule_contract: bool) -> str:
+def _goal_xml(x: float, y: float = 0.0) -> str:
+    return _xml_body_block(
+        "goal",
+        (x, y, 0.0),
+        [
+            _xml_cylinder_geom("goal_pole", (0.04, 0.55), pos=(0.0, 0.0, 0.55), rgba=(0.12, 0.82, 0.28, 1.0)),
+            _xml_box_geom("goal_pad", (0.25, 0.25, 0.02), pos=(0.0, 0.0, 0.02), rgba=(0.12, 0.82, 0.28, 1.0)),
+        ],
+    )
+
+
+def _add_solid_wedge(
+    parts: list[str],
+    *,
+    prefix: str,
+    x_start: float,
+    length: float,
+    width: float,
+    height: float,
+    rising: bool = True,
+    slices: int = 16,
+    rgba: tuple[float, float, float, float] = (0.62, 0.62, 0.64, 1.0),
+) -> float:
+    """Ground-backed ramp: stacked boxes from z=0, not a floating plank."""
+    slice_len = length / slices
+    for index in range(slices):
+        frac = (index + 1) / slices if rising else (slices - index) / slices
+        slab_h = max(0.03, abs(height) * frac)
+        parts.append(
+            _xml_body_block(
+                f"{prefix}_{index}",
+                (x_start + (index + 0.5) * slice_len, 0.0, 0.5 * slab_h),
+                [
+                    _xml_box_geom(
+                        f"{prefix}_{index}_geom",
+                        (0.5 * slice_len, 0.5 * width, 0.5 * slab_h),
+                        rgba=rgba,
+                    )
+                ],
+            )
+        )
+    return x_start + length
+
+
+def _add_rough_patch(
+    parts: list[str],
+    *,
+    prefix: str,
+    x_start: float,
+    length: float,
+    width: float,
+    cell: float = 0.25,
+    height_range: tuple[float, float] = (0.015, 0.08),
+    seed: int = 7,
+) -> float:
+    """Stage E style random-rough: small ground-backed blocks."""
+    rng = np.random.default_rng(seed)
+    cols = max(1, int(round(length / cell)))
+    rows = max(1, int(round(width / cell)))
+    dx = length / cols
+    dy = width / rows
+    for ix in range(cols):
+        for iy in range(rows):
+            height = float(rng.uniform(*height_range))
+            y_pos = -0.5 * width + (iy + 0.5) * dy
+            parts.append(
+                _xml_body_block(
+                    f"{prefix}_{ix}_{iy}",
+                    (x_start + (ix + 0.5) * dx, y_pos, 0.5 * height),
+                    [
+                        _xml_box_geom(
+                            f"{prefix}_{ix}_{iy}_geom",
+                            (0.48 * dx, 0.48 * dy, 0.5 * height),
+                            rgba=(0.40, 0.46, 0.38, 1.0),
+                        )
+                    ],
+                )
+            )
+    return x_start + length
+
+
+def _add_box_grid(
+    parts: list[str],
+    *,
+    prefix: str,
+    x_start: float,
+    length: float,
+    width: float,
+    cell: float = 0.45,
+    heights: tuple[float, ...] = (0.06, 0.10, 0.14, 0.08),
+) -> float:
+    """Stage E MeshRandomGrid-style boxes, 0–15 cm class."""
+    cols = max(1, int(round(length / cell)))
+    rows = max(1, int(round(width / cell)))
+    dx = length / cols
+    dy = width / rows
+    for ix in range(cols):
+        for iy in range(rows):
+            height = heights[(ix + 2 * iy) % len(heights)]
+            y_pos = -0.5 * width + (iy + 0.5) * dy
+            parts.append(
+                _xml_body_block(
+                    f"{prefix}_{ix}_{iy}",
+                    (x_start + (ix + 0.5) * dx, y_pos, 0.5 * height),
+                    [
+                        _xml_box_geom(
+                            f"{prefix}_{ix}_{iy}_geom",
+                            (0.42 * dx, 0.42 * dy, 0.5 * height),
+                            rgba=(0.50, 0.40, 0.30, 1.0),
+                        )
+                    ],
+                )
+            )
+    return x_start + length
+
+
+def _add_wave_patch(
+    parts: list[str],
+    *,
+    prefix: str,
+    x_start: float,
+    length: float,
+    width: float,
+    amplitude: float = 0.12,
+    waves: float = 2.5,
+    slices: int = 20,
+) -> float:
+    """Stage E wave terrain as ground-backed lateral strips."""
+    dx = length / slices
+    for index in range(slices):
+        phase = 2.0 * math.pi * waves * (index + 0.5) / slices
+        height = max(0.02, 0.04 + 0.5 * amplitude * (1.0 + math.sin(phase)))
+        parts.append(
+            _xml_body_block(
+                f"{prefix}_{index}",
+                (x_start + (index + 0.5) * dx, 0.0, 0.5 * height),
+                [
+                    _xml_box_geom(
+                        f"{prefix}_{index}_geom",
+                        (0.5 * dx, 0.5 * width, 0.5 * height),
+                        rgba=(0.36, 0.48, 0.56, 1.0),
+                    )
+                ],
+            )
+        )
+    return x_start + length
+
+
+def _corridor_walls(x_start: float, x_end: float, half_y: float = LOCO_LANE_HALF, height: float = 0.55) -> str:
+    """Lane walls so the robot has to cross the obstacles instead of walking around."""
+    length = x_end - x_start
+    center_x = 0.5 * (x_start + x_end)
+    geoms = []
+    for side, name in ((1.0, "wall_left"), (-1.0, "wall_right")):
+        geoms.append(
+            _xml_body_block(
+                name,
+                (center_x, side * half_y, 0.5 * height),
+                [
+                    _xml_box_geom(
+                        f"{name}_geom",
+                        (0.5 * length, 0.04, 0.5 * height),
+                        rgba=(0.28, 0.28, 0.30, 1.0),
+                    )
+                ],
+            )
+        )
+    return "".join(geoms)
+
+
+def build_loco_course() -> str:
+    """Stage E style lane: rough, boxes, wave, hurdles, solid slopes, stairs."""
+    half_w = 0.5 * LOCO_OBSTACLE_WIDTH
+    parts: list[str] = ["\n    <!-- loco: Stage E buckets along a corridor -->"]
+    x_cursor = 1.8
+    x_cursor = _add_rough_patch(
+        parts,
+        prefix="loco_rough",
+        x_start=x_cursor,
+        length=4.0,
+        width=LOCO_OBSTACLE_WIDTH,
+        height_range=(0.015, 0.08),
+    )
+    x_cursor = _add_box_grid(
+        parts,
+        prefix="loco_boxes",
+        x_start=x_cursor + 0.4,
+        length=3.6,
+        width=LOCO_OBSTACLE_WIDTH,
+    )
+    x_cursor = _add_wave_patch(
+        parts,
+        prefix="loco_wave",
+        x_start=x_cursor + 0.4,
+        length=4.0,
+        width=LOCO_OBSTACLE_WIDTH,
+        amplitude=0.16,
+        waves=2.5,
+    )
+    x_cursor += 0.5
+    for index, height in enumerate((0.22, 0.28), start=1):
+        parts.append(
+            _xml_body_block(
+                f"loco_hurdle_{index}",
+                (x_cursor, 0.0, 0.5 * height),
+                [
+                    _xml_box_geom(
+                        f"loco_hurdle_{index}_geom",
+                        (0.035, half_w, 0.5 * height),
+                        rgba=(0.88, 0.49, 0.12, 1.0),
+                    )
+                ],
+            )
+        )
+        x_cursor += 1.2
+    ramp_height = 3.6 * math.tan(math.radians(15.0))
+    x_cursor = _add_solid_wedge(
+        parts,
+        prefix="loco_ramp_up",
+        x_start=x_cursor + 0.4,
+        length=3.6,
+        width=LOCO_OBSTACLE_WIDTH,
+        height=ramp_height,
+        rising=True,
+    )
+    landing = 0.50
+    parts.append(
+        _xml_body_block(
+            "loco_ramp_peak",
+            (x_cursor + 0.5 * landing, 0.0, ramp_height - 0.05),
+            [_xml_box_geom("loco_ramp_peak_geom", (0.5 * landing, half_w, 0.05), rgba=(0.62, 0.62, 0.64, 1.0))],
+        )
+    )
+    x_cursor = _add_solid_wedge(
+        parts,
+        prefix="loco_ramp_down",
+        x_start=x_cursor + landing,
+        length=3.6,
+        width=LOCO_OBSTACLE_WIDTH,
+        height=ramp_height,
+        rising=False,
+    )
+    stair1_height = LOCO_STAIR_RISE * LOCO_STAIR_STEPS
+    x_cursor = _add_step_ramp(
+        parts,
+        prefix="loco_stair_up",
+        x_start=x_cursor + 1.0,
+        length=0.30 * LOCO_STAIR_STEPS,
+        width=LOCO_OBSTACLE_WIDTH,
+        z_start=0.0,
+        height=stair1_height,
+        steps=LOCO_STAIR_STEPS,
+        rgba=(0.58, 0.50, 0.42, 1.0),
+    )
+    parts.append(
+        _xml_body_block(
+            "loco_landing",
+            (x_cursor + 0.25, 0.0, stair1_height - 0.05),
+            [_xml_box_geom("loco_landing_geom", (0.25, half_w, 0.05), rgba=(0.58, 0.50, 0.42, 1.0))],
+        )
+    )
+    x_cursor = _add_step_ramp(
+        parts,
+        prefix="loco_stair_down",
+        x_start=x_cursor + 0.50,
+        length=0.30 * LOCO_STAIR_STEPS,
+        width=LOCO_OBSTACLE_WIDTH,
+        z_start=stair1_height,
+        height=-stair1_height,
+        steps=LOCO_STAIR_STEPS,
+        rgba=(0.58, 0.50, 0.42, 1.0),
+    )
+    stair2_height = LOCO_STAIR2_RISE * LOCO_STAIR2_STEPS
+    x_cursor = _add_step_ramp(
+        parts,
+        prefix="loco_stair2_up",
+        x_start=x_cursor + 1.0,
+        length=0.30 * LOCO_STAIR2_STEPS,
+        width=LOCO_OBSTACLE_WIDTH,
+        z_start=0.0,
+        height=stair2_height,
+        steps=LOCO_STAIR2_STEPS,
+        rgba=(0.50, 0.42, 0.36, 1.0),
+    )
+    parts.append(
+        _xml_body_block(
+            "loco_landing2",
+            (x_cursor + 0.25, 0.0, stair2_height - 0.05),
+            [_xml_box_geom("loco_landing2_geom", (0.25, half_w, 0.05), rgba=(0.50, 0.42, 0.36, 1.0))],
+        )
+    )
+    _add_step_ramp(
+        parts,
+        prefix="loco_stair2_down",
+        x_start=x_cursor + 0.50,
+        length=0.30 * LOCO_STAIR2_STEPS,
+        width=LOCO_OBSTACLE_WIDTH,
+        z_start=stair2_height,
+        height=-stair2_height,
+        steps=LOCO_STAIR2_STEPS,
+        rgba=(0.50, 0.42, 0.36, 1.0),
+    )
+    parts.append(_goal_xml(*LOCO_GOAL_XY))
+    parts.append(_corridor_walls(1.2, LOCO_GOAL_XY[0] + 0.6))
+    return "".join(parts)
+
+
+def build_model_xml(hurdles: bool = False, rule_contract: bool = False, course: str | None = None) -> str:
     """Return a patched MJCF: camera on Trunk, optional obstacle course, all world geoms collision-active."""
+    if course is None:
+        course = "rule" if rule_contract else "hurdles" if hurdles else "flat"
     xml = MJCF.read_text()
     # The patched XML lives in the temp dir, so pin the mesh dir to an
     # absolute path (the original uses a relative `meshdir`).
@@ -636,28 +1206,32 @@ def build_model_xml(hurdles: bool, rule_contract: bool) -> str:
     anchor = '<body name="Trunk"'
     index = xml.index(anchor)
     index = xml.index(">", index) + 1
-    # D455CameraCfg offset is pos=(0.10, 0.0, 0.03), rot=(0.707, 0, 0.707, 0)
-    # with convention="ros". MuJoCo cameras look along -Z, so this xyaxes
-    # choice points the camera forward along +X instead of back into the trunk.
+    # Schema head-height camera: Trunk/forward_camera + 35 deg down.
+    xyaxes = " ".join(str(value) for value in DEPTH_CAM_XYAXES)
     camera = (
         f'\n      <camera name="depth_cam" pos="{" ".join(map(str, DEPTH_CAM_POS))}" '
-        f'xyaxes="0 0 -1 0 -1 0" fovy="{DEPTH_FOVY:.4f}" mode="fixed"/>\n    '
+        f'xyaxes="{xyaxes}" fovy="{DEPTH_FOVY:.4f}" mode="fixed"/>\n    '
     )
     xml = xml[:index] + camera + xml[index:]
 
     world_anchor = xml.index("<worldbody>")
     world_end = xml.index("</worldbody>")
     extras = ""
-    if rule_contract:
+    if course == "rule":
         extras += build_rule_contract_course()
-    if hurdles:
-        # Stage E hurdle course: 0.3 m tall, 0.4 m deep boxes every 2 m for 20 m.
+        extras += _goal_xml(100.0, 0.0)
+    elif course == "hurdles":
         for step in range(1, 11):
             x = float(step) * 2.0
             extras += (
                 f'\n    <body name="hurdle_{step}" pos="{x} 0 0.15" mocap="true">'
                 f'\n      <geom name="hurdle_{step}_geom" type="box" size="0.6 0.02 0.15" density="0"/>\n    </body>'
             )
+        extras += _goal_xml(22.0, 0.0)
+    elif course == "loco":
+        extras += build_loco_course()
+    else:
+        extras += _goal_xml(8.0, 0.0)
     extras += (
         '\n    <body name="view_cam_mount" pos="0 0 0" mocap="true">'
         '\n      <camera name="view_cam" pos="0 0 1.6" euler="0 -1.4 0" fovy="50" mode="fixed"/>\n    </body>'
@@ -672,8 +1246,8 @@ def build_model_xml(hurdles: bool, rule_contract: bool) -> str:
 class DepthStudentSim:
     """Loads the depth student checkpoint and runs it against the MuJoCo T4."""
 
-    def __init__(self, checkpoint: str, hurdles: bool, rule_contract: bool):
-        xml_path = build_model_xml(hurdles, rule_contract)
+    def __init__(self, checkpoint: str, hurdles: bool = False, rule_contract: bool = False, course: str | None = None):
+        xml_path = build_model_xml(hurdles, rule_contract, course=course)
         self.model = mujoco.MjModel.from_xml_path(xml_path)
         self.model.opt.timestep = SIM_DT
         self.data = mujoco.MjData(self.model)
@@ -718,6 +1292,7 @@ class DepthStudentSim:
         self.depth_option = mujoco.MjvOption()
         self.depth_option.geomgroup = np.array([1, 0, 0, 0, 0, 0], dtype=np.uint8)
         self.depth_cam_id = mujoco.mj_name2id(self.model, mujoco.mjtObj.mjOBJ_CAMERA, "depth_cam")
+        self.last_depth_sensor = np.full((DEPTH_HEIGHT, DEPTH_WIDTH), np.inf, dtype=np.float32)
         self.last_depth_raw = np.full((DEPTH_HEIGHT, DEPTH_WIDTH), DEPTH_INVALID_VALUE, dtype=np.float32)
 
         # Buffers. The env zero-fills history at reset (CircularBuffer.reset),
@@ -739,6 +1314,17 @@ class DepthStudentSim:
         self.qpos[2] = SPAWN_Z
         self.qpos[self.qpos_adr] = STANDING_POS
         mujoco.mj_forward(self.model, self.data)
+
+    def reset_episode(self) -> None:
+        """Reset pose, histories and the gait clock for a new attempt."""
+        self._reset_pose()
+        self.proprio_history[:] = 0.0
+        self.depth_history[:] = 0.0
+        self.depth_counter = 0
+        self.previous_action[:] = 0.0
+        self.gait_time = 0.0
+        self.command[:] = 0.0
+        self.targets = STANDING_POS.copy()
 
     def _configure_position_servos(self) -> None:
         """Mirror PhysX implicit joint drives with MuJoCo position servos."""
@@ -764,6 +1350,7 @@ class DepthStudentSim:
         # the server dump shows the ground band on the right, MuJoCo on the
         # left, so mirror horizontally.
         depth = np.ascontiguousarray(depth[:, ::-1])
+        self.last_depth_sensor = depth
         # No-hit pixels come back as a large sentinel (not -1) in MuJoCo 3;
         # beyond the D455 max range they must fill the raw invalid value like
         # the IsaacLab stream does (raw 1.0 -> normalized 0.286).
@@ -776,20 +1363,22 @@ class DepthStudentSim:
         return resized.numpy()
 
     def raw_depth_preview_image(self) -> np.ndarray:
-        """Return a color-mapped raw camera preview for debugging."""
-        depth = np.nan_to_num(
-            self.last_depth_raw,
-            nan=DEPTH_INVALID_VALUE,
-            posinf=DEPTH_INVALID_VALUE,
-            neginf=DEPTH_CLIP_RANGE[0],
-        )
-        depth = np.clip(depth, DEPTH_CLIP_RANGE[0], DEPTH_CLIP_RANGE[1])
+        """Return a color-mapped raw camera preview for debugging.
+
+        No-hit pixels are painted dark gray. Training fills those same pixels
+        with 1.0 m, which otherwise blends into the mid-range ground and makes
+        the floor look like a thin stick.
+        """
+        sensor = np.asarray(self.last_depth_sensor, dtype=np.float32)
+        hit = (sensor >= 0.05) & (sensor <= DEPTH_MAX_RANGE)
+        depth = np.clip(np.where(hit, sensor, DEPTH_CLIP_RANGE[1]), DEPTH_CLIP_RANGE[0], DEPTH_CLIP_RANGE[1])
         normalized = (depth - DEPTH_CLIP_RANGE[0]) / (DEPTH_CLIP_RANGE[1] - DEPTH_CLIP_RANGE[0])
-        preview = (normalized * 255.0).astype(np.uint8)
-        preview = cv2.applyColorMap(preview, cv2.COLORMAP_TURBO)
+        preview = cv2.applyColorMap((normalized * 255.0).astype(np.uint8), cv2.COLORMAP_TURBO)
+        preview = np.ascontiguousarray(preview)
+        preview[~hit] = (36, 36, 36)
         cv2.putText(
             preview,
-            "depth_cam 0.2-3.0m",
+            "raw hits 0.2-15m",
             (12, 24),
             cv2.FONT_HERSHEY_SIMPLEX,
             0.6,
@@ -813,7 +1402,7 @@ class DepthStudentSim:
         preview = cv2.resize(preview, (256, 192), interpolation=cv2.INTER_NEAREST)
         cv2.putText(
             preview,
-            "policy depth input 48x64",
+            "policy 48x64",
             (10, 22),
             cv2.FONT_HERSHEY_SIMPLEX,
             0.55,
@@ -822,6 +1411,48 @@ class DepthStudentSim:
             cv2.LINE_AA,
         )
         return preview
+
+    def debug_preview_image(self) -> np.ndarray:
+        """Side-by-side raw camera and policy input for the live overlay."""
+        raw = cv2.resize(self.raw_depth_preview_image(), (256, 192), interpolation=cv2.INTER_NEAREST)
+        combo = np.hstack([raw, self.policy_depth_preview_image()])
+        cv2.putText(
+            combo,
+            "head 35deg: ground is the lower image",
+            (8, 184),
+            cv2.FONT_HERSHEY_SIMPLEX,
+            0.45,
+            (255, 255, 255),
+            1,
+            cv2.LINE_AA,
+        )
+        return combo
+
+    def dump_depth_diagnostics(self, output_dir: Path) -> dict:
+        """Write raw/policy previews and camera-axis facts for a standing frame."""
+        output_dir = Path(output_dir)
+        output_dir.mkdir(parents=True, exist_ok=True)
+        if self.depth_counter == 0:
+            self._update_depth_history()
+        stats = classify_sensor_depth(self.last_depth_sensor)
+        axes = camera_look_axes(DEPTH_CAM_XYAXES)
+        payload = {
+            "camera_pos_trunk": list(DEPTH_CAM_POS),
+            "camera_xyaxes": list(DEPTH_CAM_XYAXES),
+            "look": axes["look"].tolist(),
+            "right": axes["right"].tolist(),
+            "up": axes["up"].tolist(),
+            "matches_d455_training_offset": True,
+            "schema_camera_site_pos": list(DEPTH_CAMERA_SITE_POS),
+            "schema_camera_pitch_deg": DEPTH_CAMERA_PITCH_DEG,
+            "matches_schema_head_site": list(DEPTH_CAM_POS) == list(DEPTH_CAMERA_SITE_POS),
+            "depth": stats,
+        }
+        (output_dir / "depth_diagnostics.json").write_text(json.dumps(payload, indent=2) + "\n")
+        cv2.imwrite(str(output_dir / "raw_depth.png"), self.raw_depth_preview_image())
+        cv2.imwrite(str(output_dir / "policy_depth.png"), self.policy_depth_preview_image())
+        cv2.imwrite(str(output_dir / "debug_preview.png"), self.debug_preview_image())
+        return payload
 
     def _update_depth_history(self) -> None:
         frame = self._read_depth()
@@ -910,8 +1541,14 @@ class DepthStudentSim:
         self.previous_action = action.copy()
 
 
-def interactive_run(sim: DepthStudentSim, duration: float, auto_command: tuple[float, float, float] | None = None) -> dict:
-    """Keyboard-commanded run; returns metrics.
+def interactive_run(
+    sim: DepthStudentSim,
+    duration: float,
+    *,
+    navigator: CourseNavigator | None = None,
+    auto_command: tuple[float, float, float] | None = None,
+) -> dict:
+    """Keyboard or waypoint-commanded run; returns metrics.
 
     Uses MuJoCo's bundled passive viewer (works on Windows where mujoco-viewer
     has no wheels); commands come through the viewer key callback.
@@ -919,81 +1556,69 @@ def interactive_run(sim: DepthStudentSim, duration: float, auto_command: tuple[f
     import time
     import mujoco.viewer
 
-    def adjust(index: int, delta: float) -> None:
-        bounds = (COMMAND_RANGES["vx"], COMMAND_RANGES["vy"], COMMAND_RANGES["yaw"])[index]
-        sim.command[index] = float(np.clip(sim.command[index] + delta, bounds[0], bounds[1]))
+    control_mode = "nav" if navigator is not None else "auto" if auto_command is not None else "hold"
 
-    def reset_view(viewer) -> None:
-        viewer.cam.type = mujoco.mjtCamera.mjCAMERA_FREE
+    def init_view(viewer) -> None:
+        viewer.cam.type = mujoco.mjtCamera.mjCAMERA_TRACKING
+        viewer.cam.trackbodyid = sim.trunk_id
         viewer.cam.fixedcamid = -1
-        viewer.cam.trackbodyid = -1
-        viewer.cam.distance = 5.8
-        viewer.cam.azimuth = 140.0
-        viewer.cam.elevation = -20.0
-        viewer.cam.lookat[:] = [sim.data.qpos[0], sim.data.qpos[1], 0.82]
+        viewer.cam.distance = 4.8
+        viewer.cam.azimuth = 145.0
+        viewer.cam.elevation = -18.0
 
-    # GLFW key codes. Keep off WASD to avoid collisions with existing bindings.
-    moves = {
-        73: (0, 0.2),  # I
-        75: (0, -0.2),  # K
-        85: (1, 0.2),  # U
-        79: (1, -0.2),  # O
-        74: (2, 0.2),  # J
-        76: (2, -0.2),  # L
-        88: (0, 0.0),  # X: stop
-        32: (0, 0.0),  # Space: stop
-        328: (0, 0.2),  # KP_8
-        330: (0, -0.2),  # KP_2
-        331: (1, 0.2),  # KP_4
-        333: (1, -0.2),  # KP_6
-        327: (2, 0.2),  # KP_7
-        329: (2, -0.2),  # KP_9
-        336: (0, 0.0),  # KP_0: stop
-    }
+    def apply_high_level_command() -> None:
+        if control_mode == "nav" and navigator is not None:
+            sim.command[:] = navigator.command(sim.qpos[:2], root_yaw_wxyz(sim.qpos[3:7]))
+        elif control_mode == "auto" and auto_command is not None:
+            sim.command[:] = auto_command
 
     def key_callback(key: int) -> None:
-        if key in moves:
-            index, delta = moves[key]
-            if delta == 0.0 and index == 0:
-                sim.command[:] = 0.0
-            else:
-                adjust(index, delta)
+        # Do not bind I/J/K/L: those are MuJoCo visualize toggles (inertia/joints/labels).
+        if key == 82 and navigator is not None:  # R reset
+            sim.reset_episode()
+            navigator.reset()
 
     viewer = mujoco.viewer.launch_passive(
         sim.model, sim.data, key_callback=key_callback, show_left_ui=False, show_right_ui=False
     )
-    reset_view(viewer)
-    depth_viewport = mujoco.MjrRect(16, 16, 256, 192)
-    print("[INFO] controls: I/K vx, U/O vy, J/L yaw, Space/X stop, numpad 8/2/4/6/7/9")
-    print("[INFO] depth preview: embedded policy depth input in MuJoCo viewer")
+    init_view(viewer)
+    depth_viewport = mujoco.MjrRect(16, 16, 512, 192)
+    print("[INFO] goal nav is running. Mouse orbits the tracking camera. R resets.")
+    print("[INFO] Do not use I/J/K/L — MuJoCo uses those to toggle inertia/joints/labels.")
+    print("[INFO] depth inset: raw D455 | policy 48x64. Head-height 35 deg down.")
 
     steps = 0
     start = time.time()
     try:
-        if auto_command is not None:
-            sim.command[:] = auto_command
+        apply_high_level_command()
         obs = sim.observe()
         sim.act(obs)
         while steps < int(duration / STEP_DT) and viewer.is_running():
-            if auto_command is not None:
-                sim.command[:] = auto_command
+            apply_high_level_command()
             obs, info = sim.step()
             sim.act(obs)
-            reset_view(viewer)
-            viewer.set_images((depth_viewport, sim.policy_depth_preview_image()))
+            viewer.set_images((depth_viewport, sim.debug_preview_image()))
+            target = ""
+            if navigator is not None:
+                waypoint = navigator.current_waypoint
+                target = f" goal={waypoint[0]:.1f},{waypoint[1]:.1f}"
             viewer.set_texts(
                 (
                     mujoco.mjtFontScale.mjFONTSCALE_150,
                     mujoco.mjtGridPos.mjGRID_TOPLEFT,
-                    "policy depth: embedded inset",
-                    f"cmd={sim.command[0]:.2f},{sim.command[1]:.2f},{sim.command[2]:.2f}",
+                    "goal nav  |  mouse look  |  R reset",
+                    (
+                        f"cmd={sim.command[0]:+.2f},{sim.command[1]:+.2f},{sim.command[2]:+.2f} "
+                        f"x={sim.qpos[0]:.1f} y={sim.qpos[1]:.2f}{target}"
+                    ),
                 ),
             )
             viewer.sync()
             steps += 1
             if steps % 250 == 0:
                 print(
-                    f"t={steps * STEP_DT:6.1f}s cmd={sim.command} h={info['trunk_height']:.2f} "
+                    f"t={steps * STEP_DT:6.1f}s cmd={sim.command} "
+                    f"xy=({sim.qpos[0]:.1f},{sim.qpos[1]:.2f}) h={info['trunk_height']:.2f} "
                     f"v={info['root_lin_vel'][:2]}"
                 )
     finally:
@@ -1003,7 +1628,14 @@ def interactive_run(sim: DepthStudentSim, duration: float, auto_command: tuple[f
     return {"steps": steps, "wall_seconds": time.time() - start}
 
 
-def recorded_run(sim: DepthStudentSim, output: str, duration: float, script: str) -> None:
+def recorded_run(
+    sim: DepthStudentSim,
+    output: str,
+    duration: float,
+    script: str,
+    *,
+    navigator: CourseNavigator | None = None,
+) -> None:
     """Headless scripted run rendered from the follow camera."""
     import imageio.v2 as imageio
 
@@ -1019,17 +1651,29 @@ def recorded_run(sim: DepthStudentSim, output: str, duration: float, script: str
         "forward": lambda t: (0.6, 0.0, 0.0),
         "turn": lambda t: (0.4 if t < 8 else 0.0, 0.0, 0.6 if t >= 8 else 0.0),
         "slalom": lambda t: (0.5, 0.4 * math.sin(2 * math.pi * t / 8.0), 0.0),
+        "nav": None,
     }
+    if script not in scripts:
+        raise KeyError(f"unknown record script {script!r}")
+    if script == "nav" and navigator is None:
+        raise ValueError("recorded script 'nav' requires a CourseNavigator")
     command_fn = scripts[script]
+    use_nav = navigator is not None and script == "nav"
 
     writer = imageio.get_writer(output, fps=int(1 / STEP_DT))
     steps = int(duration / STEP_DT)
-    sim.command[:] = command_fn(0.0)
+    if use_nav:
+        sim.command[:] = navigator.command(sim.qpos[:2], root_yaw_wxyz(sim.qpos[3:7]))
+    else:
+        sim.command[:] = command_fn(0.0)
     obs = sim.observe()
     sim.act(obs)
     for step in range(steps):
         t = step * STEP_DT
-        sim.command[:] = command_fn(t)
+        if use_nav:
+            sim.command[:] = navigator.command(sim.qpos[:2], root_yaw_wxyz(sim.qpos[3:7]))
+        else:
+            sim.command[:] = command_fn(t)
         obs, info = sim.step()
         sim.act(obs)
         # Follow camera two metres behind the trunk.
@@ -1054,36 +1698,81 @@ def parse_args() -> argparse.Namespace:
         ),
     )
     scene = parser.add_mutually_exclusive_group()
-    scene.add_argument("--hurdles", action="store_true", help="Add the Stage E hurdle course")
     scene.add_argument(
-        "--rule-contract",
-        action="store_true",
-        help="Build the conservative 100m obstacle course and auto-forward route",
+        "--course",
+        choices=["loco", "flat", "hurdles", "rule"],
+        default=None,
+        help="Scene: training-scale loco (default), flat, hurdles, or 100m rule course",
     )
-    parser.add_argument("--duration", type=float, default=60.0)
+    scene.add_argument("--hurdles", action="store_true", help="Alias for --course hurdles")
+    scene.add_argument("--rule-contract", action="store_true", help="Alias for --course rule")
+    control = parser.add_mutually_exclusive_group()
+    control.add_argument("--nav", dest="control", action="store_const", const="nav", help="Force goal navigator")
+    control.add_argument(
+        "--auto-forward",
+        dest="control",
+        action="store_const",
+        const="auto",
+        help="Lock a constant forward command",
+    )
+    parser.set_defaults(control=None)
+    parser.add_argument("--cruise", type=float, default=0.55, help="Navigator forward speed in m/s")
+    parser.add_argument("--duration", type=float, default=180.0)
     parser.add_argument("--record", type=Path, default=None, help="Write an MP4 and exit instead of opening the GUI")
     parser.add_argument(
         "--script",
         type=str,
         default="forward",
-        choices=["forward", "turn", "slalom"],
+        choices=["forward", "turn", "slalom", "nav"],
         help="Command script for --record runs",
     )
+    parser.add_argument(
+        "--dump-depth",
+        type=Path,
+        default=None,
+        help="Write raw/policy depth previews and camera-axis JSON, then continue",
+    )
     return parser.parse_args()
+
+
+def resolve_course(args: argparse.Namespace) -> str:
+    if getattr(args, "course", None):
+        return args.course
+    if args.rule_contract:
+        return "rule"
+    if args.hurdles:
+        return "hurdles"
+    return "loco"
+
+
+def resolve_control_mode(args: argparse.Namespace) -> str:
+    if args.control is not None:
+        return args.control
+    return "nav"
 
 
 def main() -> None:
     args = parse_args()
     checkpoint = resolve_checkpoint(args.checkpoint)
+    course = resolve_course(args)
     print(f"[INFO] using checkpoint {checkpoint}")
-    sim = DepthStudentSim(str(checkpoint), args.hurdles, args.rule_contract)
+    print(f"[INFO] course={course}")
+    sim = DepthStudentSim(str(checkpoint), args.hurdles, args.rule_contract, course=course)
+    if args.dump_depth is not None:
+        payload = sim.dump_depth_diagnostics(args.dump_depth)
+        print(f"[INFO] wrote depth diagnostics to {args.dump_depth}: {payload['depth']}")
+    control_mode = resolve_control_mode(args)
+    navigator = None
+    if control_mode == "nav":
+        navigator = CourseNavigator(course_waypoints_from_model(sim.model), cruise_vx=args.cruise)
+        goal = navigator.waypoints[-1]
+        print(f"[INFO] goal nav ON -> ({goal[0]:.1f}, {goal[1]:.1f}), cruise={args.cruise:.2f}")
     if args.record is not None:
-        recorded_run(sim, str(args.record), args.duration, args.script)
+        script = "nav" if control_mode == "nav" and args.script == "forward" else args.script
+        recorded_run(sim, str(args.record), args.duration, script, navigator=navigator)
     else:
-        auto_command = (0.6, 0.0, 0.0) if args.rule_contract else None
-        if auto_command is not None:
-            print("[INFO] auto route: forward command enabled for rule-contract scene")
-        metrics = interactive_run(sim, args.duration, auto_command=auto_command)
+        auto_command = (0.55, 0.0, 0.0) if control_mode == "auto" else None
+        metrics = interactive_run(sim, args.duration, navigator=navigator, auto_command=auto_command)
         print(f"[DONE] {metrics['steps']} steps in {metrics['wall_seconds']:.1f}s "
               f"({metrics['steps'] * STEP_DT / metrics['wall_seconds']:.1f}x realtime)")
 

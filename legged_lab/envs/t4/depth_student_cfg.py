@@ -42,7 +42,7 @@ class T4DepthStudentAgentCfg:
     max_iterations: int = 25000
     save_interval: int = 500
     experiment_name: str = "t4_loco_depth_student"
-    run_name: str = "stage_s_depth_distill"
+    run_name: str = "stage_s_head35"
     empirical_normalization: bool = False
     logger: str = "tensorboard"
     resume: bool = False

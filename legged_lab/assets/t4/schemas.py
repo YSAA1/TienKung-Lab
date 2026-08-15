@@ -9,6 +9,8 @@ literals.
 
 from __future__ import annotations
 
+import math
+
 from legged_lab.assets.t4.constants import T4_JOINT_NAMES
 
 NUM_T4_JOINTS = len(T4_JOINT_NAMES)
@@ -160,7 +162,7 @@ TEACHER_FORBIDDEN_PRIVILEGE_FIELDS = (
 # Depth student preprocessing
 # ---------------------------------------------------------------------------
 
-DEPTH_SCHEMA_VERSION = "t4_depth.v1"
+DEPTH_SCHEMA_VERSION = "t4_depth.v2"
 
 DEPTH_SENSOR_SIZE = (270, 480)
 DEPTH_POLICY_SIZE = (48, 64)
@@ -173,17 +175,65 @@ DEPTH_HISTORY_LENGTH = 3
 DEPTH_UPDATE_DECIMATION = 3
 DEPTH_RESIZE_MODE = "area"
 
-# Camera pose candidate that keeps the visible ground band roughly aligned with
-# the teacher scan window. Camera height above ground is about 1.32 m and the
-# vertical half-FOV is about 28 deg, so a 35 deg downward pitch first sees the
-# ground near 0.67 m ahead. The 0.2-0.67 m near band is intentionally left to
-# depth history plus proprioception; it can never be directly visible from a
-# torso-mounted camera.
+# Head-height mount on Trunk at the MJCF ``forward_camera`` site. The official
+# T4 head joints are fixed in the 27DoF policy, so this is not a gimbaled
+# head camera: it sits at head height and yaws/pitches with the torso only.
+# 35 deg down keeps the visible ground band aligned with the teacher scan
+# (first ground hit near 0.67 m). Do not use the stock D455 pelvis offset
+# ``(0.10, 0, 0.03)`` + ``rot=(0.707, 0, 0.707, 0)``: that rolls the image
+# 90 deg and looks horizontally from the IMU.
 DEPTH_CAMERA_BODY = "Trunk"
 DEPTH_CAMERA_SITE = "forward_camera"
 DEPTH_CAMERA_SITE_POS = (0.085, 0.0, 0.42)
 DEPTH_CAMERA_PITCH_DEG = 35.0
 DEPTH_NEAREST_VISIBLE_GROUND = 0.67
+
+
+def depth_camera_ros_axes() -> tuple[tuple[float, float, float], tuple[float, float, float], tuple[float, float, float]]:
+    """ROS optical axes in the Trunk frame: right, down, look."""
+    pitch = math.radians(DEPTH_CAMERA_PITCH_DEG)
+    cos_p = math.cos(pitch)
+    sin_p = math.sin(pitch)
+    right = (0.0, -1.0, 0.0)
+    down = (-sin_p, 0.0, -cos_p)
+    look = (cos_p, 0.0, -sin_p)
+    return right, down, look
+
+
+def depth_camera_ros_quat_wxyz() -> tuple[float, float, float, float]:
+    """Isaac Lab ``OffsetCfg.rot`` for the schema camera, ``convention='ros'``."""
+    right, down, look = depth_camera_ros_axes()
+    return _rotation_columns_to_quat_wxyz(right, down, look)
+
+
+def depth_camera_mujoco_xyaxes() -> tuple[float, float, float, float, float, float]:
+    """MuJoCo ``xyaxes`` after Isaac Lab's ROS -> OpenGL 180 deg X conversion."""
+    right, down, _look = depth_camera_ros_axes()
+    up = (-down[0], -down[1], -down[2])
+    return (*right, *up)
+
+
+def _rotation_columns_to_quat_wxyz(
+    col0: tuple[float, float, float],
+    col1: tuple[float, float, float],
+    col2: tuple[float, float, float],
+) -> tuple[float, float, float, float]:
+    """Convert a right-handed rotation matrix given by its columns to ``(w, x, y, z)``."""
+    m00, m10, m20 = col0
+    m01, m11, m21 = col1
+    m02, m12, m22 = col2
+    trace = m00 + m11 + m22
+    if trace > 0.0:
+        scale = math.sqrt(trace + 1.0) * 2.0
+        return (0.25 * scale, (m21 - m12) / scale, (m02 - m20) / scale, (m10 - m01) / scale)
+    if m00 > m11 and m00 > m22:
+        scale = math.sqrt(1.0 + m00 - m11 - m22) * 2.0
+        return ((m21 - m12) / scale, 0.25 * scale, (m01 + m10) / scale, (m02 + m20) / scale)
+    if m11 > m22:
+        scale = math.sqrt(1.0 + m11 - m00 - m22) * 2.0
+        return ((m02 - m20) / scale, (m01 + m10) / scale, 0.25 * scale, (m12 + m21) / scale)
+    scale = math.sqrt(1.0 + m22 - m00 - m11) * 2.0
+    return ((m10 - m01) / scale, (m02 + m20) / scale, (m12 + m21) / scale, 0.25 * scale)
 
 # ---------------------------------------------------------------------------
 # Proprioceptive observation shared by teacher and student
@@ -296,6 +346,8 @@ def observation_manifest() -> dict:
             "camera_site": DEPTH_CAMERA_SITE,
             "camera_site_pos": list(DEPTH_CAMERA_SITE_POS),
             "camera_pitch_deg": DEPTH_CAMERA_PITCH_DEG,
+            "camera_ros_quat_wxyz": list(depth_camera_ros_quat_wxyz()),
+            "camera_mujoco_xyaxes": list(depth_camera_mujoco_xyaxes()),
             "nearest_visible_ground": DEPTH_NEAREST_VISIBLE_GROUND,
         },
         "actor_obs_dim": {

@@ -12,6 +12,7 @@ import torch.nn.functional as F
 from isaaclab.utils import configclass
 
 from legged_lab.assets.t4.schemas import (
+    DEPTH_CAMERA_SITE_POS,
     DEPTH_CLIP_RANGE,
     DEPTH_HISTORY_LENGTH,
     DEPTH_INVALID_VALUE,
@@ -21,28 +22,37 @@ from legged_lab.assets.t4.schemas import (
     PROPRIO_HISTORY_LENGTH,
     STUDENT_ACTOR_OBS_DIM,
     TEACHER_ACTOR_OBS_DIM,
+    depth_camera_ros_quat_wxyz,
 )
 from legged_lab.envs.base.base_config import BaseSceneCfg
 from legged_lab.envs.t4.t4_env import T4LocoEnv
 from legged_lab.envs.t4.teacher_cfg import T4LocoTeacherEnvCfg
+from legged_lab.sensors.camera.camera_cfg import CameraCfg
 from legged_lab.sensors.camera.camera_cfgs import D455CameraCfg
 
 
 @configclass
 class T4LocoDepthStudentEnvCfg(T4LocoTeacherEnvCfg):
-    """Stage E physics with an additional torso-mounted depth camera."""
+    """Stage E physics with the schema head-height depth camera."""
 
     policy_role: str = "student"
 
     def __post_init__(self):
         # Keep the same local HeightScan for teacher supervision, while the
         # student receives only the camera stream through the env below.
+        # Head-height Trunk site + 35 deg down. Do not inherit the stock D455
+        # pelvis offset: that rolls the image 90 deg and is off-contract.
         self.scene.depth_camera = D455CameraCfg(
             prim_body_name="Trunk/depth_camera",
             width=480,
             height=270,
             debug_vis=False,
             data_types=["distance_to_image_plane"],
+            offset=CameraCfg.OffsetCfg(
+                pos=DEPTH_CAMERA_SITE_POS,
+                rot=depth_camera_ros_quat_wxyz(),
+                convention="ros",
+            ),
         )
         # The nubot headless image does not ship the Isaac Nucleus visual
         # materials referenced by the generic SceneCfg. Camera sensors only

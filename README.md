@@ -162,9 +162,14 @@ Run the depth student checkpoint in the migrated T4 MuJoCo model from the
 
 ```bash
 D:\anaconda\envs\pytorch\python.exe -m legged_lab.scripts.sim2sim_t4_depth_student
-D:\anaconda\envs\pytorch\python.exe -m legged_lab.scripts.sim2sim_t4_depth_student --checkpoint artifacts/checkpoints/t4_depth_student_latest.pt
-D:\anaconda\envs\pytorch\python.exe -m legged_lab.scripts.sim2sim_t4_depth_student --checkpoint latest --hurdles --record artifacts/eval/t4_depth_student.mp4
+D:\anaconda\envs\pytorch\python.exe -m legged_lab.scripts.sim2sim_t4_depth_student --course loco --duration 180
+D:\anaconda\envs\pytorch\python.exe -m legged_lab.scripts.sim2sim_t4_depth_student --course flat
+D:\anaconda\envs\pytorch\python.exe -m legged_lab.scripts.sim2sim_t4_depth_student --course rule
 ```
+
+Default scene is a Stage E style lane: random-rough, 0–15 cm boxes, waves, 22/28 cm hurdles, a ground-backed 15° up/down slope, then 18 cm and 20 cm stairs. Side walls at ±1.2 m, green goal at 38 m. Nav follows a 1.4 m centerline carrot. Mouse orbits; `R` resets. Do not use I/J/K/L.
+
+The Stage S camera is the schema head-height mount: Trunk ``forward_camera`` site ``(0.085, 0, 0.42)`` with 35 deg downward pitch. Old pelvis-rolled D455 students are off-contract and must not be mixed with this pose.
 
 ### Sim2Real
 The results of the TienKung-Lab have been successfully verified on the real **TienKung** robot.
