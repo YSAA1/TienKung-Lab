@@ -20,6 +20,7 @@ Usage:
 from __future__ import annotations
 
 import argparse
+import importlib.util
 import math
 import sys
 import time
@@ -31,13 +32,28 @@ import numpy as np
 import torch
 
 from legged_lab.assets.t4.constants import T4_JOINT_NAMES
+from legged_lab.assets.t4.mujoco_sim2sim import apply_isaac_contact_friction, apply_isaac_pd, isaac_pd_gains
 from legged_lab.assets.t4.schemas import (
     PROPRIO_FRAME_DIM,
     PROPRIO_HISTORY_LENGTH,
     TEACHER_SCAN_CLIP,
     TEACHER_SCAN_DIM,
     TEACHER_SCAN_HEIGHT_OFFSET,
+    TEACHER_SCAN_FORWARD_RANGE,
+    TEACHER_SCAN_LATERAL_RANGE,
+    TEACHER_SCAN_SHAPE,
 )
+# Keep this MuJoCo-only entrypoint independent of IsaacLab.  Importing the
+# ``legged_lab.terrains`` package would execute its IsaacLab-heavy __init__;
+# load the pure layout truth module directly instead.
+_LAYOUT_PATH = Path(__file__).resolve().parents[1] / "terrains" / "hurdle_layout.py"
+_LAYOUT_SPEC = importlib.util.spec_from_file_location("t4_hurdle_layout", _LAYOUT_PATH)
+assert _LAYOUT_SPEC and _LAYOUT_SPEC.loader
+_LAYOUT = importlib.util.module_from_spec(_LAYOUT_SPEC)
+_LAYOUT_SPEC.loader.exec_module(_LAYOUT)
+hurdle_bar_aabbs = _LAYOUT.hurdle_bar_aabbs
+hurdle_bar_height = _LAYOUT.hurdle_bar_height
+hurdle_ring_half_widths = _LAYOUT.hurdle_ring_half_widths
 # Standing pose copied from legged_lab/assets/t4/t4.py::T4_STANDING_JOINT_POS;
 # importing t4.py directly would pull in isaaclab, which this script must not need.
 T4_STANDING_JOINT_POS = dict.fromkeys(T4_JOINT_NAMES, 0.0)
@@ -75,23 +91,6 @@ STANDING_COMMAND_THRESHOLD = 0.1
 
 INIT_ROOT_Z = 0.85
 
-# Per-joint PD gains and torque limits, copied from legged_lab/assets/t4/t4.py.
-def _gains_for(joint: str) -> tuple[float, float, float]:
-    if joint.startswith("J_arm"):
-        idx = int(joint[-2:])
-        kp = 20.0 if idx <= 5 else 10.0
-        effort = 36.0 if idx <= 4 else 12.0
-        return kp, 1.0, effort
-    if joint == "J_waist_yaw":
-        return 50.0, 2.0, 120.0
-    if "hip" in joint:
-        return (100.0, 4.0, 130.0) if joint.endswith("pitch") else (50.0, 2.0, 120.0)
-    if "knee" in joint:
-        return 100.0, 4.0, 130.0
-    if "ankle" in joint:
-        return (80.0, 4.0, 72.0) if joint.endswith("pitch") else (20.0, 1.0, 72.0)
-    raise ValueError(f"unknown joint {joint}")
-
 
 def load_actor(checkpoint_path: str) -> torch.nn.Module:
     # The checkpoint pickle references classes from the in-repo rsl_rl package.
@@ -125,11 +124,38 @@ def quat_rotate_inverse_wxyz(q: np.ndarray, v: np.ndarray) -> np.ndarray:
 
 
 class T4MujocoRunner:
-    def __init__(self, checkpoint: str):
+    def __init__(self, checkpoint: str, terrain: str = "flat", difficulty: float = 0.85):
         self.actor = load_actor(checkpoint)
+        self.terrain = terrain
+        self.bar_aabbs = []
+        if terrain == "hurdles":
+            height = hurdle_bar_height(difficulty)
+            widths = hurdle_ring_half_widths(1.1)
+            # hurdle_layout uses tile-local coordinates centered at (4, 4).
+            # MuJoCo uses the spawn point as world origin, so translate AABBs.
+            for lo, hi in hurdle_bar_aabbs(widths, height):
+                self.bar_aabbs.append(
+                    ((lo[0] - 4.0, lo[1] - 4.0, lo[2]), (hi[0] - 4.0, hi[1] - 4.0, hi[2]))
+                )
 
-        self.model = mujoco.MjModel.from_xml_path(str(MJCF_PATH))
+        if terrain == "hurdles":
+            xml = MJCF_PATH.read_text()
+            xml = xml.replace('meshdir="../meshes/"', f'meshdir="{ASSET_DIR / "meshes"}"')
+            geoms = []
+            for i, (lo, hi) in enumerate(self.bar_aabbs):
+                center = [(lo[j] + hi[j]) / 2.0 for j in range(3)]
+                half = [(hi[j] - lo[j]) / 2.0 for j in range(3)]
+                geoms.append(
+                    f'<geom name="hurdle_{i}" type="box" pos="{center[0]} {center[1]} {center[2]}" '
+                    f'size="{half[0]} {half[1]} {half[2]}" rgba="0.85 0.25 0.12 1"/>'
+                )
+            xml = xml.replace("</worldbody>", "".join(geoms) + "</worldbody>")
+            self.model = mujoco.MjModel.from_xml_string(xml)
+        else:
+            self.model = mujoco.MjModel.from_xml_path(str(MJCF_PATH))
         self.model.opt.timestep = PHYSICS_DT
+        apply_isaac_pd(self.model)
+        apply_isaac_contact_friction(self.model)
         self.data = mujoco.MjData(self.model)
 
         # T4-order <-> MuJoCo mapping, resolved by name so XML ordering is irrelevant.
@@ -141,25 +167,9 @@ class T4MujocoRunner:
         )
         self.ctrl_ids = np.array([self.model.actuator(f"M{name[1:]}").id for name in T4_JOINT_NAMES])
 
-        gains = np.array([_gains_for(name) for name in T4_JOINT_NAMES])
+        gains = np.array([isaac_pd_gains(name) for name in T4_JOINT_NAMES])
         self.kp, self.kd, self.effort_limit = gains[:, 0], gains[:, 1], gains[:, 2]
         self.default_pos = np.array([T4_STANDING_JOINT_POS[name] for name in T4_JOINT_NAMES])
-
-        # Mirror PhysX's implicit joint drive: turn each torque motor into a position
-        # servo (gain kp) and fold kd into dof damping, which MuJoCo's Euler
-        # integrator handles implicitly. Explicit PD torque at 200 Hz was unstable.
-        for i, name in enumerate(T4_JOINT_NAMES):
-            a = self.ctrl_ids[i]
-            self.model.actuator_gaintype[a] = mujoco.mjtGain.mjGAIN_FIXED
-            self.model.actuator_gainprm[a, :] = 0.0
-            self.model.actuator_gainprm[a, 0] = self.kp[i]
-            self.model.actuator_biastype[a] = mujoco.mjtBias.mjBIAS_AFFINE
-            self.model.actuator_biasprm[a, :] = 0.0
-            self.model.actuator_biasprm[a, 1] = -self.kp[i]
-            self.model.actuator_ctrllimited[a] = 0
-            self.model.actuator_forcelimited[a] = 1
-            self.model.actuator_forcerange[a] = (-self.effort_limit[i], self.effort_limit[i])
-            self.model.dof_damping[self.qvel_adr[i]] += self.kd[i]
 
         self.command = np.zeros(3)
         self.reset()
@@ -202,9 +212,33 @@ class T4MujocoRunner:
         return frame
 
     def _height_scan(self) -> np.ndarray:
-        # Flat-ground playback: every scan cell sees ground z = 0.
-        value = float(np.clip(self.data.qpos[2] - TEACHER_SCAN_HEIGHT_OFFSET, *TEACHER_SCAN_CLIP))
-        return np.full(TEACHER_SCAN_DIM, value, dtype=np.float32)
+        baseline = self.data.qpos[2] - TEACHER_SCAN_HEIGHT_OFFSET
+        if self.terrain != "hurdles":
+            return np.full(TEACHER_SCAN_DIM, np.clip(baseline, *TEACHER_SCAN_CLIP), dtype=np.float32)
+        yaw = _root_yaw_wxyz(self.data.qpos[3:7])
+        c, s = np.cos(yaw), np.sin(yaw)
+        values = []
+        for x in np.linspace(*TEACHER_SCAN_FORWARD_RANGE, TEACHER_SCAN_SHAPE[0]):
+            for y in np.linspace(*TEACHER_SCAN_LATERAL_RANGE, TEACHER_SCAN_SHAPE[1]):
+                wx = self.data.qpos[0] + c * x - s * y
+                wy = self.data.qpos[1] + s * x + c * y
+                bar_z = 0.0
+                for (x0, y0, z0), (x1, y1, z1) in self.bar_aabbs:
+                    if x0 <= wx <= x1 and y0 <= wy <= y1:
+                        bar_z = max(bar_z, z1)
+                values.append(np.clip(baseline - bar_z, *TEACHER_SCAN_CLIP))
+        return np.asarray(values, dtype=np.float32)
+
+    def hurdle_contact_count(self) -> int:
+        if self.terrain != "hurdles":
+            return 0
+        count = 0
+        for i in range(self.data.ncon):
+            contact = self.data.contact[i]
+            a = mujoco.mj_id2name(self.model, mujoco.mjtObj.mjOBJ_GEOM, contact.geom1) or ""
+            b = mujoco.mj_id2name(self.model, mujoco.mjtObj.mjOBJ_GEOM, contact.geom2) or ""
+            count += int(a.startswith("hurdle_") or b.startswith("hurdle_"))
+        return count
 
     def observe(self) -> np.ndarray:
         self.history.append(self._proprio_frame())

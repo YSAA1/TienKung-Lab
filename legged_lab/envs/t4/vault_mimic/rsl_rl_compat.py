@@ -8,7 +8,46 @@ wrappers return observation-group dicts directly.
 
 from __future__ import annotations
 
+from collections.abc import Mapping
+
 from isaaclab_rl.rsl_rl import RslRlVecEnvWrapper as IsaacLabRslRlVecEnvWrapper
+
+
+def coerce_rsl_rl_observations(observations):
+    """Turn Isaac Lab 2.1 dicts or 2.3 TensorDicts into ``(policy, extras)``."""
+    if isinstance(observations, tuple) and len(observations) == 2:
+        raw_observations, extras = observations
+    else:
+        raw_observations, extras = observations, {}
+    extras = dict(extras)
+    groups = _as_obs_groups(raw_observations)
+    if groups is None:
+        groups = _as_obs_groups(extras.get("observations"))
+    if groups is None:
+        policy = raw_observations
+        groups = {"policy": policy}
+    if "policy" not in groups:
+        raise KeyError("Isaac Lab observation groups must contain 'policy'")
+    extras["observations"] = {key: _batch_obs(value) for key, value in groups.items()}
+    return extras["observations"]["policy"], extras
+
+
+def _as_obs_groups(raw):
+    if raw is None:
+        return None
+    if isinstance(raw, Mapping) or (hasattr(raw, "keys") and hasattr(raw, "__getitem__")):
+        try:
+            if "policy" in raw:
+                return {key: raw[key] for key in raw.keys()}
+        except Exception:
+            return None
+    return None
+
+
+def _batch_obs(value):
+    if hasattr(value, "dim") and value.dim() == 1:
+        return value.unsqueeze(0)
+    return value
 
 
 class RslRlVecEnvWrapper(IsaacLabRslRlVecEnvWrapper):
@@ -16,21 +55,7 @@ class RslRlVecEnvWrapper(IsaacLabRslRlVecEnvWrapper):
 
     @staticmethod
     def _legacy_observations(observations):
-        if isinstance(observations, tuple) and len(observations) == 2:
-            raw_observations, extras = observations
-        else:
-            raw_observations, extras = observations, {}
-        extras = dict(extras)
-        if isinstance(raw_observations, dict):
-            policy = raw_observations["policy"]
-            observation_groups = raw_observations
-        else:
-            policy = raw_observations
-            observation_groups = extras.get("observations", {"policy": policy})
-        if not isinstance(observation_groups, dict) or "policy" not in observation_groups:
-            raise KeyError("Isaac Lab observation groups must contain 'policy'")
-        extras["observations"] = observation_groups
-        return policy, extras
+        return coerce_rsl_rl_observations(observations)
 
     def reset(self):
         return self._legacy_observations(super().reset())

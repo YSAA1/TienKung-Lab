@@ -42,6 +42,7 @@ from legged_lab.assets.t4.vault_contract import (
     T4_VAULT_WRIST_BODY_NAMES,
     T4_VAULT_WRIST_TERMINATION_THRESHOLD,
 )
+from legged_lab.envs.t4.vault_eval import canonical_vault_corridor_layout, wall_spawn_pose
 
 VELOCITY_RANGE = {
     "x": (-0.5, 0.5),
@@ -94,6 +95,9 @@ class VaultSceneCfg(InteractiveSceneCfg):
         ),
         init_state=AssetBaseCfg.InitialStateCfg(pos=T4_VAULT_BOX_POS, rot=T4_VAULT_BOX_ROT),
     )
+    # Populated only by T4VaultMimicEvalEnvCfg; training/play keep the open scene.
+    corridor_wall_left: AssetBaseCfg | None = None
+    corridor_wall_right: AssetBaseCfg | None = None
     light = AssetBaseCfg(
         prim_path="/World/light",
         spawn=sim_utils.DistantLightCfg(color=(0.75, 0.75, 0.75), intensity=3000.0),
@@ -356,3 +360,27 @@ class T4VaultMimicPlayEnvCfg(T4VaultMimicEnvCfg):
         self.events.push_robot = None
         self.commands.motion.sampling_strategy = "zero"
         self.observations.policy.enable_corruption = False
+
+
+def _corridor_wall_cfg(prim_name: str, aabb) -> AssetBaseCfg:
+    size, center = wall_spawn_pose(aabb)
+    return AssetBaseCfg(
+        prim_path="{ENV_REGEX_NS}/" + prim_name,
+        spawn=sim_utils.CuboidCfg(
+            size=size,
+            collision_props=sim_utils.CollisionPropertiesCfg(),
+            visual_material=None,
+        ),
+        init_state=AssetBaseCfg.InitialStateCfg(pos=center),
+    )
+
+
+@configclass
+class T4VaultMimicEvalEnvCfg(T4VaultMimicPlayEnvCfg):
+    """Play env plus the V2 corridor walls; used only by the strict evaluator."""
+
+    def __post_init__(self):
+        super().__post_init__()
+        layout = canonical_vault_corridor_layout()
+        self.scene.corridor_wall_left = _corridor_wall_cfg("CorridorWallLeft", layout.wall_aabbs[0])
+        self.scene.corridor_wall_right = _corridor_wall_cfg("CorridorWallRight", layout.wall_aabbs[1])

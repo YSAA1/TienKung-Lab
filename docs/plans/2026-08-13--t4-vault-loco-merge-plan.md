@@ -31,9 +31,9 @@ G3 合并 + transition（单一策略）
 
 ## Active Slice
 
-V4 G1 正式训练挂机监控（zhuoqun tmux `t4_vault_g1`，4096 env / 30000 iter /
-seed 42 / CUDA 0），并行补齐 V2 corridor 场景与 strict evaluator。V0/V1/V3 已完成
-（执行顺序按用户「立马开训」指令重排为 V1→V3→V4，V2 挂机期间补）。
+V6 G2 任务与蒸馏入口已落地（2026-08-14），待 zhuoqun G1 腾卡后用
+`--teacher_checkpoint` 开蒸馏。严格 evaluator 按用户裁定推迟。下一片 V7：
+G3 合并任务（接 V5 组路由 + G2 学生 + zhuoqun `stage_e_prov6` loco）。
 
 ## Non-goals
 
@@ -168,15 +168,21 @@ zhuoqun 是计划内显式 V3 gate，不构成无法规划的外部阻塞。G3 �
     `ssh zhuoqun 'CUDA_VISIBLE_DEVICES=0 ./scripts/zhuoqun_run.sh legged_lab/scripts/smoke_t4_vault_task.py'`
   - success_definition: G1 训练环境在目标 runtime 端到端可跑，合同由测试锁定。
 
-- [ ] V2：1m 箱 corridor 场景与 strict evaluator（V4 训练挂机期间并行补齐）
+- [ ] V2：1m 箱 corridor 场景与 strict evaluator（纯 Python 合同已绿，IsaacLab RED 待 GPU）
   - scope: corridor + ordered gates 的箱体评估场景；strict evaluator（crossing
     sustained + stable landing + 禁止接触/hard-limit 计数 + 固定 checkpoint 输入 +
     lineage 字段）；RED case：未训练/零策略 checkpoint 产出完整 JSON 且判失败。
+  - progress: `legged_lab/envs/t4/vault_eval.py` 冻结 1m corridor 布局（箱体填满
+    车道）与 zip 过箱/落地判定；`t4_vault_mimic_eval` 在 play 场景加两侧墙；
+    `tests/test_t4_vault_evaluator_contract.py` 12 项全绿（含参考动作本身是
+    strict success、零策略 batch 成功率 0、侧绕/跳 gate/已过箱起步/hard
+    violation、JSON lineage 字段）。IsaacLab `--policy zero` RED 等 G1 腾卡后
+    在 zhuoqun 跑；不要把 V2 代码同步进正在训的 checkout。
   - acceptance_criteria: evaluator JSON 含 lineage/seed/checkpoint/bucket/成功判定/
     失败原因/违规计数全字段；零策略成功率为 0 且失败原因分类正确；侧绕/跳 gate
     判失败。
   - verification_commands: `python -m pytest tests/test_t4_vault_evaluator_contract.py -q`;
-    `tmux new-session -d -s t4-vault-red 'cd <nubot-checkout> && bash scripts/nubot_run.sh legged_lab/scripts/eval_t4_vault.py --policy zero --output artifacts/eval/t4_vault_red.json 2>&1 | tee /tmp/t4-vault-red.log'`
+    `ssh zhuoqun 'CUDA_VISIBLE_DEVICES=0 ./scripts/zhuoqun_run.sh legged_lab/scripts/eval_t4_vault.py --task t4_vault_mimic_eval --policy zero --episodes 16 --output artifacts/eval/t4_vault_red.json'`
   - success_definition: G1/G2 gate 的证据机器可产出、失败可分类，评估语义先于训练冻结。
 
 - [x] V3：zhuoqun runtime preflight（2026-08-13 完成，docker 路线）
@@ -196,9 +202,10 @@ zhuoqun 是计划内显式 V3 gate，不构成无法规划的外部阻塞。G3 �
 
 - [ ] V4：G1 正式训练与 gate + skill AMP clips 入库（训练已启动 2026-08-13）
   - progress: zhuoqun tmux `t4_vault_g1`，CUDA 0，4096 env / 30000 iter / seed 42，
-    日志 `/tmp/t4_vault_g1_train.log` + 仓库 `logs/t4_vault_mimic/<ts>`；启动即
-    正式 lineage，前几百 iter 的数值健康检查兼作 probe（异常即杀重来）；evaluator
-    gate 待 V2 补齐后执行。
+    日志 `/tmp/t4_vault_g1_train.log` + 仓库 `logs/t4_vault_mimic/2026-08-13_09-30-13`；
+    2026-08-14 12:5x 抽检 iter 27955/30000，mean reward ~47、episode length ~480/500、
+    body_pos error ~0.05 m、`time_out` 主导终止，`model_27500.pt` 已落盘。G1 数值
+    健康；strict gate 等 V2 IsaacLab RED 通过后对固定 checkpoint 跑。
   - scope: 短 probe（数值健康 + 关键行为信号）→ 正式 lineage（预算 ~20000 iter，
     多卡，tmux）→ G1 strict evaluator（≥95%，≥100 trials）→ 成功 rollout 提取 66D
     skill AMP clips 入库（`legged_lab/envs/t4/datasets/` 下新目录 + manifest）→
@@ -210,10 +217,16 @@ zhuoqun 是计划内显式 V3 gate，不构成无法规划的外部阻塞。G3 �
     G1 evaluator 命令由 V2 产物固定。
   - success_definition: 新 plant 上有可蒸馏的 1m 翻箱专家与 skill AMP 数据。
 
-- [ ] V5：rsl_rl 多组扩展（可与 V4 训练挂机并行开发）
+- [x] V5：rsl_rl 多组扩展（2026-08-14 库 + 单测完成）
   - scope: 多专家 DAgger runner（按组查询冻结 expert）、per-group reward/termination、
     critic 组别 one-hot、AMP 双判别器相位切换（箱前缘固定偏移触发点）；纯 torch
     单测先行。
+  - progress: `rsl_rl/rsl_rl/utils/multi_expert.py`（组 ID、critic-only one-hot、
+    loco/skill 查询、transition 不监督、per-group scale）+
+    `rsl_rl/rsl_rl/utils/dual_amp.py`（箱前缘 trigger、硬切换、判别器 loss mask）。
+    `tests/test_multi_expert_dagger.py` + `tests/test_dual_amp_switch.py` 绿；
+    `tests/test_t4_observation_contracts.py` 未回归。未改 AMPPPO 默认路径。
+    IsaacLab runner 接线留到 V6/V7 任务。
   - acceptance_criteria: 单测覆盖组路由正确性（loco/skill/transition 各组 expert
     查询与 loss mask）、one-hot 只进 critic、判别器切换点数值正确；现有 AMPPPO
     训练路径不回归（Stage E 合同测试仍绿）。
@@ -221,17 +234,20 @@ zhuoqun 是计划内显式 V3 gate，不构成无法规划的外部阻塞。G3 �
     `python -m pytest tests/test_t4_observation_contracts.py -q`
   - success_definition: G2/G3 所需训练机制在库内可用且被测试锁定。
 
-- [ ] V6：G2 heightscan 技能蒸馏与泛化 gate
+- [ ] V6：G2 heightscan 技能蒸馏与泛化（任务已写，严格 gate 推迟；蒸馏待腾卡）
   - scope: DAgger(+PPO) 把 G1 expert 蒸馏到 1155D 合同（去障碍尺寸/距离特权）；
     丢 expert 后按箱宽/深/位置随机 + 箱后目标 task reward 泛化；reset 用 loco 一致
     站姿（不用 RSI）；G2 evaluator（≥90%，500 trials）+ 回放。
+  - progress: `t4_vault_skill` + `train_t4_vault_skill.py`（`--teacher_checkpoint` 加载
+    G1 actor 为冻结 teacher）。学生 1155D = Stage E teacher actor；教师组 150D；
+    `tests/test_t4_vault_skill_contracts.py` 4 项绿。泛化阶段与 90% gate 未做。
   - acceptance_criteria: G2 成功标准达成且三证齐全；观测合同 == Stage E 1155D
     schema（合同测试）；无参考/无障碍特权输入。
   - verification_commands: `python -m pytest tests/test_t4_vault_skill_contracts.py -q`;
     训练/评估命令由 V4/V2 模式固定（tmux）。
   - success_definition: 技能能力已迁移到与 loco 同合同的 heightscan 策略上。
 
-- [ ] V7：G3 合并 + transition 统一策略 gate
+- [ ] V7：G3 合并 + transition 统一策略（当前）
   - scope: 三组环境（loco 组冻结 Stage E teacher DAgger / skill 组 G2 策略 DAgger /
     transition 组三区域 reset + 稀疏过箱奖励 + 密集接近奖励 + 相位切换双 prior AMP）；
     G3 四项验收 + 报告项（0.8m 箱、梯形）。
@@ -286,5 +302,5 @@ tmux ls
 
 `implement`
 
-Reason: V4 训练挂机中（数值健康监控 + 定期 checkpoint 检查），V2 evaluator 是
-当前唯一待实现代码面；G1 gate 需要 V2 产物，挂机窗口内完成。
+Reason: G2 任务与蒸馏入口已齐；下一片 V7 G3 合并环境（接 V5 路由 + G2 ckpt +
+zhuoqun loco）。G2 蒸馏本身等 G1 腾卡后在 zhuoqun 挂。不要覆盖正在训的 checkout。

@@ -41,6 +41,10 @@ zhuoqun@100.95.109.48 密码123456 四个GPU
 Isaac 运行时（nubot）：`bash scripts/nubot_run.sh <script.py> [args...]`，它会激活 conda env
 `isaaclab` 的 lib 路径并用 isaac-sim standalone 的 `python.sh` 启动。
 
+本机 play 拉下来的 checkpoint：先 `bash scripts/setup_local_isaac_docker.sh`（国内镜像 / aria2c 拉 Isaac Sim 5.1 + IsaacLab 2.1.0，编 `t4-isaac-jammy:v2`），再用
+`scripts/local_run.sh legged_lab/scripts/play.py --task t4_vault_mimic --num_envs=1 --load_run <run> --checkpoint model_*.pt`。
+不要用 conda `env_isaaclab`（IsaacLab 2.3.2 / torch 2.7）当正式 play。说明见 `docs/runbooks/local-isaac-docker.md`。
+
 ## Style
 
 - Python 格式遵循 Black，line length 120；静态检查由 `.pre-commit-config.yaml` 和 `.flake8` 定义。

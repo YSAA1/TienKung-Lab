@@ -47,7 +47,7 @@
   <worldbody>
     <light directional="true" diffuse=".4 .4 .4" specular="0.1 0.1 0.1" pos="0 0 5.0" dir="0 0 -1" castshadow="false" />
     <light directional="true" diffuse=".6 .6 .6" specular="0.2 0.2 0.2" pos="0 0 4" dir="0 0 -1" />
-    <geom name="ground" type="plane" pos="0 0 0" size="0 0 1" material="matplane" condim="1"/>
+    <geom name="ground" type="plane" pos="0 0 0" size="0 0 1" material="matplane" condim="3" friction="1 0.005 0.0001"/>
     <body name="Trunk" pos="0 0 0.9">
       <inertial pos="0.0009803 -0.0006637 0.180334" quat="0.999961 -0.00489773 -0.000141509 0.00734485" mass="9.4921" diaginertia="0.132505 0.119262 0.034493"/>
       <!-- The vendor IMU frame is the Trunk origin.  Keep the original name and
