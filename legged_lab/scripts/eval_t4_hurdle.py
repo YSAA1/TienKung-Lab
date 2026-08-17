@@ -1,8 +1,8 @@
-"""Short fixed-command diagnostic evaluator for the Stage E hurdle bucket.
+"""Short fixed-command diagnostic evaluator for Stage E terrain buckets.
 
 This version is intentionally a progress gate, not the final zero-contact
-10-bar evaluator. It fixes a forward command, disables training randomization,
-and requires an uninterrupted timeout plus >=3 m forward displacement.
+or exact-footstep evaluator. It fixes a forward command, disables training
+randomization, and requires an uninterrupted timeout plus forward displacement.
 """
 
 from __future__ import annotations
@@ -19,7 +19,7 @@ from legged_lab.scripts.isaaclab_runtime_compat import (
     patch_physx_backward_compatibility_setting,
 )
 
-parser = argparse.ArgumentParser(description="Evaluate T4 hurdle progress.")
+parser = argparse.ArgumentParser(description="Evaluate T4 Stage E terrain progress.")
 parser.add_argument("--task", default="t4_loco_teacher")
 parser.add_argument("--num_envs", type=int, default=32)
 parser.add_argument("--episodes", type=int, default=100)
@@ -29,7 +29,16 @@ parser.add_argument("--output", required=True)
 parser.add_argument("--difficulty", type=float, default=0.85)
 parser.add_argument("--progress_m", type=float, default=3.0)
 parser.add_argument("--keep_randomization", action="store_true")
-parser.add_argument("--terrain_type", choices=("hurdles", "flat"), default="hurdles")
+parser.add_argument(
+    "--stochastic",
+    action="store_true",
+    help="Sample the PPO action distribution instead of using the deterministic actor mean.",
+)
+parser.add_argument(
+    "--terrain_type",
+    choices=("hurdles", "flat", "stepping_stones", "raised_pillars"),
+    default="hurdles",
+)
 patch_physx_backward_compatibility_setting(AppLauncher)
 AppLauncher.add_app_launcher_args(parser)
 args_cli, _ = parser.parse_known_args()
@@ -54,14 +63,9 @@ def evaluate() -> dict:
     env_cfg.scene.terrain_generator.curriculum = False
     env_cfg.scene.terrain_generator.difficulty_range = (args_cli.difficulty, args_cli.difficulty)
     sub_terrains = env_cfg.scene.terrain_generator.sub_terrains
-    if args_cli.terrain_type == "hurdles":
-        if "hurdles" not in sub_terrains:
-            raise ValueError(f"hurdles terrain is unavailable: {sorted(sub_terrains)}")
-        terrain_cfg = sub_terrains["hurdles"]
-    else:
-        if "flat" not in sub_terrains:
-            raise ValueError(f"flat terrain is unavailable: {sorted(sub_terrains)}")
-        terrain_cfg = sub_terrains["flat"]
+    if args_cli.terrain_type not in sub_terrains:
+        raise ValueError(f"{args_cli.terrain_type} terrain is unavailable: {sorted(sub_terrains)}")
+    terrain_cfg = sub_terrains[args_cli.terrain_type]
     terrain_cfg.proportion = 1.0
     env_cfg.scene.terrain_generator.sub_terrains = {args_cli.terrain_type: terrain_cfg}
     env_cfg.commands.rel_standing_envs = 0.0
@@ -74,7 +78,12 @@ def evaluate() -> dict:
     env_cfg.commands.ranges.heading = (0.0, 0.0)
     env_cfg.noise.add_noise = False
     if not args_cli.keep_randomization:
-        for name in ("physics_material", "add_base_mass", "reset_base", "reset_robot_joints", "push_robot"):
+        # Keep the seeded reset pose/joint perturbations. Removing both leaves a
+        # perfectly symmetric nominal start where deterministic locomotion
+        # policies can remain at a stationary fixed point, including known-good
+        # Stage E checkpoints. Mass/material randomization and pushes are not
+        # part of this fixed-command behavior check.
+        for name in ("physics_material", "add_base_mass", "push_robot"):
             setattr(env_cfg.domain_rand.events, name, None)
     env_cfg.scene.seed = agent_cfg.seed
     env_cfg.scene.terrain_generator.num_rows = 1
@@ -88,7 +97,16 @@ def evaluate() -> dict:
     runner_class = eval(agent_cfg.runner_class_name)
     runner = runner_class(env, agent_cfg.to_dict(), log_dir=str(root.parent), device=env.device)
     runner.load(str(root), load_optimizer=False)
-    policy = runner.get_inference_policy(device=env.device)
+    deterministic_policy = runner.get_inference_policy(device=env.device)
+    if args_cli.stochastic:
+
+        def policy(policy_obs):
+            if runner.cfg["empirical_normalization"]:
+                policy_obs = runner.obs_normalizer(policy_obs)
+            return runner.alg.policy.act(policy_obs)
+
+    else:
+        policy = deterministic_policy
 
     obs, _ = env.get_observations()
     max_steps = int(round(env.max_episode_length))
@@ -103,12 +121,21 @@ def evaluate() -> dict:
 
     start_forward_xy = forward_xy(start_quat)
     successes = failures = completed = 0
+    timeout_episodes = fall_or_early_termination_episodes = pit_fall_episodes = 0
     progress_values: list[float] = []
     failure_steps: list[int] = []
+    commanded_forward_sum = 0.0
+    actual_forward_sum = 0.0
+    velocity_sample_count = 0
     while completed < args_cli.episodes:
         with torch.inference_mode():
             actions = policy(obs)
         obs, _, dones, extras = env.step(actions)
+        current_forward_xy = forward_xy(env.robot.data.root_quat_w)
+        actual_forward = torch.sum(env.robot.data.root_lin_vel_w[:, :2] * current_forward_xy, dim=-1)
+        commanded_forward_sum += float(env.command_generator.command[:, 0].sum().item())
+        actual_forward_sum += float(actual_forward.sum().item())
+        velocity_sample_count += env.num_envs
         episode_steps += 1
         done_ids = torch.nonzero(dones, as_tuple=False).flatten().tolist()
         for env_id in done_ids:
@@ -117,6 +144,13 @@ def evaluate() -> dict:
             progress = float(torch.dot(delta_xy, start_forward_xy[env_id]).item())
             timed_out = bool(extras.get("time_outs", torch.zeros_like(dones))[env_id].item())
             progress_values.append(progress)
+            if timed_out:
+                timeout_episodes += 1
+            else:
+                fall_or_early_termination_episodes += 1
+            pit_fall_buf = getattr(env, "pit_fall_buf", None)
+            if pit_fall_buf is not None and bool(pit_fall_buf[env_id].item()):
+                pit_fall_episodes += 1
             if timed_out and progress >= args_cli.progress_m:
                 successes += 1
             else:
@@ -129,8 +163,11 @@ def evaluate() -> dict:
             if completed >= args_cli.episodes:
                 break
 
+    reach_1m_episodes = sum(progress >= 1.0 for progress in progress_values)
+    reach_2m_episodes = sum(progress >= 2.0 for progress in progress_values)
+    reach_4m_episodes = sum(progress >= 4.0 for progress in progress_values)
     result = {
-        "evaluator": "t4_hurdle_progress_v1",
+        "evaluator": "t4_stage_e_terrain_progress_v2",
         "checkpoint": str(root),
         "task": args_cli.task,
         "seed": int(agent_cfg.seed),
@@ -143,9 +180,27 @@ def evaluate() -> dict:
         "strict_progress_success_rate": successes / max(1, completed),
         "progress_m": args_cli.progress_m,
         "progress_mean_m": sum(progress_values) / max(1, len(progress_values)),
+        "progress_min_m": min(progress_values, default=0.0),
+        "progress_max_m": max(progress_values, default=0.0),
+        "reach_1m_episodes": reach_1m_episodes,
+        "reach_1m_rate": reach_1m_episodes / max(1, completed),
+        "reach_2m_episodes": reach_2m_episodes,
+        "reach_2m_rate": reach_2m_episodes / max(1, completed),
+        "reach_4m_episodes": reach_4m_episodes,
+        "reach_4m_rate": reach_4m_episodes / max(1, completed),
+        "timeout_episodes": timeout_episodes,
+        "fall_or_early_termination_episodes": fall_or_early_termination_episodes,
+        "pit_fall_episodes": pit_fall_episodes,
         "failure_step_mean": sum(failure_steps) / max(1, len(failure_steps)),
+        "stochastic_actions": args_cli.stochastic,
+        "commanded_forward_mean_mps": commanded_forward_sum / max(1, velocity_sample_count),
+        "actual_forward_mean_mps": actual_forward_sum / max(1, velocity_sample_count),
+        "exact_foothold_gate": False,
         "final_zero_contact_gate": False,
-        "caveat": "This diagnostic does not prove zero bar contact or ordered 10-bar passage.",
+        "caveat": (
+            "This progress diagnostic does not prove exact foothold placement, zero bar contact, "
+            "or ordered corridor passage."
+        ),
     }
     Path(args_cli.output).parent.mkdir(parents=True, exist_ok=True)
     Path(args_cli.output).write_text(json.dumps(result, indent=2) + "\n")

@@ -271,3 +271,49 @@ def test_eval_env_cfg_consumes_the_layout():
     assert "from legged_lab.envs.t4 import vault_eval" in script or "vault_eval" in script
     assert "--policy" in script
     assert "zero" in script
+
+
+def _range_is_zero(bounds) -> bool:
+    return bounds == (0.0, 0.0)
+
+
+def test_play_and_eval_reset_use_zero_motion_jitter():
+    """Play/eval start at frame 0 with no RSI pose/joint/vel jitter.
+
+    Training keeps the non-zero ranges. Play/eval must not inherit them.
+    """
+    assert vault_contract.T4_VAULT_PLAY_SAMPLING_STRATEGY == "zero"
+    assert vault_contract.T4_VAULT_PLAY_JOINT_POSITION_RANGE == (0.0, 0.0)
+    for axis, bounds in vault_contract.T4_VAULT_PLAY_POSE_RANGE.items():
+        assert _range_is_zero(bounds), axis
+    for axis, bounds in vault_contract.T4_VAULT_PLAY_VELOCITY_RANGE.items():
+        assert _range_is_zero(bounds), axis
+
+    source = (ROOT / "legged_lab/envs/t4/vault_mimic/vault_env_cfg.py").read_text()
+    assert "T4_VAULT_PLAY_SAMPLING_STRATEGY" in source
+    assert "T4_VAULT_PLAY_POSE_RANGE" in source
+    assert "T4_VAULT_PLAY_VELOCITY_RANGE" in source
+    assert "T4_VAULT_PLAY_JOINT_POSITION_RANGE" in source
+    play_init = source.split("class T4VaultMimicPlayEnvCfg")[1].split("class ")[0]
+    assert "T4_VAULT_PLAY_SAMPLING_STRATEGY" in play_init
+    assert "T4_VAULT_PLAY_POSE_RANGE" in play_init
+    assert "T4_VAULT_PLAY_VELOCITY_RANGE" in play_init
+    assert "T4_VAULT_PLAY_JOINT_POSITION_RANGE" in play_init
+
+
+def test_eval_script_resets_each_batch_and_flushes_kinematics():
+    """Each trial batch must start from a fresh RSI frame-0 state.
+
+    The first m28500 100-trial JSON was 48/100 because the evaluator reused
+    leftover poses across batches (16/16, 0/16, 16/16, ...). Step-0 wrist
+    deaths were the cold-start batch before FK flush, not a policy failure.
+    """
+    script = (ROOT / "legged_lab/scripts/eval_t4_vault.py").read_text()
+    assert "def _independent_reset(" in script
+    loop = script.split("while completed < requested:")[1].split("result = VaultBatchResult")[0]
+    assert "_independent_reset(env)" in loop
+    helper = script.split("def _independent_reset(")[1].split("def evaluate")[0]
+    assert helper.count("env.reset()") >= 2
+    assert "env.step(" in helper
+    assert "write_data_to_sim" in helper
+    assert "sim.forward()" in helper

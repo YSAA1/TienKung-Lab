@@ -34,6 +34,8 @@ from legged_lab.assets.t4.schemas import (
     CRITIC_FRAME_DIM,
     PROPRIO_FIELDS,
     PROPRIO_FRAME_DIM,
+    TEACHER_PAPER_ACTOR_OBS_DIM,
+    TEACHER_PAPER_CONTACT_DIM,
     TEACHER_SCAN_DIM,
     TEACHER_SCAN_SHAPE,
 )
@@ -131,19 +133,15 @@ def _frame_plan(is_critic: bool) -> tuple[list[int], list[float]]:
     return indices, signs
 
 
-def _scan_plan(start: int) -> list[int]:
-    """Mirror permutation for the flattened teacher height scan.
+def _grid_plan(start: int, shape: tuple[int, int]) -> list[int]:
+    """Sagittal mirror of an ``ordering='xy'`` grid: reverse the outer y axis."""
+    num_x, num_y = shape
+    return [start + (num_y - 1 - iy) * num_x + ix for iy in range(num_y) for ix in range(num_x)]
 
-    IsaacLab's ``grid_pattern`` with ``ordering="xy"`` flattens the grid with y
-    as the outer axis, so flat index = iy * num_x + ix and the sagittal mirror
-    reverses iy.
-    """
-    num_x, num_y = TEACHER_SCAN_SHAPE
-    indices = []
-    for iy in range(num_y):
-        for ix in range(num_x):
-            indices.append(start + (num_y - 1 - iy) * num_x + ix)
-    return indices
+
+def _scan_plan(start: int) -> list[int]:
+    """Mirror permutation for the flattened teacher height scan."""
+    return _grid_plan(start, TEACHER_SCAN_SHAPE)
 
 
 @lru_cache(maxsize=8)
@@ -204,14 +202,35 @@ def mirror_actions(actions):
 def mirror_observations(obs, is_critic: bool):
     """Mirror an actor/critic observation batch (history frames + scan tail)."""
     frame_dim = CRITIC_FRAME_DIM if is_critic else PROPRIO_FRAME_DIM
-    body_width = obs.shape[-1] - TEACHER_SCAN_DIM
+    extra = 0
+    width = obs.shape[-1]
+    if not is_critic and width == TEACHER_PAPER_ACTOR_OBS_DIM:
+        extra = TEACHER_PAPER_CONTACT_DIM
+        width -= extra
+    body_width = width - TEACHER_SCAN_DIM
     if body_width <= 0 or body_width % frame_dim:
         raise ValueError(
             f"{'critic' if is_critic else 'actor'} observation width {obs.shape[-1]} does not match "
             f"{frame_dim}-D frames plus a {TEACHER_SCAN_DIM}-D scan"
         )
     indices, signs = observation_mirror_plan(bool(is_critic), body_width // frame_dim)
-    return _apply_plan(obs, indices, signs)
+    core = obs[..., :width] if extra else obs
+    mirrored = _apply_plan(core, indices, signs)
+    if extra:
+        contact = obs[..., -extra:]
+        swapped = contact[..., [1, 0]] if extra == 2 else contact
+        return _concat_last(mirrored, swapped)
+    return mirrored
+
+
+def _concat_last(first, second):
+    if type(first).__module__.split(".", 1)[0] == "torch":
+        import torch
+
+        return torch.cat((first, second), dim=-1)
+    import numpy as np
+
+    return np.concatenate((first, second), axis=-1)
 
 
 def get_symmetric_states(obs=None, actions=None, env=None, obs_type=None, is_critic=None):

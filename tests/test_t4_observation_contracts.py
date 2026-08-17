@@ -25,6 +25,29 @@ def _field_widths(fields):
     return {name: width for name, width in fields}
 
 
+def test_teacher_actor_dim_stays_1155_paper_lineage_is_separate():
+    assert schemas.TEACHER_ACTOR_OBS_DIM == 1155
+    assert schemas.TEACHER_PAPER_ACTOR_OBS_DIM == schemas.TEACHER_ACTOR_OBS_DIM + 2
+
+
+def test_paper_actor_mirror_swaps_trailing_contact():
+    import importlib.util
+
+    import numpy as np
+
+    path = ROOT / "legged_lab" / "envs" / "t4" / "symmetry.py"
+    spec = importlib.util.spec_from_file_location("t4_symmetry_paper", path)
+    symmetry = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(symmetry)
+    obs = np.zeros((1, schemas.TEACHER_PAPER_ACTOR_OBS_DIM), dtype=np.float32)
+    obs[0, -2] = 1.0
+    obs[0, -1] = 0.0
+    mirrored = symmetry.mirror_observations(obs, is_critic=False)
+    assert mirrored.shape == obs.shape
+    assert mirrored[0, -2] == 0.0
+    assert mirrored[0, -1] == 1.0
+
+
 def test_amp_frame_layout_matches_frozen_66d_schema():
     widths = _field_widths(schemas.AMP_FIELDS)
     assert widths == {
@@ -225,6 +248,10 @@ def test_mirror_is_an_involution_on_actor_critic_obs_and_actions():
     assert np.allclose(
         _symmetry.mirror_observations(_symmetry.mirror_observations(critic_obs, True), True), critic_obs
     )
+    torch = pytest.importorskip("torch")
+    critic_t = torch.as_tensor(critic_obs)
+    mirrored_t = _symmetry.mirror_observations(_symmetry.mirror_observations(critic_t, True), True)
+    assert torch.allclose(mirrored_t, critic_t)
     assert np.allclose(_symmetry.mirror_actions(_symmetry.mirror_actions(actions)), actions)
 
 

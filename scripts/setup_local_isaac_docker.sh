@@ -36,7 +36,7 @@ have_isaacsim() {
 }
 
 have_isaaclab() {
-  [[ -f "$ISAACLAB_ROOT/VERSION" && "$(tr -d '[:space:]' < "$ISAACLAB_ROOT/VERSION")" == "2.1.0" && -d "$ISAACLAB_ROOT/source/isaaclab" ]]
+  [[ -f "$ISAACLAB_ROOT/VERSION" && "$(tr -d '[:space:]' < "$ISAACLAB_ROOT/VERSION")" == "2.1.0" && -f "$ISAACLAB_ROOT/source/isaaclab/isaaclab/utils/io/yaml.py" ]]
 }
 
 ensure_libs() {
@@ -112,6 +112,9 @@ if [[ ! -x "$ISAACSIM_ROOT/python.sh" || ! -d "$ISAACSIM_ROOT/kit" ]]; then
 fi
 
 if ! docker info >/dev/null 2>&1; then
+  if getent group docker | grep -qw "${USER:-}"; then
+    exec sg docker -c "$(printf '%q ' "$0" "$@")"
+  fi
   need_sudo
   exit 2
 fi
@@ -122,6 +125,16 @@ docker build -t "$DOCKER_IMAGE" "$REPO_ROOT/docker/t4-isaac-jammy"
 if [[ -n "${DISPLAY:-}" ]]; then
   xhost +SI:localuser:root >/dev/null 2>&1 || xhost +local: >/dev/null 2>&1 || true
 fi
+
+echo "[setup] IsaacLab pip deps into kit python (do not pin/replace torch)"
+# IsaacLab 2.1 setup.py wants torch==2.5.1; Isaac Sim 5.1 already ships torch.
+# flatdict 4.0.1 is sdist-only and needs pkg_resources at build time.
+PIP_INDEX="https://pypi.tuna.tsinghua.edu.cn/simple"
+"$REPO_ROOT/scripts/local_run.sh" -m pip install -q -i "$PIP_INDEX" 'setuptools<81' wheel
+"$REPO_ROOT/scripts/local_run.sh" -m pip install -q -i "$PIP_INDEX" --no-build-isolation \
+  'flatdict==4.0.1' 'prettytable==3.3.0' 'gymnasium' 'einops' \
+  GitPython 'onnx==1.16.1' 'tensorboard==2.18.0' 'numpy<2' \
+  h5py hydra-core moviepy 'protobuf>=3.20.2,<5.0.0'
 
 echo "[setup] smoke: torch + CUDA inside the container"
 "$REPO_ROOT/scripts/local_run.sh" -c 'import torch,sys; print(sys.version.split()[0], torch.__version__, "cuda", torch.cuda.is_available(), torch.cuda.device_count())'

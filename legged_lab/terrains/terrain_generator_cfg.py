@@ -29,7 +29,7 @@ import numpy as np
 import trimesh
 
 import isaaclab.terrains as terrain_gen
-from isaaclab.terrains.sub_terrain_cfg import SubTerrainBaseCfg
+from isaaclab.terrains import SubTerrainBaseCfg
 from isaaclab.terrains.terrain_generator_cfg import TerrainGeneratorCfg
 from isaaclab.terrains.trimesh.utils import make_plane
 from isaaclab.utils import configclass
@@ -43,6 +43,26 @@ from .hurdle_layout import (
     hurdle_bar_height,
     hurdle_ring_half_widths,
 )
+from .stepping_stone_layout import (
+    T4_FOOTHOLD_PITCH_RANGE,
+    T4_HOLE_DEPTH,
+    T4_PILLAR_DIAMETER_RANGE,
+    T4_PILLAR_HEIGHT_RANGE,
+    T4_PILLAR_PITCH_RANGE,
+    T4_STONE_BORDER_WIDTH,
+    T4_SPARSE_TERRAIN_PROPORTIONS,
+    T4_STONE_HEIGHT_JITTER_RANGE,
+    T4_STONE_HEIGHT_RANGE,
+    T4_STONE_PLATFORM_WIDTH,
+    T4_STONE_WIDTH_RANGE,
+    foothold_centers,
+    foothold_pitch,
+    pillar_diameter,
+    pillar_height,
+    stone_height,
+    stone_height_jitter,
+    stone_width,
+)
 
 
 def hurdle_rings_terrain(difficulty, cfg):
@@ -55,7 +75,7 @@ def hurdle_rings_terrain(difficulty, cfg):
     ``hurdle_layout.py`` (pure Python) so contract tests and the future
     strict-contact evaluator share one truth.
     """
-    spacing = float(np.random.uniform(*cfg.spacing_range))
+    spacing = float(cfg.spacing_range[0] + float(difficulty) * (cfg.spacing_range[1] - cfg.spacing_range[0]))
     bar_height = hurdle_bar_height(difficulty, cfg.bar_height_range)
     half_widths = hurdle_ring_half_widths(
         spacing,
@@ -95,6 +115,72 @@ class MeshHurdleRingsTerrainCfg(SubTerrainBaseCfg):
     spacing_range: tuple[float, float] = T4_HURDLE_SPACING_RANGE
     bar_height_range: tuple[float, float] = T4_HURDLE_BAR_HEIGHT_RANGE
     bar_thickness: float = T4_HURDLE_BAR_THICKNESS
+
+
+def stepping_stones_terrain(difficulty, cfg):
+    """Discrete rectangular stones over a deep hole, plus a spawn platform."""
+    width = stone_width(difficulty, cfg.stone_width_range)
+    pitch = foothold_pitch(difficulty, cfg.foothold_pitch_range)
+    base_height = stone_height(difficulty, cfg.height_range)
+    jitter = stone_height_jitter(difficulty, cfg.height_jitter_range)
+    tile = float(min(cfg.size))
+    pit = trimesh.creation.box((tile, tile, 0.1))
+    pit.apply_translation((0.5 * tile, 0.5 * tile, cfg.hole_depth - 0.05))
+    platform = make_plane((cfg.platform_width, cfg.platform_width), height=0.0, center_zero=False)
+    platform.apply_translation((0.5 * (tile - cfg.platform_width), 0.5 * (tile - cfg.platform_width), 0.0))
+    meshes = [pit, platform]
+    rng = np.random.default_rng(int(round(float(difficulty) * 1000.0)))
+    for x, y in foothold_centers(pitch, tile_size=tile, platform_width=cfg.platform_width, border_width=cfg.border_width):
+        h = base_height + float(rng.uniform(-jitter, jitter))
+        h = max(0.04, h)
+        box = trimesh.creation.box((width, width, h))
+        box.apply_translation((x, y, 0.5 * h))
+        meshes.append(box)
+    origin = np.array([0.5 * tile, 0.5 * tile, 0.0])
+    return meshes, origin
+
+
+def raised_pillars_terrain(difficulty, cfg):
+    """Cylindrical posts over a hole; LightLP Fig. 4 column 5."""
+    diameter = pillar_diameter(difficulty, cfg.diameter_range)
+    pitch = foothold_pitch(difficulty, cfg.foothold_pitch_range)
+    height = pillar_height(difficulty, cfg.height_range)
+    tile = float(min(cfg.size))
+    pit = trimesh.creation.box((tile, tile, 0.1))
+    pit.apply_translation((0.5 * tile, 0.5 * tile, cfg.hole_depth - 0.05))
+    platform = make_plane((cfg.platform_width, cfg.platform_width), height=0.0, center_zero=False)
+    platform.apply_translation((0.5 * (tile - cfg.platform_width), 0.5 * (tile - cfg.platform_width), 0.0))
+    meshes = [pit, platform]
+    for x, y in foothold_centers(pitch, tile_size=tile, platform_width=cfg.platform_width, border_width=cfg.border_width):
+        cyl = trimesh.creation.cylinder(radius=0.5 * diameter, height=height)
+        cyl.apply_translation((x, y, 0.5 * height))
+        meshes.append(cyl)
+    origin = np.array([0.5 * tile, 0.5 * tile, 0.0])
+    return meshes, origin
+
+
+@configclass
+class MeshSteppingStonesTerrainCfg(SubTerrainBaseCfg):
+    function = stepping_stones_terrain
+    platform_width: float = T4_STONE_PLATFORM_WIDTH
+    border_width: float = T4_STONE_BORDER_WIDTH
+    foothold_pitch_range: tuple[float, float] = T4_FOOTHOLD_PITCH_RANGE
+    stone_width_range: tuple[float, float] = T4_STONE_WIDTH_RANGE
+    height_range: tuple[float, float] = T4_STONE_HEIGHT_RANGE
+    height_jitter_range: tuple[float, float] = T4_STONE_HEIGHT_JITTER_RANGE
+    hole_depth: float = T4_HOLE_DEPTH
+
+
+@configclass
+class MeshRaisedPillarsTerrainCfg(SubTerrainBaseCfg):
+    function = raised_pillars_terrain
+    platform_width: float = T4_STONE_PLATFORM_WIDTH
+    border_width: float = T4_STONE_BORDER_WIDTH
+    foothold_pitch_range: tuple[float, float] = T4_PILLAR_PITCH_RANGE
+    diameter_range: tuple[float, float] = T4_PILLAR_DIAMETER_RANGE
+    height_range: tuple[float, float] = T4_PILLAR_HEIGHT_RANGE
+    hole_depth: float = T4_HOLE_DEPTH
+
 
 GRAVEL_TERRAINS_CFG = TerrainGeneratorCfg(
     curriculum=False,
@@ -235,6 +321,91 @@ T4_STAGE_E_TERRAINS_CFG = TerrainGeneratorCfg(
         ),
         "stairs_down_34": terrain_gen.MeshPyramidStairsTerrainCfg(
             proportion=0.0875,
+            step_height_range=(0.0, 0.18),
+            step_width=0.34,
+            platform_width=3.0,
+            border_width=1.0,
+            holes=False,
+        ),
+    },
+)
+
+# New Stage E mix: LightLP stones/pillars + thicker training bars. Default
+# ``T4_STAGE_E_TERRAINS_CFG`` stays unchanged so old scripts keep the old mix.
+T4_STAGE_E_SPARSE_TERRAINS_CFG = TerrainGeneratorCfg(
+    curriculum=True,
+    size=(8.0, 8.0),
+    border_width=20.0,
+    num_rows=10,
+    num_cols=20,
+    horizontal_scale=0.1,
+    vertical_scale=0.005,
+    slope_threshold=0.75,
+    use_cache=False,
+    sub_terrains={
+        "flat": terrain_gen.MeshPlaneTerrainCfg(proportion=T4_SPARSE_TERRAIN_PROPORTIONS["flat"]),
+        "random_rough": terrain_gen.HfRandomUniformTerrainCfg(
+            proportion=T4_SPARSE_TERRAIN_PROPORTIONS["random_rough"],
+            noise_range=(-0.02, 0.08),
+            noise_step=0.02,
+            border_width=0.25,
+        ),
+        "boxes": terrain_gen.MeshRandomGridTerrainCfg(
+            proportion=T4_SPARSE_TERRAIN_PROPORTIONS["boxes"],
+            grid_width=0.45,
+            grid_height_range=(0.0, 0.15),
+            platform_width=2.0,
+        ),
+        "wave": terrain_gen.HfWaveTerrainCfg(
+            proportion=T4_SPARSE_TERRAIN_PROPORTIONS["wave"], amplitude_range=(0.0, 0.2), num_waves=5.0
+        ),
+        "hurdles": MeshHurdleRingsTerrainCfg(
+            proportion=T4_SPARSE_TERRAIN_PROPORTIONS["hurdles"], bar_thickness=0.10
+        ),
+        "stepping_stones": MeshSteppingStonesTerrainCfg(
+            proportion=T4_SPARSE_TERRAIN_PROPORTIONS["stepping_stones"]
+        ),
+        "raised_pillars": MeshRaisedPillarsTerrainCfg(
+            proportion=T4_SPARSE_TERRAIN_PROPORTIONS["raised_pillars"]
+        ),
+        "slope_up": terrain_gen.HfInvertedPyramidSlopedTerrainCfg(
+            proportion=T4_SPARSE_TERRAIN_PROPORTIONS["slope_up"],
+            slope_range=(0.0, 0.3),
+            platform_width=2.0,
+            border_width=0.25,
+        ),
+        "slope_down": terrain_gen.HfPyramidSlopedTerrainCfg(
+            proportion=T4_SPARSE_TERRAIN_PROPORTIONS["slope_down"],
+            slope_range=(0.0, 0.3),
+            platform_width=2.0,
+            border_width=0.25,
+        ),
+        "stairs_up_30": terrain_gen.MeshInvertedPyramidStairsTerrainCfg(
+            proportion=T4_SPARSE_TERRAIN_PROPORTIONS["stairs_up_30"],
+            step_height_range=(0.0, 0.20),
+            step_width=0.30,
+            platform_width=3.0,
+            border_width=1.0,
+            holes=False,
+        ),
+        "stairs_up_34": terrain_gen.MeshInvertedPyramidStairsTerrainCfg(
+            proportion=T4_SPARSE_TERRAIN_PROPORTIONS["stairs_up_34"],
+            step_height_range=(0.0, 0.20),
+            step_width=0.34,
+            platform_width=3.0,
+            border_width=1.0,
+            holes=False,
+        ),
+        "stairs_down_30": terrain_gen.MeshPyramidStairsTerrainCfg(
+            proportion=T4_SPARSE_TERRAIN_PROPORTIONS["stairs_down_30"],
+            step_height_range=(0.0, 0.18),
+            step_width=0.30,
+            platform_width=3.0,
+            border_width=1.0,
+            holes=False,
+        ),
+        "stairs_down_34": terrain_gen.MeshPyramidStairsTerrainCfg(
+            proportion=T4_SPARSE_TERRAIN_PROPORTIONS["stairs_down_34"],
             step_height_range=(0.0, 0.18),
             step_width=0.34,
             platform_width=3.0,

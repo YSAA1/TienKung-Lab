@@ -22,7 +22,10 @@ ROOT = Path(__file__).resolve().parents[1]
 MJCF = ROOT / "legged_lab/assets/t4/mjcf/t4_std.xml"
 MESHDIR = ROOT / "legged_lab/assets/t4/meshes"
 T4_PY = ROOT / "legged_lab/assets/t4/t4.py"
-
+ZL_T4_MJCF = (
+    ROOT
+    / "zl_deploy/install/mj_sim/share/mj_sim/description/T4_std_add_head/xml/t4_std_add_head.xml"
+)
 mujoco = pytest.importorskip("mujoco")
 
 
@@ -88,6 +91,58 @@ def test_t4_std_ground_has_isaac_friction() -> None:
     gid = int(model.geom("ground").id)
     assert int(model.geom_condim[gid]) == 3
     assert np.allclose(model.geom_friction[gid], ISAAC_FRICTION)
+
+
+def test_zl_t4_sim_ground_matches_direct_sim2sim_friction() -> None:
+    model = mujoco.MjModel.from_xml_path(str(ZL_T4_MJCF))
+    gid = int(model.geom("ground").id)
+    assert int(model.geom_condim[gid]) == 3
+    assert np.allclose(model.geom_friction[gid], ISAAC_FRICTION)
+    world_geoms = [
+        mujoco.mj_id2name(model, mujoco.mjtObj.mjOBJ_GEOM, geom_id)
+        for geom_id in range(model.ngeom)
+        if int(model.geom_bodyid[geom_id]) == 0
+    ]
+    assert world_geoms == ["ground"]
+
+
+def test_direct_and_zl_stair_probe_geometries_match() -> None:
+    from legged_lab.scripts import eval_t4_depth_plant_gap as gap_eval
+    from legged_lab.scripts import sim2sim_t4_depth_student as sim2sim
+
+    direct = mujoco.MjModel.from_xml_path(sim2sim.build_model_xml(course="stairs"))
+    zl = mujoco.MjModel.from_xml_path(gap_eval.build_zl_model_xml("stairs"))
+
+    def stair_geoms(model):
+        return {
+            name: (tuple(model.geom(name).size), tuple(model.geom(name).pos))
+            for name in [
+                *(f"stair_probe_up_{index}_geom" for index in range(sim2sim.LOCO_STAIR_STEPS)),
+                "stair_probe_landing_geom",
+            ]
+        }
+
+    direct_geoms = stair_geoms(direct)
+    zl_geoms = stair_geoms(zl)
+    assert direct_geoms.keys() == zl_geoms.keys()
+    for name in direct_geoms:
+        assert direct_geoms[name][0] == pytest.approx(zl_geoms[name][0])
+        assert direct_geoms[name][1] == pytest.approx(zl_geoms[name][1])
+
+
+def test_stair_success_requires_joint_position_height_and_duration() -> None:
+    from legged_lab.scripts import eval_t4_depth_plant_gap as gap_eval
+
+    samples = [
+        {"x_m": 3.8, "y_m": 0.0, "height_m": 1.6},
+        {"x_m": 3.9, "y_m": 0.0, "height_m": 1.7},
+        {"x_m": 4.0, "y_m": 0.0, "height_m": 1.8},
+        {"x_m": 4.1, "y_m": 0.0, "height_m": 1.9},
+        {"x_m": 4.2, "y_m": 0.0, "height_m": 1.9},
+    ]
+    assert gap_eval.longest_stair_top_run(samples) == 5
+    samples[2]["y_m"] = 2.0
+    assert gap_eval.longest_stair_top_run(samples) == 2
 
 
 def test_vault_scene_box_hands_feet_match_isaac_surfaces() -> None:

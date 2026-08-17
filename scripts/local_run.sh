@@ -11,11 +11,18 @@
 set -euo pipefail
 
 REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-ISAACSIM_ROOT="${ISAACSIM_ROOT:-$HOME/isaac-sim-standalone-5.1.0-linux-x86_64}"
-ISAACLAB_ROOT="${ISAACLAB_ROOT:-$HOME/IsaacLab}"
-ISAACLAB_LIB_DIR="${ISAACLAB_LIB_DIR:-$HOME/isaaclab-libs/lib}"
+# Do not inherit ISAACLAB_ROOT from the desktop/conda shell — that often
+# points at ssy_files IsaacLab 2.3.2. Same pin as setup_local_isaac_docker.sh.
+ISAACSIM_ROOT="${T4_ISAACSIM_ROOT:-$HOME/isaac-sim-standalone-5.1.0-linux-x86_64}"
+ISAACLAB_ROOT="${T4_ISAACLAB_ROOT:-$HOME/IsaacLab}"
+ISAACLAB_LIB_DIR="${T4_ISAACLAB_LIBS:-$HOME/isaaclab-libs}/lib"
 DOCKER_IMAGE="${DOCKER_IMAGE:-t4-isaac-jammy:v2}"
 CACHE_ROOT="${CACHE_ROOT:-$HOME/docker/isaac-sim}"
+
+# Membership is in /etc/group, but this login session may not have it yet.
+if ! docker info >/dev/null 2>&1 && getent group docker | grep -qw "${USER:-}"; then
+  exec sg docker -c "$(printf '%q ' "$0" "$@")"
+fi
 
 if [ ! -x "$ISAACSIM_ROOT/python.sh" ] || [ ! -x "$ISAACSIM_ROOT/kit/kit" ]; then
   echo "Isaac Sim 5.1 standalone is incomplete at $ISAACSIM_ROOT (need kit/). Run scripts/setup_local_isaac_docker.sh" >&2
@@ -47,6 +54,7 @@ done
 docker_args=(
   --rm
   --gpus all
+  --runtime nvidia
   --network host
   --ipc host
   --ulimit memlock=-1
@@ -55,8 +63,23 @@ docker_args=(
   -e PRIVACY_CONSENT=Y
   -e OMNI_KIT_ACCEPT_EULA=YES
   -e PYTHONUNBUFFERED=1
+  -e NVIDIA_VISIBLE_DEVICES=all
+  -e NVIDIA_DRIVER_CAPABILITIES=all
   -e "LD_LIBRARY_PATH=$ISAACLAB_LIB_DIR"
   -e "PYTHONPATH=$python_path"
+  -e "ISAACLAB_ROOT=$ISAACLAB_ROOT"
+  -e "ISAACLAB_PATH=$ISAACLAB_ROOT"
+)
+if [ -f /usr/share/vulkan/icd.d/nvidia_icd.json ]; then
+  docker_args+=(
+    -v /usr/share/vulkan/icd.d/nvidia_icd.json:/usr/share/vulkan/icd.d/nvidia_icd.json:ro
+    -e VK_ICD_FILENAMES=/usr/share/vulkan/icd.d/nvidia_icd.json
+  )
+fi
+if [ -f /usr/share/glvnd/egl_vendor.d/10_nvidia.json ]; then
+  docker_args+=(-v /usr/share/glvnd/egl_vendor.d/10_nvidia.json:/usr/share/glvnd/egl_vendor.d/10_nvidia.json:ro)
+fi
+docker_args+=(
   -v "$ISAACSIM_ROOT:$ISAACSIM_ROOT"
   -v "$ISAACLAB_ROOT:$ISAACLAB_ROOT"
   -v "$ISAACLAB_LIB_DIR:$ISAACLAB_LIB_DIR"

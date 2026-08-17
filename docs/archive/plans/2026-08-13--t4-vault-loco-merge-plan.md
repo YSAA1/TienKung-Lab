@@ -1,6 +1,8 @@
 # Executable Plan - T4 走跑与 1m 翻箱合并（LightLP V-B/V-C 复现）
 
-> Status: active
+> **Status: archived（非权威）** — living work surface: `.harness/work_index.md` → `docs/plans/2026-08-15--t4-vault-g1-g2-recovery-plan.md`。
+
+> Status: superseded
 > Date: 2026-08-13
 > Spec: `docs/specs/2026-08-13--t4-vault-loco-merge.md`（user-approved）
 > Branch: `t4-train`
@@ -31,9 +33,9 @@ G3 合并 + transition（单一策略）
 
 ## Active Slice
 
-V6 G2 任务与蒸馏入口已落地（2026-08-14），待 zhuoqun G1 腾卡后用
-`--teacher_checkpoint` 开蒸馏。严格 evaluator 按用户裁定推迟。下一片 V7：
-G3 合并任务（接 V5 组路由 + G2 学生 + zhuoqun `stage_e_prov6` loco）。
+被 `docs/plans/2026-08-15--t4-vault-g1-g2-recovery-plan.md` 接管。旧 G2
+`2026-08-14_05-30-51_g2_from_g1_m28500` 配方作废，不可 resume。V7 G3 继续
+blocked。当前项是 R1（评测 reset 对齐 + m28500 复评），不是 V7。
 
 ## Non-goals
 
@@ -247,7 +249,7 @@ zhuoqun 是计划内显式 V3 gate，不构成无法规划的外部阻塞。G3 �
     训练/评估命令由 V4/V2 模式固定（tmux）。
   - success_definition: 技能能力已迁移到与 loco 同合同的 heightscan 策略上。
 
-- [ ] V7：G3 合并 + transition 统一策略（当前）
+- [ ] V7：G3 合并 + transition 统一策略（blocked：等 recovery R4 + Stage E evaluator）
   - scope: 三组环境（loco 组冻结 Stage E teacher DAgger / skill 组 G2 策略 DAgger /
     transition 组三区域 reset + 稀疏过箱奖励 + 密集接近奖励 + 相位切换双 prior AMP）；
     G3 四项验收 + 报告项（0.8m 箱、梯形）。
@@ -291,7 +293,7 @@ zhuoqun 是计划内显式 V3 gate，不构成无法规划的外部阻塞。G3 �
 ```bash
 git status --short --branch
 sed -n '1,60p' .harness/state.md
-rg -n '^[-] \[[ x]\]' docs/plans/2026-08-13--t4-vault-loco-merge-plan.md
+rg -n '^[-] \[[ x]\]' docs/archive/plans/2026-08-13--t4-vault-loco-merge-plan.md
 tmux ls
 ```
 
@@ -300,7 +302,7 @@ tmux ls
 
 ## Next Skill
 
-`implement`
+`implement` on `docs/plans/2026-08-15--t4-vault-g1-g2-recovery-plan.md` R1。
 
-Reason: G2 任务与蒸馏入口已齐；下一片 V7 G3 合并环境（接 V5 路由 + G2 ckpt +
-zhuoqun loco）。G2 蒸馏本身等 G1 腾卡后在 zhuoqun 挂。不要覆盖正在训的 checkout。
+Reason: 旧 G2 已平台化且标签不一致；先对齐 G1 评测 reset，再补从第 0 帧过箱
+能力。不要开 V7。

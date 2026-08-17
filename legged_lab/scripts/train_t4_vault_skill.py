@@ -21,6 +21,49 @@ parser.add_argument(
     required=True,
     help="G1 mimic checkpoint whose actor weights become the frozen teacher.",
 )
+parser.add_argument(
+    "--student_checkpoint",
+    type=str,
+    default=None,
+    help="Optional G2 student checkpoint to warm-start after the G1 teacher is loaded.",
+)
+parser.add_argument(
+    "--collect_mode",
+    type=str,
+    choices=("teacher", "student"),
+    default=None,
+    help="Override Distillation collect_mode. teacher=R3, student=R4 DAgger.",
+)
+parser.add_argument(
+    "--pg_coef",
+    type=float,
+    default=None,
+    help="Student-drive PPO-clip coefficient on tracking-return advantages. 0 keeps pure BC.",
+)
+parser.add_argument(
+    "--teacher_mix",
+    type=float,
+    default=None,
+    help="Fraction of envs that execute the frozen teacher action (DAgger beta).",
+)
+parser.add_argument(
+    "--teacher_mix_end",
+    type=float,
+    default=None,
+    help="Optional end value for a linear teacher_mix anneal.",
+)
+parser.add_argument(
+    "--teacher_mix_decay_iters",
+    type=int,
+    default=None,
+    help="Iterations over which teacher_mix anneals to teacher_mix_end.",
+)
+parser.add_argument(
+    "--student_noise",
+    type=float,
+    default=None,
+    help="Override student action std after checkpoint load.",
+)
 cli_args.add_rsl_rl_args(parser)
 patch_physx_backward_compatibility_setting(AppLauncher)
 AppLauncher.add_app_launcher_args(parser)
@@ -57,6 +100,16 @@ def train():
         env_cfg.scene.num_envs = args_cli.num_envs
 
     agent_cfg = update_rsl_rl_cfg(agent_cfg, args_cli)
+    if args_cli.collect_mode is not None:
+        agent_cfg.algorithm.collect_mode = args_cli.collect_mode
+    if args_cli.pg_coef is not None:
+        agent_cfg.algorithm.pg_coef = args_cli.pg_coef
+    if args_cli.teacher_mix is not None:
+        agent_cfg.algorithm.teacher_mix = args_cli.teacher_mix
+    if args_cli.teacher_mix_end is not None:
+        agent_cfg.algorithm.teacher_mix_end = args_cli.teacher_mix_end
+    if args_cli.teacher_mix_decay_iters is not None:
+        agent_cfg.algorithm.teacher_mix_decay_iters = args_cli.teacher_mix_decay_iters
 
     agent_cfg.device = args_cli.device if args_cli.device is not None else agent_cfg.device
     env_cfg.seed = agent_cfg.seed
@@ -77,12 +130,28 @@ def train():
     if not teacher_path.is_file():
         raise FileNotFoundError(f"G1 teacher checkpoint not found: {teacher_path}")
     print(f"[INFO] Loading G1 teacher from: {teacher_path}")
+    print(
+        f"[INFO] Distillation collect_mode={agent_cfg.algorithm.collect_mode} "
+        f"pg_coef={agent_cfg.algorithm.pg_coef} "
+        f"teacher_mix={agent_cfg.algorithm.teacher_mix}->{agent_cfg.algorithm.teacher_mix_end} "
+        f"over {agent_cfg.algorithm.teacher_mix_decay_iters}"
+    )
     runner.load(str(teacher_path), load_optimizer=False)
+    if args_cli.student_checkpoint:
+        student_path = Path(args_cli.student_checkpoint)
+        if not student_path.is_file():
+            raise FileNotFoundError(f"G2 student checkpoint not found: {student_path}")
+        print(f"[INFO] Loading G2 student from: {student_path}")
+        runner.load(str(student_path), load_optimizer=False)
+        runner.current_learning_iteration = 0
+    if args_cli.student_noise is not None:
+        runner.alg.policy.std.data.fill_(float(args_cli.student_noise))
+        print(f"[INFO] Student action std set to {args_cli.student_noise}")
 
     dump_yaml(os.path.join(log_dir, "params", "env.yaml"), env_cfg)
     dump_yaml(os.path.join(log_dir, "params", "agent.yaml"), agent_cfg)
 
-    runner.learn(num_learning_iterations=agent_cfg.max_iterations, init_at_random_ep_len=True)
+    runner.learn(num_learning_iterations=agent_cfg.max_iterations, init_at_random_ep_len=False)
     env.close()
 
 

@@ -86,6 +86,24 @@ def _checkpoint_path(agent_cfg) -> str:
     return str(get_checkpoint_path(root, args_cli.load_run, args_cli.checkpoint))
 
 
+def _independent_reset(env):
+    """Start a trial batch from a warm RSI frame-0 state.
+
+    Cold ``reset()`` + ``sim.forward()`` still leaves wrist body poses stale
+    until PhysX has taken at least one step. A discarded zero-action step
+    followed by a second reset matches the working post-termination path
+    and keeps last-action / motion time from the previous batch out.
+    """
+    env.reset()
+    zeros = torch.zeros((env.num_envs, env.num_actions), device=env.unwrapped.device)
+    env.step(zeros)
+    env.reset()
+    unwrapped = env.unwrapped
+    unwrapped.scene.write_data_to_sim()
+    unwrapped.sim.forward()
+    return env.get_observations()
+
+
 def evaluate() -> dict:
     spec = gym.spec(args_cli.task)
     env_cfg = spec.kwargs["env_cfg_entry_point"]()
@@ -116,9 +134,9 @@ def evaluate() -> dict:
     requested = args_cli.episodes
     completed = 0
     episode_results = []
-    obs, _ = env.reset()
 
     while completed < requested:
+        obs, _ = _independent_reset(env)
         batch = min(args_cli.num_envs, requested - completed)
         active = torch.zeros(args_cli.num_envs, dtype=torch.bool, device=env.device)
         active[:batch] = True

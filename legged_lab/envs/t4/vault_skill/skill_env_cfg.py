@@ -80,3 +80,4 @@ class T4VaultSkillEnvCfg(T4VaultMimicEnvCfg):
         self.actions.joint_pos.scale = G2_ACTION_SCALE
         self.observations.policy.enable_corruption = False
         self.observations.teacher.enable_corruption = False
+        self.events.push_robot = None

@@ -6,6 +6,7 @@ import numpy as np
 import pytest
 
 from legged_lab.assets.t4 import schemas
+from legged_lab.assets.t4.navigation import CourseNavigator as SharedCourseNavigator
 from legged_lab.scripts.sim2sim_t4_depth_student import (
     COMMAND_RANGES,
     D455_ROS_ROT_WXYZ,
@@ -19,6 +20,7 @@ from legged_lab.scripts.sim2sim_t4_depth_student import (
     LOCO_STAIR_STEPS,
     CourseNavigator,
     build_model_xml,
+    build_stair_probe_course,
     camera_look_axes,
     classify_sensor_depth,
     course_waypoints_from_model,
@@ -96,10 +98,17 @@ def test_lookahead_corrects_harder_than_a_distant_goal():
 
 
 def test_navigator_steers_back_to_the_centerline():
+    assert CourseNavigator is SharedCourseNavigator
     nav = CourseNavigator(np.array([[0.0, 0.0], [4.0, 0.0], [8.0, 0.0]]), cruise_vx=0.55)
     cmd = nav.command(np.array([0.0, 0.4]), yaw=0.0)
     assert cmd[1] == 0.0
     assert cmd[2] < 0.0
+
+
+def test_navigator_can_bound_yaw_rate_for_deployment():
+    nav = CourseNavigator(np.array([[0.0, 0.0], [4.0, 0.0]]), cruise_vx=0.8, max_yaw_rate=0.2)
+    cmd = nav.command(np.array([0.0, 1.0]), yaw=0.8)
+    assert abs(cmd[2]) <= 0.2
     assert cmd[0] >= 0.0
     assert COMMAND_RANGES["yaw"][0] <= cmd[2] <= COMMAND_RANGES["yaw"][1]
 
@@ -125,7 +134,7 @@ def test_rule_contract_waypoints_include_weave_and_l_turn():
 
 def test_loco_course_has_training_scale_obstacles_and_a_goal():
     xml = Path(build_model_xml(course="loco")).read_text()
-    assert xml.count('<body name="loco_hurdle_') == 2
+    assert xml.count('<body name="loco_hurdle_') == 3
     assert xml.count('<body name="loco_rough_') >= 8
     assert xml.count('<body name="loco_boxes_') >= 4
     assert xml.count('<body name="loco_wave_') >= 8
@@ -149,6 +158,14 @@ def test_loco_course_has_training_scale_obstacles_and_a_goal():
     assert points[0, 0] <= 0.05
     assert len(points) >= 8
     assert np.max(np.abs(points[:, 1])) < 1e-6
+
+
+def test_stair_probe_matches_stage_e_bucket_without_lead_in():
+    xml = build_stair_probe_course()
+    assert xml.count('<body name="stair_probe_up_') == LOCO_STAIR_STEPS
+    assert 'name="stair_probe_landing"' in xml
+    assert "loco_rough" not in xml
+    assert "loco_hurdle" not in xml
 
 
 def test_wrap_to_pi_and_default_control_mode():

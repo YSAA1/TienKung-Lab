@@ -165,11 +165,12 @@ def body_orientation_l2(
 
 def feet_stumble(env: BaseEnv | TienKungEnv, sensor_cfg: SceneEntityCfg) -> torch.Tensor:
     contact_sensor: ContactSensor = env.scene.sensors[sensor_cfg.name]
-    return torch.any(
+    penalty = torch.any(
         torch.norm(contact_sensor.data.net_forces_w[:, sensor_cfg.body_ids, :2], dim=2)
         > 5 * torch.abs(contact_sensor.data.net_forces_w[:, sensor_cfg.body_ids, 2]),
         dim=1,
-    )
+    ).to(dtype=torch.float)
+    return penalty
 
 
 def feet_too_near_humanoid(
@@ -201,6 +202,90 @@ def hip_roll_action(env: TienKungEnv) -> torch.Tensor:
 def hip_yaw_action(env: TienKungEnv) -> torch.Tensor:
     """Penalize hip yaw joint actions."""
     return torch.sum(torch.abs(env.action[:, [env.left_leg_ids[2], env.right_leg_ids[2]]]), dim=1)
+
+
+def velocity_slack(
+    env: BaseEnv | TienKungEnv,
+    lo: float = 0.3,
+    hi: float = 1.5,
+    asset_cfg: SceneEntityCfg = SceneEntityCfg("robot"),
+) -> torch.Tensor:
+    """LightLP slack: 1 when actual/cmd forward speed is in ``[lo, hi]``."""
+    asset: Articulation = env.scene[asset_cfg.name]
+    vel_yaw = math_utils.quat_rotate_inverse(
+        math_utils.yaw_quat(asset.data.root_quat_w), asset.data.root_lin_vel_w[:, :3]
+    )
+    cmd = env.command_generator.command[:, 0]
+    standing = cmd.abs() < 1.0e-4
+    ratio = vel_yaw[:, 0] / torch.where(standing, torch.ones_like(cmd), cmd)
+    return ((ratio >= lo) & (ratio <= hi) & (~standing)).to(dtype=vel_yaw.dtype)
+
+
+def illegal_footstep(
+    env: BaseEnv | TienKungEnv,
+    delta: float = 0.1,
+    contact_threshold: float = 0.5,
+    sensor_cfg: SceneEntityCfg = SceneEntityCfg("contact_sensor", body_names=".*_foot_link"),
+) -> torch.Tensor:
+    """Mean fraction of downward foot rays that miss support by more than ``delta``."""
+    scanners = []
+    sensors = env.scene.sensors
+    for name in ("left_foot_scanner", "right_foot_scanner"):
+        if name in sensors:
+            scanners.append(sensors[name])
+    if not scanners:
+        return torch.zeros(env.num_envs, device=env.device)
+    contact_sensor: ContactSensor = env.scene.sensors[sensor_cfg.name]
+    feet_force_w = contact_sensor.data.net_forces_w
+    if feet_force_w.ndim == 4:
+        feet_force_w = feet_force_w[:, -1]
+    feet_force = torch.norm(feet_force_w[:, env.feet_body_ids], dim=-1)
+    in_contact = feet_force > contact_threshold
+    penalties = []
+    for i, scanner in enumerate(scanners):
+        hits = scanner.data.ray_hits_w[..., 2]
+        foot_z = scanner.data.pos_w[:, 2].unsqueeze(-1)
+        miss = torch.isnan(hits) | torch.isinf(hits)
+        depth = foot_z - hits
+        bad = miss | (depth > delta)
+        frac = bad.float().mean(dim=-1)
+        contact_i = in_contact[:, min(i, in_contact.shape[1] - 1)]
+        penalties.append(frac * contact_i.float())
+    penalty = torch.stack(penalties, dim=-1).mean(dim=-1)
+    type_ids = getattr(env, "sparse_foothold_type_ids", None)
+    types = getattr(getattr(env.scene, "terrain", None), "terrain_types", None)
+    if type_ids and types is not None:
+        mask = torch.zeros(env.num_envs, dtype=torch.bool, device=env.device)
+        for type_id in type_ids:
+            mask |= types == type_id
+        penalty = penalty * mask.float()
+    return penalty
+
+
+def hurdle_bar_contact(
+    env: BaseEnv | TienKungEnv,
+    z_range: tuple[float, float] = (0.06, 0.38),
+    contact_threshold: float = 0.5,
+    sensor_cfg: SceneEntityCfg = SceneEntityCfg("contact_sensor", body_names=".*_foot_link"),
+) -> torch.Tensor:
+    """1 on hurdle tiles when a stance foot is in the bar height band (plow/clip)."""
+    contact_sensor: ContactSensor = env.scene.sensors[sensor_cfg.name]
+    forces = contact_sensor.data.net_forces_w
+    if forces.ndim == 4:
+        forces = forces[:, -1]
+    foot_ids = env.feet_body_ids
+    force = torch.norm(forces[:, foot_ids], dim=-1)
+    in_contact = force > contact_threshold
+    foot_z = env.robot.data.body_pos_w[:, foot_ids, 2]
+    mid_air_contact = in_contact & (foot_z > z_range[0]) & (foot_z < z_range[1])
+    hit = mid_air_contact.any(dim=-1)
+    type_id = getattr(env, "hurdle_terrain_type_id", None)
+    if type_id is None or not hasattr(env.scene, "terrain"):
+        return hit.float()
+    types = getattr(env.scene.terrain, "terrain_types", None)
+    if types is None:
+        return hit.float()
+    return hit.float() * (types == type_id).float()
 
 
 def feet_y_distance(env: TienKungEnv, target: float = 0.299) -> torch.Tensor:

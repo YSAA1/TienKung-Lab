@@ -38,6 +38,10 @@ from legged_lab.assets.t4.vault_contract import (
     T4_VAULT_FOOT_BODY_NAMES,
     T4_VAULT_FOOT_TERMINATION_THRESHOLD,
     T4_VAULT_MOTION_FILE,
+    T4_VAULT_PLAY_JOINT_POSITION_RANGE,
+    T4_VAULT_PLAY_POSE_RANGE,
+    T4_VAULT_PLAY_SAMPLING_STRATEGY,
+    T4_VAULT_PLAY_VELOCITY_RANGE,
     T4_VAULT_TRACKING_BODY_NAMES,
     T4_VAULT_WRIST_BODY_NAMES,
     T4_VAULT_WRIST_TERMINATION_THRESHOLD,
@@ -358,7 +362,10 @@ class T4VaultMimicPlayEnvCfg(T4VaultMimicEnvCfg):
         self.events.add_joint_default_pos = None
         self.events.base_com = None
         self.events.push_robot = None
-        self.commands.motion.sampling_strategy = "zero"
+        self.commands.motion.sampling_strategy = T4_VAULT_PLAY_SAMPLING_STRATEGY
+        self.commands.motion.pose_range = dict(T4_VAULT_PLAY_POSE_RANGE)
+        self.commands.motion.velocity_range = dict(T4_VAULT_PLAY_VELOCITY_RANGE)
+        self.commands.motion.joint_position_range = T4_VAULT_PLAY_JOINT_POSITION_RANGE
         self.observations.policy.enable_corruption = False
 
 

@@ -14,9 +14,6 @@ from isaaclab.utils.buffers import CircularBuffer
 
 from legged_lab.assets.t4.vault_contract import T4_VAULT_BOX_POS, T4_VAULT_BOX_SIZE
 from legged_lab.assets.t4.vault_skill_contract import (
-    G2_GAIT_AIR_RATIO,
-    G2_GAIT_CYCLE,
-    G2_GAIT_PHASE_OFFSET,
     G2_PROPRIO_HISTORY_LENGTH,
     G2_SKILL_LIN_VEL_X,
     analytic_vault_height_scan,
@@ -47,11 +44,8 @@ def g2_proprio_frame(env: ManagerBasedEnv) -> torch.Tensor:
     joint_pos = robot.data.joint_pos - robot.data.default_joint_pos
     joint_vel = robot.data.joint_vel - robot.data.default_joint_vel
     previous_action = env.action_manager.action
-    cycle = max(float(G2_GAIT_CYCLE), 1.0e-6)
-    gait_time = env.episode_length_buf.to(dtype=ang_vel.dtype) * env.step_dt / cycle
-    offsets = ang_vel.new_tensor(list(G2_GAIT_PHASE_OFFSET))
-    phase = (gait_time.unsqueeze(-1) + offsets) % 1.0
-    air_ratio = ang_vel.new_tensor(list(G2_GAIT_AIR_RATIO)).expand(env.num_envs, 2)
+    # Keep the 96D Stage E layout, but do not inject a walk clock as vault phase.
+    gait_slots = ang_vel.new_zeros((env.num_envs, 6))
     return torch.cat(
         (
             ang_vel,
@@ -60,9 +54,7 @@ def g2_proprio_frame(env: ManagerBasedEnv) -> torch.Tensor:
             joint_pos,
             joint_vel,
             previous_action,
-            torch.sin(2.0 * torch.pi * phase),
-            torch.cos(2.0 * torch.pi * phase),
-            air_ratio,
+            gait_slots,
         ),
         dim=-1,
     )

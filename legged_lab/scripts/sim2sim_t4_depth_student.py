@@ -37,7 +37,10 @@ import sys
 import tempfile
 from pathlib import Path
 
-import cv2
+try:
+    import cv2
+except ModuleNotFoundError:  # MuJoCo-only course builders do not need previews.
+    cv2 = None
 import mujoco
 import numpy as np
 import torch
@@ -51,6 +54,15 @@ sys.path.insert(0, str(ROOT / "rsl_rl"))
 from rsl_rl.modules.depth_student_teacher import DepthStudentTeacher  # noqa: E402
 
 from legged_lab.assets.t4.constants import T4_JOINT_NAMES  # noqa: E402
+from legged_lab.assets.t4.navigation import (  # noqa: E402
+    COMMAND_RANGES,
+    HEADING_STIFFNESS,
+    NAV_LOOKAHEAD,
+    CourseNavigator,
+    heading_velocity_command,
+    polyline_lookahead,
+    wrap_to_pi,
+)
 from legged_lab.assets.t4.schemas import (  # noqa: E402
     DEPTH_CAMERA_PITCH_DEG,
     DEPTH_CAMERA_SITE_POS,
@@ -187,10 +199,6 @@ STEP_DT = SIM_DT * DECIMATION
 ACTION_SCALE = 0.25
 CLIP_ACTIONS = 100.0
 CLIP_OBS = 100.0
-COMMAND_RANGES = {"vx": (-0.6, 1.0), "vy": (-0.5, 0.5), "yaw": (-1.57, 1.57)}
-# Isaac Lab UniformVelocityCommand with heading_command=True.
-HEADING_STIFFNESS = 0.5
-TURN_IN_PLACE_YAW = math.radians(50.0)
 LOCO_GOAL_XY = (38.0, 0.0)
 LOCO_STAIR_RISE = 0.18
 LOCO_STAIR_STEPS = 6
@@ -198,7 +206,10 @@ LOCO_STAIR2_RISE = 0.20
 LOCO_STAIR2_STEPS = 5
 LOCO_LANE_HALF = 1.20
 LOCO_OBSTACLE_WIDTH = 2.20
-NAV_LOOKAHEAD = 1.4
+STAIR_PROBE_START_X = 1.8
+STAIR_PROBE_TREAD = 0.30
+STAIR_PROBE_WIDTH = 3.0
+STAIR_PROBE_LANDING_LENGTH = 1.2
 # T4GaitCfg defaults to fixed_clock; standing commands freeze the clock.
 GAIT_CYCLE = 0.85
 STANDING_COMMAND_THRESHOLD = 0.1
@@ -252,11 +263,6 @@ def camera_look_axes(xyaxes: tuple[float, ...] | np.ndarray) -> dict[str, np.nda
     return {"right": right, "up": up, "look": look}
 
 
-def wrap_to_pi(angle: float) -> float:
-    """Wrap an angle in radians to ``(-pi, pi]``."""
-    return float((angle + math.pi) % (2.0 * math.pi) - math.pi)
-
-
 def root_yaw_wxyz(quat: np.ndarray) -> float:
     """Yaw of a MuJoCo floating-base ``(w, x, y, z)`` quaternion."""
     w, x, y, z = (float(value) for value in quat)
@@ -285,72 +291,6 @@ def classify_sensor_depth(sensor_depth: np.ndarray, max_range: float = DEPTH_MAX
         "band_width_frac": float((band[1] - band[0]) / max(sensor_depth.shape[1], 1)),
         "median_hit_depth": float(np.median(sensor_depth[hit])) if np.any(hit) else math.nan,
     }
-
-
-def heading_velocity_command(
-    root_xy: np.ndarray,
-    yaw: float,
-    goal_xy: np.ndarray,
-    cruise_vx: float,
-    arrive: float = 0.45,
-) -> np.ndarray:
-    """Return the ``(vx, 0, K * heading_error)`` command Isaac Lab trained on.
-
-    Stage E / Stage S use ``heading_command=True`` and
-    ``heading_control_stiffness=0.5``. The third observation is not a user yaw
-    rate; it is a P controller on the remaining heading error.
-    """
-    delta = np.asarray(goal_xy, dtype=np.float64) - np.asarray(root_xy, dtype=np.float64)
-    dist = float(np.linalg.norm(delta))
-    if dist <= arrive:
-        return np.zeros(3, dtype=np.float64)
-    desired_yaw = math.atan2(delta[1], delta[0])
-    yaw_err = wrap_to_pi(desired_yaw - yaw)
-    yaw_rate = float(np.clip(HEADING_STIFFNESS * yaw_err, *COMMAND_RANGES["yaw"]))
-    if abs(yaw_err) > TURN_IN_PLACE_YAW:
-        vx = 0.0
-    else:
-        vx = float(np.clip(cruise_vx * max(0.0, math.cos(yaw_err)), 0.0, COMMAND_RANGES["vx"][1]))
-    return np.array([vx, 0.0, yaw_rate], dtype=np.float64)
-
-
-def polyline_lookahead(root_xy: np.ndarray, waypoints: np.ndarray, lookahead: float = NAV_LOOKAHEAD) -> np.ndarray:
-    """Closest point on the polyline, then a carrot ``lookahead`` metres ahead.
-
-    Aiming at a far goal from a small lateral offset barely turns the robot, so
-    it walks around 1.4 m obstacles. A short carrot on the centerline does not.
-    """
-    root_xy = np.asarray(root_xy, dtype=np.float64)
-    pts = np.asarray(waypoints, dtype=np.float64).reshape(-1, 2)
-    if len(pts) == 1:
-        pts = np.vstack([[min(root_xy[0], pts[0, 0]), pts[0, 1]], pts[0]])
-    segments: list[tuple[float, float, np.ndarray, np.ndarray]] = []
-    acc = 0.0
-    best_dist = math.inf
-    best_s = 0.0
-    for index in range(len(pts) - 1):
-        start = pts[index]
-        chord = pts[index + 1] - start
-        length = float(np.linalg.norm(chord))
-        if length < 1e-6:
-            continue
-        ratio = float(np.clip(np.dot(root_xy - start, chord) / (length * length), 0.0, 1.0))
-        projected = start + ratio * chord
-        dist = float(np.linalg.norm(root_xy - projected))
-        if dist < best_dist:
-            best_dist = dist
-            best_s = acc + ratio * length
-        segments.append((acc, length, start, chord))
-        acc += length
-    if not segments:
-        return pts[-1]
-    # Off-track: shorten the carrot so heading error actually grows.
-    carrot = max(0.7, float(lookahead) - 1.1 * min(best_dist, 0.8))
-    target_s = min(best_s + carrot, acc)
-    for acc0, length, start, chord in segments:
-        if target_s <= acc0 + length:
-            return start + ((target_s - acc0) / length) * chord
-    return pts[-1]
 
 
 def _named_body_pos(model: mujoco.MjModel, name: str) -> np.ndarray | None:
@@ -397,45 +337,6 @@ def course_waypoints_from_model(model: mujoco.MjModel) -> np.ndarray:
     elif len(points) == 1:
         points.append([8.0, 0.0])
     return np.asarray(points, dtype=np.float64)
-
-
-class CourseNavigator:
-    """Centerline carrot-follower using the training heading-command interface."""
-
-    def __init__(
-        self,
-        waypoints: np.ndarray,
-        cruise_vx: float = 0.55,
-        reach: float = 0.55,
-        lookahead: float = NAV_LOOKAHEAD,
-    ):
-        if len(waypoints) < 1:
-            raise ValueError("navigator needs at least one waypoint")
-        self.waypoints = np.asarray(waypoints, dtype=np.float64)
-        self.cruise_vx = float(cruise_vx)
-        self.reach = float(reach)
-        self.lookahead = float(lookahead)
-        self.index = 0
-
-    def reset(self) -> None:
-        self.index = 0
-
-    def _advance(self, root_xy: np.ndarray) -> None:
-        while self.index < len(self.waypoints) - 1:
-            if root_xy[0] + 0.15 >= self.waypoints[self.index, 0]:
-                self.index += 1
-            else:
-                break
-
-    def command(self, root_xy: np.ndarray, yaw: float) -> np.ndarray:
-        root_xy = np.asarray(root_xy, dtype=np.float64)
-        self._advance(root_xy)
-        carrot = polyline_lookahead(root_xy, self.waypoints, self.lookahead)
-        return heading_velocity_command(root_xy, yaw, carrot, self.cruise_vx, arrive=0.40)
-
-    @property
-    def current_waypoint(self) -> np.ndarray:
-        return self.waypoints[min(self.index, len(self.waypoints) - 1)]
 
 
 def render_standing_sensor_depth(*, hurdles: bool = False, rule_contract: bool = False) -> np.ndarray:
@@ -1083,7 +984,7 @@ def build_loco_course() -> str:
         waves=2.5,
     )
     x_cursor += 0.5
-    for index, height in enumerate((0.22, 0.28), start=1):
+    for index, height in enumerate((0.25, 0.28, 0.30), start=1):
         parts.append(
             _xml_body_block(
                 f"loco_hurdle_{index}",
@@ -1190,6 +1091,43 @@ def build_loco_course() -> str:
     return "".join(parts)
 
 
+def build_stair_probe_course(*, include_goal: bool = True) -> str:
+    """Build the Stage E 18 cm stair bucket directly in front of reset.
+
+    The probe omits the rough, hurdle and ramp lead-in from ``loco`` so a
+    failed rollout can be attributed to the stair interaction itself.
+    """
+    parts: list[str] = ["\n    <!-- stair probe: shared direct/ZL geometry -->"]
+    stair_height = LOCO_STAIR_RISE * LOCO_STAIR_STEPS
+    stair_end = _add_step_ramp(
+        parts,
+        prefix="stair_probe_up",
+        x_start=STAIR_PROBE_START_X,
+        length=STAIR_PROBE_TREAD * LOCO_STAIR_STEPS,
+        width=STAIR_PROBE_WIDTH,
+        z_start=0.0,
+        height=stair_height,
+        steps=LOCO_STAIR_STEPS,
+        rgba=(0.58, 0.50, 0.42, 1.0),
+    )
+    parts.append(
+        _xml_body_block(
+            "stair_probe_landing",
+            (stair_end + 0.5 * STAIR_PROBE_LANDING_LENGTH, 0.0, stair_height - 0.05),
+            [
+                _xml_box_geom(
+                    "stair_probe_landing_geom",
+                    (0.5 * STAIR_PROBE_LANDING_LENGTH, 0.5 * STAIR_PROBE_WIDTH, 0.05),
+                    rgba=(0.58, 0.50, 0.42, 1.0),
+                )
+            ],
+        )
+    )
+    if include_goal:
+        parts.append(_goal_xml(stair_end + STAIR_PROBE_LANDING_LENGTH - 0.2, 0.0))
+    return "".join(parts)
+
+
 def build_model_xml(hurdles: bool = False, rule_contract: bool = False, course: str | None = None) -> str:
     """Return a patched MJCF: camera on Trunk, optional obstacle course, all world geoms collision-active."""
     if course is None:
@@ -1230,6 +1168,8 @@ def build_model_xml(hurdles: bool = False, rule_contract: bool = False, course: 
         extras += _goal_xml(22.0, 0.0)
     elif course == "loco":
         extras += build_loco_course()
+    elif course == "stairs":
+        extras += build_stair_probe_course()
     else:
         extras += _goal_xml(8.0, 0.0)
     extras += (
@@ -1246,7 +1186,14 @@ def build_model_xml(hurdles: bool = False, rule_contract: bool = False, course: 
 class DepthStudentSim:
     """Loads the depth student checkpoint and runs it against the MuJoCo T4."""
 
-    def __init__(self, checkpoint: str, hurdles: bool = False, rule_contract: bool = False, course: str | None = None):
+    def __init__(
+        self,
+        checkpoint: str,
+        hurdles: bool = False,
+        rule_contract: bool = False,
+        course: str | None = None,
+        depth_source_size: tuple[int, int] | None = None,
+    ):
         xml_path = build_model_xml(hurdles, rule_contract, course=course)
         self.model = mujoco.MjModel.from_xml_path(xml_path)
         self.model.opt.timestep = SIM_DT
@@ -1287,12 +1234,14 @@ class DepthStudentSim:
         # Depth renderer at the native sensor resolution. Training keeps the
         # depth stream self-contained by disabling visual assets, so mirror the
         # collision-only view here.
-        self.renderer = mujoco.Renderer(self.model, height=DEPTH_HEIGHT, width=DEPTH_WIDTH)
+        self.depth_source_size = depth_source_size or (DEPTH_HEIGHT, DEPTH_WIDTH)
+        source_height, source_width = self.depth_source_size
+        self.renderer = mujoco.Renderer(self.model, height=source_height, width=source_width)
         self.renderer.enable_depth_rendering()
         self.depth_option = mujoco.MjvOption()
         self.depth_option.geomgroup = np.array([1, 0, 0, 0, 0, 0], dtype=np.uint8)
         self.depth_cam_id = mujoco.mj_name2id(self.model, mujoco.mjtObj.mjOBJ_CAMERA, "depth_cam")
-        self.last_depth_sensor = np.full((DEPTH_HEIGHT, DEPTH_WIDTH), np.inf, dtype=np.float32)
+        self.last_depth_sensor = np.full(self.depth_source_size, np.inf, dtype=np.float32)
         self.last_depth_raw = np.full((DEPTH_HEIGHT, DEPTH_WIDTH), DEPTH_INVALID_VALUE, dtype=np.float32)
 
         # Buffers. The env zero-fills history at reset (CircularBuffer.reset),
@@ -1351,6 +1300,10 @@ class DepthStudentSim:
         # left, so mirror horizontally.
         depth = np.ascontiguousarray(depth[:, ::-1])
         self.last_depth_sensor = depth
+        if depth.shape != (DEPTH_HEIGHT, DEPTH_WIDTH):
+            if cv2 is None:
+                raise RuntimeError("OpenCV is required to emulate the ZL low-resolution depth stream")
+            depth = cv2.resize(depth, (DEPTH_WIDTH, DEPTH_HEIGHT), interpolation=cv2.INTER_AREA)
         # No-hit pixels come back as a large sentinel (not -1) in MuJoCo 3;
         # beyond the D455 max range they must fill the raw invalid value like
         # the IsaacLab stream does (raw 1.0 -> normalized 0.286).
@@ -1635,8 +1588,14 @@ def recorded_run(
     script: str,
     *,
     navigator: CourseNavigator | None = None,
+    rollout_output: Path | None = None,
 ) -> None:
-    """Headless scripted run rendered from the follow camera."""
+    """Headless scripted run rendered from the follow camera.
+
+    When ``rollout_output`` is supplied, also save a tracking-compatible NPZ
+    at policy rate (50 Hz).  The NPZ keeps MuJoCo body order and T4 joint order
+    explicit; downstream tracking consumers can validate/reorder it by name.
+    """
     import imageio.v2 as imageio
 
     sim.renderer.enable_depth_rendering()  # keep depth for obs
@@ -1661,6 +1620,27 @@ def recorded_run(
     use_nav = navigator is not None and script == "nav"
 
     writer = imageio.get_writer(output, fps=int(1 / STEP_DT))
+    rollout = {
+        "joint_pos": [],
+        "joint_vel": [],
+        "body_pos_w": [],
+        "body_quat_w": [],
+        "body_lin_vel_w": [],
+        "body_ang_vel_w": [],
+        "action": [],
+        "command": [],
+    }
+
+    def capture() -> None:
+        rollout["joint_pos"].append(sim.qpos[sim.qpos_adr].copy())
+        rollout["joint_vel"].append(sim.qvel[sim.dof_adr].copy())
+        rollout["body_pos_w"].append(sim.data.xpos.copy())
+        rollout["body_quat_w"].append(sim.data.xquat.copy())
+        rollout["body_lin_vel_w"].append(sim.data.xvelp.copy())
+        rollout["body_ang_vel_w"].append(sim.data.xvelr.copy())
+        rollout["action"].append(sim.previous_action.copy())
+        rollout["command"].append(sim.command.copy())
+
     steps = int(duration / STEP_DT)
     if use_nav:
         sim.command[:] = navigator.command(sim.qpos[:2], root_yaw_wxyz(sim.qpos[3:7]))
@@ -1668,6 +1648,8 @@ def recorded_run(
         sim.command[:] = command_fn(0.0)
     obs = sim.observe()
     sim.act(obs)
+    if rollout_output is not None:
+        capture()
     for step in range(steps):
         t = step * STEP_DT
         if use_nav:
@@ -1676,6 +1658,8 @@ def recorded_run(
             sim.command[:] = command_fn(t)
         obs, info = sim.step()
         sim.act(obs)
+        if rollout_output is not None:
+            capture()
         # Follow camera two metres behind the trunk.
         pos = sim.data.xpos[sim.trunk_id]
         sim.data.mocap_pos[mount_mocap_id] = [pos[0] - 2.0, pos[1], 0.0]
@@ -1684,6 +1668,20 @@ def recorded_run(
         if step % 500 == 0:
             print(f"t={t:6.1f}s h={info['trunk_height']:.2f} cmd={sim.command}")
     writer.close()
+    if rollout_output is not None:
+        rollout_output = Path(rollout_output)
+        rollout_output.parent.mkdir(parents=True, exist_ok=True)
+        np.savez_compressed(
+            rollout_output,
+            schema_version=np.asarray("t4_tracking_rollout.v1"),
+            fps=np.asarray(1.0 / STEP_DT, dtype=np.float32),
+            joint_names=np.asarray(T4_JOINT_NAMES),
+            body_names=np.asarray(
+                [mujoco.mj_id2name(sim.model, mujoco.mjtObj.mjOBJ_BODY, i) or f"body_{i}" for i in range(sim.model.nbody)]
+            ),
+            **{key: np.asarray(value, dtype=np.float32) for key, value in rollout.items()},
+        )
+        print(f"[INFO] wrote rollout NPZ to {rollout_output} ({len(rollout['joint_pos'])} frames)")
 
 
 def parse_args() -> argparse.Namespace:
@@ -1700,9 +1698,9 @@ def parse_args() -> argparse.Namespace:
     scene = parser.add_mutually_exclusive_group()
     scene.add_argument(
         "--course",
-        choices=["loco", "flat", "hurdles", "rule"],
+        choices=["loco", "flat", "hurdles", "stairs", "rule"],
         default=None,
-        help="Scene: training-scale loco (default), flat, hurdles, or 100m rule course",
+        help="Scene: training-scale loco (default), stair probe, flat, hurdles, or 100m rule course",
     )
     scene.add_argument("--hurdles", action="store_true", help="Alias for --course hurdles")
     scene.add_argument("--rule-contract", action="store_true", help="Alias for --course rule")
@@ -1719,6 +1717,12 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--cruise", type=float, default=0.55, help="Navigator forward speed in m/s")
     parser.add_argument("--duration", type=float, default=180.0)
     parser.add_argument("--record", type=Path, default=None, help="Write an MP4 and exit instead of opening the GUI")
+    parser.add_argument(
+        "--rollout",
+        type=Path,
+        default=None,
+        help="Alongside --record, write a tracking-compatible rollout NPZ at policy rate",
+    )
     parser.add_argument(
         "--script",
         type=str,
@@ -1769,7 +1773,9 @@ def main() -> None:
         print(f"[INFO] goal nav ON -> ({goal[0]:.1f}, {goal[1]:.1f}), cruise={args.cruise:.2f}")
     if args.record is not None:
         script = "nav" if control_mode == "nav" and args.script == "forward" else args.script
-        recorded_run(sim, str(args.record), args.duration, script, navigator=navigator)
+        recorded_run(sim, str(args.record), args.duration, script, navigator=navigator, rollout_output=args.rollout)
+    elif args.rollout is not None:
+        raise SystemExit("--rollout requires --record so the rollout has a fixed scripted command")
     else:
         auto_command = (0.55, 0.0, 0.0) if control_mode == "auto" else None
         metrics = interactive_run(sim, args.duration, navigator=navigator, auto_command=auto_command)

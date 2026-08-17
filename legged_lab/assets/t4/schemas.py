@@ -144,6 +144,15 @@ TEACHER_SCAN_CLIP = (-1.0, 1.0)
 TEACHER_SCAN_INVALID_VALUE = 1.0
 TEACHER_SCAN_HISTORY_LENGTH = 1
 
+# Downward foot grid used only for reward / critic. Matches FootScannerCfg.
+FOOT_SCAN_RESOLUTION = 0.04
+FOOT_SCAN_SIZE = (0.16, 0.08)
+FOOT_SCAN_SHAPE = (
+    round(FOOT_SCAN_SIZE[0] / FOOT_SCAN_RESOLUTION) + 1,
+    round(FOOT_SCAN_SIZE[1] / FOOT_SCAN_RESOLUTION) + 1,
+)
+FOOT_SCAN_DIM = FOOT_SCAN_SHAPE[0] * FOOT_SCAN_SHAPE[1]
+
 # Fields that would make the teacher unlearnable for a depth student.
 TEACHER_FORBIDDEN_PRIVILEGE_FIELDS = (
     "global_map",
@@ -262,6 +271,11 @@ CRITIC_EXTRA_FIELDS: tuple[tuple[str, int], ...] = (
 CRITIC_FRAME_DIM = PROPRIO_FRAME_DIM + sum(width for _, width in CRITIC_EXTRA_FIELDS)
 
 TEACHER_ACTOR_OBS_DIM = PROPRIO_FRAME_DIM * PROPRIO_HISTORY_LENGTH + TEACHER_SCAN_DIM
+# LightLP-style experimental teacher: frozen 1155D plus current-frame feet contact.
+# Do not change TEACHER_ACTOR_OBS_DIM. This lineage cannot distill into the
+# existing depth student.
+TEACHER_PAPER_CONTACT_DIM = 2
+TEACHER_PAPER_ACTOR_OBS_DIM = TEACHER_ACTOR_OBS_DIM + TEACHER_PAPER_CONTACT_DIM
 STUDENT_ACTOR_OBS_DIM = (
     PROPRIO_FRAME_DIM * PROPRIO_HISTORY_LENGTH + DEPTH_POLICY_SIZE[0] * DEPTH_POLICY_SIZE[1] * DEPTH_HISTORY_LENGTH
 )

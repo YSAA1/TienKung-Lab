@@ -2,7 +2,7 @@
 
 状态：T4 路线的 living context。已批准的行为与架构合同见
 `docs/specs/2026-08-12--t4-unified-depth-locomotion.md`，当前可执行工作面见
-`docs/plans/2026-08-12--t4-unified-depth-locomotion-plan.md`。本文保留迁移背景与现状，
+`.harness/work_index.md` 中的唯一 active work surface。本文保留迁移背景与现状，
 若与已批准 Spec 冲突，以 Spec 为准。
 
 ## 1. 项目背景
@@ -198,19 +198,48 @@ TienKung 的硬编码 20DoF/52D loader，也不能离线复制其他机器人末
 
 ## 9. 当前边界与下一步
 
+### 2026-08-16 状态快照
+
+走跑阶段已关闭：Stage E teacher 主线已把连续跨栏作为 terrain bucket 并入课程
+（`stage_e_prov7_hurdle`）；深度 student `stage_s_head35/model_24999.pt` 已完成训练预算，
+用户通过仓库原始 `sim2sim_t4_depth_student.py --course loco` MuJoCo 交互环境人工复核。
+该声明限定为 T4 loco/深度 loco 阶段，不等同于 100m `rule` 全路线、真机部署或翻箱合并完成。
+
+当前双工作面：翻箱仍在 zhuoqun，计划
+`docs/plans/2026-08-15--t4-vault-g1-g2-recovery-plan.md`；稀疏落足执行面是
+`docs/plans/2026-08-17--t4-sparse-ab-rollback-plan.md`。旧 25k 与 S1d A/B 都已否决。
+T-compat v2 @3874 踏石 `reach_2m=0.80`，圆桩≈0。S1d 厨房水槽 10k 未救圆桩，还把踏石从零砸掉。
+能力声明仍由 fixed evaluator 和连续回放决定。
+本机 Docker 已补齐（`t4-isaac-jammy:v2` + Isaac Sim 5.1 + IsaacLab 2.1.0），旧学生
+0.30 FT 在 tmux `t4-student-ft`（32 env，`logs/t4-student-hurdle030-ft.log`）。
+G3 保持 blocked。旧 merge plan 在 `docs/archive/plans/`。runtime 以
+`.harness/state.md` 和 `.harness/decisions.md` 为准。
+
+`model_25746.pt` 的 ZL stair sim2sim gap 已闭环到可接受范围。真机模型名为
+`t4_tienkung_depth`，ZL parity alias 为 `t4_tienkung_depth_sim`，两者复用同一 ONNX。
+deterministic sim 不再使用 vendor 29DoF plant，而是直接加载原始 27DoF `t4_std.xml`，
+复用 direct position servo。最终 gap 根因是进入 `RL_ACTIVE` 前已到达的首个 policy seed
+action 被 driver 丢弃，driver 使用了带 noise/cutoff 的 MJCF gyro 而 direct 读取
+`qvel[3:6]`，以及原生 `270×480` float 深度图经 CycloneDDS 传输后断流。当前 sim 仍按
+`270×480` 渲染，在 driver 内执行训练等价的 clip/area resize 后只传 `48×64` policy 深度；
+三项对齐后，`vx=0.8` 独立冷启动楼梯严格评估 3/3 通过。ZL 三次均值相对 direct 的
+最低/最高高度、最终 x、最终高度绝对 gap 分别为
+`0.0091/0.0026/0.0498/0.0011 m`；最终 y gap 为 `0.0884 m`。
+
 M0 资产、相机与 motion 事实闭环已于 2026-08-12 全部通过：nubot IsaacLab 上完成
 joint/body/foot/hand/camera discovery 与 18 条 motion headless playback（0 reject），
 人工视觉复核基于 `artifacts/motion_review/` 的三视角回放裁定通过，accept 17 条，
 `t4_run` 因 hard joint limit violations 继续 held out。已接受的缺陷是 clip 不对齐地面、
 接触时序不可用；66D AMP feature 只含关节量与 root 相对量，不受该缺陷影响。
 
-已注册 teacher 任务 `t4_loco_teacher`（`legged_lab/envs/t4/`），Stage E teacher 训练正在
-nubot 四卡上以 lineage `stage_e_prov1` 运行。目前仍没有任何行为能力声明：evaluator 尚未
-建立并通过。
+已注册 teacher 任务 `t4_loco_teacher`（`legged_lab/envs/t4/`）。历史 `prov1`–`prov6`
+lineage 已被后续修订接替；当前主线是含跨栏 bucket 的 `stage_e_prov7_hurdle`，并保留
+`stage_e_prov6_local` 作为无跨栏对照。teacher fixed evaluator 仍未通过；深度 student
+当前只有 `model_25746.pt` 在指定 stair XML、`vx=0.8` 下的 direct/ZL 行为验收，不能外推
+到完整 100m 路线、其他复杂地形或真机能力。
 
 下一步：
 
 1. 把 provisional AMP expert 提升为 formal 并补 lineage 记录；
 2. 建立 teacher 固定 evaluator，跑通基础 walk/jog/rough/上下楼 buckets；
-3. teacher evaluator 通过后再实现 depth CNN student、distillation 与 T4 depth MuJoCo parity；
-4. 全部 Gate 通过后才允许对外声明 locomotion 能力。
+3. 进入翻箱 G1/R3→R4 recovery；走跑阶段产物只作为独立 loco teacher/对照，不直接替代翻箱 expert。

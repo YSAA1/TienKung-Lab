@@ -21,6 +21,13 @@ class DistillationAlgCfg:
     gradient_length: int = 15
     learning_rate: float = 1.0e-3
     loss_type: str = "mse"
+    collect_mode: str = "teacher"
+    pg_coef: float = 0.0
+    clip_param: float = 0.2
+    gamma: float = 0.99
+    teacher_mix: float = 0.0
+    teacher_mix_end: float = 0.0
+    teacher_mix_decay_iters: int = 0
 
 
 @configclass

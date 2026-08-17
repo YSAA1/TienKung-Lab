@@ -32,6 +32,9 @@ class T4DepthDistillationAlgCfg:
     gradient_length: int = 15
     learning_rate: float = 1.0e-3
     loss_type: str = "mse"
+    collect_mode: str = "student"
+    pg_coef: float = 0.0
+    behavior_coef: float = 1.0
 
 
 @configclass
@@ -50,3 +53,19 @@ class T4DepthStudentAgentCfg:
     load_checkpoint: str = "model_.*.pt"
     policy: T4DepthStudentPolicyCfg = T4DepthStudentPolicyCfg()
     algorithm: T4DepthDistillationAlgCfg = T4DepthDistillationAlgCfg()
+
+
+@configclass
+class T4DepthStudentFtAlgCfg(T4DepthDistillationAlgCfg):
+    """PPO on the existing student; do not clone the plowing teacher."""
+
+    pg_coef: float = 1.0
+    behavior_coef: float = 0.0
+
+
+@configclass
+class T4DepthStudentFtAgentCfg(T4DepthStudentAgentCfg):
+    experiment_name: str = "t4_loco_depth_student_ft"
+    run_name: str = "hurdle030_ft"
+    max_iterations: int = 8000
+    algorithm: T4DepthStudentFtAlgCfg = T4DepthStudentFtAlgCfg()

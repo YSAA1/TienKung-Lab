@@ -48,6 +48,7 @@ from legged_lab.envs.base.base_config import (
     CommandsCfg,
     DomainRandCfg,
     EventCfg,
+    FootScannerCfg,
     HeightScannerCfg,
     NoiseCfg,
     NoiseScalesCfg,
@@ -57,7 +58,7 @@ from legged_lab.envs.base.base_config import (
     RobotCfg,
     SimCfg,
 )
-from legged_lab.terrains import T4_STAGE_E_TERRAINS_CFG
+from legged_lab.terrains import T4_STAGE_E_SPARSE_TERRAINS_CFG, T4_STAGE_E_TERRAINS_CFG
 
 
 @configclass
@@ -257,6 +258,7 @@ class T4LocoTeacherEnvCfg:
         feet_body_names=[".*_foot_link"],
     )
     reward = T4TeacherRewardCfg()
+    append_actor_feet_contact: bool = False
     gait = T4GaitCfg()
     amp_terrain_schedule = T4AmpTerrainScheduleCfg()
     normalization: NormalizationCfg = NormalizationCfg(
@@ -408,17 +410,56 @@ class T4LocoTeacherAgentCfg(RslRlOnPolicyRunnerCfg):
     resume = False
     load_run = ".*"
     load_checkpoint = "model_.*.pt"
-
-    # amp parameter
     amp_reward_coef = 0.3
     amp_frame_dim = AMP_FRAME_DIM
     amp_joint_order = list(T4_JOINT_NAMES)
-    # `T4_AMP_EXPERT_DIR` exists so a provisional expert set whose human playback
-    # review is still pending can be smoke-tested without touching the frozen
-    # formal path used by Stage E lineages.
     amp_expert_dir = os.environ.get("T4_AMP_EXPERT_DIR", AMP_FORMAL_EXPERT_DIR)
     amp_motion_files = amp_expert_files(os.environ.get("T4_AMP_EXPERT_DIR", AMP_FORMAL_EXPERT_DIR))
     amp_num_preload_transitions = 200000
     amp_task_reward_lerp = 0.7
     amp_discr_hidden_dims = [1024, 512, 256]
     min_normalized_std = [0.05] * NUM_T4_JOINTS
+
+
+@configclass
+class T4SparseTeacherRewardCfg(T4TeacherRewardCfg):
+    velocity_slack = RewTerm(func=mdp.velocity_slack, weight=1.5)
+    illegal_footstep = RewTerm(func=mdp.illegal_footstep, weight=-1.0)
+    hurdle_bar_contact = RewTerm(func=mdp.hurdle_bar_contact, weight=-2.0)
+
+
+@configclass
+class T4LocoSparseTeacherEnvCfg(T4LocoTeacherEnvCfg):
+    """T-compat: same 1155D actor, LightLP sparse mix + foothold rewards."""
+
+    def __post_init__(self):
+        self.scene.terrain_generator = T4_STAGE_E_SPARSE_TERRAINS_CFG
+        self.scene.max_init_terrain_level = 2
+        self.scene.foot_scanner = FootScannerCfg(enable=True)
+        self.reward = T4SparseTeacherRewardCfg()
+        self.append_actor_feet_contact = False
+
+
+@configclass
+class T4LocoSparsePaperTeacherEnvCfg(T4LocoSparseTeacherEnvCfg):
+    """T-paper: 1157D actor with current-frame feet contact."""
+
+    def __post_init__(self):
+        super().__post_init__()
+        self.append_actor_feet_contact = True
+
+
+@configclass
+class T4LocoSparseTeacherAgentCfg(T4LocoTeacherAgentCfg):
+    experiment_name = "t4_loco_teacher_sparse"
+    run_name = "t_compat_sparse"
+    neptune_project = "t4_loco_teacher_sparse"
+    wandb_project = "t4_loco_teacher_sparse"
+
+
+@configclass
+class T4LocoSparsePaperTeacherAgentCfg(T4LocoTeacherAgentCfg):
+    experiment_name = "t4_loco_teacher_sparse_paper"
+    run_name = "t_paper_sparse"
+    neptune_project = "t4_loco_teacher_sparse_paper"
+    wandb_project = "t4_loco_teacher_sparse_paper"

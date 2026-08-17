@@ -371,6 +371,9 @@ def test_t4_vault_mimic_env_cfg_consumes_the_contract() -> None:
     assert "motion_file=str(T4_VAULT_MOTION_FILE)" in source
     assert "wrist_body_pos" in source
     assert '"std": 0.15' in source
+    assert "T4_VAULT_PLAY_SAMPLING_STRATEGY" in source
+    assert "T4_VAULT_PLAY_POSE_RANGE" in source
+    assert "T4_VAULT_PLAY_JOINT_POSITION_RANGE" in source
     # Vendored MotionLoader must keep the fail-fast named reorder.
     commands_source = (ROOT / "legged_lab/envs/t4/vault_mimic/mdp/commands.py").read_text()
     assert "reorder_named_axis" in commands_source

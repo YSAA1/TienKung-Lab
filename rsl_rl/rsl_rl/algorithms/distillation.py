@@ -40,6 +40,14 @@ class Distillation:
         learning_rate=1e-3,
         loss_type="mse",
         device="cpu",
+        collect_mode="student",
+        pg_coef=0.0,
+        behavior_coef=1.0,
+        clip_param=0.2,
+        gamma=0.99,
+        teacher_mix=0.0,
+        teacher_mix_end=None,
+        teacher_mix_decay_iters=0,
         # Distributed training parameters
         multi_gpu_cfg: dict | None = None,
     ):
@@ -68,6 +76,16 @@ class Distillation:
         self.num_learning_epochs = num_learning_epochs
         self.gradient_length = gradient_length
         self.learning_rate = learning_rate
+        if collect_mode not in {"student", "teacher"}:
+            raise ValueError(f"Unknown collect_mode={collect_mode!r}; expected 'student' or 'teacher'")
+        self.collect_mode = collect_mode
+        self.pg_coef = float(pg_coef)
+        self.behavior_coef = float(behavior_coef)
+        self.clip_param = float(clip_param)
+        self.gamma = float(gamma)
+        self.teacher_mix = float(teacher_mix)
+        self.teacher_mix_end = None if teacher_mix_end is None else float(teacher_mix_end)
+        self.teacher_mix_decay_iters = int(teacher_mix_decay_iters)
 
         # initialize the loss function
         if loss_type == "mse":
@@ -94,14 +112,37 @@ class Distillation:
             self.device,
         )
 
+    def current_teacher_mix(self):
+        """Fraction of envs that execute the teacher action this step."""
+        if self.collect_mode == "teacher":
+            return 1.0
+        start = self.teacher_mix
+        end = start if self.teacher_mix_end is None else self.teacher_mix_end
+        decay = self.teacher_mix_decay_iters
+        if decay <= 0:
+            return start
+        progress = min(float(self.num_updates) / float(decay), 1.0)
+        return start + (end - start) * progress
+
     def act(self, obs, teacher_obs):
-        # compute the actions
-        self.transition.actions = self.policy.act(obs).detach()
-        self.transition.privileged_actions = self.policy.evaluate(teacher_obs).detach()
-        # record the observations
+        student_actions = self.policy.act(obs)
+        student_log_prob = self.policy.distribution.log_prob(student_actions).sum(dim=-1).detach()
+        student_actions = student_actions.detach()
+        teacher_actions = self.policy.evaluate(teacher_obs).detach()
+        self.transition.privileged_actions = teacher_actions
         self.transition.observations = obs
         self.transition.privileged_observations = teacher_obs
-        return self.transition.actions
+        self.transition.actions_log_prob = student_log_prob
+        mix = self.current_teacher_mix()
+        if mix >= 1.0:
+            executed = teacher_actions
+        elif mix <= 0.0:
+            executed = student_actions
+        else:
+            take_teacher = torch.rand(student_actions.shape[0], device=student_actions.device) < mix
+            executed = torch.where(take_teacher.unsqueeze(-1), teacher_actions, student_actions)
+        self.transition.actions = executed
+        return executed
 
     def process_env_step(self, rewards, dones, infos):
         # record the rewards and dones
@@ -112,16 +153,31 @@ class Distillation:
         self.transition.clear()
         self.policy.reset(dones)
 
+    def _return_advantages(self):
+        rewards = self.storage.rewards
+        dones = self.storage.dones.float()
+        returns = torch.zeros_like(rewards)
+        running = torch.zeros(rewards.shape[1], 1, device=rewards.device, dtype=rewards.dtype)
+        for step in reversed(range(rewards.shape[0])):
+            running = rewards[step] + self.gamma * running * (1.0 - dones[step])
+            returns[step] = running
+        advantages = (returns - returns.mean()) / (returns.std() + 1.0e-8)
+        return advantages
+
     def update(self):
         self.num_updates += 1
         mean_behavior_loss = 0
+        mean_pg_loss = 0
         loss = 0
         cnt = 0
+        use_pg = self.pg_coef > 0.0 and self.collect_mode == "student"
+        advantages = self._return_advantages() if use_pg else None
 
         for epoch in range(self.num_learning_epochs):
             self.policy.reset(hidden_states=self.last_hidden_states)
             self.policy.detach_hidden_states()
-            for obs, _, _, privileged_actions, dones in self.storage.generator():
+            step_index = 0
+            for obs, _, executed_actions, privileged_actions, dones in self.storage.generator():
                 # Rollout collection runs under ``torch.inference_mode``.  The
                 # stored tensors therefore carry inference-mode metadata, but
                 # the student forward below must save activations for backward.
@@ -129,17 +185,30 @@ class Distillation:
                 with torch.inference_mode(False):
                     obs = obs.clone()
                     privileged_actions = privileged_actions.clone()
+                    executed_actions = executed_actions.clone()
 
                 # inference the student for gradient computation
                 actions = self.policy.act_inference(obs)
 
                 # behavior cloning loss
                 behavior_loss = self.loss_fn(actions, privileged_actions)
+                step_loss = self.behavior_coef * behavior_loss
+                if use_pg:
+                    self.policy.update_distribution(obs)
+                    log_prob = self.policy.distribution.log_prob(executed_actions).sum(dim=-1)
+                    old_log_prob = self.storage.actions_log_prob[step_index].squeeze(-1).detach()
+                    ratio = torch.exp(log_prob - old_log_prob)
+                    adv = advantages[step_index].squeeze(-1).detach()
+                    clipped = torch.clamp(ratio, 1.0 - self.clip_param, 1.0 + self.clip_param)
+                    pg_loss = -torch.min(ratio * adv, clipped * adv).mean()
+                    step_loss = self.behavior_coef * behavior_loss + self.pg_coef * pg_loss
+                    mean_pg_loss += pg_loss.item()
 
                 # total loss
-                loss = loss + behavior_loss
+                loss = loss + step_loss
                 mean_behavior_loss += behavior_loss.item()
                 cnt += 1
+                step_index += 1
 
                 # gradient step
                 if cnt % self.gradient_length == 0:
@@ -161,7 +230,9 @@ class Distillation:
         self.policy.detach_hidden_states()
 
         # construct the loss dictionary
-        loss_dict = {"behavior": mean_behavior_loss}
+        loss_dict = {"behavior": mean_behavior_loss, "teacher_mix": self.current_teacher_mix()}
+        if use_pg:
+            loss_dict["pg"] = mean_pg_loss / cnt
 
         return loss_dict
 

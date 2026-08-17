@@ -34,6 +34,7 @@ from legged_lab.assets.t4.constants import T4_JOINT_NAMES
 from legged_lab.assets.t4.schemas import (
     NUM_T4_JOINTS,
     PROPRIO_FRAME_DIM,
+    TEACHER_PAPER_CONTACT_DIM,
     TEACHER_SCAN_CLIP,
     TEACHER_SCAN_DIM,
     TEACHER_SCAN_INVALID_VALUE,
@@ -46,6 +47,7 @@ from legged_lab.envs.t4.curriculum import (
     gait_tracking_scale,
     terrain_level_moves,
 )
+from legged_lab.envs.t4.mdp.sparse_signals import sparse_curriculum_moves, sparse_pit_fall_mask
 from legged_lab.envs.t4.teacher_cfg import T4LocoTeacherEnvCfg
 from legged_lab.utils.env_utils.scene import SceneCfg
 from rsl_rl.env import VecEnv
@@ -53,6 +55,19 @@ from rsl_rl.env import VecEnv
 
 class T4LocoEnv(VecEnv):
     """PPO + AMP locomotion env for the T4 27-DoF humanoid."""
+
+    _TERRAIN_METRIC_FIELDS = (
+        "success_rate",
+        "reach_1m_rate",
+        "reach_2m_rate",
+        "reach_4m_rate",
+        "fall_rate",
+        "timeout_rate",
+        "pit_fall_rate",
+        "progress_m",
+    )
+    _TERRAIN_METRIC_BANDS = ("easy", "mid", "hard")
+    _TERRAIN_METRIC_EPISODE_ALPHA = 0.01
 
     def __init__(self, cfg: T4LocoTeacherEnvCfg, headless):
         self.cfg = cfg
@@ -107,6 +122,18 @@ class T4LocoEnv(VecEnv):
         )
         self.command_generator = UniformVelocityCommand(cfg=command_cfg, env=self)
         self.reward_manager = RewardManager(self.cfg.reward, self)
+        self.hurdle_terrain_type_id = None
+        self.sparse_foothold_type_ids: list[int] = []
+        generator = getattr(self.cfg.scene, "terrain_generator", None)
+        sub = getattr(generator, "sub_terrains", None) if generator is not None else None
+        self.terrain_type_names = list(sub.keys()) if sub else []
+        if sub:
+            names = self.terrain_type_names
+            if "hurdles" in names:
+                self.hurdle_terrain_type_id = names.index("hurdles")
+            for name in ("stepping_stones", "raised_pillars"):
+                if name in names:
+                    self.sparse_foothold_type_ids.append(names.index(name))
 
         self.init_buffers()
 
@@ -202,6 +229,22 @@ class T4LocoEnv(VecEnv):
         self.episode_length_buf = torch.zeros(self.num_envs, device=self.device, dtype=torch.long)
         self.sim_step_counter = 0
         self.time_out_buf = torch.zeros(self.num_envs, device=self.device, dtype=torch.bool)
+        self.pit_fall_buf = torch.zeros(self.num_envs, device=self.device, dtype=torch.bool)
+
+        metric_shape = (len(self.terrain_type_names), 1 + len(self._TERRAIN_METRIC_BANDS))
+        self.terrain_metric_ema = torch.zeros(
+            *metric_shape,
+            len(self._TERRAIN_METRIC_FIELDS),
+            dtype=torch.float,
+            device=self.device,
+            requires_grad=False,
+        )
+        self.terrain_metric_initialized = torch.zeros(
+            *metric_shape, dtype=torch.bool, device=self.device, requires_grad=False
+        )
+        self.terrain_metric_episodes = torch.zeros(
+            *metric_shape, dtype=torch.long, device=self.device, requires_grad=False
+        )
 
         self.gait_phase = torch.zeros(self.num_envs, 2, dtype=torch.float, device=self.device, requires_grad=False)
         self.gait_time = torch.zeros(self.num_envs, dtype=torch.float, device=self.device, requires_grad=False)
@@ -351,6 +394,16 @@ class T4LocoEnv(VecEnv):
         if self.add_noise:
             height_scan = height_scan + (2 * torch.rand_like(height_scan) - 1) * self.height_scan_noise_vec
         actor_obs = torch.cat([actor_obs, height_scan], dim=-1)
+        if getattr(self.cfg, "append_actor_feet_contact", False):
+            net_contact_forces = self.contact_sensor.data.net_forces_w_history
+            feet_contact = (
+                torch.max(torch.norm(net_contact_forces[:, :, self.feet_cfg.body_ids], dim=-1), dim=1)[0] > 0.5
+            )
+            if feet_contact.shape[-1] != TEACHER_PAPER_CONTACT_DIM:
+                raise RuntimeError(
+                    f"paper teacher contact width {tuple(feet_contact.shape)} != {TEACHER_PAPER_CONTACT_DIM}"
+                )
+            actor_obs = torch.cat([actor_obs, feet_contact.float()], dim=-1)
 
         actor_obs = torch.clip(actor_obs, -self.clip_obs, self.clip_obs)
         critic_obs = torch.clip(critic_obs, -self.clip_obs, self.clip_obs)
@@ -440,6 +493,22 @@ class T4LocoEnv(VecEnv):
         pitch = torch.atan2(torch.sin(pitch), torch.cos(pitch))
         reset_buf |= (torch.abs(pitch) > 1.0) | (torch.abs(roll) > 0.8)
 
+        self.pit_fall_buf.zero_()
+        terrain_types = getattr(getattr(self.scene, "terrain", None), "terrain_types", None)
+        if self.sparse_foothold_type_ids and terrain_types is not None:
+            is_sparse = torch.zeros(self.num_envs, dtype=torch.bool, device=self.device)
+            for type_id in self.sparse_foothold_type_ids:
+                is_sparse |= terrain_types == type_id
+            self.pit_fall_buf.copy_(
+                sparse_pit_fall_mask(
+                    self.robot.data.root_pos_w[:, 2],
+                    self.scene.env_origins[:, 2],
+                    is_sparse,
+                    drop_threshold=0.5,
+                )
+            )
+            reset_buf |= self.pit_fall_buf
+
         return reset_buf, time_out_buf
 
     def reset(self, env_ids):
@@ -479,19 +548,113 @@ class T4LocoEnv(VecEnv):
         self.sim.forward()
 
     def update_terrain_levels(self, env_ids):
-        """Apply the frozen curriculum algebra; see :mod:`legged_lab.envs.t4.curriculum`."""
+        """Apply terrain curriculum and update recent per-bucket behavior metrics."""
         max_dist = self.episode_max_radial_dist[env_ids]
+        command_norm = torch.norm(self.command_generator.command[env_ids, :2], dim=1)
+        moving = command_norm > STANDING_COMMAND_THRESHOLD
         move_up, move_down = terrain_level_moves(
             max_radial_dist=max_dist,
-            command_lin_vel_norm=torch.norm(self.command_generator.command[env_ids, :2], dim=1),
+            command_lin_vel_norm=command_norm,
             episode_length_s=self.max_episode_length_s,
             tile_size=self.scene.terrain.cfg.terrain_generator.size[0],
         )
+        terrain_types = self.scene.terrain.terrain_types[env_ids].long()
+        terrain_levels = self.scene.terrain.terrain_levels[env_ids].long()
+        is_sparse = torch.zeros(len(env_ids), dtype=torch.bool, device=self.device)
+        for type_id in self.sparse_foothold_type_ids:
+            is_sparse |= terrain_types == type_id
+        timed_out = self.time_out_buf[env_ids]
+        pit_fall = self.pit_fall_buf[env_ids]
+        move_up, move_down = sparse_curriculum_moves(
+            move_up=move_up,
+            move_down=move_down,
+            is_sparse=is_sparse,
+            moving=moving,
+            timed_out=timed_out,
+            pit_fall=pit_fall,
+        )
+        strict_success = move_up & timed_out
+        self._update_terrain_metrics(
+            terrain_types=terrain_types,
+            terrain_levels=terrain_levels,
+            moving=moving,
+            strict_success=strict_success,
+            timed_out=timed_out,
+            pit_fall=pit_fall,
+            max_dist=max_dist,
+        )
         self.scene.terrain.update_env_origins(env_ids, move_up, move_down)
-        return {
+        logs = {
             "Curriculum/terrain_levels": torch.mean(self.scene.terrain.terrain_levels.float()),
             "Curriculum/episode_max_radial_dist": torch.mean(max_dist),
         }
+        logs.update(self._terrain_metrics_log())
+        return logs
+
+    def _update_terrain_metrics(
+        self,
+        *,
+        terrain_types: torch.Tensor,
+        terrain_levels: torch.Tensor,
+        moving: torch.Tensor,
+        strict_success: torch.Tensor,
+        timed_out: torch.Tensor,
+        pit_fall: torch.Tensor,
+        max_dist: torch.Tensor,
+    ) -> None:
+        """Maintain recent episode-weighted EMAs for TensorBoard monitoring."""
+        if not self.terrain_type_names or not bool(moving.any()):
+            return
+        max_level = max(1, self.cfg.scene.terrain_generator.num_rows - 1)
+        band_ids = torch.clamp((terrain_levels * 3) // (max_level + 1), min=0, max=2)
+        fall = ~timed_out
+        values = (
+            strict_success.float(),
+            (max_dist >= 1.0).float(),
+            (max_dist >= 2.0).float(),
+            (max_dist >= 4.0).float(),
+            fall.float(),
+            timed_out.float(),
+            pit_fall.float(),
+            max_dist,
+        )
+
+        for type_id in range(len(self.terrain_type_names)):
+            type_mask = moving & (terrain_types == type_id)
+            self._update_terrain_metric_slot(type_id, 0, type_mask, values)
+            if type_id not in self.sparse_foothold_type_ids:
+                continue
+            for band_id in range(len(self._TERRAIN_METRIC_BANDS)):
+                self._update_terrain_metric_slot(type_id, 1 + band_id, type_mask & (band_ids == band_id), values)
+
+    def _update_terrain_metric_slot(self, type_id: int, slot: int, mask: torch.Tensor, values: tuple) -> None:
+        count = int(mask.sum().item())
+        if count == 0:
+            return
+        batch = torch.stack([value[mask].mean() for value in values])
+        if self.terrain_metric_initialized[type_id, slot]:
+            alpha = 1.0 - (1.0 - self._TERRAIN_METRIC_EPISODE_ALPHA) ** count
+            self.terrain_metric_ema[type_id, slot].lerp_(batch, alpha)
+        else:
+            self.terrain_metric_ema[type_id, slot].copy_(batch)
+            self.terrain_metric_initialized[type_id, slot] = True
+        self.terrain_metric_episodes[type_id, slot] += count
+
+    def _terrain_metrics_log(self) -> dict[str, torch.Tensor]:
+        logs: dict[str, torch.Tensor] = {}
+        for type_id, name in enumerate(self.terrain_type_names):
+            values = self.terrain_metric_ema[type_id, 0]
+            for metric_id, metric in enumerate(self._TERRAIN_METRIC_FIELDS):
+                logs[f"Terrain/{name}/{metric}"] = values[metric_id]
+            logs[f"Terrain/{name}/episodes"] = self.terrain_metric_episodes[type_id, 0].float()
+            if type_id not in self.sparse_foothold_type_ids:
+                continue
+            for band_id, band in enumerate(self._TERRAIN_METRIC_BANDS, start=1):
+                band_values = self.terrain_metric_ema[type_id, band_id]
+                for metric_id, metric in enumerate(self._TERRAIN_METRIC_FIELDS):
+                    logs[f"Terrain/{name}/{band}_{metric}"] = band_values[metric_id]
+                logs[f"Terrain/{name}/{band}_episodes"] = self.terrain_metric_episodes[type_id, band_id].float()
+        return logs
 
     """
     Curriculum-coupled schedules.

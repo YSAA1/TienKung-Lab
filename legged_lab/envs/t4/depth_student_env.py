@@ -26,7 +26,9 @@ from legged_lab.assets.t4.schemas import (
 )
 from legged_lab.envs.base.base_config import BaseSceneCfg
 from legged_lab.envs.t4.t4_env import T4LocoEnv
-from legged_lab.envs.t4.teacher_cfg import T4LocoTeacherEnvCfg
+from legged_lab.envs.base.base_config import FootScannerCfg
+from legged_lab.envs.t4.teacher_cfg import T4LocoTeacherEnvCfg, T4SparseTeacherRewardCfg
+from legged_lab.terrains import T4_STAGE_E_SPARSE_TERRAINS_CFG
 from legged_lab.sensors.camera.camera_cfg import CameraCfg
 from legged_lab.sensors.camera.camera_cfgs import D455CameraCfg
 
@@ -59,6 +61,19 @@ class T4LocoDepthStudentEnvCfg(T4LocoTeacherEnvCfg):
         # need the collision terrain, so keep rendering self-contained.
         self.scene.disable_visual_assets = True
         self.noise.add_noise = False
+
+
+@configclass
+class T4LocoDepthStudentFtEnvCfg(T4LocoDepthStudentEnvCfg):
+    """Sparse-mix student FT: LightLP rewards, existing depth student obs."""
+
+    def __post_init__(self):
+        super().__post_init__()
+        self.scene.terrain_generator = T4_STAGE_E_SPARSE_TERRAINS_CFG
+        self.scene.max_init_terrain_level = 5
+        self.scene.foot_scanner = FootScannerCfg(enable=True)
+        self.reward = T4SparseTeacherRewardCfg()
+        self.append_actor_feet_contact = False
 
 
 class T4LocoDepthDistillEnv(T4LocoEnv):

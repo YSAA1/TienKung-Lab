@@ -15,6 +15,9 @@ Usage:
     python legged_lab/scripts/play_t4_teacher_viser.py \\
         --checkpoint logs/t4_loco_teacher/<run>/model_3500.pt \\
         --record artifacts/eval/t4_play.mp4 --duration 12
+    python legged_lab/scripts/play_t4_teacher_viser.py \
+        --checkpoint logs/t4_loco_teacher/<run>/model_24999.pt \
+        --terrain loco --viewer mujoco
 """
 
 from __future__ import annotations
@@ -92,6 +95,13 @@ STANDING_COMMAND_THRESHOLD = 0.1
 INIT_ROOT_Z = 0.85
 
 
+def teacher_scan_local_points() -> np.ndarray:
+    """Return scan points in IsaacLab GridPatternCfg(ordering="xy") order."""
+    xs = np.linspace(*TEACHER_SCAN_FORWARD_RANGE, TEACHER_SCAN_SHAPE[0])
+    ys = np.linspace(*TEACHER_SCAN_LATERAL_RANGE, TEACHER_SCAN_SHAPE[1])
+    return np.asarray([(x, y) for y in ys for x in xs], dtype=np.float64)
+
+
 def load_actor(checkpoint_path: str) -> torch.nn.Module:
     # The checkpoint pickle references classes from the in-repo rsl_rl package.
     sys.path.insert(0, str(Path(__file__).resolve().parents[2] / "rsl_rl"))
@@ -128,7 +138,18 @@ class T4MujocoRunner:
         self.actor = load_actor(checkpoint)
         self.terrain = terrain
         self.bar_aabbs = []
-        if terrain == "hurdles":
+        if terrain == "loco":
+            # Keep teacher and depth-student comparisons on the exact same
+            # Stage-E course, including the 25/28/30 cm hurdle sequence.
+            from legged_lab.scripts.sim2sim_t4_depth_student import (
+                CourseNavigator,
+                build_model_xml,
+                course_waypoints_from_model,
+            )
+
+            self.model = mujoco.MjModel.from_xml_path(build_model_xml(course="loco"))
+            self.navigator = CourseNavigator(course_waypoints_from_model(self.model), cruise_vx=0.6)
+        elif terrain == "hurdles":
             height = hurdle_bar_height(difficulty)
             widths = hurdle_ring_half_widths(1.1)
             # hurdle_layout uses tile-local coordinates centered at (4, 4).
@@ -138,7 +159,6 @@ class T4MujocoRunner:
                     ((lo[0] - 4.0, lo[1] - 4.0, lo[2]), (hi[0] - 4.0, hi[1] - 4.0, hi[2]))
                 )
 
-        if terrain == "hurdles":
             xml = MJCF_PATH.read_text()
             xml = xml.replace('meshdir="../meshes/"', f'meshdir="{ASSET_DIR / "meshes"}"')
             geoms = []
@@ -153,6 +173,8 @@ class T4MujocoRunner:
             self.model = mujoco.MjModel.from_xml_string(xml)
         else:
             self.model = mujoco.MjModel.from_xml_path(str(MJCF_PATH))
+        if terrain != "loco":
+            self.navigator = None
         self.model.opt.timestep = PHYSICS_DT
         apply_isaac_pd(self.model)
         apply_isaac_contact_friction(self.model)
@@ -170,6 +192,8 @@ class T4MujocoRunner:
         gains = np.array([isaac_pd_gains(name) for name in T4_JOINT_NAMES])
         self.kp, self.kd, self.effort_limit = gains[:, 0], gains[:, 1], gains[:, 2]
         self.default_pos = np.array([T4_STANDING_JOINT_POS[name] for name in T4_JOINT_NAMES])
+        self._ray_geomgroup = np.ones(6, dtype=np.uint8)
+        self._robot_body_id = self.model.body("Trunk").id
 
         self.command = np.zeros(3)
         self.reset()
@@ -184,6 +208,8 @@ class T4MujocoRunner:
         self.action = np.zeros(len(T4_JOINT_NAMES), dtype=np.float32)
         self.gait_time = 0.0
         self.gait_phase = PHASE_OFFSET % 1.0
+        if self.navigator is not None:
+            self.navigator.reset()
         frame = self._proprio_frame()
         self.history: deque[np.ndarray] = deque(
             [frame.copy() for _ in range(PROPRIO_HISTORY_LENGTH)], maxlen=PROPRIO_HISTORY_LENGTH
@@ -213,20 +239,40 @@ class T4MujocoRunner:
 
     def _height_scan(self) -> np.ndarray:
         baseline = self.data.qpos[2] - TEACHER_SCAN_HEIGHT_OFFSET
+        if self.terrain == "loco":
+            yaw = _root_yaw_wxyz(self.data.qpos[3:7])
+            c, s = np.cos(yaw), np.sin(yaw)
+            values = []
+            for x, y in teacher_scan_local_points():
+                wx = self.data.qpos[0] + c * x - s * y
+                wy = self.data.qpos[1] + s * x + c * y
+                geomid = np.zeros(1, dtype=np.int32)
+                distance = mujoco.mj_ray(
+                    self.model,
+                    self.data,
+                    np.array([wx, wy, 5.0]),
+                    np.array([0.0, 0.0, -1.0]),
+                    self._ray_geomgroup,
+                    1,
+                    self._robot_body_id,
+                    geomid,
+                )
+                terrain_z = 0.0 if distance < 0.0 else 5.0 - distance
+                values.append(np.clip(baseline - terrain_z, *TEACHER_SCAN_CLIP))
+            return np.asarray(values, dtype=np.float32)
         if self.terrain != "hurdles":
             return np.full(TEACHER_SCAN_DIM, np.clip(baseline, *TEACHER_SCAN_CLIP), dtype=np.float32)
         yaw = _root_yaw_wxyz(self.data.qpos[3:7])
         c, s = np.cos(yaw), np.sin(yaw)
         values = []
-        for x in np.linspace(*TEACHER_SCAN_FORWARD_RANGE, TEACHER_SCAN_SHAPE[0]):
-            for y in np.linspace(*TEACHER_SCAN_LATERAL_RANGE, TEACHER_SCAN_SHAPE[1]):
-                wx = self.data.qpos[0] + c * x - s * y
-                wy = self.data.qpos[1] + s * x + c * y
-                bar_z = 0.0
-                for (x0, y0, z0), (x1, y1, z1) in self.bar_aabbs:
-                    if x0 <= wx <= x1 and y0 <= wy <= y1:
-                        bar_z = max(bar_z, z1)
-                values.append(np.clip(baseline - bar_z, *TEACHER_SCAN_CLIP))
+        for x, y in teacher_scan_local_points():
+            wx = self.data.qpos[0] + c * x - s * y
+            wy = self.data.qpos[1] + s * x + c * y
+            bar_z = 0.0
+            for (x0, y0, z0), (x1, y1, z1) in self.bar_aabbs:
+                if x0 <= wx <= x1 and y0 <= wy <= y1:
+                    bar_z = max(bar_z, z1)
+            values.append(np.clip(baseline - bar_z, *TEACHER_SCAN_CLIP))
         return np.asarray(values, dtype=np.float32)
 
     def hurdle_contact_count(self) -> int:
@@ -246,6 +292,10 @@ class T4MujocoRunner:
         return np.clip(obs, -CLIP_OBS, CLIP_OBS)
 
     def step(self) -> None:
+        if self.navigator is not None:
+            self.command[:] = self.navigator.command(
+                self.data.qpos[:2], _root_yaw_wxyz(self.data.qpos[3:7])
+            )
         obs = self.observe()
         with torch.no_grad():
             action = self.actor(torch.from_numpy(obs).unsqueeze(0)).squeeze(0).numpy()
@@ -320,10 +370,51 @@ def record_video(
     print(f"wrote {output} ({len(frames)} frames, fallen={runner.fallen}, t={runner.data.time:.2f}s)")
 
 
+def run_native_viewer(runner: T4MujocoRunner, vx: float, vy: float, wz: float) -> None:
+    """Run the same sim2sim loop with MuJoCo's built-in viewer.
+
+    This keeps the teacher entrypoint usable in lightweight environments where
+    the optional Viser/yourdfpy visualization packages are not installed.
+    """
+    import mujoco.viewer
+
+    runner.command[:] = [vx, vy, wz]
+    step_dt = PHYSICS_DT * DECIMATION
+    with mujoco.viewer.launch_passive(runner.model, runner.data) as viewer:
+        while viewer.is_running():
+            t0 = time.time()
+            runner.step()
+            if runner.fallen:
+                runner.reset()
+                runner.command[:] = [vx, vy, wz]
+            viewer.sync()
+            remain = step_dt - (time.time() - t0)
+            if remain > 0:
+                time.sleep(remain)
+
+
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--checkpoint", required=True, help="rsl_rl model_*.pt checkpoint path")
     parser.add_argument("--port", type=int, default=8080)
+    parser.add_argument(
+        "--viewer",
+        choices=["auto", "mujoco", "viser"],
+        default="auto",
+        help="Viewer backend. MuJoCo renders the complete physics scene, including terrain and obstacles.",
+    )
+    parser.add_argument(
+        "--terrain",
+        choices=["flat", "hurdles", "loco"],
+        default="flat",
+        help="MuJoCo scene; loco reuses the student Stage-E course (25/28/30 cm hurdles).",
+    )
+    parser.add_argument(
+        "--difficulty",
+        type=float,
+        default=1.0,
+        help="Difficulty for the legacy hurdle-ring scene; 1.0 produces the 30 cm bar.",
+    )
     parser.add_argument("--record", type=Path, default=None, help="Write an MP4 instead of opening the viser GUI.")
     parser.add_argument("--duration", type=float, default=12.0, help="Recorded seconds.")
     parser.add_argument("--fps", type=float, default=30.0)
@@ -332,17 +423,28 @@ def main() -> None:
     parser.add_argument("--wz", type=float, default=0.0)
     args = parser.parse_args()
 
-    runner = T4MujocoRunner(args.checkpoint)
+    runner = T4MujocoRunner(args.checkpoint, terrain=args.terrain, difficulty=args.difficulty)
     if args.record is not None:
         record_video(runner, args.record, args.duration, args.fps, args.vx, args.vy, args.wz)
         return
+    if args.viewer == "mujoco":
+        run_native_viewer(runner, args.vx, args.vy, args.wz)
+        return
 
-    import viser
-    import yourdfpy
-    from viser.extras import ViserUrdf
+    try:
+        import viser
+        import yourdfpy
+        from viser.extras import ViserUrdf
+    except ModuleNotFoundError as exc:
+        if args.viewer == "viser":
+            raise
+        missing = exc.name or "optional viewer dependency"
+        print(f"[INFO] {missing} is not installed; using MuJoCo native viewer.")
+        run_native_viewer(runner, args.vx, args.vy, args.wz)
+        return
 
     server = viser.ViserServer(port=args.port)
-    server.scene.add_grid("/ground", width=20.0, height=20.0, cell_size=0.5)
+    server.scene.add_grid("/ground", width=50.0, height=20.0, cell_size=0.5)
     root_frame = server.scene.add_frame("/root", show_axes=False)
     urdf_model = yourdfpy.URDF.load(str(URDF_PATH))
     viser_urdf = ViserUrdf(server, urdf_model, root_node_name="/root")

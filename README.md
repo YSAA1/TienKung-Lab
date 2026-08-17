@@ -9,6 +9,14 @@
 > 本地 T4 27DoF 迁移路线的背景、数据合同、任务目标与当前边界见
 > [PROJECT_CONTEXT.md](PROJECT_CONTEXT.md)。该文件是当前 T4 工作的 living source of truth。
 
+> 当前状态（2026-08-17）：走跑阶段已关闭。翻箱仍在 zhuoqun。稀疏 S1d 稳定组/对照组
+> 已判定失败，执行面是
+> `docs/plans/2026-08-17--t4-sparse-ab-rollback-plan.md`。能力声明仍以固定 evaluator 为准。
+> 旧学生微调（本机 Docker）：`scripts/local_run.sh legged_lab/scripts/train_t4_depth_student_ft.py --headless --student_checkpoint artifacts/checkpoints/nubot/t4_loco_depth_student_stage_s_head35/model_24999.pt --task_num_envs 32 --rendering_mode performance`。
+
+> T4 teacher 高程图与头部深度学生的实机接入合同、安装与上机检查见
+> [部署手册](docs/runbooks/t4-teacher-and-depth-deployment.md)。
+
 [![IsaacSim](https://img.shields.io/badge/IsaacSim-4.5.0-silver.svg)](https://docs.omniverse.nvidia.com/isaacsim/latest/overview.html)
 [![Isaac Lab](https://img.shields.io/badge/IsaacLab-2.1.0-silver)](https://isaac-sim.github.io/IsaacLab)
 [![RSL_RK](https://img.shields.io/badge/RSL_RL-2.3.1-silver)](https://github.com/leggedrobotics/rsl_rl)
@@ -167,7 +175,7 @@ D:\anaconda\envs\pytorch\python.exe -m legged_lab.scripts.sim2sim_t4_depth_stude
 D:\anaconda\envs\pytorch\python.exe -m legged_lab.scripts.sim2sim_t4_depth_student --course rule
 ```
 
-Default scene is a Stage E style lane: random-rough, 0–15 cm boxes, waves, 22/28 cm hurdles, a ground-backed 15° up/down slope, then 18 cm and 20 cm stairs. Side walls at ±1.2 m, green goal at 38 m. Nav follows a 1.4 m centerline carrot. Mouse orbits; `R` resets. Do not use I/J/K/L.
+Default scene is a Stage E style lane: random-rough, 0–15 cm boxes, waves, 25/28/30 cm hurdles, a ground-backed 15° up/down slope, then 18 cm and 20 cm stairs. Side walls at ±1.2 m, green goal at 38 m. Nav follows a 1.4 m centerline carrot. Mouse orbits; `R` resets. Do not use I/J/K/L.
 
 The Stage S camera is the schema head-height mount: Trunk ``forward_camera`` site ``(0.085, 0, 0.42)`` with 35 deg downward pitch. Old pelvis-rolled D455 students are off-contract and must not be mixed with this pose.
 

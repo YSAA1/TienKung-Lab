@@ -36,6 +36,15 @@ class RewardCfg:
 
 
 @configclass
+class FootScannerCfg:
+    enable: bool = False
+    body_names: tuple = ("left_foot_link", "right_foot_link")
+    resolution: float = 0.04
+    size: tuple = (0.16, 0.08)
+    debug_vis: bool = False
+
+
+@configclass
 class HeightScannerCfg:
     enable_height_scan: bool = False
     prim_body_name: str = MISSING
@@ -59,6 +68,7 @@ class BaseSceneCfg:
     terrain_generator: TerrainGeneratorCfg = None
     max_init_terrain_level: int = 5
     height_scanner: HeightScannerCfg = HeightScannerCfg()
+    foot_scanner: FootScannerCfg = FootScannerCfg()
     lidar: LidarCfg = LidarCfg()
     depth_camera: TiledCameraCfg = TiledCameraCfg()
     disable_visual_assets: bool = False

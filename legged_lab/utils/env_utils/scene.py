@@ -100,6 +100,26 @@ class SceneCfg(InteractiveSceneCfg):
                 drift_range=config.height_scanner.drift_range,
             )
 
+        if getattr(config, "foot_scanner", None) is not None and config.foot_scanner.enable:
+            for body_name, attr in zip(
+                config.foot_scanner.body_names, ("left_foot_scanner", "right_foot_scanner"), strict=False
+            ):
+                setattr(
+                    self,
+                    attr,
+                    RayCasterCfg(
+                        prim_path="{ENV_REGEX_NS}/Robot/" + body_name,
+                        offset=RayCasterCfg.OffsetCfg(pos=(0.04, 0.0, 0.02)),
+                        attach_yaw_only=True,
+                        pattern_cfg=patterns.GridPatternCfg(
+                            resolution=config.foot_scanner.resolution, size=config.foot_scanner.size
+                        ),
+                        debug_vis=config.foot_scanner.debug_vis,
+                        mesh_prim_paths=["/World/ground"],
+                        update_period=step_dt,
+                    ),
+                )
+
         if config.lidar.enable_lidar:
             self.lidar = RayCasterCfg(
                 prim_path="{ENV_REGEX_NS}/Robot/" + config.lidar.prim_body_name,

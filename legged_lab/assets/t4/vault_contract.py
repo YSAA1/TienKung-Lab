@@ -52,4 +52,25 @@ T4_VAULT_WRIST_TERMINATION_THRESHOLD = 0.50
 T4_VAULT_ADAPTIVE_KERNEL_SIZE = 3
 T4_VAULT_ADAPTIVE_KERNEL_LAMBDA = 0.8
 
+# Play / eval start at the first reference frame with no RSI jitter. Training
+# keeps the non-zero pose / joint / velocity ranges on MotionCommand.
+T4_VAULT_PLAY_SAMPLING_STRATEGY = "zero"
+T4_VAULT_PLAY_JOINT_POSITION_RANGE = (0.0, 0.0)
+T4_VAULT_PLAY_POSE_RANGE = {
+    "x": (0.0, 0.0),
+    "y": (0.0, 0.0),
+    "z": (0.0, 0.0),
+    "roll": (0.0, 0.0),
+    "pitch": (0.0, 0.0),
+    "yaw": (0.0, 0.0),
+}
+T4_VAULT_PLAY_VELOCITY_RANGE = {
+    "x": (0.0, 0.0),
+    "y": (0.0, 0.0),
+    "z": (0.0, 0.0),
+    "roll": (0.0, 0.0),
+    "pitch": (0.0, 0.0),
+    "yaw": (0.0, 0.0),
+}
+
 __all__ = [name for name in globals() if name.startswith("T4_VAULT_")]

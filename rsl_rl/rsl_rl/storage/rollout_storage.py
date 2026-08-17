@@ -78,6 +78,7 @@ class RolloutStorage:
         # for distillation
         if training_type == "distillation":
             self.privileged_actions = torch.zeros(num_transitions_per_env, num_envs, *actions_shape, device=self.device)
+            self.actions_log_prob = torch.zeros(num_transitions_per_env, num_envs, 1, device=self.device)
 
         # for reinforcement learning
         if training_type == "rl":
@@ -115,6 +116,8 @@ class RolloutStorage:
         # for distillation
         if self.training_type == "distillation":
             self.privileged_actions[self.step].copy_(transition.privileged_actions)
+            if transition.actions_log_prob is not None:
+                self.actions_log_prob[self.step].copy_(transition.actions_log_prob.view(-1, 1))
 
         # for reinforcement learning
         if self.training_type == "rl":
