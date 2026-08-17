@@ -2,7 +2,7 @@
 # All rights reserved.
 # Modifications are licensed under the BSD-3-Clause license.
 
-"""Layer-0 contracts for T4 stepping-stone / pillar layout."""
+"""Layer-0 contracts for T4 stepping-stone / pillar layout (LightLP v4)."""
 
 from __future__ import annotations
 
@@ -18,13 +18,46 @@ _spec.loader.exec_module(layout)
 
 
 def test_stone_difficulty_narrows_and_widens_gaps():
-    assert layout.stone_width(0.0) == layout.T4_STONE_WIDTH_RANGE[0]
-    assert layout.stone_width(1.0) == layout.T4_STONE_WIDTH_RANGE[1]
-    assert layout.stone_width(1.0) >= 0.30
-    assert layout.stone_width(0.0) > layout.stone_width(1.0)
+    easy_w = layout.stone_width(0.0)
+    hard_w = layout.stone_width(1.0)
+    assert 0.24 <= easy_w <= 0.30
+    assert 0.20 <= hard_w <= 0.24
+    assert hard_w < easy_w
     assert layout.stone_gap(0.0) < layout.stone_gap(1.0)
-    assert layout.foothold_pitch(0.5) >= 0.65
+    assert layout.foothold_pitch(0.5) >= 0.50
     assert layout.stone_gap(0.5) >= 0.22
+
+
+def test_stone_first_step_is_a_step_not_a_jump():
+    easy = layout.platform_to_first_gap(0.0, layout.stone_width(0.0))
+    hard = layout.platform_to_first_gap(1.0, layout.stone_width(1.0))
+    assert 0.03 <= easy <= 0.10
+    assert easy < hard <= 0.18
+
+
+def test_illegal_no_longer_silent_with_6cm_bias():
+    """Center stance ≈0; 6 cm edge bias must push the sole scan off a narrow top."""
+    d = 0.0
+    pitch = layout.foothold_pitch(d)
+    centers = layout.foothold_centers(pitch)
+    assert centers
+    # First cardinal foothold ahead of the spawn pad.
+    center = min((c for c in centers if c[0] > 4.0 and abs(c[1] - 4.0) < 1e-6), key=lambda c: c[0])
+    centered = layout.illegal_footstep_fraction_layout(center, kind="stepping_stones", difficulty=d)
+    assert centered == pytest.approx(0.0, abs=1e-9)
+    # Bias along the long sole axis (16 cm); 6 cm is enough to walk the toe grid off a 26 cm top.
+    biased = layout.illegal_footstep_fraction_layout(
+        (center[0] + 0.06, center[1]), kind="stepping_stones", difficulty=d
+    )
+    assert biased > 0.0
+
+
+def test_soft_terrain_stands_but_reports_hole():
+    gap_xy = (4.0 + 0.5 * layout.T4_STONE_PLATFORM_WIDTH + 0.02, 4.0)
+    assert layout.soft_physics_supports(gap_xy)
+    assert layout.soft_reports_hole(gap_xy, kind="stepping_stones", difficulty=0.0)
+    stone_xy = layout.foothold_centers(layout.foothold_pitch(0.0))[0]
+    assert not layout.soft_reports_hole(stone_xy, kind="stepping_stones", difficulty=0.0)
 
 
 def test_pillar_first_step_is_a_step_not_a_jump():
@@ -51,7 +84,8 @@ def test_stone_and_pillar_height_curriculum_starts_reachable():
 
 
 def test_pillar_difficulty_and_spacing():
-    assert layout.pillar_diameter(1.0) >= 0.36
+    assert layout.pillar_diameter(0.0) == pytest.approx(0.50)
+    assert layout.pillar_diameter(1.0) == pytest.approx(0.38)
     assert layout.pillar_gap(0.0) <= 0.08
     assert layout.pillar_gap(0.0) < layout.pillar_gap(1.0)
 

@@ -170,6 +170,10 @@ def feet_stumble(env: BaseEnv | TienKungEnv, sensor_cfg: SceneEntityCfg) -> torc
         > 5 * torch.abs(contact_sensor.data.net_forces_w[:, sensor_cfg.body_ids, 2]),
         dim=1,
     ).to(dtype=torch.float)
+    # LightLP sparse mix: zero stumble on sparse tiles (disk rims look like stumbles).
+    mask = getattr(env, "sparse_tile_mask", None)
+    if mask is not None:
+        penalty = penalty * (~mask).float()
     return penalty
 
 
@@ -227,7 +231,15 @@ def illegal_footstep(
     contact_threshold: float = 0.5,
     sensor_cfg: SceneEntityCfg = SceneEntityCfg("contact_sensor", body_names=".*_foot_link"),
 ) -> torch.Tensor:
-    """Mean fraction of downward foot rays that miss support by more than ``delta``."""
+    """Mean fraction of downward foot rays that miss support by more than ``delta``.
+
+    Soft-stage sparse tiles use the algebraic true-hole map when the env sets
+    ``use_algebraic_sparse_scan`` (filled collision would otherwise silence rays).
+    """
+    algebraic = getattr(env, "algebraic_illegal_footstep", None)
+    if algebraic is not None and getattr(env, "use_algebraic_sparse_scan", False):
+        return algebraic(contact_threshold=contact_threshold)
+
     scanners = []
     sensors = env.scene.sensors
     for name in ("left_foot_scanner", "right_foot_scanner"):
@@ -260,6 +272,38 @@ def illegal_footstep(
             mask |= types == type_id
         penalty = penalty * mask.float()
     return penalty
+
+
+def opposite_direction(
+    env: BaseEnv | TienKungEnv,
+    cmd_threshold: float = 0.1,
+    asset_cfg: SceneEntityCfg = SceneEntityCfg("robot"),
+) -> torch.Tensor:
+    """1 when body-forward velocity opposes a non-trivial forward command."""
+    asset: Articulation = env.scene[asset_cfg.name]
+    vel_yaw = math_utils.quat_rotate_inverse(
+        math_utils.yaw_quat(asset.data.root_quat_w), asset.data.root_lin_vel_w[:, :3]
+    )
+    cmd = env.command_generator.command[:, 0]
+    active = cmd.abs() >= cmd_threshold
+    return (active & (cmd * vel_yaw[:, 0] < 0.0)).to(dtype=vel_yaw.dtype)
+
+
+def foot_acceleration_penalty(
+    env: BaseEnv | TienKungEnv,
+    asset_cfg: SceneEntityCfg = SceneEntityCfg("robot", body_names=[".*_foot_link"]),
+    tau_s: float = 0.06,
+    threshold_mps2: float = 30.0,
+) -> torch.Tensor:
+    """LightLP filtered foot-acceleration excess (replaces touchdown-impact on sparse)."""
+    update = getattr(env, "update_foot_accel_penalty", None)
+    if update is not None:
+        return update(tau_s=tau_s, threshold_mps2=threshold_mps2, asset_cfg=asset_cfg)
+    asset: Articulation = env.scene[asset_cfg.name]
+    # Fallback without EMA state: instantaneous |a| excess of both feet.
+    accel = asset.data.body_lin_acc_w[:, asset_cfg.body_ids, :]
+    magnitude = torch.norm(accel, dim=-1)
+    return torch.mean(torch.clamp(magnitude - threshold_mps2, min=0.0), dim=-1)
 
 
 def hurdle_bar_contact(

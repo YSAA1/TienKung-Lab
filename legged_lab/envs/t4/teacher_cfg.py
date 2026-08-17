@@ -31,6 +31,8 @@ from legged_lab.assets.t4.constants import T4_JOINT_NAMES, T4_NOMINAL_FEET_Y_DIS
 from legged_lab.assets.t4.schemas import (
     AMP_FORMAL_EXPERT_DIR,
     AMP_FRAME_DIM,
+    FOOT_SCAN_RESOLUTION,
+    FOOT_SCAN_SIZE,
     NUM_T4_JOINTS,
     PROPRIO_HISTORY_LENGTH,
     TEACHER_SCAN_BODY,
@@ -38,6 +40,7 @@ from legged_lab.assets.t4.schemas import (
     TEACHER_SCAN_OFFSET,
     TEACHER_SCAN_RESOLUTION,
     TEACHER_SCAN_SIZE,
+    TEACHER_SPARSE_SCAN_HISTORY_LENGTH,
     amp_expert_files,
 )
 from legged_lab.assets.t4.t4 import T4_CFG
@@ -423,43 +426,71 @@ class T4LocoTeacherAgentCfg(RslRlOnPolicyRunnerCfg):
 
 @configclass
 class T4SparseTeacherRewardCfg(T4TeacherRewardCfg):
+    """LightLP §IV sparse rewards: slack + illegal + reverse + filtered foot accel.
+
+    On sparse tiles the env zeros gait / AMP / stumble via masks; continuous
+    terrain buckets keep the Stage E weights from the base class.
+    """
+
     velocity_slack = RewTerm(func=mdp.velocity_slack, weight=1.5)
     illegal_footstep = RewTerm(func=mdp.illegal_footstep, weight=-1.0)
+    opposite_direction = RewTerm(func=mdp.opposite_direction, weight=-1.0)
     hurdle_bar_contact = RewTerm(func=mdp.hurdle_bar_contact, weight=-2.0)
+    # Merge LightLP foot-acceleration filter with the old touchdown impact term.
+    foot_touchdown_impact = RewTerm(
+        func=mdp.foot_acceleration_penalty,
+        weight=-0.01,
+        params={
+            "asset_cfg": SceneEntityCfg("robot", body_names=[".*_foot_link"]),
+            "tau_s": 0.06,
+            "threshold_mps2": 30.0,
+        },
+    )
 
 
 @configclass
 class T4LocoSparseTeacherEnvCfg(T4LocoTeacherEnvCfg):
-    """T-compat: same 1155D actor, LightLP sparse mix + foothold rewards."""
+    """LightLP v4 sparse teacher: 1937D actor, soft-filled sparse tiles, new dims."""
+
+    # Soft stage by default; set False when opening real pits on this lineage.
+    soft_sparse_terrain: bool = True
+    teacher_scan_history_length: int = TEACHER_SPARSE_SCAN_HISTORY_LENGTH
+    append_actor_feet_contact: bool = True
+    append_critic_foot_scan: bool = True
+    use_algebraic_sparse_scan: bool = True
 
     def __post_init__(self):
         self.scene.terrain_generator = T4_STAGE_E_SPARSE_TERRAINS_CFG
         self.scene.max_init_terrain_level = 2
-        self.scene.foot_scanner = FootScannerCfg(enable=True)
+        self.scene.foot_scanner = FootScannerCfg(
+            enable=True,
+            resolution=FOOT_SCAN_RESOLUTION,
+            size=FOOT_SCAN_SIZE,
+        )
         self.reward = T4SparseTeacherRewardCfg()
-        self.append_actor_feet_contact = False
-
-
-@configclass
-class T4LocoSparsePaperTeacherEnvCfg(T4LocoSparseTeacherEnvCfg):
-    """T-paper: 1157D actor with current-frame feet contact."""
-
-    def __post_init__(self):
-        super().__post_init__()
         self.append_actor_feet_contact = True
+        self.append_critic_foot_scan = True
+        # Sparse tiles zero gait/AMP via env masks; keep schedule enabled for continuous tiles.
+        self.amp_terrain_schedule.enable = True
+        # One flag drives both collision fill and pit_fall (soft stage).
+        self.apply_soft_sparse_stage(self.soft_sparse_terrain)
+
+    def apply_soft_sparse_stage(self, soft: bool) -> None:
+        """Soft: filled collision + no pit_fall. Hard: open pits + pit_fall termination."""
+        self.soft_sparse_terrain = bool(soft)
+        self.use_algebraic_sparse_scan = bool(soft)
+        generator = self.scene.terrain_generator
+        sub = getattr(generator, "sub_terrains", None) or {}
+        for name in ("stepping_stones", "raised_pillars"):
+            cfg = sub.get(name)
+            if cfg is not None and hasattr(cfg, "soft_fill"):
+                cfg.soft_fill = bool(soft)
 
 
 @configclass
 class T4LocoSparseTeacherAgentCfg(T4LocoTeacherAgentCfg):
     experiment_name = "t4_loco_teacher_sparse"
-    run_name = "t_compat_sparse"
+    run_name = "t_sparse_lightlp_v4"
     neptune_project = "t4_loco_teacher_sparse"
     wandb_project = "t4_loco_teacher_sparse"
-
-
-@configclass
-class T4LocoSparsePaperTeacherAgentCfg(T4LocoTeacherAgentCfg):
-    experiment_name = "t4_loco_teacher_sparse_paper"
-    run_name = "t_paper_sparse"
-    neptune_project = "t4_loco_teacher_sparse_paper"
-    wandb_project = "t4_loco_teacher_sparse_paper"
+    max_iterations = 35000

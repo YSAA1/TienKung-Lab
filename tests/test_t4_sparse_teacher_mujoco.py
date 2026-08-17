@@ -10,12 +10,12 @@ def test_sparse_course_uses_training_layout_and_supports_both_teacher_contracts(
     module = importlib.import_module("legged_lab.scripts.play_t4_sparse_teacher_mujoco")
 
     layout = module.sparse_course_layout(0.5)
-    assert layout["stone_width"] == pytest.approx(0.4)
-    assert layout["stone_gap"] == pytest.approx(0.33)
-    assert layout["stone_height"] == pytest.approx(0.23)
-    assert layout["pillar_diameter"] == pytest.approx(0.44)
-    assert layout["pillar_gap"] == pytest.approx(0.125)
-    assert layout["pillar_height"] == pytest.approx(0.23)
+    assert layout["stone_width"] == pytest.approx(module._LAYOUT.stone_width(0.5))
+    assert layout["stone_gap"] == pytest.approx(module._LAYOUT.stone_gap(0.5))
+    assert layout["stone_height"] == pytest.approx(module._LAYOUT.stone_height(0.5))
+    assert layout["pillar_diameter"] == pytest.approx(module._LAYOUT.pillar_diameter(0.5))
+    assert layout["pillar_gap"] == pytest.approx(module._LAYOUT.pillar_gap(0.5))
+    assert layout["pillar_height"] == pytest.approx(module._LAYOUT.pillar_height(0.5))
     assert {geom["kind"] for geom in layout["geoms"]} >= {"stone", "pillar", "platform"}
 
     start_platform = next(geom for geom in layout["geoms"] if geom["name"] == "start_platform")
@@ -25,14 +25,14 @@ def test_sparse_course_uses_training_layout_and_supports_both_teacher_contracts(
         footholds = [geom for geom in layout["geoms"] if geom["kind"] == kind]
         lateral_min = min(geom["pos"][1] - geom["size"][0] for geom in footholds)
         lateral_max = max(geom["pos"][1] + geom["size"][0] for geom in footholds)
-        assert lateral_min <= -1.5
-        assert lateral_max >= 1.5
+        assert lateral_min <= -1.0
+        assert lateral_max >= 1.0
 
     xml = module.build_sparse_model_xml(0.5)
     model = mujoco.MjModel.from_xml_string(xml)
     assert model.geom("sparse_pit_floor").pos[2] == -2.05
-    assert model.geom("stone_0_0").size[0] == pytest.approx(0.2)
-    assert model.geom("pillar_0_0").size[0] == pytest.approx(0.22)
+    assert model.geom("stone_0_0").size[0] == pytest.approx(0.5 * layout["stone_width"])
+    assert model.geom("pillar_0_0").size[0] == pytest.approx(0.5 * layout["pillar_diameter"])
 
     start_front = start_platform["pos"][0] + start_platform["size"][0]
     first_stone = next(geom for geom in layout["geoms"] if geom["name"] == "stone_0_3")
@@ -41,7 +41,8 @@ def test_sparse_course_uses_training_layout_and_supports_both_teacher_contracts(
 
     assert module.supported_actor_obs_dim(module.TEACHER_ACTOR_OBS_DIM)
     assert module.supported_actor_obs_dim(module.TEACHER_PAPER_ACTOR_OBS_DIM)
-    assert not module.supported_actor_obs_dim(module.TEACHER_PAPER_ACTOR_OBS_DIM + 1)
+    assert module.supported_actor_obs_dim(module.TEACHER_SPARSE_ACTOR_OBS_DIM)
+    assert not module.supported_actor_obs_dim(module.TEACHER_SPARSE_ACTOR_OBS_DIM + 1)
 
 
 def test_teacher_scan_matches_isaac_xy_flatten_order():

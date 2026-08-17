@@ -32,12 +32,19 @@ from legged_lab.assets.t4.constants import T4_JOINT_NAMES
 from legged_lab.assets.t4.schemas import (
     CRITIC_EXTRA_FIELDS,
     CRITIC_FRAME_DIM,
+    FOOT_SCAN_BOTH_DIM,
+    FOOT_SCAN_DIM,
+    FOOT_SCAN_SHAPE,
     PROPRIO_FIELDS,
     PROPRIO_FRAME_DIM,
     TEACHER_PAPER_ACTOR_OBS_DIM,
     TEACHER_PAPER_CONTACT_DIM,
     TEACHER_SCAN_DIM,
     TEACHER_SCAN_SHAPE,
+    TEACHER_SPARSE_ACTOR_OBS_DIM,
+    TEACHER_SPARSE_CONTACT_DIM,
+    TEACHER_SPARSE_CRITIC_OBS_DIM,
+    TEACHER_SPARSE_SCAN_HISTORY_LENGTH,
 )
 
 _ARM_NUMBER_SIGNS = {
@@ -199,11 +206,61 @@ def mirror_actions(actions):
     return _apply_plan(actions, sources, signs)
 
 
+def _mirror_scan_stack(start: int, history: int) -> list[int]:
+    indices: list[int] = []
+    for h in range(history):
+        indices.extend(_scan_plan(start + h * TEACHER_SCAN_DIM))
+    return indices
+
+
+def _mirror_foot_scan_stack(start: int) -> list[int]:
+    """Swap left/right sole grids and sagittal-mirror each grid."""
+    left = _grid_plan(start, FOOT_SCAN_SHAPE)
+    right = _grid_plan(start + FOOT_SCAN_DIM, FOOT_SCAN_SHAPE)
+    # After swap, left slot reads the mirrored right grid and vice versa.
+    return right + left
+
+
+@lru_cache(maxsize=8)
+def sparse_observation_mirror_plan(is_critic: bool, history_length: int) -> tuple[tuple[int, ...], tuple[float, ...]]:
+    """Mirror plan for LightLP sparse actor/critic (scan history ×5, optional foot scan)."""
+    frame_indices, frame_signs = _frame_plan(is_critic)
+    frame_dim = len(frame_indices)
+    indices: list[int] = []
+    signs: list[float] = []
+    for history_index in range(history_length):
+        offset = history_index * frame_dim
+        indices.extend(offset + index for index in frame_indices)
+        signs.extend(frame_signs)
+    scan_start = history_length * frame_dim
+    indices.extend(_mirror_scan_stack(scan_start, TEACHER_SPARSE_SCAN_HISTORY_LENGTH))
+    signs.extend([1.0] * (TEACHER_SCAN_DIM * TEACHER_SPARSE_SCAN_HISTORY_LENGTH))
+    if is_critic:
+        foot_start = scan_start + TEACHER_SCAN_DIM * TEACHER_SPARSE_SCAN_HISTORY_LENGTH
+        indices.extend(_mirror_foot_scan_stack(foot_start))
+        signs.extend([1.0] * FOOT_SCAN_BOTH_DIM)
+    return tuple(indices), tuple(signs)
+
+
 def mirror_observations(obs, is_critic: bool):
     """Mirror an actor/critic observation batch (history frames + scan tail)."""
     frame_dim = CRITIC_FRAME_DIM if is_critic else PROPRIO_FRAME_DIM
-    extra = 0
     width = obs.shape[-1]
+
+    # LightLP sparse v4 contracts.
+    if not is_critic and width == TEACHER_SPARSE_ACTOR_OBS_DIM:
+        body = PROPRIO_FRAME_DIM * 10
+        indices, signs = sparse_observation_mirror_plan(False, 10)
+        # sparse plan includes scan history but not trailing contact — append swap.
+        core_w = body + TEACHER_SCAN_DIM * TEACHER_SPARSE_SCAN_HISTORY_LENGTH
+        mirrored = _apply_plan(obs[..., :core_w], indices, signs)
+        contact = obs[..., -TEACHER_SPARSE_CONTACT_DIM:]
+        return _concat_last(mirrored, contact[..., [1, 0]])
+    if is_critic and width == TEACHER_SPARSE_CRITIC_OBS_DIM:
+        indices, signs = sparse_observation_mirror_plan(True, 10)
+        return _apply_plan(obs, indices, signs)
+
+    extra = 0
     if not is_critic and width == TEACHER_PAPER_ACTOR_OBS_DIM:
         extra = TEACHER_PAPER_CONTACT_DIM
         width -= extra

@@ -135,11 +135,11 @@
   - acceptance_criteria: 踏石/圆桩都不算会；S1d 真坑厨房水槽已否；§IV 缺件清单已写
   - verification_commands: `artifacts/eval/t4_sparse_ab_tb_dump.json`；TB `t_compat_sparse_v2_resume`；`docs/research/2026-08-17--t4-sparse-lightlp-completion.md`
   - success_definition: 回退续训不再是执行面，完整补全范围由论文+数据决定
-- [ ] 阶段 1：几何 / 观测 / 软地形合同（当前）
+- [x] 阶段 1：几何 / 观测 / 软地形合同
   - acceptance_criteria: 踏石边长与第一跨落在上文区间；中心站立 illegal≈0、偏 6 cm>0；新 `TEACHER_SPARSE_*_DIM` 有测试；`TEACHER_ACTOR_OBS_DIM==1155` 仍成立；`t4_loco_teacher_sparse_paper` 不再注册
   - verification_commands: `python -m pytest tests/test_t4_stepping_stone_contracts.py tests/test_t4_observation_contracts.py tests/test_t4_sparse_reward_contracts.py tests/test_t4_sparse_monitor_contract.py -q`
   - success_definition: implement 不能再「先大方砖再看」；illegal 沉默被测试钉死
-- [ ] 阶段 2：环境与奖励实现
+- [x] 阶段 2：环境与奖励实现
   - acceptance_criteria: 软/硬地形可切换；稀疏 tile 步态/AMP/stumble=0；Actor 接触+scan×5；Critic 脚下 scan；足加速度与反向走已挂；无 `legal_foothold` / 双 Critic
   - verification_commands: 同上 pytest + 有 Isaac 时 64-env 3-iter smoke（nubot tmux）
   - success_definition: 新配方在代码里是一条任务，不是注释掉的开关堆

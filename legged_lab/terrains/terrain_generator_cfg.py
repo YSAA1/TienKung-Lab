@@ -117,6 +117,20 @@ class MeshHurdleRingsTerrainCfg(SubTerrainBaseCfg):
     bar_thickness: float = T4_HURDLE_BAR_THICKNESS
 
 
+def _sparse_base_meshes(cfg, tile: float):
+    """Spawn pad plus either a deep pit (hard) or a filled floor (soft)."""
+    platform = make_plane((cfg.platform_width, cfg.platform_width), height=0.0, center_zero=False)
+    platform.apply_translation((0.5 * (tile - cfg.platform_width), 0.5 * (tile - cfg.platform_width), 0.0))
+    if getattr(cfg, "soft_fill", False):
+        # Soft stage: walkable floor at z=0. Scan / illegal still use the true-hole map.
+        floor = trimesh.creation.box((tile, tile, 0.1))
+        floor.apply_translation((0.5 * tile, 0.5 * tile, -0.05))
+        return [floor, platform]
+    pit = trimesh.creation.box((tile, tile, 0.1))
+    pit.apply_translation((0.5 * tile, 0.5 * tile, cfg.hole_depth - 0.05))
+    return [pit, platform]
+
+
 def stepping_stones_terrain(difficulty, cfg):
     """Discrete rectangular stones over a deep hole, plus a spawn platform."""
     width = stone_width(difficulty, cfg.stone_width_range)
@@ -124,11 +138,7 @@ def stepping_stones_terrain(difficulty, cfg):
     base_height = stone_height(difficulty, cfg.height_range)
     jitter = stone_height_jitter(difficulty, cfg.height_jitter_range)
     tile = float(min(cfg.size))
-    pit = trimesh.creation.box((tile, tile, 0.1))
-    pit.apply_translation((0.5 * tile, 0.5 * tile, cfg.hole_depth - 0.05))
-    platform = make_plane((cfg.platform_width, cfg.platform_width), height=0.0, center_zero=False)
-    platform.apply_translation((0.5 * (tile - cfg.platform_width), 0.5 * (tile - cfg.platform_width), 0.0))
-    meshes = [pit, platform]
+    meshes = _sparse_base_meshes(cfg, tile)
     rng = np.random.default_rng(int(round(float(difficulty) * 1000.0)))
     for x, y in foothold_centers(pitch, tile_size=tile, platform_width=cfg.platform_width, border_width=cfg.border_width):
         h = base_height + float(rng.uniform(-jitter, jitter))
@@ -146,11 +156,7 @@ def raised_pillars_terrain(difficulty, cfg):
     pitch = foothold_pitch(difficulty, cfg.foothold_pitch_range)
     height = pillar_height(difficulty, cfg.height_range)
     tile = float(min(cfg.size))
-    pit = trimesh.creation.box((tile, tile, 0.1))
-    pit.apply_translation((0.5 * tile, 0.5 * tile, cfg.hole_depth - 0.05))
-    platform = make_plane((cfg.platform_width, cfg.platform_width), height=0.0, center_zero=False)
-    platform.apply_translation((0.5 * (tile - cfg.platform_width), 0.5 * (tile - cfg.platform_width), 0.0))
-    meshes = [pit, platform]
+    meshes = _sparse_base_meshes(cfg, tile)
     for x, y in foothold_centers(pitch, tile_size=tile, platform_width=cfg.platform_width, border_width=cfg.border_width):
         cyl = trimesh.creation.cylinder(radius=0.5 * diameter, height=height)
         cyl.apply_translation((x, y, 0.5 * height))
@@ -169,6 +175,7 @@ class MeshSteppingStonesTerrainCfg(SubTerrainBaseCfg):
     height_range: tuple[float, float] = T4_STONE_HEIGHT_RANGE
     height_jitter_range: tuple[float, float] = T4_STONE_HEIGHT_JITTER_RANGE
     hole_depth: float = T4_HOLE_DEPTH
+    soft_fill: bool = False
 
 
 @configclass
@@ -180,6 +187,7 @@ class MeshRaisedPillarsTerrainCfg(SubTerrainBaseCfg):
     diameter_range: tuple[float, float] = T4_PILLAR_DIAMETER_RANGE
     height_range: tuple[float, float] = T4_PILLAR_HEIGHT_RANGE
     hole_depth: float = T4_HOLE_DEPTH
+    soft_fill: bool = False
 
 
 GRAVEL_TERRAINS_CFG = TerrainGeneratorCfg(
@@ -363,10 +371,12 @@ T4_STAGE_E_SPARSE_TERRAINS_CFG = TerrainGeneratorCfg(
             proportion=T4_SPARSE_TERRAIN_PROPORTIONS["hurdles"], bar_thickness=0.10
         ),
         "stepping_stones": MeshSteppingStonesTerrainCfg(
-            proportion=T4_SPARSE_TERRAIN_PROPORTIONS["stepping_stones"]
+            proportion=T4_SPARSE_TERRAIN_PROPORTIONS["stepping_stones"],
+            soft_fill=True,
         ),
         "raised_pillars": MeshRaisedPillarsTerrainCfg(
-            proportion=T4_SPARSE_TERRAIN_PROPORTIONS["raised_pillars"]
+            proportion=T4_SPARSE_TERRAIN_PROPORTIONS["raised_pillars"],
+            soft_fill=True,
         ),
         "slope_up": terrain_gen.HfInvertedPyramidSlopedTerrainCfg(
             proportion=T4_SPARSE_TERRAIN_PROPORTIONS["slope_up"],

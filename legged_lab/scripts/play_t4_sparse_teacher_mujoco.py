@@ -39,6 +39,8 @@ from legged_lab.assets.t4.schemas import (
     TEACHER_SCAN_HEIGHT_OFFSET,
     TEACHER_SCAN_LATERAL_RANGE,
     TEACHER_SCAN_SHAPE,
+    TEACHER_SPARSE_ACTOR_OBS_DIM,
+    TEACHER_SPARSE_SCAN_HISTORY_LENGTH,
 )
 from legged_lab.scripts.play_t4_teacher_viser import (
     ACTION_SCALE,
@@ -76,7 +78,7 @@ FOOTHOLD_ROWS = 10
 
 
 def supported_actor_obs_dim(num_obs: int) -> bool:
-    return num_obs in (TEACHER_ACTOR_OBS_DIM, TEACHER_PAPER_ACTOR_OBS_DIM)
+    return num_obs in (TEACHER_ACTOR_OBS_DIM, TEACHER_PAPER_ACTOR_OBS_DIM, TEACHER_SPARSE_ACTOR_OBS_DIM)
 
 
 def teacher_scan_local_points() -> np.ndarray:
@@ -228,7 +230,7 @@ def load_actor(checkpoint_path: str) -> tuple[torch.nn.Module, int]:
     if not supported_actor_obs_dim(num_obs):
         raise RuntimeError(
             f"checkpoint actor expects {num_obs} observations; supported sparse contracts are "
-            f"{TEACHER_ACTOR_OBS_DIM} and {TEACHER_PAPER_ACTOR_OBS_DIM}"
+            f"{TEACHER_ACTOR_OBS_DIM}, {TEACHER_PAPER_ACTOR_OBS_DIM}, and {TEACHER_SPARSE_ACTOR_OBS_DIM}"
         )
     dims = [num_obs, 512, 256, 128, len(T4_JOINT_NAMES)]
     layers: list[torch.nn.Module] = []
@@ -251,7 +253,12 @@ class T4SparseTeacherMujocoRunner:
         geometry: str = "current",
     ):
         self.actor, self.actor_obs_dim = load_actor(checkpoint)
-        self.paper_contact_obs = self.actor_obs_dim == TEACHER_PAPER_ACTOR_OBS_DIM
+        self.paper_contact_obs = self.actor_obs_dim in (
+            TEACHER_PAPER_ACTOR_OBS_DIM,
+            TEACHER_SPARSE_ACTOR_OBS_DIM,
+        )
+        self.sparse_scan_history = self.actor_obs_dim == TEACHER_SPARSE_ACTOR_OBS_DIM
+        self.scan_history_length = TEACHER_SPARSE_SCAN_HISTORY_LENGTH if self.sparse_scan_history else 1
         self.layout = sparse_course_layout(difficulty, terrain=terrain, geometry=geometry)
         self.model = mujoco.MjModel.from_xml_string(
             build_sparse_model_xml(difficulty, terrain=terrain, geometry=geometry)
@@ -293,6 +300,10 @@ class T4SparseTeacherMujocoRunner:
         frame = self._proprio_frame()
         self.history: deque[np.ndarray] = deque(
             [frame.copy() for _ in range(PROPRIO_HISTORY_LENGTH)], maxlen=PROPRIO_HISTORY_LENGTH
+        )
+        scan = self._height_scan()
+        self.scan_history: deque[np.ndarray] = deque(
+            [scan.copy() for _ in range(self.scan_history_length)], maxlen=self.scan_history_length
         )
         self.reset_count += 1
 
@@ -359,7 +370,8 @@ class T4SparseTeacherMujocoRunner:
 
     def observe(self) -> np.ndarray:
         self.history.append(self._proprio_frame())
-        parts = [*self.history, self._height_scan()]
+        self.scan_history.append(self._height_scan())
+        parts = [*self.history, *self.scan_history]
         if self.paper_contact_obs:
             parts.append(self._feet_contact())
         obs = np.concatenate(parts)
@@ -432,7 +444,12 @@ def main() -> None:
         geometry=args.geometry,
     )
     layout = runner.layout
-    contract = "T-paper 1157D" if runner.paper_contact_obs else "T-compat 1155D"
+    if runner.sparse_scan_history:
+        contract = f"LightLP sparse {TEACHER_SPARSE_ACTOR_OBS_DIM}D"
+    elif runner.paper_contact_obs:
+        contract = "T-paper 1157D"
+    else:
+        contract = "T-compat 1155D"
     print(
         f"[INFO] loaded {contract}; terrain={args.terrain}; geometry={args.geometry}; "
         f"difficulty={args.difficulty:.2f}; stone={layout['stone_width']:.3f}m "

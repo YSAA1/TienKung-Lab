@@ -26,8 +26,42 @@ def illegal_footstep_fraction(foot_z: float, hit_zs: list[float], *, in_contact:
     return bad / float(len(hit_zs))
 
 
-def sparse_pit_fall_mask(root_z, origin_z, is_sparse, drop_threshold: float = 0.5):
-    """Terminate only sparse-terrain envs whose root fell below the tile origin."""
+def opposite_direction(vx_cmd: float, vx_act: float, cmd_threshold: float = 0.1) -> float:
+    """1 when commanded forward progress and body-forward velocity have opposite sign."""
+    if abs(vx_cmd) < cmd_threshold:
+        return 0.0
+    return 1.0 if vx_cmd * vx_act < 0.0 else 0.0
+
+
+def foot_accel_ema_step(
+    prev_ema: float,
+    foot_accel_mps2: float,
+    *,
+    tau_s: float = 0.06,
+    dt_s: float = 0.02,
+    threshold_mps2: float = 30.0,
+) -> tuple[float, float]:
+    """LightLP filtered foot acceleration excess.
+
+    Returns ``(new_ema, excess)`` where ``excess = max(0, ema - threshold)`` and
+    ``ema`` tracks ``|a|`` with time constant ``tau_s``.
+    """
+    if tau_s <= 0.0:
+        raise ValueError(f"tau_s must be positive, got {tau_s}")
+    alpha = 1.0 - pow(2.718281828459045, -dt_s / tau_s)
+    magnitude = abs(float(foot_accel_mps2))
+    ema = (1.0 - alpha) * float(prev_ema) + alpha * magnitude
+    excess = max(0.0, ema - threshold_mps2)
+    return ema, excess
+
+
+def sparse_pit_fall_mask(root_z, origin_z, is_sparse, drop_threshold: float = 0.5, soft_terrain: bool = False):
+    """Terminate only sparse-terrain envs whose root fell below the tile origin.
+
+    Soft stage fills collision, so pit-fall is disabled even on sparse tiles.
+    """
+    if soft_terrain:
+        return is_sparse & (root_z != root_z)  # all-False, preserves numpy/torch type
     return is_sparse & (root_z < origin_z - drop_threshold)
 
 

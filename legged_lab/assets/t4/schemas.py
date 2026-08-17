@@ -152,6 +152,7 @@ FOOT_SCAN_SHAPE = (
     round(FOOT_SCAN_SIZE[1] / FOOT_SCAN_RESOLUTION) + 1,
 )
 FOOT_SCAN_DIM = FOOT_SCAN_SHAPE[0] * FOOT_SCAN_SHAPE[1]
+FOOT_SCAN_BOTH_DIM = 2 * FOOT_SCAN_DIM
 
 # Fields that would make the teacher unlearnable for a depth student.
 TEACHER_FORBIDDEN_PRIVILEGE_FIELDS = (
@@ -271,11 +272,23 @@ CRITIC_EXTRA_FIELDS: tuple[tuple[str, int], ...] = (
 CRITIC_FRAME_DIM = PROPRIO_FRAME_DIM + sum(width for _, width in CRITIC_EXTRA_FIELDS)
 
 TEACHER_ACTOR_OBS_DIM = PROPRIO_FRAME_DIM * PROPRIO_HISTORY_LENGTH + TEACHER_SCAN_DIM
-# LightLP-style experimental teacher: frozen 1155D plus current-frame feet contact.
-# Do not change TEACHER_ACTOR_OBS_DIM. This lineage cannot distill into the
-# existing depth student.
+# Historical T-paper lineage (kept for old checkpoint playback only; task removed).
 TEACHER_PAPER_CONTACT_DIM = 2
 TEACHER_PAPER_ACTOR_OBS_DIM = TEACHER_ACTOR_OBS_DIM + TEACHER_PAPER_CONTACT_DIM
+# LightLP §IV sparse teacher (v4): scan history ×5 + feet contact on actor;
+# foot sole scan is critic-only. Default Stage E stays at TEACHER_ACTOR_OBS_DIM.
+TEACHER_SPARSE_SCAN_HISTORY_LENGTH = 5
+TEACHER_SPARSE_CONTACT_DIM = 2
+TEACHER_SPARSE_ACTOR_OBS_DIM = (
+    PROPRIO_FRAME_DIM * PROPRIO_HISTORY_LENGTH
+    + TEACHER_SCAN_DIM * TEACHER_SPARSE_SCAN_HISTORY_LENGTH
+    + TEACHER_SPARSE_CONTACT_DIM
+)
+TEACHER_SPARSE_CRITIC_OBS_DIM = (
+    CRITIC_FRAME_DIM * PROPRIO_HISTORY_LENGTH
+    + TEACHER_SCAN_DIM * TEACHER_SPARSE_SCAN_HISTORY_LENGTH
+    + FOOT_SCAN_BOTH_DIM
+)
 STUDENT_ACTOR_OBS_DIM = (
     PROPRIO_FRAME_DIM * PROPRIO_HISTORY_LENGTH + DEPTH_POLICY_SIZE[0] * DEPTH_POLICY_SIZE[1] * DEPTH_HISTORY_LENGTH
 )

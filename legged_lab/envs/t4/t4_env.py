@@ -16,6 +16,8 @@ joint ordering, so training, export and MuJoCo deployment share one contract.
 
 from __future__ import annotations
 
+import math
+
 import isaaclab.sim as sim_utils
 import isaacsim.core.utils.torch as torch_utils  # type: ignore
 import numpy as np
@@ -32,12 +34,16 @@ from isaaclab.utils.math import euler_xyz_from_quat, quat_rotate_inverse, yaw_qu
 
 from legged_lab.assets.t4.constants import T4_JOINT_NAMES
 from legged_lab.assets.t4.schemas import (
+    FOOT_SCAN_BOTH_DIM,
+    FOOT_SCAN_DIM,
     NUM_T4_JOINTS,
     PROPRIO_FRAME_DIM,
     TEACHER_PAPER_CONTACT_DIM,
     TEACHER_SCAN_CLIP,
     TEACHER_SCAN_DIM,
     TEACHER_SCAN_INVALID_VALUE,
+    TEACHER_SPARSE_CONTACT_DIM,
+    TEACHER_SPARSE_SCAN_HISTORY_LENGTH,
     assert_no_privilege_leakage,
     proprio_field_slice,
 )
@@ -49,6 +55,17 @@ from legged_lab.envs.t4.curriculum import (
 )
 from legged_lab.envs.t4.mdp.sparse_signals import sparse_curriculum_moves, sparse_pit_fall_mask
 from legged_lab.envs.t4.teacher_cfg import T4LocoTeacherEnvCfg
+from legged_lab.terrains.stepping_stone_layout import (
+    T4_FOOT_SCAN_RESOLUTION,
+    T4_FOOT_SCAN_SIZE,
+    T4_FOOTHOLD_PITCH_RANGE,
+    T4_PILLAR_DIAMETER_RANGE,
+    T4_PILLAR_PITCH_RANGE,
+    T4_STONE_PLATFORM_WIDTH,
+    T4_STONE_TILE_SIZE,
+    T4_STONE_WIDTH_RANGE,
+    foot_scan_local_offsets,
+)
 from legged_lab.utils.env_utils.scene import SceneCfg
 from rsl_rl.env import VecEnv
 
@@ -288,6 +305,22 @@ class T4LocoEnv(VecEnv):
         self.avg_feet_speed_per_step = torch.zeros(
             self.num_envs, len(self.feet_cfg.body_ids), dtype=torch.float, device=self.device, requires_grad=False
         )
+        self.foot_accel_ema = torch.zeros(
+            self.num_envs, len(self.feet_body_ids), dtype=torch.float, device=self.device, requires_grad=False
+        )
+        self.prev_foot_lin_vel_w = torch.zeros(
+            self.num_envs, len(self.feet_body_ids), 3, dtype=torch.float, device=self.device, requires_grad=False
+        )
+        self.use_algebraic_sparse_scan = bool(getattr(self.cfg, "use_algebraic_sparse_scan", False))
+        self.soft_sparse_terrain = bool(getattr(self.cfg, "soft_sparse_terrain", False))
+        self.teacher_scan_history_length = int(getattr(self.cfg, "teacher_scan_history_length", 1))
+        self.append_critic_foot_scan = bool(getattr(self.cfg, "append_critic_foot_scan", False))
+        self._foot_scan_local = torch.tensor(
+            foot_scan_local_offsets(T4_FOOT_SCAN_SIZE, T4_FOOT_SCAN_RESOLUTION),
+            dtype=torch.float,
+            device=self.device,
+        )
+        self.sparse_tile_mask = torch.zeros(self.num_envs, dtype=torch.bool, device=self.device)
 
         self.amp_builder = T4AmpFeatureBuilder(self.robot, self.device)
         self.init_obs_buffer()
@@ -316,6 +349,9 @@ class T4LocoEnv(VecEnv):
         )
         self.critic_obs_buffer = CircularBuffer(
             max_len=self.cfg.robot.critic_obs_history_length, batch_size=self.num_envs, device=self.device
+        )
+        self.scan_obs_buffer = CircularBuffer(
+            max_len=max(1, self.teacher_scan_history_length), batch_size=self.num_envs, device=self.device
         )
 
     """
@@ -358,6 +394,16 @@ class T4LocoEnv(VecEnv):
         )
         return current_actor_obs, current_critic_obs
 
+    def refresh_sparse_tile_mask(self) -> torch.Tensor:
+        """Update and return the per-env mask of stepping-stone / raised-pillar tiles."""
+        terrain_types = getattr(getattr(self.scene, "terrain", None), "terrain_types", None)
+        mask = torch.zeros(self.num_envs, dtype=torch.bool, device=self.device)
+        if self.sparse_foothold_type_ids and terrain_types is not None:
+            for type_id in self.sparse_foothold_type_ids:
+                mask |= terrain_types == type_id
+        self.sparse_tile_mask = mask
+        return mask
+
     def compute_teacher_terrain_privilege(self):
         """Forward-asymmetric local height scan, clipped and invalid-filled."""
         height_scan = (
@@ -372,11 +418,148 @@ class T4LocoEnv(VecEnv):
             neginf=TEACHER_SCAN_INVALID_VALUE,
         )
         height_scan = torch.clip(height_scan, TEACHER_SCAN_CLIP[0], TEACHER_SCAN_CLIP[1])
+        if self.use_algebraic_sparse_scan and self.soft_sparse_terrain:
+            height_scan = self._apply_algebraic_sparse_scan(height_scan)
         if height_scan.shape[-1] != TEACHER_SCAN_DIM:
             raise RuntimeError(
                 f"teacher scan width {height_scan.shape[-1]} does not match schema width {TEACHER_SCAN_DIM}"
             )
         return height_scan * self.obs_scales.height_scan
+
+    def _sparse_support_mask_xy(self, world_xy: torch.Tensor) -> torch.Tensor:
+        """True-hole support mask for world XY points on sparse tiles ``[N, P]``."""
+        sparse = self.sparse_tile_mask
+        n_pts = world_xy.shape[1]
+        on_support = torch.zeros(self.num_envs, n_pts, dtype=torch.bool, device=self.device)
+        if not torch.any(sparse):
+            return on_support
+        difficulty = self.terrain_difficulty()
+        terrain_types = self.scene.terrain.terrain_types
+        stone_type = self.sparse_foothold_type_ids[0] if self.sparse_foothold_type_ids else -1
+        pillar_type = self.sparse_foothold_type_ids[1] if len(self.sparse_foothold_type_ids) > 1 else stone_type
+        origins = self.scene.env_origins[:, :2]
+        c = 0.5 * T4_STONE_TILE_SIZE
+        half_p = 0.5 * T4_STONE_PLATFORM_WIDTH
+        tile_x = (world_xy[..., 0] - origins[:, 0:1]) + c
+        tile_y = (world_xy[..., 1] - origins[:, 1:2]) + c
+        rx = tile_x - c
+        ry = tile_y - c
+        on_platform = (rx.abs() <= half_p) & (ry.abs() <= half_p)
+        is_stone = terrain_types == stone_type
+        pitch = torch.where(
+            is_stone,
+            (1.0 - difficulty) * T4_FOOTHOLD_PITCH_RANGE[0] + difficulty * T4_FOOTHOLD_PITCH_RANGE[1],
+            (1.0 - difficulty) * T4_PILLAR_PITCH_RANGE[0] + difficulty * T4_PILLAR_PITCH_RANGE[1],
+        )
+        half_support = 0.5 * torch.where(
+            is_stone,
+            (1.0 - difficulty) * T4_STONE_WIDTH_RANGE[0] + difficulty * T4_STONE_WIDTH_RANGE[1],
+            (1.0 - difficulty) * T4_PILLAR_DIAMETER_RANGE[0] + difficulty * T4_PILLAR_DIAMETER_RANGE[1],
+        )
+        pitch = pitch.clamp_min(1.0e-3).unsqueeze(1)
+        half_support = half_support.unsqueeze(1)
+        ix = torch.round(rx / pitch)
+        iy = torch.round(ry / pitch)
+        dx = rx - ix * pitch
+        dy = ry - iy * pitch
+        on_rect = (dx.abs() <= half_support) & (dy.abs() <= half_support)
+        on_disk = (dx * dx + dy * dy) <= (half_support * half_support)
+        on_foothold = torch.where(is_stone.unsqueeze(1), on_rect, on_disk)
+        on_support = on_platform | on_foothold
+        return on_support & sparse.unsqueeze(1)
+
+    def _apply_algebraic_sparse_scan(self, height_scan: torch.Tensor) -> torch.Tensor:
+        """True-hole map on soft sparse tiles: pad/footholds keep rays; gaps → invalid."""
+        sparse = self.sparse_tile_mask
+        if not torch.any(sparse):
+            return height_scan
+        # Prefer hit XY when finite; otherwise cast from sensor pose + ray pattern is unavailable,
+        # so fall back to treating non-support using ray hit positions only.
+        hit_xy = self.height_scanner.data.ray_hits_w[..., :2]
+        finite = torch.isfinite(hit_xy).all(dim=-1)
+        # When the ray misses, force a hole on sparse tiles.
+        on_support = self._sparse_support_mask_xy(torch.nan_to_num(hit_xy, nan=0.0))
+        hole = sparse.unsqueeze(1) & (~on_support | ~finite)
+        return torch.where(hole, torch.full_like(height_scan, TEACHER_SCAN_INVALID_VALUE), height_scan)
+
+    def compute_foot_scan_privilege(self) -> torch.Tensor:
+        """Concatenated left/right downward foot scans for the critic only."""
+        scanners = []
+        for name in ("left_foot_scanner", "right_foot_scanner"):
+            if name in self.scene.sensors:
+                scanners.append(self.scene.sensors[name])
+        if len(scanners) != 2:
+            return torch.zeros(self.num_envs, FOOT_SCAN_BOTH_DIM, device=self.device)
+        chunks = []
+        for scanner in scanners:
+            foot_z = scanner.data.pos_w[:, 2].unsqueeze(1)
+            hits = scanner.data.ray_hits_w[..., 2]
+            depth = foot_z - hits - self.cfg.normalization.height_scan_offset
+            depth = torch.nan_to_num(
+                depth,
+                nan=TEACHER_SCAN_INVALID_VALUE,
+                posinf=TEACHER_SCAN_INVALID_VALUE,
+                neginf=TEACHER_SCAN_INVALID_VALUE,
+            )
+            depth = torch.clip(depth, TEACHER_SCAN_CLIP[0], TEACHER_SCAN_CLIP[1])
+            if self.use_algebraic_sparse_scan and self.soft_sparse_terrain:
+                hit_xy = scanner.data.ray_hits_w[..., :2]
+                finite = torch.isfinite(hit_xy).all(dim=-1)
+                on_support = self._sparse_support_mask_xy(torch.nan_to_num(hit_xy, nan=0.0))
+                hole = self.sparse_tile_mask.unsqueeze(1) & (~on_support | ~finite)
+                depth = torch.where(hole, torch.full_like(depth, TEACHER_SCAN_INVALID_VALUE), depth)
+            if depth.shape[-1] != FOOT_SCAN_DIM:
+                raise RuntimeError(f"foot scan width {depth.shape[-1]} != {FOOT_SCAN_DIM}")
+            chunks.append(depth * self.obs_scales.height_scan)
+        return torch.cat(chunks, dim=-1)
+
+    def algebraic_illegal_footstep(self, contact_threshold: float = 0.5) -> torch.Tensor:
+        """Vectorized illegal fraction from the true-hole lattice (soft-stage)."""
+        sparse = self.sparse_tile_mask
+        if not torch.any(sparse):
+            return torch.zeros(self.num_envs, device=self.device)
+        feet_force_w = self.contact_sensor.data.net_forces_w
+        if feet_force_w.ndim == 4:
+            feet_force_w = feet_force_w[:, -1]
+        feet_force = torch.norm(feet_force_w[:, self.feet_body_ids], dim=-1)
+        in_contact = feet_force > contact_threshold
+        foot_pos = self.robot.data.body_pos_w[:, self.feet_body_ids, :2]
+        yaw_q = yaw_quat(self.robot.data.root_quat_w)
+        w, x, y, z = yaw_q[:, 0], yaw_q[:, 1], yaw_q[:, 2], yaw_q[:, 3]
+        yaw = torch.atan2(2.0 * (w * z + x * y), 1.0 - 2.0 * (y * y + z * z))
+        cos_y = torch.cos(yaw)
+        sin_y = torch.sin(yaw)
+        local = self._foot_scan_local
+        penalties = []
+        for foot_i in range(foot_pos.shape[1]):
+            fx = foot_pos[:, foot_i, 0]
+            fy = foot_pos[:, foot_i, 1]
+            wx = fx.unsqueeze(1) + cos_y.unsqueeze(1) * local[:, 0] - sin_y.unsqueeze(1) * local[:, 1]
+            wy = fy.unsqueeze(1) + sin_y.unsqueeze(1) * local[:, 0] + cos_y.unsqueeze(1) * local[:, 1]
+            world_xy = torch.stack((wx, wy), dim=-1)
+            on_support = self._sparse_support_mask_xy(world_xy)
+            # Non-sparse envs have all-false support mask; force full support so frac is 0.
+            on_support = on_support | (~sparse).unsqueeze(1)
+            frac = (~on_support).float().mean(dim=-1)
+            penalties.append(frac * in_contact[:, foot_i].float())
+        penalty = torch.stack(penalties, dim=-1).mean(dim=-1) * sparse.float()
+        return penalty
+
+    def update_foot_accel_penalty(
+        self,
+        tau_s: float = 0.06,
+        threshold_mps2: float = 30.0,
+        asset_cfg: SceneEntityCfg | None = None,
+    ) -> torch.Tensor:
+        """EMA of foot |a|; penalty is mean excess over ``threshold_mps2``."""
+        foot_vel = self.robot.data.body_lin_vel_w[:, self.feet_body_ids, :]
+        accel = (foot_vel - self.prev_foot_lin_vel_w) / max(self.step_dt, 1.0e-6)
+        self.prev_foot_lin_vel_w.copy_(foot_vel)
+        magnitude = torch.norm(accel, dim=-1)
+        alpha = 1.0 - math.exp(-self.step_dt / max(tau_s, 1.0e-6))
+        self.foot_accel_ema = (1.0 - alpha) * self.foot_accel_ema + alpha * magnitude
+        excess = torch.clamp(self.foot_accel_ema - threshold_mps2, min=0.0)
+        return excess.mean(dim=-1)
 
     def compute_observations(self):
         current_actor_obs, current_critic_obs = self.compute_current_observations()
@@ -390,20 +573,37 @@ class T4LocoEnv(VecEnv):
         critic_obs = self.critic_obs_buffer.buffer.reshape(self.num_envs, -1)
 
         height_scan = self.compute_teacher_terrain_privilege()
-        critic_obs = torch.cat([critic_obs, height_scan], dim=-1)
+        self.scan_obs_buffer.append(height_scan)
+        scan_hist = self.scan_obs_buffer.buffer.reshape(self.num_envs, -1)
+        # CircularBuffer stores oldest→newest; when history length is 1 this is one frame.
+        if self.teacher_scan_history_length > 1:
+            actor_scan = scan_hist
+            critic_scan = scan_hist
+        else:
+            actor_scan = height_scan
+            critic_scan = height_scan
+
+        critic_obs = torch.cat([critic_obs, critic_scan], dim=-1)
         if self.add_noise:
-            height_scan = height_scan + (2 * torch.rand_like(height_scan) - 1) * self.height_scan_noise_vec
-        actor_obs = torch.cat([actor_obs, height_scan], dim=-1)
+            noisy = height_scan + (2 * torch.rand_like(height_scan) - 1) * self.height_scan_noise_vec
+            if self.teacher_scan_history_length > 1:
+                # Only noise the newest frame in the stacked scan history.
+                actor_scan = scan_hist.clone()
+                actor_scan[:, -TEACHER_SCAN_DIM:] = noisy
+            else:
+                actor_scan = noisy
+        actor_obs = torch.cat([actor_obs, actor_scan], dim=-1)
         if getattr(self.cfg, "append_actor_feet_contact", False):
             net_contact_forces = self.contact_sensor.data.net_forces_w_history
             feet_contact = (
                 torch.max(torch.norm(net_contact_forces[:, :, self.feet_cfg.body_ids], dim=-1), dim=1)[0] > 0.5
             )
-            if feet_contact.shape[-1] != TEACHER_PAPER_CONTACT_DIM:
-                raise RuntimeError(
-                    f"paper teacher contact width {tuple(feet_contact.shape)} != {TEACHER_PAPER_CONTACT_DIM}"
-                )
+            contact_dim = TEACHER_SPARSE_CONTACT_DIM if self.teacher_scan_history_length > 1 else TEACHER_PAPER_CONTACT_DIM
+            if feet_contact.shape[-1] != contact_dim:
+                raise RuntimeError(f"feet contact width {tuple(feet_contact.shape)} != {contact_dim}")
             actor_obs = torch.cat([actor_obs, feet_contact.float()], dim=-1)
+        if self.append_critic_foot_scan:
+            critic_obs = torch.cat([critic_obs, self.compute_foot_scan_privilege()], dim=-1)
 
         actor_obs = torch.clip(actor_obs, -self.clip_obs, self.clip_obs)
         critic_obs = torch.clip(critic_obs, -self.clip_obs, self.clip_obs)
@@ -494,17 +694,15 @@ class T4LocoEnv(VecEnv):
         reset_buf |= (torch.abs(pitch) > 1.0) | (torch.abs(roll) > 0.8)
 
         self.pit_fall_buf.zero_()
-        terrain_types = getattr(getattr(self.scene, "terrain", None), "terrain_types", None)
-        if self.sparse_foothold_type_ids and terrain_types is not None:
-            is_sparse = torch.zeros(self.num_envs, dtype=torch.bool, device=self.device)
-            for type_id in self.sparse_foothold_type_ids:
-                is_sparse |= terrain_types == type_id
+        is_sparse = self.refresh_sparse_tile_mask()
+        if self.sparse_foothold_type_ids and torch.any(is_sparse):
             self.pit_fall_buf.copy_(
                 sparse_pit_fall_mask(
                     self.robot.data.root_pos_w[:, 2],
                     self.scene.env_origins[:, 2],
                     is_sparse,
                     drop_threshold=0.5,
+                    soft_terrain=self.soft_sparse_terrain,
                 )
             )
             reset_buf |= self.pit_fall_buf
@@ -539,6 +737,10 @@ class T4LocoEnv(VecEnv):
         self.command_generator.reset(env_ids)
         self.actor_obs_buffer.reset(env_ids)
         self.critic_obs_buffer.reset(env_ids)
+        self.scan_obs_buffer.reset(env_ids)
+        self.foot_accel_ema[env_ids] = 0.0
+        # Seed with post-reset foot velocity so the first EMA step is not v/dt spike.
+        self.prev_foot_lin_vel_w[env_ids] = self.robot.data.body_lin_vel_w[env_ids][:, self.feet_body_ids, :]
         self.action_buffer.reset(env_ids)
         self.episode_length_buf[env_ids] = 0
         self.episode_max_radial_dist[env_ids] = 0.0
@@ -682,14 +884,18 @@ class T4LocoEnv(VecEnv):
 
         The expert set is flat-ground only, so the style weight decays with terrain
         difficulty instead of punishing the stair and strong-rough gaits the task
-        reward asks for. The schedule is frozen before Stage E starts.
+        reward asks for. Sparse tiles force AMP to zero (LightLP §IV has no AMP).
         """
         schedule = self.cfg.amp_terrain_schedule
         if not schedule.enable:
-            return torch.ones(self.num_envs, dtype=torch.float, device=self.device)
-        if schedule.mode != "linear_decay":
+            scale = torch.ones(self.num_envs, dtype=torch.float, device=self.device)
+        elif schedule.mode != "linear_decay":
             raise NotImplementedError(f"unsupported AMP terrain schedule mode {schedule.mode!r}")
-        return self._decay_scale(self.terrain_difficulty(), schedule.decay_start_difficulty, schedule.min_scale)
+        else:
+            scale = self._decay_scale(self.terrain_difficulty(), schedule.decay_start_difficulty, schedule.min_scale)
+        if self.sparse_foothold_type_ids:
+            scale = scale * (~self.sparse_tile_mask).float()
+        return scale
 
     def _planar_vel_yaw(self):
         """Root planar velocity in the yaw frame, matching track_lin_vel_xy_exp."""
@@ -726,6 +932,10 @@ class T4LocoEnv(VecEnv):
                 self.terrain_difficulty(), gait.gait_relax_start_difficulty, gait.min_gait_reward_scale
             )
         self.gait_reward_scale = tracking_scale * terrain_scale
+        # LightLP sparse mix: no periodic gait on stones / pillars.
+        if self.sparse_foothold_type_ids:
+            self.refresh_sparse_tile_mask()
+            self.gait_reward_scale = self.gait_reward_scale * (~self.sparse_tile_mask).float()
 
     def command_provenance_log(self) -> dict:
         """Log what actually reached the reward, not just what was requested."""

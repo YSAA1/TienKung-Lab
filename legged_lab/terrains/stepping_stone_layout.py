@@ -6,26 +6,35 @@
 
 No IsaacLab imports: contract tests run on any machine. Tile frame matches
 ``hurdle_layout`` — x/y in ``[0, tile_size]``, ground z=0, spawn at center.
+
+v4 stones are intentionally narrow (slightly larger than the foot) so a 6 cm
+lateral bias drives the foot scanner off the top and ``illegal_footstep`` fires.
 """
 
 from __future__ import annotations
+
+import math
 
 T4_STONE_TILE_SIZE = 8.0
 T4_STONE_PLATFORM_WIDTH = 1.6
 T4_STONE_BORDER_WIDTH = 0.25
 T4_FOOTHOLD_GRID_COUNT = 9
-# Stones keep the v2 lattice: square tops are large enough that a 32 cm first
-# step is already being learned. Pillars use a tighter pitch so the first
-# circular landing is a step, not a jump onto a disk.
-T4_FOOTHOLD_PITCH_RANGE = (0.68, 0.78)
-T4_STONE_WIDTH_RANGE = (0.48, 0.32)
+# Narrow tops: easy ~26 cm, hard ~22 cm. Pitch stays tight so the first gap is a
+# step (3–10 cm easy, ≤18 cm hard), not a jump, and 9×9 still fits the 8 m tile.
+T4_FOOTHOLD_PITCH_RANGE = (0.50, 0.53)
+T4_STONE_WIDTH_RANGE = (0.26, 0.22)
 T4_STONE_HEIGHT_RANGE = (0.16, 0.30)
 T4_STONE_HEIGHT_JITTER_RANGE = (0.00, 0.04)
 T4_HOLE_DEPTH = -2.0
 
+# Pillars keep the v3 curriculum: easy first step ~5 cm onto a 50 cm disk.
 T4_PILLAR_PITCH_RANGE = (0.55, 0.58)
 T4_PILLAR_DIAMETER_RANGE = (0.50, 0.38)
 T4_PILLAR_HEIGHT_RANGE = (0.14, 0.32)
+
+# Foot sole scan used by illegal-footstep contracts (matches FootScannerCfg).
+T4_FOOT_SCAN_SIZE = (0.16, 0.08)
+T4_FOOT_SCAN_RESOLUTION = 0.04
 
 T4_SPARSE_TERRAIN_PROPORTIONS = {
     "flat": 0.04,
@@ -160,3 +169,102 @@ def point_on_disk(point_xy: tuple[float, float], center: tuple[float, float], di
     dy = point_xy[1] - center[1]
     r = diameter * 0.5
     return dx * dx + dy * dy <= r * r
+
+
+def point_on_platform(
+    point_xy: tuple[float, float],
+    tile_size: float = T4_STONE_TILE_SIZE,
+    platform_width: float = T4_STONE_PLATFORM_WIDTH,
+) -> bool:
+    c = tile_size / 2.0
+    return point_on_rect(point_xy, (c, c), platform_width)
+
+
+def point_on_support(
+    point_xy: tuple[float, float],
+    *,
+    kind: str,
+    difficulty: float,
+    tile_size: float = T4_STONE_TILE_SIZE,
+    platform_width: float = T4_STONE_PLATFORM_WIDTH,
+) -> bool:
+    """True when ``point_xy`` is on the spawn pad or a foothold (true-hole map)."""
+    if point_on_platform(point_xy, tile_size=tile_size, platform_width=platform_width):
+        return True
+    if kind == "stepping_stones":
+        pitch = foothold_pitch(difficulty, T4_FOOTHOLD_PITCH_RANGE)
+        width = stone_width(difficulty, T4_STONE_WIDTH_RANGE)
+        hit = point_on_rect
+        size = width
+    elif kind == "raised_pillars":
+        pitch = foothold_pitch(difficulty, T4_PILLAR_PITCH_RANGE)
+        size = pillar_diameter(difficulty, T4_PILLAR_DIAMETER_RANGE)
+        hit = point_on_disk
+    else:
+        raise ValueError(f"unknown sparse kind {kind!r}")
+    for center in foothold_centers(pitch, tile_size=tile_size, platform_width=platform_width):
+        if hit(point_xy, center, size):
+            return True
+    return False
+
+
+def foot_scan_local_offsets(
+    size: tuple[float, float] = T4_FOOT_SCAN_SIZE,
+    resolution: float = T4_FOOT_SCAN_RESOLUTION,
+) -> list[tuple[float, float]]:
+    """Yaw-frame (x, y) offsets for the downward foot grid, matching Isaac GridPattern."""
+    num_x = int(round(size[0] / resolution)) + 1
+    num_y = int(round(size[1] / resolution)) + 1
+    xs = [i * resolution - 0.5 * size[0] for i in range(num_x)]
+    ys = [j * resolution - 0.5 * size[1] for j in range(num_y)]
+    return [(x, y) for y in ys for x in xs]
+
+
+def foot_scan_world_points(
+    foot_xy: tuple[float, float],
+    yaw: float = 0.0,
+    size: tuple[float, float] = T4_FOOT_SCAN_SIZE,
+    resolution: float = T4_FOOT_SCAN_RESOLUTION,
+) -> list[tuple[float, float]]:
+    cos_y = math.cos(yaw)
+    sin_y = math.sin(yaw)
+    points = []
+    for lx, ly in foot_scan_local_offsets(size, resolution):
+        wx = foot_xy[0] + cos_y * lx - sin_y * ly
+        wy = foot_xy[1] + sin_y * lx + cos_y * ly
+        points.append((wx, wy))
+    return points
+
+
+def illegal_footstep_fraction_layout(
+    foot_xy: tuple[float, float],
+    *,
+    kind: str,
+    difficulty: float,
+    in_contact: bool = True,
+    yaw: float = 0.0,
+) -> float:
+    """Algebraic illegal-footstep fraction from the true-hole map (soft-stage fallback)."""
+    if not in_contact:
+        return 0.0
+    points = foot_scan_world_points(foot_xy, yaw=yaw)
+    if not points:
+        return 0.0
+    bad = sum(1 for p in points if not point_on_support(p, kind=kind, difficulty=difficulty))
+    return bad / float(len(points))
+
+
+def soft_physics_supports(point_xy: tuple[float, float]) -> bool:
+    """Soft stage: collision is filled, so every in-tile XY is walkable."""
+    _ = point_xy
+    return True
+
+
+def soft_reports_hole(
+    point_xy: tuple[float, float],
+    *,
+    kind: str,
+    difficulty: float,
+) -> bool:
+    """Soft stage: eyes still see the true-hole map."""
+    return not point_on_support(point_xy, kind=kind, difficulty=difficulty)
