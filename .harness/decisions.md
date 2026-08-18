@@ -1,6 +1,7 @@
 # Decisions
 
-- 2026-08-17：梅花桩完整补全改从零。不续 `v2_resume`；不做旧学生短 FT；踏石必须收到 illegal 能咬偏脚；本任务 Actor 1155D 可打破（scan history=5 + 接触进 Actor，足底 scan 仍只进 Critic）。默认 Stage E 1155D 不动。软→硬是新 lineage 内部二阶段。执行面 `docs/plans/2026-08-17--t4-sparse-lightlp-complete-plan.md`。
+- 2026-08-18：文档收口。现行只有两条执行轨道（梅花桩 s4、翻箱 G1/G2）。入口改为 `docs/README.md`。撤回梅花桩软/硬二阶段，单阶段真洞。G2 学生与 G3 合并等过箱后再开。
+- 2026-08-17：梅花桩完整补全改从零。不续 `v2_resume`；不做旧学生短 FT；踏石必须收到 illegal 能咬偏脚；本任务 Actor 1155D 可打破（scan history=5 + 接触进 Actor，足底 scan 仍只进 Critic）。默认 Stage E 1155D 不动。**软→硬二阶段已于 2026-08-18 撤回。** 执行面 `docs/plans/2026-08-17--t4-sparse-lightlp-complete-plan.md`。
 - 2026-08-17：S1d 稳定组/对照组判定失败并回退。证据：v2 @3874 踏石 `reach_2m=0.80`、圆桩≈0；A/B @11000 全局 reward 52–62、length 860–920，两任务目视未成功。一次叠步态/stumble/AMP/脚下 scan/双 Critic/掉坑免 −200，还杀掉正在涨的 v2。**续训恢复 v2 的执行面已被同日「从零补全」取代。**
 - 2026-08-16：开稳定组/对照组，不再只赌几何。BeamDojo「拆开」= 两个价值网络分别估走跑奖励和落足奖励，不是再加一项。稳定组只做奖励侧拆开（稀疏 tile 步态/stumble=0、AMP×0.1）+ Critic 脚下 scan，保留掉坑 −200。对照组再加掉坑不吃 −200、AMP=0、双 Critic。1155D 不动。**已被 2026-08-17 否决。**
 - 2026-08-16：圆桩/梅花桩失败不是「前向 scan 看不见支撑」。旧 25k 平地 4/4，T-paper 接触标志反而摔得更多。v2 @2.1k 已把踏石 easy `reach_2m` 拉到 ~0.79，但圆桩 `reach_2m≈0`、progress≈1.0 m、`illegal_footstep≈0`。根因是圆盘落点 + 出生台到第一桩 35–60 cm 空隙；缺的是可迈出去的第一跨和「踩在抬高支撑上」的正奖励，不是再给 Actor 加特权。T-compat v2 继续跑踏石；T-paper 停掉，改用同 1155D 开 v3 圆桩探针（更密圆桩间距 + `legal_foothold`）。

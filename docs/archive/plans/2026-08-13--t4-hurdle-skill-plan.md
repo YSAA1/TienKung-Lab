@@ -1,6 +1,6 @@
 # Executable Plan - T4 连续跨栏并入 Stage E 课程（terrain bucket 路线）
 
-> **Status: archived（阶段完成，非当前 work surface）** — living work surface: `.harness/work_index.md` → `docs/plans/2026-08-15--t4-vault-g1-g2-recovery-plan.md`。
+> **Status: archived（阶段完成，非当前 work surface）** — 入口：`docs/README.md`。
 > Closure note: 跨栏作为 Stage E terrain bucket 纳入走跑阶段，并随 `loco` 交互回放关闭；100m `rule` strict-contact evaluator 仍是独立未关闭范围。
 
 > Status: done（2026-08-15；作为 loco 阶段的一部分完成）

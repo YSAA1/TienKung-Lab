@@ -372,11 +372,11 @@ T4_STAGE_E_SPARSE_TERRAINS_CFG = TerrainGeneratorCfg(
         ),
         "stepping_stones": MeshSteppingStonesTerrainCfg(
             proportion=T4_SPARSE_TERRAIN_PROPORTIONS["stepping_stones"],
-            soft_fill=True,
+            soft_fill=False,
         ),
         "raised_pillars": MeshRaisedPillarsTerrainCfg(
             proportion=T4_SPARSE_TERRAIN_PROPORTIONS["raised_pillars"],
-            soft_fill=True,
+            soft_fill=False,
         ),
         "slope_up": terrain_gen.HfInvertedPyramidSlopedTerrainCfg(
             proportion=T4_SPARSE_TERRAIN_PROPORTIONS["slope_up"],

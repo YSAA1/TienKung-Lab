@@ -1,8 +1,9 @@
 # Research: T4 最多两阶段正式训练方案
 
+> **非权威。** 走跑阶段已按老师→学生两条正式训练交付。入口：`docs/README.md`。
 > Date: 2026-08-12
 > Question: 当前 Plan 的五段正式训练（walk → jog → rough → stairs → route）是否过度设计？在本框架约束下，最多两次正式训练的可执行方案是什么？
-> Status: findings for plan revision (does not amend Spec/Plan by itself)
+> Status: 历史 findings
 
 ## 1. Verdict
 

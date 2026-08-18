@@ -6,6 +6,43 @@
 
 from __future__ import annotations
 
+import math
+import random
+
+# LightLP §IV-C2 numeric constants. ``t4_env`` must import these, not copy them.
+LIGHTLP_TILT_LIMIT_RAD = 63.0 * math.pi / 180.0
+LIGHTLP_FALL_PROB = 0.01
+LIGHTLP_JOINT_VEL_LIMIT = 50.0
+LIGHTLP_ACCEL_LIMIT = 40.0
+LIGHTLP_ACCEL_WARMUP_S = 1.0
+LIGHTLP_IMMUNITY_FRAC = 0.10
+LIGHTLP_IMMUNITY_PERIOD = 200
+LIGHTLP_OOB_MARGIN_M = 0.25
+
+
+def _is_batch(x) -> bool:
+    return hasattr(x, "shape") and getattr(x, "ndim", 0) > 0
+
+
+def promote_radius_m(tile_size: float) -> float:
+    """L2 promotion bar used by ``terrain_level_moves`` (half the tile)."""
+    return float(tile_size) * 0.5
+
+
+def oob_linf_limit_m(tile_size: float, margin: float = LIGHTLP_OOB_MARGIN_M) -> float:
+    """L-inf timeout past the L2 promote bar so an axis-aligned crossing can promote."""
+    return promote_radius_m(tile_size) + float(margin)
+
+
+def out_of_bounds_linf(offset_xy, tile_size: float, margin: float = LIGHTLP_OOB_MARGIN_M):
+    """True when Chebyshev distance from the tile origin exceeds ``oob_linf_limit_m``."""
+    limit = oob_linf_limit_m(tile_size, margin)
+    if hasattr(offset_xy, "abs"):
+        return offset_xy.abs().amax(dim=-1) > limit
+    import numpy as np
+
+    return np.max(np.abs(np.asarray(offset_xy)), axis=-1) > limit
+
 
 def velocity_slack(vx_cmd: float, vx_act: float, lo: float = 0.3, hi: float = 1.5) -> float:
     """1 if commanded forward speed is nonzero and actual/cmd is in ``[lo, hi]``."""
@@ -53,6 +90,118 @@ def foot_accel_ema_step(
     ema = (1.0 - alpha) * float(prev_ema) + alpha * magnitude
     excess = max(0.0, ema - threshold_mps2)
     return ema, excess
+
+
+def tilt_from_upright_rad(gx, gy, gz):
+    """Angle from upright using body-frame projected gravity (down is −z).
+
+    Accepts scalars or batched arrays/tensors. Inverted gravity ``(0, 0, +1)``
+    is π, not 0.
+    """
+    if _is_batch(gx):
+        g2 = gx * gx + gy * gy + gz * gz
+        if hasattr(g2, "clamp"):
+            norm = g2.clamp(min=1.0e-16).sqrt()
+            cos_tilt = (-gz / norm).clamp(-1.0, 1.0)
+            return cos_tilt.acos()
+        import numpy as np
+
+        norm = np.sqrt(np.maximum(g2, 1.0e-16))
+        cos_tilt = np.clip(-np.asarray(gz) / norm, -1.0, 1.0)
+        sin_tilt = np.clip(np.sqrt(np.maximum(np.asarray(gx) ** 2 + np.asarray(gy) ** 2, 0.0)) / norm, 0.0, 1.0)
+        return np.arctan2(sin_tilt, cos_tilt)
+    norm = (gx * gx + gy * gy + gz * gz) ** 0.5
+    if norm <= 1.0e-8:
+        return 0.0
+    cos_tilt = max(-1.0, min(1.0, -gz / norm))
+    sin_tilt = max(0.0, min(1.0, (gx * gx + gy * gy) ** 0.5 / norm))
+    return math.atan2(sin_tilt, cos_tilt)
+
+
+def stochastic_fall_over(tilt_rad, sample, *, limit_rad: float = LIGHTLP_TILT_LIMIT_RAD, prob: float = LIGHTLP_FALL_PROB):
+    """LightLP fall-over: tilt past 63° and a Bernoulli draw (expected ~100-step window)."""
+    over = tilt_rad > limit_rad
+    drawn = sample < prob
+    if _is_batch(over) or _is_batch(drawn):
+        return over & drawn
+    return bool(over and drawn)
+
+
+def impact_immunity_from_draws(draws, fraction: float = LIGHTLP_IMMUNITY_FRAC):
+    """Boolean immunity mask from uniform draws in ``[0, 1)``."""
+    if isinstance(draws, (list, tuple)):
+        return [float(d) < fraction for d in draws]
+    return draws < fraction
+
+
+def resample_impact_immunity(n: int, fraction: float = LIGHTLP_IMMUNITY_FRAC, draws=None) -> list[bool]:
+    """Mark ``fraction`` of envs immune to torso-contact and excessive-accel resets."""
+    if n < 0:
+        raise ValueError(f"n must be non-negative, got {n}")
+    if draws is None:
+        draws = [random.random() for _ in range(n)]
+    if len(draws) != n:
+        raise ValueError("draws length must match n")
+    flags = impact_immunity_from_draws(draws, fraction=fraction)
+    return [bool(flag) for flag in flags]
+
+
+def joint_velocity_timeout(max_abs_qd, limit: float = LIGHTLP_JOINT_VEL_LIMIT):
+    """LightLP joint-speed guard: treat as time-out, not a behavioral failure."""
+    over = abs(max_abs_qd) > limit
+    if _is_batch(over):
+        return over
+    return bool(over)
+
+
+def excessive_base_accel(
+    accel_mps2, elapsed_s, *, limit: float = LIGHTLP_ACCEL_LIMIT, warmup_s: float = LIGHTLP_ACCEL_WARMUP_S
+):
+    """LightLP excessive-acceleration reset after a 1 s warmup."""
+    warmed = elapsed_s >= warmup_s
+    over = abs(accel_mps2) > limit
+    if _is_batch(over) or _is_batch(warmed):
+        return warmed & over
+    return bool(warmed and over)
+
+
+def lightlp_timeout_and_reset(
+    *,
+    episode_timeout,
+    offset_xy,
+    tile_size: float,
+    max_abs_joint_vel,
+    torso_hit,
+    accel_mps2,
+    elapsed_s,
+    gravity_gx,
+    gravity_gy,
+    gravity_gz,
+    fall_draws,
+    immunity,
+):
+    """Shipped LightLP §IV-C2 timeout/reset flags. ``t4_env`` must call this."""
+    oob = out_of_bounds_linf(offset_xy, tile_size)
+    joint_to = joint_velocity_timeout(max_abs_joint_vel)
+    time_out = episode_timeout | oob | joint_to
+    hard_impact = excessive_base_accel(accel_mps2, elapsed_s)
+    impact_reset = (torso_hit | hard_impact) & (~immunity)
+    tilt = tilt_from_upright_rad(gravity_gx, gravity_gy, gravity_gz)
+    fall_over = stochastic_fall_over(tilt, fall_draws)
+    reset = time_out | impact_reset | fall_over
+    return reset, time_out
+
+
+def wrap_heading_error(yaw: float, heading_target: float) -> float:
+    """Absolute wrapped heading error |Δψ|."""
+    return abs(math.atan2(math.sin(heading_target - yaw), math.cos(heading_target - yaw)))
+
+
+def upright_orientation_reward(gx: float, gy: float) -> float:
+    """LightLP Table I / Eq. (2): exp(-2||g_xy||^2) + 0.1 exp(-||g_xy||)."""
+    n2 = gx * gx + gy * gy
+    n1 = n2**0.5
+    return math.exp(-2.0 * n2) + 0.1 * math.exp(-n1)
 
 
 def sparse_pit_fall_mask(root_z, origin_z, is_sparse, drop_threshold: float = 0.5, soft_terrain: bool = False):

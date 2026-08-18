@@ -1,6 +1,6 @@
 # Executable Plan - T4 走跑与 1m 翻箱合并（LightLP V-B/V-C 复现）
 
-> **Status: archived（非权威）** — living work surface: `.harness/work_index.md` → `docs/plans/2026-08-15--t4-vault-g1-g2-recovery-plan.md`。
+> **Status: archived（非权威）** — 翻箱现行执行面：`docs/plans/2026-08-15--t4-vault-g1-g2-recovery-plan.md`。入口：`docs/README.md`。
 
 > Status: superseded
 > Date: 2026-08-13

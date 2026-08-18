@@ -163,6 +163,36 @@ def body_orientation_l2(
     return torch.sum(torch.square(body_orientation[:, :2]), dim=1)
 
 
+def upright_orientation(
+    env: BaseEnv | TienKungEnv, asset_cfg: SceneEntityCfg = SceneEntityCfg("robot")
+) -> torch.Tensor:
+    """LightLP Table I / Eq. (2) upright bonus on projected gravity xy."""
+    asset: Articulation = env.scene[asset_cfg.name]
+    gravity_b = math_utils.quat_rotate_inverse(
+        asset.data.body_quat_w[:, asset_cfg.body_ids[0], :], asset.data.GRAVITY_VEC_W
+    )
+    g_xy = gravity_b[:, :2]
+    n2 = torch.sum(torch.square(g_xy), dim=1)
+    n1 = torch.sqrt(n2 + 1.0e-8)
+    return torch.exp(-2.0 * n2) + 0.1 * torch.exp(-n1)
+
+
+def heading_error(
+    env: BaseEnv | TienKungEnv, asset_cfg: SceneEntityCfg = SceneEntityCfg("robot")
+) -> torch.Tensor:
+    """LightLP Table I |Δψ| between commanded heading and base yaw."""
+    target = getattr(env.command_generator, "heading_target", None)
+    if target is None:
+        return torch.zeros(env.num_envs, device=env.device)
+    asset: Articulation = env.scene[asset_cfg.name]
+    heading_w = getattr(asset.data, "heading_w", None)
+    if heading_w is None:
+        _, _, yaw = math_utils.euler_xyz_from_quat(asset.data.root_quat_w)
+        heading_w = yaw
+    delta = math_utils.wrap_to_pi(target - heading_w)
+    return torch.abs(delta)
+
+
 def feet_stumble(env: BaseEnv | TienKungEnv, sensor_cfg: SceneEntityCfg) -> torch.Tensor:
     contact_sensor: ContactSensor = env.scene.sensors[sensor_cfg.name]
     penalty = torch.any(

@@ -39,14 +39,7 @@ parser.add_argument(
     choices=("hurdles", "flat", "stepping_stones", "raised_pillars"),
     default="hurdles",
 )
-parser.add_argument(
-    "--hard_sparse_pits",
-    action="store_true",
-    help=(
-        "For t4_loco_teacher_sparse: open real pits (soft_fill=False) and enable pit_fall. "
-        "Default keeps the task's soft-stage filled collision."
-    ),
-)
+
 patch_physx_backward_compatibility_setting(AppLauncher)
 AppLauncher.add_app_launcher_args(parser)
 args_cli, _ = parser.parse_known_args()
@@ -67,13 +60,6 @@ patch_missing_physx_material_attributes()
 
 def evaluate() -> dict:
     env_cfg, agent_cfg = task_registry.get_cfgs(args_cli.task)
-    soft_sparse_terrain = bool(getattr(env_cfg, "soft_sparse_terrain", False))
-    if args_cli.hard_sparse_pits:
-        apply_soft = getattr(env_cfg, "apply_soft_sparse_stage", None)
-        if apply_soft is None:
-            raise ValueError("--hard_sparse_pits requires a sparse env cfg with apply_soft_sparse_stage()")
-        apply_soft(False)
-        soft_sparse_terrain = False
     env_cfg.scene.num_envs = args_cli.num_envs
     env_cfg.scene.terrain_generator.curriculum = False
     env_cfg.scene.terrain_generator.difficulty_range = (args_cli.difficulty, args_cli.difficulty)
@@ -83,7 +69,7 @@ def evaluate() -> dict:
     terrain_cfg = sub_terrains[args_cli.terrain_type]
     terrain_cfg.proportion = 1.0
     if hasattr(terrain_cfg, "soft_fill"):
-        terrain_cfg.soft_fill = soft_sparse_terrain
+        terrain_cfg.soft_fill = False
     env_cfg.scene.terrain_generator.sub_terrains = {args_cli.terrain_type: terrain_cfg}
     env_cfg.commands.rel_standing_envs = 0.0
     env_cfg.commands.rel_heading_envs = 0.0
@@ -190,8 +176,7 @@ def evaluate() -> dict:
         "seed": int(agent_cfg.seed),
         "difficulty": args_cli.difficulty,
         "terrain_type": args_cli.terrain_type,
-        "soft_sparse_terrain": soft_sparse_terrain,
-        "hard_sparse_pits": bool(args_cli.hard_sparse_pits),
+        "soft_sparse_terrain": False,
         "requested_episodes": args_cli.episodes,
         "completed_episodes": completed,
         "strict_progress_successes": successes,
@@ -218,12 +203,7 @@ def evaluate() -> dict:
         "final_zero_contact_gate": False,
         "caveat": (
             "This progress diagnostic does not prove exact foothold placement, zero bar contact, "
-            "or ordered corridor passage."
-            + (
-                " Soft-stage filled collision is off (--hard_sparse_pits)."
-                if args_cli.hard_sparse_pits
-                else ""
-            )
+            "or ordered corridor passage. Sparse tiles use real holes (no soft-fill)."
         ),
     }
     Path(args_cli.output).parent.mkdir(parents=True, exist_ok=True)

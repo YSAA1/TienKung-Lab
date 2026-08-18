@@ -6,16 +6,10 @@
 
 # TienKung-Lab: Direct IsaacLab Workflow for TienKung
 
-> 本地 T4 27DoF 迁移路线的背景、数据合同、任务目标与当前边界见
-> [PROJECT_CONTEXT.md](PROJECT_CONTEXT.md)。该文件是当前 T4 工作的 living source of truth。
-
-> 当前状态（2026-08-17）：走跑阶段已关闭。翻箱仍在 zhuoqun。稀疏 S1d 稳定组/对照组
-> 已判定失败，执行面是
-> `docs/plans/2026-08-17--t4-sparse-ab-rollback-plan.md`。能力声明仍以固定 evaluator 为准。
-> 旧学生微调（本机 Docker）：`scripts/local_run.sh legged_lab/scripts/train_t4_depth_student_ft.py --headless --student_checkpoint artifacts/checkpoints/nubot/t4_loco_depth_student_stage_s_head35/model_24999.pt --task_num_envs 32 --rendering_mode performance`。
-
-> T4 teacher 高程图与头部深度学生的实机接入合同、安装与上机检查见
-> [部署手册](docs/runbooks/t4-teacher-and-depth-deployment.md)。
+> **本 checkout 的 T4 工作**（走跑已交付；现在做梅花桩老师 + 翻箱 G1/G2）以
+> [docs/README.md](docs/README.md) 为入口，背景见 [PROJECT_CONTEXT.md](PROJECT_CONTEXT.md)。
+> 部署合同见 [部署手册](docs/runbooks/t4-teacher-and-depth-deployment.md)。
+> 下面 Overview / Installation / Usage 仍是上游 TienKung `walk`/`run` 框架说明。
 
 [![IsaacSim](https://img.shields.io/badge/IsaacSim-4.5.0-silver.svg)](https://docs.omniverse.nvidia.com/isaacsim/latest/overview.html)
 [![Isaac Lab](https://img.shields.io/badge/IsaacLab-2.1.0-silver)](https://isaac-sim.github.io/IsaacLab)

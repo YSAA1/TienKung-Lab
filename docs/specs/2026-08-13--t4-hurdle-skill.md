@@ -2,6 +2,7 @@
 
 > 状态 / Status: user-approved (2026-08-13)；**2026-08-14 路线修订 user-approved**：
 > 跨栏不再作为独立 skill lineage，改为并入 Stage E locomotion 课程的地形 bucket。
+> 货架: half-living。课程已并入 Stage E 并随走跑阶段关闭；100m `rule` 零碰杆 evaluator 仍未做，不要当当前执行队列。
 > Owner: user
 > Date: 2026-08-13（修订 2026-08-14）
 > 来源请求 / Source request: 用 RL 训练 100m 障碍赛的连续跨栏并集成进现有 plans。

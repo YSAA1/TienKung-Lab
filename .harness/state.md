@@ -1,68 +1,38 @@
 # Current State
 
-- Planning surface: 双工作面隔离——翻箱 `docs/plans/2026-08-15--t4-vault-g1-g2-recovery-plan.md`（zhuoqun）；梅花桩 `docs/plans/2026-08-17--t4-sparse-lightlp-complete-plan.md`。旧回退续训计划已 superseded。
-- Approved Spec: `docs/specs/2026-08-13--t4-vault-loco-merge.md`（user-approved 2026-08-13）
-- Active item: 最终纯学生段已开。tmux `t4_vault_g2_to0`（CUDA 1），从 `g2_dagger_mix15k/model_8000.pt` 起步，`teacher_mix 0.25→0 / 5000 iter`，之后 0 维持，共 12000 iter，`--run_name g2_dagger_to0_12k`，日志 `/tmp/t4_vault_g2_to0.log`。原 `t4_vault_g2_mix`（CUDA 0）继续在 mix=0.25 收尾。
-- Verification path: `python -m pytest tests/test_t4_asset_migration.py tests/test_t4_mujoco_sim2sim_contract.py -q`（资产 + G1 MuJoCo PD/接触合同）与 `tests/test_t4_observation_contracts.py` 在任意机器可跑；nubot gates via `scripts/nubot_run.sh`；zhuoqun gates via `scripts/zhuoqun_run.sh`（docker `t4-isaac-jammy:v2`）。
-- G1 MuJoCo sim2sim 合同（2026-08-14，诊断，不是 G1 gate）：`legged_lab/assets/t4/mujoco_sim2sim.py` 把 Isaac Kp/Kd/力矩写成 position servo、`dof_damping=kd`（不再 `+=`）、`frictionloss=0`、地面/箱/手脚 `condim=3` μ=1；脚碰撞改为 URDF 三 box，手改为 `half_sphere.obj`。入口仍是 `python legged_lab/scripts/play_t4_vault_g1_mujoco.py`。本地 m28500 确定性 5s smoke：reset 手腕误差 ~0、前进约 0.5m 后 step 176 摔倒，不再一进仿真就炸。PhysX 接触/求解器仍不等价。
-- zhuoqun runtime 事实（V3 preflight 2026-08-13 PASS）: 容器 `t4-isaac-jammy:v2`（原镜像缺 `libxt6` 导致 kit GPU foundation 全灭，v2 已补）+ bind-mount isaac-sim 5.1 / IsaacLab / 仓库（`~/workspace/TienKung-Lab`，分支 t4-train）；torch CUDA 4 卡 + vulkaninfo 4×RTX 4090；坑：Nucleus 云资产不可达（场景不得引用外部 USD/材质）、instanceable USD 遍历需 TraverseInstanceProxies、`SimulationApp.close()` 会吞 traceback 且挂死（入口已加 watchdog）。vault 任务 smoke：policy 150D / critic 276D / action 27D / 50 步全有限 / 双手 sphere 碰撞 prim 存活（`/tmp/t4_vault_smoke_result.json`）。
-- Next skill: 监控梅花桩阶段 3 软训；翻箱仍在 zhuoqun，不要动。
-- Sparse LightLP v4 (2026-08-17): 阶段 1–2 已交付并 commit `dfb8b59`。配方：踏石 easy/hard 顶面 0.26→0.22 m、第一跨 ~7–15 cm；Actor 1937D（本体史+scan×5+接触）；Critic 2015D（+脚下 30）；软填碰撞 + 真洞代数 scan/illegal；稀疏 tile 关步态/AMP/stumble；无 paper 任务、无 legal_foothold/双 Critic。默认 Stage E 仍 1155D。
-- Sparse LightLP v4 soft runtime (2026-08-17→18): 软阶段从零训至约 iter 25309 / 35000 后手动切真坑；最后软 ckpt `.../2026-08-17_18-04-44_t_sparse_lightlp_v4/model_25000.pt`。软固定 eval（d=0.5）踏石/圆桩 16/16；真坑对照 0/16、mean progress≈1.4 m。
-- Sparse LightLP v4 hard runtime (2026-08-18): 已停软训。tmux `t4-sparse-lightlp-v4-hard`，四卡 4096 env，`--hard_sparse_pits --resume True --load_run 2026-08-17_18-04-44_t_sparse_lightlp_v4 --checkpoint model_25000.pt --max_iterations 15000`（显示 25000→40000），run `t_sparse_lightlp_v4_hard`，日志 `logs/t4-sparse-lightlp-v4-hard.log`，TB :8006。开训后圆桩已见 `pit_fall_rate>0`，`reach_2m` 从软阶段高位掉回近 0（预期迁移阵痛）。
-- Sparse failed lineage (2026-08-16): nubot 旧 `t_compat_sparse/model_24999.pt` 与 `t_paper_sparse/model_24999.pt` 完成 25k 预算，但不能作为梅花桩能力证据。修正后的 IsaacLab fixed evaluator（保留 seed=42 的 reset pose/joint perturbation）正对照 `stage_e_prov7/model_24999.pt` flat = 4/4、平均 12.31 m；T-compat flat = 4/4、平均 13.69 m，证明基础 loco 和 evaluator 可用。但旧 difficulty=0.5 stepping stones：最终 T-compat = 4/16、平均 2.62 m、实际前向速度 0.175 m/s；T-paper = 2/16、平均 2.93 m、10 次提前摔倒。证据在 `artifacts/eval/t4_sparse_*_stones_d05_seeded_reset_eval16.json`。
-- Sparse root cause (2026-08-16): 不是 sim2sim——失败 MP4 和 fixed evaluator 都是 IsaacLab。TB `Curriculum/terrain_levels`是 13 类地形的全局平均，sparse 只占 16%；末值 4.79/4.84 仅等价全局 difficulty 0.53/0.54，没有 per-bucket 成功语义。课程只看峰值径向位移 >4 m，不看精确落脚/掉坑；地形在 level 0 就要从 z=0 平台踏上 0.36 m 石顶，且难度升高时 foothold 数量从 187 增到 216，反而更密。`illegal_footstep` 全局 TB 末值仅约 -5e-4至-9e-4，没有形成有效的 sparse 失败信号。旧 checkpoint/log 保留为失败证据，地形/MDP 改动后两条 teacher 必须从零训练。
-- Sparse v2 contract (2026-08-16): 石块 0.16→0.30 m、圆桩 0.18→0.36 m；固定 9×9 阵列，中心距 0.68→0.78 m；sparse 采样提升到 40%，初始最高 level=2；掉坑 root 低于 origin 0.5 m 立即 reset；sparse 只有完成 4 m 且 timeout 才晋级，提前摔倒强制降级。TB 对每种 terrain 记录 `success/fall/timeout/pit_fall/progress`，并对 sparse easy/mid/hard 额外记录 `reach_1m/reach_2m/reach_4m`。
-- Sparse v2 runtime (2026-08-16 14:46 抽检): T-compat v2 仍在 CUDA 0,1，约 `2159/40000`。踏石 `reach_1m=0.89`、`reach_2m=0.79`、success=0.33、progress=4.54 m；圆桩 `reach_2m=0.007`、success=0、fall=0.65、progress=1.04 m。`illegal_footstep≈-1e-4`。T-paper 同期圆桩同样失败（`reach_2m=0.003`），Actor 接触标志没有帮助。
-- Sparse v3 contract (2026-08-16): 踏石几何保持 v2。圆桩改独立间距 `(0.55, 0.58)`、顶面 `(0.50, 0.38)`、高度 `(0.14, 0.32)`，easy 第一跨约 5 cm。新增 `legal_foothold`（+1.5，只在抬高支撑且 velocity-slack 成立时给分）。1155D 不变。
-- Sparse split A/B runtime (2026-08-16 16:02): v2/v3 已停。稳定组 tmux `t4-sparse-stable` CUDA 0,1，task `t4_loco_teacher_sparse_stable`，run `2026-08-16_16-01-03_t_compat_sparse_stable`，日志 `logs/t4-sparse-stable.log`，TB :8004。对照组 tmux `t4-sparse-allin` CUDA 2,3，task `t4_loco_teacher_sparse_allin`，run `2026-08-16_16-01-54_t_compat_sparse_allin`，日志 `logs/t4-sparse-allin2.log`，TB :8005。启动后四卡均有占用，对照组已见 PPO iter 3/40000。
-- Sparse v2 baseline evaluator: 旧 compat `model_24999.pt` 放到新 d=0.5 踏石几何为 0/8，平均 1.81 m，4 次提前终止且 1 次 `pit_fall`；证据 `artifacts/eval/t4_sparse_v2_geometry_old_compat_m24999_stones_d05_eval8.json`。该结果证明新终止能捕获掉坑，不能作为 v2 新模型能力。
-- 本机 Docker（2026-08-15 补齐并开训）：镜像 `t4-isaac-jammy:v2` 已在；Isaac Sim 5.1 从已有 8.2G zip 解到 `$HOME/isaac-sim-standalone-5.1.0-linux-x86_64`（先前只有空壳）；IsaacLab 2.1.0 从 ghfast 重拉（`$HOME/IsaacLab` 原先只有空目录树，`have_isaaclab` 已改为检查 `utils/io/yaml.py`）。`local_run.sh` 钉死 `$HOME/IsaacLab`（不继承 conda 的 2.3.2）、`sg docker -c`、`--runtime nvidia` + host `nvidia_icd.json`（否则 Vulkan 只有 llvmpipe）。kit python 已装 flatdict/prettytable/gymnasium/GitPython/onnx==1.16.1/tensorboard==2.18.0/h5py/hydra/moviepy，**不改** Isaac 自带 torch 2.7 / numpy 1.26。
-- 本机 FT：tmux `t4-student-ft`，`scripts/local_run.sh train_t4_depth_student_ft.py --headless --rendering_mode performance --task_num_envs 32`，ckpt `artifacts/checkpoints/nubot/t4_loco_depth_student_stage_s_head35/model_24999.pt`，日志 `logs/t4-student-hurdle030-ft.log`，run `logs/t4_loco_depth_student_ft/2026-08-15_10-08-09_hurdle030_ft`（docker root 属主）。已过 Loading + iter 25000+（从学生 ckpt 的 24999 再跑 8000）。128 env 会打满 RTX descriptor 并卡住。为腾卡停掉已跑完预算并卡在 `SimulationApp.close()` 的 `t4-stage-e-local`（prov6）。
+- Living index: `docs/README.md`
+- Context: `PROJECT_CONTEXT.md`
+- Dual track（各一份计划，不是双真相）:
+  - 梅花桩：`docs/plans/2026-08-17--t4-sparse-lightlp-complete-plan.md`
+  - 翻箱：`docs/plans/2026-08-15--t4-vault-g1-g2-recovery-plan.md`
+- Approved specs: `docs/specs/2026-08-12--t4-unified-depth-locomotion.md`（走跑/学生合同）、`docs/specs/2026-08-13--t4-vault-loco-merge.md`（G1→G2→G3 目标）、`docs/specs/2026-08-15--t4-stepping-stones-and-hurdle-stable.md`（梅花桩目标；执行已改单阶段）
 
-## Cleanup status (2026-08-15)
+## 梅花桩（nubot）
 
-- 走跑阶段已完成：Stage E teacher 主线含跨栏 bucket；深度 student `stage_s_head35/model_24999.pt` 已完成预算，用户通过原始 MuJoCo `loco` 交互环境人工复核。
-- 该完成声明范围是 T4 loco/深度 loco 阶段，不包含 100m `rule` 全路线、真机部署或翻箱 G2/G3。
-- 翻箱 G2 蒸馏处于 blocked recovery：先完成 G1/R3 教师开车，再进入 R4 学生 DAgger+PPO；G3 保持 blocked。
-- `deferred_cleanup`:
-  - `docs/research/*`：历史研究，未被入口误链，暂不搬迁；下次文档收口时再按主题归档。
-  - `artifacts/eval/*` 与视频：可能是当前 evaluator/回放证据，未逐项核对 lineage，暂不删除。
-- 本机 Isaac play Docker（2026-08-15 已齐）：`t4-isaac-jammy:v2` + `$HOME/isaac-sim-standalone-5.1.0-linux-x86_64` + `$HOME/IsaacLab` 2.1.0。入口 `scripts/local_run.sh`。conda `env_isaaclab` / `ssy_files/IsaacLab` 仍是 2.3.2，不要拿来当正式 play/train。
-- User decision (2026-08-14): 不改 plan 三段结构（仍 G1→G2→G3），但暂不跑 G1/G2/G3 严格 evaluator；以 TB 曲线为开训依据。G1 是 150D tracking，不能直接当 G3 skill expert。
-- Completed surface: Stage E teacher `stage_e_prov7_hurdle` 与深度 student `stage_s_head35` 已完成走跑阶段；student `model_24999.pt` 已由用户在原始 MuJoCo `loco` 交互环境复核。
-- Completed hurdle surface: 跨栏已作为 terrain bucket 并入 Stage E；H0/H1 代码与合同测试已交付。100m `rule` strict zero-contact evaluator 不包含在本阶段完成声明内。
-- H2 diagnostic evidence（2026-08-14，已修正）: 初版 progress evaluator 在 `T4LocoEnv.step()` 自动 reset 后读取 `root_pos_w`，且用 world-x 而非初始 yaw 对齐的 body-forward progress；旧结果全部作废。修正后 `stage_e_prov7_hurdle/model_14000.pt` flat control = 10/10 达到 3m，平均 body-forward progress 12.73m；hurdle progress diagnostic = 83/100、平均 body-forward progress 10.78m（不等价于零碰栏/10 栏 gate，仍需 H3/H4 strict evaluator）。
-- GPU 分配裁定（2026-08-14 修订）: prov7 用 nubot 2 卡（CUDA 0,1）×2048 env；nubot 其余 2 卡留空；跨栏侧取消 zhuoqun 2 卡配额（原 2026-08-13 的 2+2 裁定中 vault 是否回收 4 卡由 vault surface 裁定）；本机 1 卡继续跑 `stage_e_prov6_local` 对照组（2026-08-14 用户裁定不停止）。
-- Vault 数据事实: 参考动作 `overbox_1m_t4_mjcf_fps50.npz`（SHA256 `67dde158…130e0a0`，346 帧 @50Hz，27 关节 MJCF BFS 序，32 body）入库 `legged_lab/envs/t4/datasets/motion_tracking/`；PHP tracking 14 body 全部存在于 URDF；箱体 1m³ @ pos (0.38, 0.2, 0.5)；zip 内 depth student 证据无效（0% 成功率），`model_29999` 只作配方参考。
-- Long-running rule: 所有训练、GPU probe、批量 playback 和 evaluator 必须在 tmux 中运行。
-- Stop gate: 走跑/深度走跑阶段已关闭；翻箱 G3 仍需独立 G2 skill 与 vault evaluator，不得复用 loco 完成声明。
-- Frozen contracts: `legged_lab/assets/t4/schemas.py` 冻结 AMP 66D、teacher 前向不对称 scan（1.4x1.2m @0.1，offset x=0.9，前向 0.2-1.6m，15x13=195 维）、depth 预处理与 proprio 96 维/10 帧；teacher actor obs 1155 维。
-- Running lineage (Stage E 主线): `stage_e_prov7_hurdle`（commit `e9f46fb` 跨栏环形地形并入课程，从零训练，nubot tmux `t4-stage-e`，CUDA 0,1 双卡 torchrun `--distributed`、每 rank 2048 env（合计 4096），25000 iter 预算，日志 `logs/t4-stage-e-teacher.stage_e_prov7_hurdle.log`）。启动于 2026-08-14 01:10；**2026-08-14 12:5x 抽检 iter 18639/25000**，mean reward ~70.6、episode length ~995、iter ~2.2s、ETA ~4h，GPU 0/1 占用、2/3 空闲，无 NaN/OOM。观察项：hurdle bucket terrain_levels 是否随课程上行；中期需渲染回放人工复核「预抬腿过杆」。
-- Running lineage (对照组): `stage_e_prov6_local`（commit `859fe24` 姿态摔倒终止修复，从零训练，本机 tmux `t4-stage-e-local`，1x RTX 4090，1024 env，**当前预算 49000 iter**，日志 `logs/t4-stage-e-teacher.stage_e_prov6_local.log`，TensorBoard tmux `t4-tb-local` 端口 6008，PYTHONPATH 需含仓库根与 `rsl_rl/`——本机 env_isaaclab 的 site-packages 有 Z2-Lab-stable 的 rsl_rl editable 安装会抢占）。启动于 2026-08-13 21:17；2026-08-14 12:5x 抽检 **40360/49000**，terrain_difficulty ~0.62。**2026-08-14 用户裁定：作为无跨栏对照组继续跑，不因 prov7 停止。** 中断记录：2026-08-14 01:52–01:57 本机 tmux 服务器崩溃（疑似 OOM——play 批量录制的 Isaac boot 叠加训练进程，30GB RAM + swap 8GB 压力；内核日志需 sudo 未能确证），prov6 进程连坐死亡于 iter ~9100；02:00 从 `model_9000.pt` resume（`--resume True --load_run 2026-08-13_21-17-43_stage_e_prov6_local`，新 run dir `2026-08-14_02-00-*_stage_e_prov6_local`，损失 ~100 iter），日志续写同一文件。教训：本机训练与批量渲染并行时贴近 RAM 上限，录制一律串行 + 180s 超时。
-- Vault G1 runtime 抽检（2026-08-14 12:5x）: zhuoqun tmux `t4_vault_g1` 仍健康，iter **27955/30000**，mean reward ~47，episode length ~480/500，body_pos error ~0.05 m，`time_out` 主导；ckpt `logs/t4_vault_mimic/2026-08-13_09-30-13/model_27500.pt`。zhuoqun checkout 仍停在 `859fe24`，另有 `t4-stage-e` docker 占其余卡——G1 未结束前不要覆盖该 checkout。nubot prov7 已于同轮补刷新（见上）。
-- Terminated lineage（诊断作废）: `stage_e_prov5`（commit `4d4e088`，从零训练，nubot tmux `t4-stage-e`，4x RTX 4090，每卡 1024 env，日志 `logs/t4-stage-e-teacher.log`）。缺陷：URDF 仅脚/手有碰撞体，Trunk/臂接触终止永不触发，摔倒零代价 → 学成爬行作弊解；修复 `859fe24`（|pitch|>1.0 或 |roll|>0.8 姿态终止）。nubot 端 tmux 是否已停未在本机核实。
-- MDP change (2026-08-13, commit `4d4e088`): 对照成功参照 VITAL_Lab T4_27 做了四项变更，任何一项都要求开新 lineage、从零训练，不得从 prov3/prov4 checkpoint 续：
-  1. `legged_lab/assets/t4/t4.py`: 踝关节增益 10/0.5 → pitch 80/4、roll 20/1（旧值近似被动踝，无真值来源；VITAL 同机器人训成功的值），并打开 self-collisions。
-  2. `teacher_cfg.py` 奖励再平衡: track_lin 1.0→2.0、lin_vel_z -1.0→-0.15、删 hip_roll/yaw_action(-1.0)、Shank 接触从 undesired_contacts(-1.0) 拆出为 -0.3、新增 foot_touchdown_impact(-0.08, `mdp.foot_touchdown_impact_penalty`)。
-  3. 周期步态奖励保留（bf06c0a 的 tracking 门控不变）。
-  4. 对称性: AMPPPO `symmetry_cfg`（augmentation + mirror loss 5.0），镜像计划 `legged_lab/envs/t4/symmetry.py`（arm 01-07 符号 +--+-+-，来自 MJCF 轴向；scan 沿 y 翻转），合同测试在 `tests/test_t4_observation_contracts.py`。
-- Terminated lineage: `stage_e_prov4`（从 `stage_e_prov3` 的 `model_2000.pt` 续训，commit `bf06c0a`，2026-08-13 13:2x 手动中断于 iter ~2900，旧日志 `logs/t4-stage-e-teacher.stage_e_prov4.log`）——诊断结论：课程钉 0 的根因是基础行走能力（降到 level 0 平地后 episode_max_radial_dist 均值仍 ≤1.38m < promote 4m），而非课程代数；见上面的 MDP 变更。
-- Terminated lineage: `stage_e_prov3`（commit `38a3e12`）于 iter ~2248 停止续写：TB 显示 mean_reward 平台 55–59、terrain_levels 从 ~350 钉 0、episode_max_radial_dist 全程 ≤1.38m、lin tracking 在 0.3–0.7 波动。`stage_e_prov2`/`prov1` 见下。旧日志 `logs/t4-stage-e-teacher.stage_e_prov3.log`。
-- Gait fix（commit `bf06c0a`）: 周期步态奖励改为 `moving * exp(-||v_cmd-v_act||^2 / 0.5^2)`（与 track_lin_vel_xy_exp 同核），站立仍为 0 并冻结时钟；日志 `Curriculum/gait_tracking_scale`。高速命令蹲着时步态分应接近 0。
-- Curriculum watch: 续训后看 `gait_tracking_scale` 是否明显低于原先 ~0.42 的命令速度缩放、径向是否离开 1.2m、lin tracking 是否随 gait 被关掉而上升。
-- Lineage caveat: `stage_e_prov1`/`stage_e_prov2`/`stage_e_prov3`/`stage_e_prov4` 启动时使用 provisional AMP expert（`artifacts/amp_expert_provisional/_manifest.json` 中 `human_playback_review=pending`）。人工复核已通过，且 66D feature 与 root 绝对高度无关，因此该 expert 数值上等同于正式 expert；提升为 formal 需要先比对 provisional manifest 的 clip 列表与 accept 清单一致，再写入 `legged_lab/envs/t4/datasets/motion_amp_expert` 并补 lineage 记录，未完成前仍按 provisional 引用。
-- Stage E surface: 任务 `t4_loco_teacher`（`legged_lab/envs/t4/t4_env.py` + `teacher_cfg.py`），地形 `T4_STAGE_E_TERRAINS_CFG` 含上行/下行楼梯，AMP 系数按 terrain difficulty 线性衰减，gait 模式旋钮 `fixed_clock|command_conditioned|difficulty_relaxed`。
-- Latest M0 evidence: `artifacts/eval/t4_motion_audit.json` machine-audited 18 motions; 17 accepted, `t4_run` rejected for hard joint limit violations plus holdout rule.
-- Latest simulator evidence: nubot IsaacLab spawn smoke loaded T4 with 27 joints and 30 bodies; joint name set matches `T4_JOINT_NAMES`, runtime order differs and playback reorders by name.
-- Latest playback evidence: `artifacts/eval/t4_motion_playback_smoke.json` simulated `t4_stand` 5 frames with 0 rejects; `artifacts/eval/t4_motion_playback.json` simulated all 18 motions with 0 rejects.
-- Human playback verdict (2026-08-12, 通过): 证据为 `artifacts/motion_review/`（18 条 MP4，每帧含前 3/4、侧视、足部特写三视角，另有 worst-frame 静帧与 `_manifest.json`），渲染入口 `python -m legged_lab.scripts.render_t4_motions`（MuJoCo `t4_std.xml`，30fps）。裁定 accept 17 条，`t4_run` 继续 held out。
-- Accepted known defect: 除 `t4_stand`（sole +1.4mm）外全部 clip 未对齐地面——stance sole p05 在 `-57.6mm`(B4) 到 `-11.1mm`(t4_left_rotate) 之间，`t4_jog_backward` 整段悬空 `+43.1mm`；按 p05 归一后 contact frame fraction 仅 0.07-0.15，说明这些 clip 的接触时序不可用。66D AMP frame（`q27+dq27+hands_root6+feet_root6`）全部来自关节 FK 与 root 相对量，不含绝对 root 高度，故该缺陷不改变 expert 数值；任何消费绝对 root 高度或 motion 接触相位的逻辑都不得引用这些 clip。
-- Evidence caveat: `artifacts/eval/t4_motion_audit.json` 与 `t4_motion_playback.json` 中的 `human_playback_status` 由脚本生成、恒为 `pending`，人工裁定以本文件与 plan M0 工作项为准。
-- Current blocker: 无 M0 阻塞。
-- New M0 simulator entrypoint: `legged_lab/scripts/playback_t4_motions.py` writes raw T4 frames into the IsaacLab T4 articulation and emits `artifacts/eval/t4_motion_playback.json` in the target nubot runtime.
-- Nubot target: `nubot@100.100.188.39:/home/nubot/phn_ws/t4_train/TienKung-Lab`; M0 headless spawn/playback evidence was collected on commit `dfb69d1` (`fix(t4): 按名称重排动作关节`).
-- Nubot runtime: use `/home/nubot/isaac-sim-standalone-5.1.0-linux-x86_64/python.sh` with IsaacLab source paths in `PYTHONPATH`; torch verified as `2.5.1+cu124`, CUDA visible on 4 GPUs.
-- Nubot caveat: GitHub fetch can fail with `GnuTLS recv error (-110)`; latest commits were synced through local git bundles over SSH when needed.
-- Local depth student sim2sim entrypoint: `legged_lab/scripts/sim2sim_t4_depth_student.py`; it accepts an explicit checkpoint or `latest`, prefers `artifacts/checkpoints/t4_depth_student_latest.pt`, and falls back to the newest `logs/t4_loco_depth_student` run.
-- ZL/direct stair gap closure（2026-08-17）: 当前 checkpoint 为 `model_25746.pt`（`obs[1,10176] -> action[1,27]`，policy/control `50/200 Hz`，`ankle_in_series=true`）。deterministic sim 默认直接加载原始 27DoF `legged_lab/assets/t4/mjcf/t4_std.xml`，runtime timestep 固定 `0.005s`，position servo/Kp/Kd/effort limit 与 direct runner 相同；ZL 仅保留启动、命令、ONNX adapter 和状态外壳。已验证根因有三个：旧 driver 丢弃首个 policy seed action；角速度误用带 noise/cutoff 的 MJCF gyro；原生 `270x480 32FC1` 深度图经 CycloneDDS 传输后断流并触发 `depth_image` timeout。当前 sim 仍按原生分辨率渲染，在 driver 内执行训练等价的 invalid/clip/adaptive-area resize 后只传 `48x64` policy 深度。对齐后 `vx=0.8` 三次独立冷启动严格评估 3/3 `success=true`，所有 driver trace 均为 4 physics steps；相对 direct 三次均值绝对 gap：min `0.0091m`、max `0.0026m`、final x `0.0498m`、final height `0.0011m`、final y `0.0884m`。证据为 `direct_stairs_nav_vx080_seed_action.json` 与 `live_zl_original_policy_depth_vx080_final_run1/2/3.json`。
+- 任务 `t4_loco_teacher_sparse`，run `t_sparse_lightlp_s4`，四卡从零，真洞，无 soft/hard。
+- tmux `t4-sparse-lightlp-s4`，日志 `logs/t4-sparse-lightlp-s4.log`，TB `:8007`（`http://100.100.188.39:8007/`）。
+- Stage E `t4_loco_teacher` 1155D 未改。
+- 旧 v4 软/硬与更早 sparse ckpt 只留对照，不加载。
+- 本切片不训学生。能力声明要等 evaluator + 回放。
+
+## 翻箱（zhuoqun）
+
+- 执行面仍是 G1/G2 recovery。G3 / 与走跑合并被 G2 过箱挡住。
+- 不要动 nubot 梅花桩 checkout 去盖 zhuoqun 翻箱。
+
+## 已关闭（不要当待办）
+
+- Stage E 走跑 + 跨栏 bucket + 深度学生 `model_24999` / 部署候选 `model_25746`。
+- 走跑完成 ≠ 100m `rule`、真机障碍、梅花桩、翻箱 G3。
+
+## 验证
+
+- 本机：`python -m pytest tests/test_t4_asset_migration.py tests/test_t4_observation_contracts.py tests/test_t4_sparse_reward_contracts.py tests/test_t4_sparse_monitor_contract.py -q`
+- nubot：`scripts/nubot_run.sh`；zhuoqun：`scripts/zhuoqun_run.sh`
+- 长任务一律 tmux。
+
+## deferred_cleanup
+
+- `docs/research/*` 历史调研：已用 `docs/research/README.md` 标明非权威，不搬迁。
+- `artifacts/eval/*` 与视频：可能是对照证据，未逐项核对 lineage，不删。
+- 梅花桩学生蒸馏、G3 合并：等各自 teacher/G2 gate，不要提前写第二套执行计划。

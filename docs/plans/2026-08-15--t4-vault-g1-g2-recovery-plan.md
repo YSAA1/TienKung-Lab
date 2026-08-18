@@ -2,10 +2,11 @@
 
 > Status: active
 > Date: 2026-08-15
-> Spec: `docs/specs/2026-08-13--t4-vault-loco-merge.md`（已批准；本计划不改 Spec 三段，只修正 V4/V6 的执行顺序和蒸馏配方）
+> Updated: 2026-08-18 — 本文件仍是翻箱执行面。G2 学生与 G3 技能合并（和走跑 / 梅花桩并成一条策略）要等 G2 过箱之后另开切片，不在本文件里提前写第二套配方。
+> Spec: `docs/specs/2026-08-13--t4-vault-loco-merge.md`（已批准；本计划不改 Spec 三段，只修正执行顺序和蒸馏配方）
 > Branch: `t4-train`
 > Planning surface: docs plan（本文件）；旧合并 plan 已归档到 `docs/archive/plans/2026-08-13--t4-vault-loco-merge-plan.md`
-> 关系: 恢复 slice。不取代合并 Spec；暂停该 plan 里「直接进 V7」的裁定。
+> 关系: 恢复 slice。不取代合并 Spec；暂停该 plan 里「直接进 V7」的裁定。入口：`docs/README.md`。
 
 ## Objective
 

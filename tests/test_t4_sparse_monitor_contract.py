@@ -22,16 +22,18 @@ def test_paper_task_is_unregistered():
     assert "t4_loco_teacher_sparse" in source
 
 
-def test_sparse_teacher_is_lightlp_v4():
+def test_sparse_teacher_is_one_stage_lightlp():
     source = CFG.read_text()
-    assert "t_sparse_lightlp_v4" in source
-    assert "soft_sparse_terrain" in source
+    assert "t_sparse_lightlp_s4" in source
+    assert "use_lightlp_terminations" in source
     assert "append_critic_foot_scan" in source
+    assert "append_critic_immunity" in source
     assert "opposite_direction" in source
     assert "foot_acceleration_penalty" in source
     assert "self.scene.max_init_terrain_level = 2" in source
-    assert "apply_soft_sparse_stage" in source
-    assert "soft_fill" in source
+    assert "apply_soft_sparse_stage" not in source
+    assert "soft_sparse_terrain" not in source
+    assert "cfg.soft_fill = False" in source
 
 
 def test_soft_scan_uses_true_hole_support_mask():

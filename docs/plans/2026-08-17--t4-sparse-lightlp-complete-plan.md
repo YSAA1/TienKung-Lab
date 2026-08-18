@@ -2,16 +2,17 @@
 
 > Status: active
 > Date: 2026-08-17
-> Spec: `docs/specs/2026-08-15--t4-stepping-stones-and-hurdle-stable.md`（user-approved，本计划修订 1155D 冻结 / 旧学生 FT / 大方砖）
-> 对照: `docs/research/2026-08-17--t4-sparse-lightlp-completion.md`、`docs/research/2608.02653v1/auto/2608.02653v1.md` §IV
-> 取代: `docs/plans/2026-08-17--t4-sparse-ab-rollback-plan.md`
+> Updated: 2026-08-18 — 撤回 BeamDojo 软/硬二阶段；现行 lineage 为单阶段真洞 `t_sparse_lightlp_s4`
+> Spec: `docs/specs/2026-08-15--t4-stepping-stones-and-hurdle-stable.md`（批准规格；执行以本文件为准，不再开 T-compat/T-paper 双老师）
+> 对照: `docs/research/2608.02653v1/auto/2608.02653v1.md` §IV（研究笔记非权威）
+> 取代: `docs/archive/plans/2026-08-17--t4-sparse-ab-rollback-plan.md`
 > Branch: `t4-train`
 > Planning surface: docs plan
-> GPU: nubot 2 卡（CUDA 0,1）从零开训；另 2 卡空出。zhuoqun 翻箱不动
+> GPU: nubot 4×4090 从零训 `t_sparse_lightlp_s4`。zhuoqun 翻箱不动。Stage E `t4_loco_teacher` 1155D 不覆盖。
 
 ## Objective
 
-按 LightLP 感知走跑老师（§IV）补全梅花桩配方，**从零**训一条新 sparse teacher。踏石收窄到 `illegal_footstep` 能咬到偏脚；圆桩/踏石都走「先软地形再真坑」。本 lineage **可以打破 1155D**。不做旧学生短 FT，不续任何旧 ckpt。
+按 LightLP 感知走跑老师（§IV）补全梅花桩配方，**从零**训一条新 sparse teacher。踏石收窄到 `illegal_footstep` 能咬到偏脚；同一课表上开真洞，**不再**做软填再切真坑。本 lineage **可以打破 1155D**。不做旧学生短 FT，不续任何旧 ckpt。本切片不蒸学生；梅花桩学生与走跑/翻箱合并是后续工作面。
 
 用户 2026-08-17 裁定：
 
@@ -21,7 +22,7 @@
 
 ## Active Slice
 
-阶段 4：真坑续训（`t_sparse_lightlp_v4_hard`，自 soft `model_25000` 再 +15000 iter → 显示 25000/40000）。软阶段固定 eval 已过；真坑对照曾 0/16。
+阶段已改：撤回软/硬二阶段。现行 lineage 为单阶段真洞 `t_sparse_lightlp_s4`（任务仍是 `t4_loco_teacher_sparse`）。旧 v4 hard 已停，ckpt 仅作对照。
 
 ## 配方（一次打齐，不是再拧一颗螺丝）
 
@@ -67,17 +68,15 @@
 - 新增 LightLP 滤波足加速度（τ=0.06 s，超 30 m/s² 的 EMA，−0.01）。与现有 `foot_touchdown_impact` 合并成一套，不要两套各打各的。
 - 新增 `opposite_direction −1.0`。
 - 不加 `legal_foothold`，不装双 Critic。
-- **软阶段**：踏石/圆桩碰撞是填实的；前向 scan 与 illegal 仍按「有洞」的真图算。踩偏扣分，不 `pit_fall`。
-- **硬阶段**：同一 lineage 打开真坑，恢复 `pit_fall`。这是本配方的二阶段，不是续旧 1155 ckpt。
-
-软地形实现优先：碰撞 mesh 填平，射线打在带洞的非碰撞 mesh（或等价的双 prim）。若 Isaac 地形导入做不到，fallback = 碰撞填平 + 用 `stepping_stone_layout` 代数写 scan / illegal（已有 `point_on_rect` / `point_on_disk`）。合同：站在「缝」上掉不下去，且该 XY 的向下查询仍报洞。
+- **单阶段真洞**：踏石/圆桩一开始就是真间隙。`pit_fall −200` 不是稀疏失败模式（LightLP 无此项）；掉坑由躯干接触 / 姿态 / 超时等终止捕获。
+- 下文若仍出现「软阶段 / 硬阶段 / `t_sparse_lightlp_v4`」，视为 2026-08-17 草稿，**已撤回**。
 
 ### 训练
 
-- 开训前停 nubot `t4-sparse-v2-resume`，旧日志/ckpt 留作对照，**不加载**。
-- `bash scripts/nubot_run.sh`，任务 `t4_loco_teacher_sparse`，`--resume` 关闭，CUDA 0,1，每 rank 2048 env，AMP 仍走 `artifacts/amp_expert_provisional`。
-- run name 标明 `t_sparse_lightlp_v4`。
-- 软阶段从零跑到两边 `reach_2m` 都离开 0 且 `illegal` 均值明显负于 −0.001，再切硬阶段（加载**本 run** 的软阶段 ckpt）。
+- 旧 v4 软/硬与更早 lineage 的日志/ckpt 留作对照，**不加载**。
+- `bash scripts/nubot_run.sh` + 四卡 `torch.distributed.run`，任务 `t4_loco_teacher_sparse`，`--resume` 关闭，每 rank 1024 env，AMP 仍走 `artifacts/amp_expert_provisional`。
+- run name：`t_sparse_lightlp_s4`。
+- 验收看分地形 `reach_2m` / `illegal` / 回放，不要切软硬。
 
 ## Non-goals
 
@@ -95,17 +94,16 @@
 1. 合同：新踏石几何、illegal 偏置 >0、软地形「站得住仍报洞」、新 Actor/Critic 维、paper 任务已删。pytest 绿。
 2. 默认 teacher 仍 1155D；sparse 任务是新维，用 1155 loader 硬失败。
 3. nubot 从零健康开训，不加载旧 ckpt。
-4. 软阶段：踏石与圆桩 `reach_2m` 都离开 0；`illegal` 不再是 −0.001。
-5. 硬阶段：两边都能连续走，不是只活过第一跨。能力声明必须有分地形 TB + 回放，不要单靠 reward。
+4. 真洞课表上踏石与圆桩 `reach_2m` 都离开 0；`illegal` 不再是 −0.001。
+5. 两边都能连续走，不是只活过第一跨。能力声明必须有分地形 TB + 回放 + evaluator，不要单靠 reward。
 
 ## Verification Path
 
 ```text
 本机合同 pytest
   -> 确认 1155 默认未改、sparse 新维、paper 任务消失
-  -> nubot 停旧续训，从零开 t4_loco_teacher_sparse
-  -> 软阶段 TB：踏石/圆桩 reach_2m、illegal
-  -> 本 lineage 切真坑
+  -> nubot 停旧续训，从零开 t_sparse_lightlp_s4
+  -> TB：踏石/圆桩 reach_2m、illegal
   -> 回放 / evaluator（无学生 FT）
 ```
 
@@ -116,7 +114,7 @@
 ## Required Capabilities
 
 - 本机 pytest（无 Isaac）。
-- nubot 2×4090 + `scripts/nubot_run.sh` + tmux。
+- nubot 4×4090 + `scripts/nubot_run.sh` + tmux。
 - 已有对照：`t_compat_sparse_v2_resume` 踏石 hard 摔倒 0.50、圆桩 progress 0.95 m、`illegal≈-0.001`。
 
 ## Fallback Evidence
@@ -127,7 +125,7 @@
 
 ## Final integration claim
 
-`final_integration_claim`: 新的从零 sparse teacher 按 LightLP §IV + 软→硬地形 + 能咬偏脚的踏石几何训练。默认 1155D Stage E 不动。本切片不蒸学生、不宣称实机梅花桩。
+`final_integration_claim`: 新的从零 sparse teacher 按 LightLP §IV 单阶段真洞 + 能咬偏脚的踏石几何训练。默认 1155D Stage E 不动。本切片不蒸学生、不宣称实机梅花桩。
 
 ## 工作项
 
@@ -143,9 +141,9 @@
   - acceptance_criteria: 软/硬地形可切换；稀疏 tile 步态/AMP/stumble=0；Actor 接触+scan×5；Critic 脚下 scan；足加速度与反向走已挂；无 `legal_foothold` / 双 Critic
   - verification_commands: 同上 pytest + 有 Isaac 时 64-env 3-iter smoke（nubot tmux）
   - success_definition: 新配方在代码里是一条任务，不是注释掉的开关堆
-- [ ] 阶段 3：nubot 从零软阶段开训
+- [ ] 阶段 3：nubot 从零单阶段真洞开训（`t_sparse_lightlp_s4`）
   - acceptance_criteria: 不加载旧 ckpt；tmux 健康；两边 `reach_2m` 离开 0；`illegal` 明显负于 −0.001
-  - verification_commands: nubot `tmux ls`；`logs/` + TB `Terrain/stepping_stones|raised_pillars/reach_2m_rate`、`Episode_Reward/illegal_footstep`
+  - verification_commands: nubot `tmux ls`；`logs/t4-sparse-lightlp-s4.log` + TB `Terrain/stepping_stones|raised_pillars/reach_2m_rate`、`Episode_Reward/illegal_footstep`
   - success_definition: 圆桩不再死在 1 m，踏石 illegal 开始干活
 - [ ] 阶段 4：本 lineage 切真坑
   - acceptance_criteria: 加载阶段 3 的本 run ckpt；真坑打开；两边仍能走，不是立刻回到 progress≈1 m

@@ -53,7 +53,14 @@ from legged_lab.envs.t4.curriculum import (
     gait_tracking_scale,
     terrain_level_moves,
 )
-from legged_lab.envs.t4.mdp.sparse_signals import sparse_curriculum_moves, sparse_pit_fall_mask
+from legged_lab.envs.t4.mdp.sparse_signals import (
+    LIGHTLP_IMMUNITY_FRAC,
+    LIGHTLP_IMMUNITY_PERIOD,
+    impact_immunity_from_draws,
+    lightlp_timeout_and_reset,
+    sparse_curriculum_moves,
+    sparse_pit_fall_mask,
+)
 from legged_lab.envs.t4.teacher_cfg import T4LocoTeacherEnvCfg
 from legged_lab.terrains.stepping_stone_layout import (
     T4_FOOT_SCAN_RESOLUTION,
@@ -313,8 +320,16 @@ class T4LocoEnv(VecEnv):
         )
         self.use_algebraic_sparse_scan = bool(getattr(self.cfg, "use_algebraic_sparse_scan", False))
         self.soft_sparse_terrain = bool(getattr(self.cfg, "soft_sparse_terrain", False))
+        self.use_lightlp_terminations = bool(getattr(self.cfg, "use_lightlp_terminations", False))
+        self.terminate_on_pit_fall = bool(getattr(self.cfg, "terminate_on_pit_fall", True))
+        self.append_critic_immunity = bool(getattr(self.cfg, "append_critic_immunity", False))
         self.teacher_scan_history_length = int(getattr(self.cfg, "teacher_scan_history_length", 1))
         self.append_critic_foot_scan = bool(getattr(self.cfg, "append_critic_foot_scan", False))
+        self.impact_immunity = torch.zeros(self.num_envs, dtype=torch.bool, device=self.device)
+        self._lightlp_step = 0
+        self.prev_root_lin_vel_w = torch.zeros(self.num_envs, 3, dtype=torch.float, device=self.device)
+        if self.use_lightlp_terminations:
+            self._resample_impact_immunity()
         self._foot_scan_local = torch.tensor(
             foot_scan_local_offsets(T4_FOOT_SCAN_SIZE, T4_FOOT_SCAN_RESOLUTION),
             dtype=torch.float,
@@ -604,6 +619,8 @@ class T4LocoEnv(VecEnv):
             actor_obs = torch.cat([actor_obs, feet_contact.float()], dim=-1)
         if self.append_critic_foot_scan:
             critic_obs = torch.cat([critic_obs, self.compute_foot_scan_privilege()], dim=-1)
+        if self.append_critic_immunity:
+            critic_obs = torch.cat([critic_obs, self.impact_immunity.float().unsqueeze(-1)], dim=-1)
 
         actor_obs = torch.clip(actor_obs, -self.clip_obs, self.clip_obs)
         critic_obs = torch.clip(critic_obs, -self.clip_obs, self.clip_obs)
@@ -652,6 +669,10 @@ class T4LocoEnv(VecEnv):
             self.sim.render()
 
         self.episode_length_buf += 1
+        if self.use_lightlp_terminations:
+            self._lightlp_step += 1
+            if self._lightlp_step % LIGHTLP_IMMUNITY_PERIOD == 0:
+                self._resample_impact_immunity()
         radial_dist = torch.norm(self.robot.data.root_pos_w[:, :2] - self.scene.env_origins[:, :2], dim=1)
         self.episode_max_radial_dist = torch.maximum(self.episode_max_radial_dist, radial_dist)
         self._update_gait()
@@ -672,7 +693,17 @@ class T4LocoEnv(VecEnv):
         self.extras["observations"] = {"critic": critic_obs}
         return actor_obs, reward_buf, self.reset_buf, self.extras
 
+    def _resample_impact_immunity(self) -> None:
+        self.impact_immunity = impact_immunity_from_draws(
+            torch.rand(self.num_envs, device=self.device), fraction=LIGHTLP_IMMUNITY_FRAC
+        )
+
     def check_reset(self):
+        if self.use_lightlp_terminations:
+            return self._check_reset_lightlp()
+        return self._check_reset_stage_e()
+
+    def _check_reset_stage_e(self):
         net_contact_forces = self.contact_sensor.data.net_forces_w_history
         reset_buf = torch.any(
             torch.max(
@@ -695,7 +726,7 @@ class T4LocoEnv(VecEnv):
 
         self.pit_fall_buf.zero_()
         is_sparse = self.refresh_sparse_tile_mask()
-        if self.sparse_foothold_type_ids and torch.any(is_sparse):
+        if self.terminate_on_pit_fall and self.sparse_foothold_type_ids and torch.any(is_sparse):
             self.pit_fall_buf.copy_(
                 sparse_pit_fall_mask(
                     self.robot.data.root_pos_w[:, 2],
@@ -707,6 +738,52 @@ class T4LocoEnv(VecEnv):
             )
             reset_buf |= self.pit_fall_buf
 
+        return reset_buf, time_out_buf
+
+    def _check_reset_lightlp(self):
+        """LightLP §IV-C2: gather tensors, then the shared helper decides flags."""
+        tile = float(self.cfg.scene.terrain_generator.size[0])
+        offset = self.robot.data.root_pos_w[:, :2] - self.scene.env_origins[:, :2]
+        net_contact_forces = self.contact_sensor.data.net_forces_w_history
+        torso_hit = torch.any(
+            torch.max(
+                torch.norm(net_contact_forces[:, :, self.termination_contact_cfg.body_ids], dim=-1),
+                dim=1,
+            )[0]
+            > 1.0,
+            dim=1,
+        )
+        lin_vel = self.robot.data.root_lin_vel_w
+        accel = torch.norm((lin_vel - self.prev_root_lin_vel_w) / max(self.step_dt, 1.0e-6), dim=1)
+        self.prev_root_lin_vel_w.copy_(lin_vel)
+        gravity_b = self.robot.data.projected_gravity_b
+        reset_buf, time_out_buf = lightlp_timeout_and_reset(
+            episode_timeout=self.episode_length_buf >= self.max_episode_length,
+            offset_xy=offset,
+            tile_size=tile,
+            max_abs_joint_vel=torch.max(torch.abs(self.robot.data.joint_vel), dim=1)[0],
+            torso_hit=torso_hit,
+            accel_mps2=accel,
+            elapsed_s=self.episode_length_buf.float() * self.step_dt,
+            gravity_gx=gravity_b[:, 0],
+            gravity_gy=gravity_b[:, 1],
+            gravity_gz=gravity_b[:, 2],
+            fall_draws=torch.rand(self.num_envs, device=self.device),
+            immunity=self.impact_immunity,
+        )
+
+        self.pit_fall_buf.zero_()
+        is_sparse = self.refresh_sparse_tile_mask()
+        if self.sparse_foothold_type_ids and torch.any(is_sparse):
+            self.pit_fall_buf.copy_(
+                sparse_pit_fall_mask(
+                    self.robot.data.root_pos_w[:, 2],
+                    self.scene.env_origins[:, 2],
+                    is_sparse,
+                    drop_threshold=0.5,
+                    soft_terrain=False,
+                )
+            )
         return reset_buf, time_out_buf
 
     def reset(self, env_ids):
@@ -767,14 +844,15 @@ class T4LocoEnv(VecEnv):
             is_sparse |= terrain_types == type_id
         timed_out = self.time_out_buf[env_ids]
         pit_fall = self.pit_fall_buf[env_ids]
-        move_up, move_down = sparse_curriculum_moves(
-            move_up=move_up,
-            move_down=move_down,
-            is_sparse=is_sparse,
-            moving=moving,
-            timed_out=timed_out,
-            pit_fall=pit_fall,
-        )
+        if not self.use_lightlp_terminations:
+            move_up, move_down = sparse_curriculum_moves(
+                move_up=move_up,
+                move_down=move_down,
+                is_sparse=is_sparse,
+                moving=moving,
+                timed_out=timed_out,
+                pit_fall=pit_fall,
+            )
         strict_success = move_up & timed_out
         self._update_terrain_metrics(
             terrain_types=terrain_types,

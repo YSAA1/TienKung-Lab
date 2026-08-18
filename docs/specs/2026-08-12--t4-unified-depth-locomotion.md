@@ -1,6 +1,7 @@
 # Spec - T4 特权专家到深度学生 Locomotion
 
-> 状态 / Status: user-approved
+> 状态 / Status: user-approved（走跑 / 深度学生阶段 **done**；部署合同仍以本文为准）
+> 货架: living 架构。当前执行队列不在本文，见 `docs/README.md`。
 > Owner: user / agent
 > Date: 2026-08-12
 > Revision: teacher-student route

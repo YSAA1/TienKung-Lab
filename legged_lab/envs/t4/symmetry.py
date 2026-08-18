@@ -44,6 +44,7 @@ from legged_lab.assets.t4.schemas import (
     TEACHER_SPARSE_ACTOR_OBS_DIM,
     TEACHER_SPARSE_CONTACT_DIM,
     TEACHER_SPARSE_CRITIC_OBS_DIM,
+    TEACHER_SPARSE_IMMUNITY_DIM,
     TEACHER_SPARSE_SCAN_HISTORY_LENGTH,
 )
 
@@ -239,6 +240,10 @@ def sparse_observation_mirror_plan(is_critic: bool, history_length: int) -> tupl
         foot_start = scan_start + TEACHER_SCAN_DIM * TEACHER_SPARSE_SCAN_HISTORY_LENGTH
         indices.extend(_mirror_foot_scan_stack(foot_start))
         signs.extend([1.0] * FOOT_SCAN_BOTH_DIM)
+        if TEACHER_SPARSE_IMMUNITY_DIM:
+            immune_i = foot_start + FOOT_SCAN_BOTH_DIM
+            indices.append(immune_i)
+            signs.append(1.0)
     return tuple(indices), tuple(signs)
 
 

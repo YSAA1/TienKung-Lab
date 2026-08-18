@@ -426,17 +426,42 @@ class T4LocoTeacherAgentCfg(RslRlOnPolicyRunnerCfg):
 
 @configclass
 class T4SparseTeacherRewardCfg(T4TeacherRewardCfg):
-    """LightLP §IV sparse rewards: slack + illegal + reverse + filtered foot accel.
+    """LightLP §IV Table I on the mixed sparse teacher.
 
-    On sparse tiles the env zeros gait / AMP / stumble via masks; continuous
-    terrain buckets keep the Stage E weights from the base class.
+    Stage E extras (periodic gait, AMP, stumble) stay in the base class so
+    continuous tiles keep the successful walk recipe; the env zeros them on
+    sparse tiles. Table I terms that Stage E lacked are added here.
+    Instant pit-fall −200 is not a sparse failure mode.
     """
 
+    track_ang_vel_z_exp = RewTerm(func=mdp.track_ang_vel_z_world_exp, weight=2.0, params={"std": 0.5})
+    body_orientation_l2 = RewTerm(
+        func=mdp.body_orientation_l2, params={"asset_cfg": SceneEntityCfg("robot", body_names="Trunk")}, weight=0.0
+    )
+    upright_orientation = RewTerm(
+        func=mdp.upright_orientation, params={"asset_cfg": SceneEntityCfg("robot", body_names="Trunk")}, weight=1.0
+    )
+    undesired_contacts = RewTerm(
+        func=mdp.undesired_contacts,
+        weight=-2.0,
+        params={
+            "sensor_cfg": SceneEntityCfg("contact_sensor", body_names=["A[LR]2", "A[LR]4", "Trunk", "Shank_.*"]),
+            "threshold": 1.0,
+        },
+    )
+    shank_contacts = RewTerm(
+        func=mdp.undesired_contacts,
+        weight=0.0,
+        params={"sensor_cfg": SceneEntityCfg("contact_sensor", body_names=["Shank_.*"]), "threshold": 1.0},
+    )
+    dof_pos_limits = RewTerm(func=mdp.joint_pos_limits, weight=-10.0)
+    action_rate_l2 = RewTerm(func=mdp.action_rate_l2, weight=-0.1)
+    termination_penalty = RewTerm(func=mdp.is_terminated, weight=0.0)
+    heading_error = RewTerm(func=mdp.heading_error, weight=-1.0)
     velocity_slack = RewTerm(func=mdp.velocity_slack, weight=1.5)
     illegal_footstep = RewTerm(func=mdp.illegal_footstep, weight=-1.0)
     opposite_direction = RewTerm(func=mdp.opposite_direction, weight=-1.0)
     hurdle_bar_contact = RewTerm(func=mdp.hurdle_bar_contact, weight=-2.0)
-    # Merge LightLP foot-acceleration filter with the old touchdown impact term.
     foot_touchdown_impact = RewTerm(
         func=mdp.foot_acceleration_penalty,
         weight=-0.01,
@@ -450,14 +475,15 @@ class T4SparseTeacherRewardCfg(T4TeacherRewardCfg):
 
 @configclass
 class T4LocoSparseTeacherEnvCfg(T4LocoTeacherEnvCfg):
-    """LightLP v4 sparse teacher: 1937D actor, soft-filled sparse tiles, new dims."""
+    """One-stage LightLP §IV sparse teacher: real holes, no soft/hard switch."""
 
-    # Soft stage by default; set False when opening real pits on this lineage.
-    soft_sparse_terrain: bool = True
     teacher_scan_history_length: int = TEACHER_SPARSE_SCAN_HISTORY_LENGTH
     append_actor_feet_contact: bool = True
     append_critic_foot_scan: bool = True
-    use_algebraic_sparse_scan: bool = True
+    append_critic_immunity: bool = True
+    use_lightlp_terminations: bool = True
+    use_algebraic_sparse_scan: bool = False
+    terminate_on_pit_fall: bool = False
 
     def __post_init__(self):
         self.scene.terrain_generator = T4_STAGE_E_SPARSE_TERRAINS_CFG
@@ -470,27 +496,23 @@ class T4LocoSparseTeacherEnvCfg(T4LocoTeacherEnvCfg):
         self.reward = T4SparseTeacherRewardCfg()
         self.append_actor_feet_contact = True
         self.append_critic_foot_scan = True
-        # Sparse tiles zero gait/AMP via env masks; keep schedule enabled for continuous tiles.
+        self.append_critic_immunity = True
+        self.use_lightlp_terminations = True
+        self.use_algebraic_sparse_scan = False
         self.amp_terrain_schedule.enable = True
-        # One flag drives both collision fill and pit_fall (soft stage).
-        self.apply_soft_sparse_stage(self.soft_sparse_terrain)
-
-    def apply_soft_sparse_stage(self, soft: bool) -> None:
-        """Soft: filled collision + no pit_fall. Hard: open pits + pit_fall termination."""
-        self.soft_sparse_terrain = bool(soft)
-        self.use_algebraic_sparse_scan = bool(soft)
+        self.noise.noise_scales.height_scan = 0.0
         generator = self.scene.terrain_generator
         sub = getattr(generator, "sub_terrains", None) or {}
         for name in ("stepping_stones", "raised_pillars"):
             cfg = sub.get(name)
             if cfg is not None and hasattr(cfg, "soft_fill"):
-                cfg.soft_fill = bool(soft)
+                cfg.soft_fill = False
 
 
 @configclass
 class T4LocoSparseTeacherAgentCfg(T4LocoTeacherAgentCfg):
     experiment_name = "t4_loco_teacher_sparse"
-    run_name = "t_sparse_lightlp_v4"
+    run_name = "t_sparse_lightlp_s4"
     neptune_project = "t4_loco_teacher_sparse"
     wandb_project = "t4_loco_teacher_sparse"
-    max_iterations = 35000
+    max_iterations = 40000

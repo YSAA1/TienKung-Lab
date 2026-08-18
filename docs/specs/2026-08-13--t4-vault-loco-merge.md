@@ -1,6 +1,7 @@
 # Spec - T4 走跑与 1m 翻箱合并：heightscan 统一策略（LightLP V-B/V-C 复现）
 
 > 状态 / Status: user-approved (2026-08-13)
+> 货架: living 目标规格。当前执行面是 G1/G2 recovery：`docs/plans/2026-08-15--t4-vault-g1-g2-recovery-plan.md`。G3 合并仍被 G2 挡住。
 > Owner: user
 > Date: 2026-08-13
 > 来源请求 / Source request: 复现 arXiv:2608.02653（Light-Loco-Parkour）第二阶段蒸馏，

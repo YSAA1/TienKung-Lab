@@ -1,8 +1,9 @@
 # Research: T4 梅花桩与跨栏加高
 
+> **非权威。** 现行工作面见 `docs/README.md`（梅花桩 + 翻箱两条，不是「唯一翻箱」）。
 > Date: 2026-08-15
 > Question: 本项目里「梅花桩」最可能指什么？当前跨栏到底训到哪、验到哪？梅花桩该怎么训才不违反合同？跨栏再加高该先诊断还是改 range？和工作面怎么排？
-> Status: findings for a future slice（不修订 Spec/Plan/`.harness/`，也不启动训练）
+> Status: 历史 findings
 > Paper: `docs/research/2608.02653v1/auto/2608.02653v1.md`（arXiv:2608.02653，Light-Loco-Parkour）
 
 ## 1. Verdict

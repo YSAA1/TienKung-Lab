@@ -1,7 +1,8 @@
 # Research: LightLP 对照下的 T4 梅花桩完整补全方案
 
+> **非权威。** 文中「先软后硬」已撤回。现行执行：`docs/plans/2026-08-17--t4-sparse-lightlp-complete-plan.md`。
 > Date: 2026-08-17
-> Status: 方案草案；执行面已落到 plan
+> Status: 历史对照；执行面已落到 plan
 > Question: 踏石、圆桩现在都不算会；上一版「只给圆桩填坑」太保守。对照 Light-Loco-Parkour §IV 与当前代码，完整该补什么？
 > 主源: `docs/research/2608.02653v1/auto/2608.02653v1.md`
 > 取代建议: `docs/research/2026-08-16--t4-precise-foothold-literature.md` 里「先别做两阶段 / 先关步态」的顺序

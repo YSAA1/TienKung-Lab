@@ -1,8 +1,10 @@
 # Executable Plan - T4 梅花桩双 teacher 与跨栏 0.30 学生微调
 
+> **Status: archived（非权威）** — 双 teacher / S1d 路线已否。现行梅花桩执行面：`docs/plans/2026-08-17--t4-sparse-lightlp-complete-plan.md`。入口：`docs/README.md`。
+
 > Status: superseded
 > Date: 2026-08-15
-> Updated: 2026-08-17（S1d 厨房水槽失败，执行面改到 `docs/plans/2026-08-17--t4-sparse-ab-rollback-plan.md`）
+> Updated: 2026-08-18 归档；中间曾改到 rollback plan，现一并作废
 > Spec: `docs/specs/2026-08-15--t4-stepping-stones-and-hurdle-stable.md`（user-approved）
 > Branch: `t4-train`
 > Planning surface: docs plan
@@ -107,4 +109,4 @@ sparse v2 合同 pytest（本机 + nubot）
 
 ## Next skill
 
-本计划已 superseded。后续执行 `docs/plans/2026-08-17--t4-sparse-ab-rollback-plan.md`。
+本计划已 superseded。现行梅花桩执行面：`docs/plans/2026-08-17--t4-sparse-lightlp-complete-plan.md`。

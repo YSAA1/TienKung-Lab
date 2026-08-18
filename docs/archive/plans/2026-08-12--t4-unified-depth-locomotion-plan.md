@@ -1,6 +1,6 @@
 # Executable Plan - T4 特权专家到深度学生 Locomotion
 
-> **Status: archived（阶段完成，非当前 work surface）** — living work surface: `.harness/work_index.md` → `docs/plans/2026-08-15--t4-vault-g1-g2-recovery-plan.md`。
+> **Status: archived（阶段完成，非当前 work surface）** — 入口：`docs/README.md`。
 > Closure note: 用户于 2026-08-15 依据 `stage_s_head35/model_24999.pt` 在原始 MuJoCo `loco` 交互环境的人工复核关闭走跑阶段；未将该结论扩展为 100m `rule`、真机或翻箱合并验收。
 
 > Status: done（2026-08-15；走跑/深度走跑阶段按 MuJoCo loco 交互回放完成）
