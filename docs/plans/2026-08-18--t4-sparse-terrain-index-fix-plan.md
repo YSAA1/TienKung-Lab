@@ -15,7 +15,7 @@
 
 ## Active Slice
 
-阶段 1–2 代码已落地（列映射 + LightLP MDP）。当前：独立审查后等开 `t_sparse_lightlp_s5`。不启 s5、不热补 s4。
+阶段 3 已开：nubot 四卡从零 `t_sparse_lightlp_s5`（`2026-08-19_00-20-19_t_sparse_lightlp_s5`）。s4 ckpt 保留。下一步是健康门，不是能力验收。
 
 ## 已核实的 s4 现状（iter 12018，勿当梅花桩证据）
 
@@ -125,11 +125,11 @@ col 10-13 raised_pillars
   - acceptance_criteria: 10% 随机 level；Eq.4 求和；Eq.5 先超限再泄漏积分再双脚求和；opposite 为连续点积；晋级用累计路径 + 跟令质量；不改 accel 40 / 免疫 10% / algebraic
   - verification_commands: `python -m pytest tests/test_t4_sparse_reward_contracts.py tests/test_t4_terrain_curriculum.py -q`
   - success_definition: 论文第 140 行免疫和第 150 行随机 level 是两套开关；公式与 Table I / Eq.4–5 同形
-- [ ] 阶段 3：停 s4，从零开 s5（下一步）
+- [x] 阶段 3：停 s4，从零开 s5
   - acceptance_criteria: s4 tmux 停、ckpt 保留；s5 `--resume` 关；run name `t_sparse_lightlp_s5`；任务仍 `t4_loco_teacher_sparse`
   - verification_commands: nubot `tmux ls`；`logs/t4-sparse-lightlp-s5.log` 开头无 load ckpt
   - success_definition: 新 lineage 在修过的 MDP 上冷启动
-- [ ] 阶段 4：s5 健康门（非能力验收）
+- [ ] 阶段 4：s5 健康门（非能力验收）（当前）
   - acceptance_criteria: 真名踏石+圆桩 occupancy≈0.40；两侧 `hard_episodes` 早期非零；`illegal` 明显负于 s4 的 −0.001；连续地形 length/reward 不崩
   - verification_commands: TB `Terrain/stepping_stones|raised_pillars/{reach_2m_rate,hard_episodes,episodes}` 与 per-column occupancy
   - success_definition: 监控不再撒谎，稀疏列能进 hard。能力仍要 evaluator + 回放

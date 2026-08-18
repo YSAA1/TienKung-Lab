@@ -1,5 +1,9 @@
 # Progress
 
+## 2026-08-19 开训 s5
+
+停 s4 tmux，ckpt 留到 `model_12500.pt`。nubot 工作区覆盖了列映射/MDP 源码后从零启动 `t_sparse_lightlp_s5`。logdir `logs/t4_loco_teacher_sparse/2026-08-19_00-20-19_t_sparse_lightlp_s5`，无 load ckpt。TB `:8008`。
+
 ## 2026-08-18 阶段 1–2 代码落地
 
 列映射 helper `terrain_columns.py`；`t4_env` / `rewards` 走列号；TB 按真名聚合并打 `TerrainCol/*/occupancy` 与 `Curriculum/level_*_frac`。LightLP：Eq.4 求和、Eq.5 泄漏积分、opposite 点积、10% 随机 level、路径长度晋级。审查后又修了两处：play 单类型 `curriculum=False` 时全列绑定；horizon 超时重抽命令不再翻 standing/moving。相关 pytest 74 passed / 1 skipped。未开 s5、未停 s4。

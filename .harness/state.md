@@ -9,9 +9,9 @@
 
 ## 梅花桩（nubot）
 
-- 任务仍是 `t4_loco_teacher_sparse`。s4（`2026-08-18_16-01-39_t_sparse_lightlp_s4`）因 `terrain_types` 列号错位作废，iter 12018 起不再当梅花桩证据。
-- 阶段 1–2 代码已落地，待审查。s4 tmux 暂留作基线，阶段 3 再停并开 `t_sparse_lightlp_s5`。
-- s4 TB `:8007`（`http://100.100.188.39:8007/`）。读曲线必须按列重标：`Terrain/stepping_stones`=跨栏，`Terrain/raised_pillars`=踏石第一列。
+- 任务仍是 `t4_loco_teacher_sparse`。现行 lineage：`2026-08-19_00-20-19_t_sparse_lightlp_s5`，nubot 四卡从零，tmux `t4-sparse-lightlp-s5`。
+- s4（`2026-08-18_16-01-39_t_sparse_lightlp_s4`，最后 ckpt `model_12500.pt`）已停，仅作错误实现基线。
+- s5 TB `:8008`（`http://100.100.188.39:8008/`）。s4 对照仍在 `:8007`。父目录 `:8002` 也能看到两条 run。
 - Stage E `t4_loco_teacher` 1155D 未改。
 - 旧 v4 软/硬与更早 sparse ckpt 只留对照，不加载。
 - 本切片不训学生。能力声明要等 evaluator + 回放。
