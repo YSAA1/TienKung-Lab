@@ -16,3 +16,6 @@ def test_sparse_progress_evaluator_accepts_both_foothold_terrains():
     assert '"reach_2m_rate"' in source
     assert '"reach_4m_rate"' in source
     assert '"terrain_type": args_cli.terrain_type' in source
+    assert "--hard_sparse_pits" in source
+    assert "apply_soft_sparse_stage" in source
+    assert '"soft_sparse_terrain"' in source

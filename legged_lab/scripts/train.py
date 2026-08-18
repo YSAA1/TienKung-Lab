@@ -35,6 +35,14 @@ parser = argparse.ArgumentParser(description="Train an RL agent with RSL-RL.")
 parser.add_argument("--task", type=str, default=None, help="Name of the task.")
 parser.add_argument("--num_envs", type=int, default=None, help="Number of environments to simulate.")
 parser.add_argument("--seed", type=int, default=None, help="Seed used for the environment")
+parser.add_argument(
+    "--hard_sparse_pits",
+    action="store_true",
+    help=(
+        "For t4_loco_teacher_sparse: open real pits (soft_fill=False) and enable pit_fall. "
+        "Use when switching a soft-stage lineage to hard sparse training."
+    ),
+)
 
 # append RSL-RL cli arguments
 cli_args.add_rsl_rl_args(parser)
@@ -76,6 +84,13 @@ def train():
 
     if args_cli.num_envs is not None:
         env_cfg.scene.num_envs = args_cli.num_envs
+
+    if args_cli.hard_sparse_pits:
+        apply_soft = getattr(env_cfg, "apply_soft_sparse_stage", None)
+        if apply_soft is None:
+            raise ValueError("--hard_sparse_pits requires a sparse env cfg with apply_soft_sparse_stage()")
+        apply_soft(False)
+        print("[INFO] Sparse hard pits enabled: soft_fill=False, pit_fall on, algebraic soft scan off")
 
     agent_cfg = update_rsl_rl_cfg(agent_cfg, args_cli)
     env_cfg.scene.seed = agent_cfg.seed

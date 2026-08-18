@@ -21,7 +21,7 @@
 
 ## Active Slice
 
-阶段 3：nubot 从零软阶段开训（`t_sparse_lightlp_v4`，4096 env × 35000 iter）。阶段 1–2 代码与合同已交付。
+阶段 4：真坑续训（`t_sparse_lightlp_v4_hard`，自 soft `model_25000` 再 +15000 iter → 显示 25000/40000）。软阶段固定 eval 已过；真坑对照曾 0/16。
 
 ## 配方（一次打齐，不是再拧一颗螺丝）
 
