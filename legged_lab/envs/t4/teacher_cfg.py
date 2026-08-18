@@ -231,6 +231,7 @@ class T4TeacherRewardCfg:
 class T4LocoTeacherEnvCfg:
     policy_role: str = "teacher"
     device: str = "cuda:0"
+    random_level_reset_fraction: float = 0.0
     scene: BaseSceneCfg = BaseSceneCfg(
         max_episode_length_s=20.0,
         # Formal starting point for the first Stage E lineage; the capacity probe
@@ -484,6 +485,7 @@ class T4LocoSparseTeacherEnvCfg(T4LocoTeacherEnvCfg):
     use_lightlp_terminations: bool = True
     use_algebraic_sparse_scan: bool = False
     terminate_on_pit_fall: bool = False
+    random_level_reset_fraction: float = 0.10
 
     def __post_init__(self):
         self.scene.terrain_generator = T4_STAGE_E_SPARSE_TERRAINS_CFG
@@ -499,6 +501,7 @@ class T4LocoSparseTeacherEnvCfg(T4LocoTeacherEnvCfg):
         self.append_critic_immunity = True
         self.use_lightlp_terminations = True
         self.use_algebraic_sparse_scan = False
+        self.random_level_reset_fraction = 0.10
         self.amp_terrain_schedule.enable = True
         self.noise.noise_scales.height_scan = 0.0
         generator = self.scene.terrain_generator
@@ -512,7 +515,7 @@ class T4LocoSparseTeacherEnvCfg(T4LocoTeacherEnvCfg):
 @configclass
 class T4LocoSparseTeacherAgentCfg(T4LocoTeacherAgentCfg):
     experiment_name = "t4_loco_teacher_sparse"
-    run_name = "t_sparse_lightlp_s4"
+    run_name = "t_sparse_lightlp_s5"
     neptune_project = "t4_loco_teacher_sparse"
     wandb_project = "t4_loco_teacher_sparse"
     max_iterations = 40000

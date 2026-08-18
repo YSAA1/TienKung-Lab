@@ -29,10 +29,10 @@ T4 约 1.4 m 站高，Trunk 在 0.9 m。资产在 `legged_lab/assets/t4/`，关�
 ## 还在推进
 
 1. **梅花桩**（nubot）  
-   LightLP §IV 单阶段真洞老师 `t4_loco_teacher_sparse` / `t_sparse_lightlp_s4`。  
+   LightLP §IV 单阶段真洞老师 `t4_loco_teacher_sparse`。s4 因列号错位作废；现行是修映射 + MDP 后从零 `t_sparse_lightlp_s5`。  
    Actor 1937D（scan 史 ×5 + 接触）；足底 scan 只给 Critic。Stage E 1155D 不改。  
    本切片 **不** 训梅花桩学生。  
-   计划：`docs/plans/2026-08-17--t4-sparse-lightlp-complete-plan.md`。
+   计划：`docs/plans/2026-08-18--t4-sparse-terrain-index-fix-plan.md`。
 
 2. **翻箱**（zhuoqun）  
    G1 mimic 专家 → G2 同 1155D 观测的 heightscan 技能。  

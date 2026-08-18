@@ -38,15 +38,18 @@ def test_illegal_footstep_fraction():
 
 
 def test_opposite_direction_and_foot_accel_ema():
-    assert sig.opposite_direction(0.8, -0.2) == 1.0
-    assert sig.opposite_direction(0.8, 0.2) == 0.0
-    assert sig.opposite_direction(0.0, -1.0) == 0.0
-    ema, excess = sig.foot_accel_ema_step(0.0, 40.0, tau_s=0.06, dt_s=0.02, threshold_mps2=30.0)
-    assert ema > 0.0
-    assert excess >= 0.0
-    ema2, excess2 = sig.foot_accel_ema_step(ema, 40.0, tau_s=0.06, dt_s=0.02, threshold_mps2=30.0)
-    assert ema2 >= ema
-    assert excess2 >= 0.0
+    assert sig.opposite_direction((0.8, 0.0), (-0.2, 0.0)) == pytest.approx(0.2)
+    assert sig.opposite_direction((0.8, 0.0), (0.2, 0.0)) == 0.0
+    assert sig.opposite_direction((0.0, 0.0), (-1.0, 0.0)) == 0.0
+    first = sig.foot_accel_ema_step(0.0, (40.0, 40.0), tau_s=0.06, dt_s=0.02, threshold_mps2=30.0)
+    assert first == pytest.approx(20.0)
+    second = sig.foot_accel_ema_step(first, (40.0, 40.0), tau_s=0.06, dt_s=0.02, threshold_mps2=30.0)
+    decay = __import__("math").exp(-0.02 / 0.06)
+    assert second == pytest.approx(decay * 20.0 + 20.0)
+    assert sig.illegal_from_foot_fractions(0.5, 0.0) == 0.5
+    assert sig.illegal_from_foot_fractions(0.5, 0.5) == 1.0
+    flags = sig.random_level_reset_mask([0.05, 0.2, 0.09], fraction=0.10)
+    assert flags == [True, False, True]
 
 
 def test_sparse_pit_fall_only_applies_to_sparse_terrains():

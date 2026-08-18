@@ -49,8 +49,10 @@ from legged_lab.assets.t4.schemas import (
 )
 from legged_lab.envs.t4.amp_features import T4AmpFeatureBuilder
 from legged_lab.envs.t4.curriculum import (
+    LIGHTLP_TRACKING_WELL_THRESHOLD,
     STANDING_COMMAND_THRESHOLD,
     gait_tracking_scale,
+    lightlp_terrain_level_moves,
     terrain_level_moves,
 )
 from legged_lab.envs.t4.mdp.sparse_signals import (
@@ -58,8 +60,17 @@ from legged_lab.envs.t4.mdp.sparse_signals import (
     LIGHTLP_IMMUNITY_PERIOD,
     impact_immunity_from_draws,
     lightlp_timeout_and_reset,
+    random_level_reset_mask,
     sparse_curriculum_moves,
     sparse_pit_fall_mask,
+)
+from legged_lab.envs.t4.terrain_columns import (
+    HURDLE_TERRAIN_NAMES,
+    SPARSE_FOOTHOLD_NAMES,
+    assign_curriculum_columns,
+    columns_named,
+    name_to_columns,
+    unique_names,
 )
 from legged_lab.envs.t4.teacher_cfg import T4LocoTeacherEnvCfg
 from legged_lab.terrains.stepping_stone_layout import (
@@ -147,17 +158,34 @@ class T4LocoEnv(VecEnv):
         self.command_generator = UniformVelocityCommand(cfg=command_cfg, env=self)
         self.reward_manager = RewardManager(self.cfg.reward, self)
         self.hurdle_terrain_type_id = None
+        self.hurdle_terrain_type_ids: list[int] = []
         self.sparse_foothold_type_ids: list[int] = []
+        self.stone_column_ids: list[int] = []
+        self.pillar_column_ids: list[int] = []
+        self.terrain_column_names: list[str] = []
+        self.terrain_name_to_columns: dict[str, list[int]] = {}
         generator = getattr(self.cfg.scene, "terrain_generator", None)
         sub = getattr(generator, "sub_terrains", None) if generator is not None else None
         self.terrain_type_names = list(sub.keys()) if sub else []
-        if sub:
-            names = self.terrain_type_names
-            if "hurdles" in names:
-                self.hurdle_terrain_type_id = names.index("hurdles")
-            for name in ("stepping_stones", "raised_pillars"):
-                if name in names:
-                    self.sparse_foothold_type_ids.append(names.index(name))
+        num_cols = int(getattr(generator, "num_cols", 0) or 0) if generator is not None else 0
+        if sub and num_cols > 0:
+            proportions = {name: float(getattr(cfg, "proportion", 0.0)) for name, cfg in sub.items()}
+            if bool(getattr(generator, "curriculum", False)):
+                self.terrain_column_names = assign_curriculum_columns(proportions, num_cols)
+            elif len(sub) == 1:
+                # play/eval often disable curriculum and keep one sub-terrain; every column is that type.
+                only = next(iter(sub))
+                self.terrain_column_names = [only] * num_cols
+            if self.terrain_column_names:
+                self.terrain_type_names = unique_names(self.terrain_column_names, preferred_order=list(sub.keys()))
+                self.terrain_name_to_columns = name_to_columns(self.terrain_column_names, self.terrain_type_names)
+                self.sparse_foothold_type_ids = columns_named(self.terrain_column_names, *SPARSE_FOOTHOLD_NAMES)
+                self.stone_column_ids = columns_named(self.terrain_column_names, "stepping_stones")
+                self.pillar_column_ids = columns_named(self.terrain_column_names, "raised_pillars")
+                self.hurdle_terrain_type_ids = columns_named(self.terrain_column_names, *HURDLE_TERRAIN_NAMES)
+                self.hurdle_terrain_type_id = (
+                    self.hurdle_terrain_type_ids[0] if self.hurdle_terrain_type_ids else None
+                )
 
         self.init_buffers()
 
@@ -290,6 +318,13 @@ class T4LocoEnv(VecEnv):
         self.episode_max_radial_dist = torch.zeros(
             self.num_envs, dtype=torch.float, device=self.device, requires_grad=False
         )
+        self.episode_path_length = torch.zeros(self.num_envs, dtype=torch.float, device=self.device, requires_grad=False)
+        self.episode_tracking_sum = torch.zeros(
+            self.num_envs, dtype=torch.float, device=self.device, requires_grad=False
+        )
+        self.episode_tracking_steps = torch.zeros(
+            self.num_envs, dtype=torch.float, device=self.device, requires_grad=False
+        )
         # Evaluators need the terminal state before ``reset()`` overwrites the
         # just-finished environment with its initial pose.
         self.last_step_root_pos_w = torch.zeros(
@@ -312,9 +347,7 @@ class T4LocoEnv(VecEnv):
         self.avg_feet_speed_per_step = torch.zeros(
             self.num_envs, len(self.feet_cfg.body_ids), dtype=torch.float, device=self.device, requires_grad=False
         )
-        self.foot_accel_ema = torch.zeros(
-            self.num_envs, len(self.feet_body_ids), dtype=torch.float, device=self.device, requires_grad=False
-        )
+        self.foot_accel_ema = torch.zeros(self.num_envs, dtype=torch.float, device=self.device, requires_grad=False)
         self.prev_foot_lin_vel_w = torch.zeros(
             self.num_envs, len(self.feet_body_ids), 3, dtype=torch.float, device=self.device, requires_grad=False
         )
@@ -409,15 +442,20 @@ class T4LocoEnv(VecEnv):
         )
         return current_actor_obs, current_critic_obs
 
+    def _columns_mask(self, terrain_types: torch.Tensor, column_ids: list[int]) -> torch.Tensor:
+        mask = torch.zeros(terrain_types.shape[0], dtype=torch.bool, device=terrain_types.device)
+        for column_id in column_ids:
+            mask |= terrain_types == column_id
+        return mask
+
     def refresh_sparse_tile_mask(self) -> torch.Tensor:
         """Update and return the per-env mask of stepping-stone / raised-pillar tiles."""
         terrain_types = getattr(getattr(self.scene, "terrain", None), "terrain_types", None)
-        mask = torch.zeros(self.num_envs, dtype=torch.bool, device=self.device)
         if self.sparse_foothold_type_ids and terrain_types is not None:
-            for type_id in self.sparse_foothold_type_ids:
-                mask |= terrain_types == type_id
-        self.sparse_tile_mask = mask
-        return mask
+            self.sparse_tile_mask = self._columns_mask(terrain_types, self.sparse_foothold_type_ids)
+        else:
+            self.sparse_tile_mask = torch.zeros(self.num_envs, dtype=torch.bool, device=self.device)
+        return self.sparse_tile_mask
 
     def compute_teacher_terrain_privilege(self):
         """Forward-asymmetric local height scan, clipped and invalid-filled."""
@@ -450,8 +488,6 @@ class T4LocoEnv(VecEnv):
             return on_support
         difficulty = self.terrain_difficulty()
         terrain_types = self.scene.terrain.terrain_types
-        stone_type = self.sparse_foothold_type_ids[0] if self.sparse_foothold_type_ids else -1
-        pillar_type = self.sparse_foothold_type_ids[1] if len(self.sparse_foothold_type_ids) > 1 else stone_type
         origins = self.scene.env_origins[:, :2]
         c = 0.5 * T4_STONE_TILE_SIZE
         half_p = 0.5 * T4_STONE_PLATFORM_WIDTH
@@ -460,7 +496,7 @@ class T4LocoEnv(VecEnv):
         rx = tile_x - c
         ry = tile_y - c
         on_platform = (rx.abs() <= half_p) & (ry.abs() <= half_p)
-        is_stone = terrain_types == stone_type
+        is_stone = self._columns_mask(terrain_types, self.stone_column_ids)
         pitch = torch.where(
             is_stone,
             (1.0 - difficulty) * T4_FOOTHOLD_PITCH_RANGE[0] + difficulty * T4_FOOTHOLD_PITCH_RANGE[1],
@@ -557,7 +593,7 @@ class T4LocoEnv(VecEnv):
             on_support = on_support | (~sparse).unsqueeze(1)
             frac = (~on_support).float().mean(dim=-1)
             penalties.append(frac * in_contact[:, foot_i].float())
-        penalty = torch.stack(penalties, dim=-1).mean(dim=-1) * sparse.float()
+        penalty = torch.stack(penalties, dim=-1).sum(dim=-1) * sparse.float()
         return penalty
 
     def update_foot_accel_penalty(
@@ -566,15 +602,15 @@ class T4LocoEnv(VecEnv):
         threshold_mps2: float = 30.0,
         asset_cfg: SceneEntityCfg | None = None,
     ) -> torch.Tensor:
-        """EMA of foot |a|; penalty is mean excess over ``threshold_mps2``."""
+        """LightLP Eq. (5): leaky integral of summed per-foot |a| excess."""
         foot_vel = self.robot.data.body_lin_vel_w[:, self.feet_body_ids, :]
         accel = (foot_vel - self.prev_foot_lin_vel_w) / max(self.step_dt, 1.0e-6)
         self.prev_foot_lin_vel_w.copy_(foot_vel)
         magnitude = torch.norm(accel, dim=-1)
-        alpha = 1.0 - math.exp(-self.step_dt / max(tau_s, 1.0e-6))
-        self.foot_accel_ema = (1.0 - alpha) * self.foot_accel_ema + alpha * magnitude
-        excess = torch.clamp(self.foot_accel_ema - threshold_mps2, min=0.0)
-        return excess.mean(dim=-1)
+        excess_sum = torch.clamp(magnitude - threshold_mps2, min=0.0).sum(dim=-1)
+        decay = math.exp(-self.step_dt / max(tau_s, 1.0e-6))
+        self.foot_accel_ema = decay * self.foot_accel_ema + excess_sum
+        return self.foot_accel_ema
 
     def compute_observations(self):
         current_actor_obs, current_critic_obs = self.compute_current_observations()
@@ -675,6 +711,12 @@ class T4LocoEnv(VecEnv):
                 self._resample_impact_immunity()
         radial_dist = torch.norm(self.robot.data.root_pos_w[:, :2] - self.scene.env_origins[:, :2], dim=1)
         self.episode_max_radial_dist = torch.maximum(self.episode_max_radial_dist, radial_dist)
+        step_delta = torch.norm(self.robot.data.root_pos_w[:, :2] - self.last_step_root_pos_w[:, :2], dim=1)
+        self.episode_path_length = self.episode_path_length + step_delta
+        tracking = self._gait_tracking_scale()
+        moving_cmd = torch.norm(self.command_generator.command[:, :2], dim=1) > STANDING_COMMAND_THRESHOLD
+        self.episode_tracking_sum = self.episode_tracking_sum + tracking
+        self.episode_tracking_steps = self.episode_tracking_steps + moving_cmd.float()
         self._update_gait()
 
         self.command_generator.compute(self.step_dt)
@@ -821,27 +863,52 @@ class T4LocoEnv(VecEnv):
         self.action_buffer.reset(env_ids)
         self.episode_length_buf[env_ids] = 0
         self.episode_max_radial_dist[env_ids] = 0.0
+        self.episode_path_length[env_ids] = 0.0
+        self.episode_tracking_sum[env_ids] = 0.0
+        self.episode_tracking_steps[env_ids] = 0.0
         self.gait_time[env_ids] = 0.0
 
         self.scene.write_data_to_sim()
         self.sim.forward()
+        self.last_step_root_pos_w[env_ids] = self.robot.data.root_pos_w[env_ids]
+        self.last_step_root_quat_w[env_ids] = self.robot.data.root_quat_w[env_ids]
 
     def update_terrain_levels(self, env_ids):
         """Apply terrain curriculum and update recent per-bucket behavior metrics."""
         max_dist = self.episode_max_radial_dist[env_ids]
+        path_length = self.episode_path_length[env_ids]
+        tracking_steps = self.episode_tracking_steps[env_ids]
+        tracking_mean = self.episode_tracking_sum[env_ids] / tracking_steps.clamp(min=1.0)
+        tracking_mean = torch.where(tracking_steps > 0.0, tracking_mean, torch.zeros_like(tracking_mean))
         command_norm = torch.norm(self.command_generator.command[env_ids, :2], dim=1)
+        # Horizon timeout resamples the command on the same step; use the episode
+        # moving history so a fresh stand/move draw cannot flip promotion.
+        if self.use_lightlp_terminations:
+            command_norm = torch.where(
+                tracking_steps > 0.0,
+                torch.clamp(command_norm, min=STANDING_COMMAND_THRESHOLD + 1.0e-3),
+                torch.zeros_like(command_norm),
+            )
         moving = command_norm > STANDING_COMMAND_THRESHOLD
-        move_up, move_down = terrain_level_moves(
-            max_radial_dist=max_dist,
-            command_lin_vel_norm=command_norm,
-            episode_length_s=self.max_episode_length_s,
-            tile_size=self.scene.terrain.cfg.terrain_generator.size[0],
-        )
+        tile_size = self.scene.terrain.cfg.terrain_generator.size[0]
+        if self.use_lightlp_terminations:
+            move_up, move_down = lightlp_terrain_level_moves(
+                path_length=path_length,
+                tracking_mean=tracking_mean,
+                command_lin_vel_norm=command_norm,
+                tile_size=tile_size,
+                tracking_threshold=LIGHTLP_TRACKING_WELL_THRESHOLD,
+            )
+        else:
+            move_up, move_down = terrain_level_moves(
+                max_radial_dist=max_dist,
+                command_lin_vel_norm=command_norm,
+                episode_length_s=self.max_episode_length_s,
+                tile_size=tile_size,
+            )
         terrain_types = self.scene.terrain.terrain_types[env_ids].long()
         terrain_levels = self.scene.terrain.terrain_levels[env_ids].long()
-        is_sparse = torch.zeros(len(env_ids), dtype=torch.bool, device=self.device)
-        for type_id in self.sparse_foothold_type_ids:
-            is_sparse |= terrain_types == type_id
+        is_sparse = self._columns_mask(terrain_types, self.sparse_foothold_type_ids)
         timed_out = self.time_out_buf[env_ids]
         pit_fall = self.pit_fall_buf[env_ids]
         if not self.use_lightlp_terminations:
@@ -864,12 +931,36 @@ class T4LocoEnv(VecEnv):
             max_dist=max_dist,
         )
         self.scene.terrain.update_env_origins(env_ids, move_up, move_down)
+        self._apply_random_level_resets(env_ids)
         logs = {
             "Curriculum/terrain_levels": torch.mean(self.scene.terrain.terrain_levels.float()),
             "Curriculum/episode_max_radial_dist": torch.mean(max_dist),
+            "Curriculum/episode_path_length": torch.mean(path_length),
+            "Curriculum/episode_tracking_mean": torch.mean(tracking_mean),
         }
         logs.update(self._terrain_metrics_log())
         return logs
+
+    def _apply_random_level_resets(self, env_ids: torch.Tensor) -> None:
+        """Place a fraction of resets on a random row, independent of performance."""
+        fraction = float(getattr(self.cfg, "random_level_reset_fraction", 0.0) or 0.0)
+        if fraction <= 0.0 or len(env_ids) == 0:
+            return
+        terrain = self.scene.terrain
+        if getattr(terrain, "terrain_origins", None) is None:
+            return
+        draws = torch.rand(len(env_ids), device=self.device)
+        pick = random_level_reset_mask(draws, fraction=fraction)
+        if not bool(pick.any()):
+            return
+        chosen = env_ids[pick]
+        max_level = int(terrain.max_terrain_level)
+        terrain.terrain_levels[chosen] = torch.randint(
+            0, max_level, (len(chosen),), device=self.device, dtype=terrain.terrain_levels.dtype
+        )
+        terrain.env_origins[chosen] = terrain.terrain_origins[
+            terrain.terrain_levels[chosen], terrain.terrain_types[chosen]
+        ]
 
     def _update_terrain_metrics(
         self,
@@ -899,10 +990,11 @@ class T4LocoEnv(VecEnv):
             max_dist,
         )
 
-        for type_id in range(len(self.terrain_type_names)):
-            type_mask = moving & (terrain_types == type_id)
+        for type_id, name in enumerate(self.terrain_type_names):
+            columns = self.terrain_name_to_columns.get(name, [])
+            type_mask = moving & self._columns_mask(terrain_types, columns)
             self._update_terrain_metric_slot(type_id, 0, type_mask, values)
-            if type_id not in self.sparse_foothold_type_ids:
+            if name not in SPARSE_FOOTHOLD_NAMES:
                 continue
             for band_id in range(len(self._TERRAIN_METRIC_BANDS)):
                 self._update_terrain_metric_slot(type_id, 1 + band_id, type_mask & (band_ids == band_id), values)
@@ -927,13 +1019,30 @@ class T4LocoEnv(VecEnv):
             for metric_id, metric in enumerate(self._TERRAIN_METRIC_FIELDS):
                 logs[f"Terrain/{name}/{metric}"] = values[metric_id]
             logs[f"Terrain/{name}/episodes"] = self.terrain_metric_episodes[type_id, 0].float()
-            if type_id not in self.sparse_foothold_type_ids:
+            if name not in SPARSE_FOOTHOLD_NAMES:
                 continue
             for band_id, band in enumerate(self._TERRAIN_METRIC_BANDS, start=1):
                 band_values = self.terrain_metric_ema[type_id, band_id]
                 for metric_id, metric in enumerate(self._TERRAIN_METRIC_FIELDS):
                     logs[f"Terrain/{name}/{band}_{metric}"] = band_values[metric_id]
                 logs[f"Terrain/{name}/{band}_episodes"] = self.terrain_metric_episodes[type_id, band_id].float()
+        terrain = getattr(self.scene, "terrain", None)
+        types_all = getattr(terrain, "terrain_types", None)
+        levels_all = getattr(terrain, "terrain_levels", None)
+        if types_all is not None and self.terrain_column_names:
+            for column_id, column_name in enumerate(self.terrain_column_names):
+                on_col = types_all == column_id
+                logs[f"TerrainCol/{column_id:02d}_{column_name}/occupancy"] = on_col.float().mean()
+                if levels_all is not None and bool(on_col.any()):
+                    logs[f"TerrainCol/{column_id:02d}_{column_name}/mean_level"] = levels_all[on_col].float().mean()
+                else:
+                    logs[f"TerrainCol/{column_id:02d}_{column_name}/mean_level"] = torch.zeros(
+                        (), device=self.device, dtype=torch.float
+                    )
+        if levels_all is not None:
+            max_level = max(1, self.cfg.scene.terrain_generator.num_rows - 1)
+            for level in range(max_level + 1):
+                logs[f"Curriculum/level_{level}_frac"] = (levels_all == level).float().mean()
         return logs
 
     """
@@ -972,6 +1081,7 @@ class T4LocoEnv(VecEnv):
         else:
             scale = self._decay_scale(self.terrain_difficulty(), schedule.decay_start_difficulty, schedule.min_scale)
         if self.sparse_foothold_type_ids:
+            self.refresh_sparse_tile_mask()
             scale = scale * (~self.sparse_tile_mask).float()
         return scale
 

@@ -1,5 +1,13 @@
 # Progress
 
+## 2026-08-18 阶段 1–2 代码落地
+
+列映射 helper `terrain_columns.py`；`t4_env` / `rewards` 走列号；TB 按真名聚合并打 `TerrainCol/*/occupancy` 与 `Curriculum/level_*_frac`。LightLP：Eq.4 求和、Eq.5 泄漏积分、opposite 点积、10% 随机 level、路径长度晋级。审查后又修了两处：play 单类型 `curriculum=False` 时全列绑定；horizon 超时重抽命令不再翻 standing/moving。相关 pytest 74 passed / 1 skipped。未开 s5、未停 s4。
+
+## 2026-08-18 s4 列号审计与 TB 重读
+
+IsaacLab 2.1.0 `terrain_types` 是 20 列列号。s4 代码用 13 个 `sub_terrains` 下标，TB 名整体错位。nubot EventAccumulator @ iter 12018：连续地形 reach_2m 0.70–0.77、progress 3.3–3.5 m；四列踏石与三列可见圆桩 reach_2m 0.02–0.05、progress 1.17–1.30 m。他人「踏石 71%」实为跨栏列。执行面改到 `docs/plans/2026-08-18--t4-sparse-terrain-index-fix-plan.md`。
+
 ## 2026-08-18 文档收口与 s4
 
 入口改为 `docs/README.md`。S1d / rollback / 软硬 v4 计划已进 `docs/archive/plans/`。现行训练 `t_sparse_lightlp_s4`（nubot 四卡，真洞从零）。翻箱仍走 G1/G2 recovery。

@@ -3,14 +3,15 @@
 - Living index: `docs/README.md`
 - Context: `PROJECT_CONTEXT.md`
 - Dual track（各一份计划，不是双真相）:
-  - 梅花桩：`docs/plans/2026-08-17--t4-sparse-lightlp-complete-plan.md`
+  - 梅花桩：`docs/plans/2026-08-18--t4-sparse-terrain-index-fix-plan.md`（s4 计划已 superseded）
   - 翻箱：`docs/plans/2026-08-15--t4-vault-g1-g2-recovery-plan.md`
 - Approved specs: `docs/specs/2026-08-12--t4-unified-depth-locomotion.md`（走跑/学生合同）、`docs/specs/2026-08-13--t4-vault-loco-merge.md`（G1→G2→G3 目标）、`docs/specs/2026-08-15--t4-stepping-stones-and-hurdle-stable.md`（梅花桩目标；执行已改单阶段）
 
 ## 梅花桩（nubot）
 
-- 任务 `t4_loco_teacher_sparse`，run `t_sparse_lightlp_s4`，四卡从零，真洞，无 soft/hard。
-- tmux `t4-sparse-lightlp-s4`，日志 `logs/t4-sparse-lightlp-s4.log`，TB `:8007`（`http://100.100.188.39:8007/`）。
+- 任务仍是 `t4_loco_teacher_sparse`。s4（`2026-08-18_16-01-39_t_sparse_lightlp_s4`）因 `terrain_types` 列号错位作废，iter 12018 起不再当梅花桩证据。
+- 阶段 1–2 代码已落地，待审查。s4 tmux 暂留作基线，阶段 3 再停并开 `t_sparse_lightlp_s5`。
+- s4 TB `:8007`（`http://100.100.188.39:8007/`）。读曲线必须按列重标：`Terrain/stepping_stones`=跨栏，`Terrain/raised_pillars`=踏石第一列。
 - Stage E `t4_loco_teacher` 1155D 未改。
 - 旧 v4 软/硬与更早 sparse ckpt 只留对照，不加载。
 - 本切片不训学生。能力声明要等 evaluator + 回放。

@@ -29,6 +29,8 @@ from __future__ import annotations
 # Commands with a planar norm below this are standing envs (matches the
 # `standing_env_fraction` logging convention).
 STANDING_COMMAND_THRESHOLD = 0.1
+# LightLP §IV-C3: mean planar-tracking kernel above this counts as "tracking well".
+LIGHTLP_TRACKING_WELL_THRESHOLD = 0.5
 
 
 def terrain_level_moves(
@@ -64,6 +66,28 @@ def terrain_level_moves(
     demote_dist = commanded_half_dist.clip(max=promote_dist * 0.5)
     move_down = (max_radial_dist < demote_dist) & moving & ~move_up
 
+    return move_up, move_down
+
+
+def lightlp_terrain_level_moves(
+    path_length,
+    tracking_mean,
+    command_lin_vel_norm,
+    tile_size: float,
+    tracking_threshold: float = LIGHTLP_TRACKING_WELL_THRESHOLD,
+    standing_threshold: float = STANDING_COMMAND_THRESHOLD,
+):
+    """LightLP §IV-C3 level moves: cumulative path length and command tracking.
+
+    Promotion requires walking more than half a cell *and* tracking the command
+    well. Poor tracking demotes. Standing commands do neither. Distance is
+    episode-cumulative path length, not peak radial displacement.
+    """
+    promote_dist = tile_size / 2
+    moving = command_lin_vel_norm > standing_threshold
+    tracking_well = tracking_mean >= tracking_threshold
+    move_up = (path_length > promote_dist) & tracking_well & moving
+    move_down = (~tracking_well) & moving & ~move_up
     return move_up, move_down
 
 

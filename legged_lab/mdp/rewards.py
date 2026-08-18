@@ -261,7 +261,7 @@ def illegal_footstep(
     contact_threshold: float = 0.5,
     sensor_cfg: SceneEntityCfg = SceneEntityCfg("contact_sensor", body_names=".*_foot_link"),
 ) -> torch.Tensor:
-    """Mean fraction of downward foot rays that miss support by more than ``delta``.
+    """Eq. (4): sum over contacted feet of the fraction of rays that miss support.
 
     Soft-stage sparse tiles use the algebraic true-hole map when the env sets
     ``use_algebraic_sparse_scan`` (filled collision would otherwise silence rays).
@@ -293,13 +293,14 @@ def illegal_footstep(
         frac = bad.float().mean(dim=-1)
         contact_i = in_contact[:, min(i, in_contact.shape[1] - 1)]
         penalties.append(frac * contact_i.float())
-    penalty = torch.stack(penalties, dim=-1).mean(dim=-1)
+    penalty = torch.stack(penalties, dim=-1).sum(dim=-1)
     type_ids = getattr(env, "sparse_foothold_type_ids", None)
     types = getattr(getattr(env.scene, "terrain", None), "terrain_types", None)
-    if type_ids and types is not None:
+    if type_ids is not None:
         mask = torch.zeros(env.num_envs, dtype=torch.bool, device=env.device)
-        for type_id in type_ids:
-            mask |= types == type_id
+        if type_ids and types is not None:
+            for type_id in type_ids:
+                mask |= types == type_id
         penalty = penalty * mask.float()
     return penalty
 
@@ -309,14 +310,17 @@ def opposite_direction(
     cmd_threshold: float = 0.1,
     asset_cfg: SceneEntityCfg = SceneEntityCfg("robot"),
 ) -> torch.Tensor:
-    """1 when body-forward velocity opposes a non-trivial forward command."""
+    """LightLP Table I: max(0, -v · v̂) against the commanded planar direction."""
     asset: Articulation = env.scene[asset_cfg.name]
     vel_yaw = math_utils.quat_rotate_inverse(
         math_utils.yaw_quat(asset.data.root_quat_w), asset.data.root_lin_vel_w[:, :3]
     )
-    cmd = env.command_generator.command[:, 0]
-    active = cmd.abs() >= cmd_threshold
-    return (active & (cmd * vel_yaw[:, 0] < 0.0)).to(dtype=vel_yaw.dtype)
+    cmd_xy = env.command_generator.command[:, :2]
+    cmd_norm = torch.norm(cmd_xy, dim=-1)
+    active = cmd_norm >= cmd_threshold
+    vhat = cmd_xy / cmd_norm.clamp(min=1.0e-6).unsqueeze(-1)
+    against = (-(vel_yaw[:, :2] * vhat).sum(dim=-1)).clamp(min=0.0)
+    return against * active.to(dtype=against.dtype)
 
 
 def foot_acceleration_penalty(
@@ -333,7 +337,7 @@ def foot_acceleration_penalty(
     # Fallback without EMA state: instantaneous |a| excess of both feet.
     accel = asset.data.body_lin_acc_w[:, asset_cfg.body_ids, :]
     magnitude = torch.norm(accel, dim=-1)
-    return torch.mean(torch.clamp(magnitude - threshold_mps2, min=0.0), dim=-1)
+    return torch.sum(torch.clamp(magnitude - threshold_mps2, min=0.0), dim=-1)
 
 
 def hurdle_bar_contact(
@@ -353,13 +357,18 @@ def hurdle_bar_contact(
     foot_z = env.robot.data.body_pos_w[:, foot_ids, 2]
     mid_air_contact = in_contact & (foot_z > z_range[0]) & (foot_z < z_range[1])
     hit = mid_air_contact.any(dim=-1)
-    type_id = getattr(env, "hurdle_terrain_type_id", None)
-    if type_id is None or not hasattr(env.scene, "terrain"):
+    type_ids = getattr(env, "hurdle_terrain_type_ids", None)
+    if type_ids is None:
+        legacy_id = getattr(env, "hurdle_terrain_type_id", None)
+        type_ids = [legacy_id] if legacy_id is not None else None
+    if type_ids is None or not hasattr(env.scene, "terrain"):
         return hit.float()
     types = getattr(env.scene.terrain, "terrain_types", None)
-    if types is None:
-        return hit.float()
-    return hit.float() * (types == type_id).float()
+    mask = torch.zeros(env.num_envs, dtype=torch.bool, device=env.device)
+    if type_ids and types is not None:
+        for type_id in type_ids:
+            mask |= types == type_id
+    return hit.float() * mask.float()
 
 
 def feet_y_distance(env: TienKungEnv, target: float = 0.299) -> torch.Tensor:

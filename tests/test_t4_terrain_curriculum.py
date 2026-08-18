@@ -29,7 +29,9 @@ _spec.loader.exec_module(_curriculum)
 
 STANDING_COMMAND_THRESHOLD = _curriculum.STANDING_COMMAND_THRESHOLD
 terrain_level_moves = _curriculum.terrain_level_moves
+lightlp_terrain_level_moves = _curriculum.lightlp_terrain_level_moves
 gait_tracking_scale = _curriculum.gait_tracking_scale
+LIGHTLP_TRACKING_WELL_THRESHOLD = _curriculum.LIGHTLP_TRACKING_WELL_THRESHOLD
 
 # Stage E values (teacher_cfg.py / T4_STAGE_E_TERRAINS_CFG).
 EPISODE_LENGTH_S = 20.0
@@ -128,3 +130,32 @@ def test_still_robot_on_fast_command_near_zero_gait_scale():
     actual = np.zeros((1, 2))
     scale = gait_tracking_scale(cmd, actual, tracking_std=0.5)
     assert scale[0] < 0.05
+
+
+def test_lightlp_promotes_on_path_length_and_tracking():
+    path = np.array([4.01, 4.01, 3.0, 5.0])
+    tracking = np.array([1.0, 0.2, 1.0, 1.0])
+    cmd = np.array([0.8, 0.8, 0.8, 0.0])
+    move_up, move_down = lightlp_terrain_level_moves(path, tracking, cmd, TILE_SIZE)
+    np.testing.assert_array_equal(move_up, np.array([True, False, False, False]))
+    np.testing.assert_array_equal(move_down, np.array([False, True, False, False]))
+
+
+def test_lightlp_timeout_uses_episode_moving_not_fresh_command():
+    """A horizon resample to standing must not erase a moving tracked episode."""
+    path = np.array([5.0, 5.0])
+    tracking = np.array([1.0, 1.0])
+    # Fresh command after resample: first env now "standing", second still moving.
+    # The env layer maps tracking_steps>0 to a moving command_norm before this call.
+    cmd = np.array([0.5, 0.5])
+    move_up, move_down = lightlp_terrain_level_moves(path, tracking, cmd, TILE_SIZE)
+    assert move_up.all() and not move_down.any()
+
+
+def test_lightlp_does_not_use_radial_displacement():
+    # Long path that loops back (radial would be small) still promotes if tracking is good.
+    path = np.array([5.0])
+    tracking = np.array([LIGHTLP_TRACKING_WELL_THRESHOLD])
+    cmd = np.array([0.5])
+    move_up, move_down = lightlp_terrain_level_moves(path, tracking, cmd, TILE_SIZE)
+    assert bool(move_up[0]) and not bool(move_down[0])

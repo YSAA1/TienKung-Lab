@@ -63,33 +63,54 @@ def illegal_footstep_fraction(foot_z: float, hit_zs: list[float], *, in_contact:
     return bad / float(len(hit_zs))
 
 
-def opposite_direction(vx_cmd: float, vx_act: float, cmd_threshold: float = 0.1) -> float:
-    """1 when commanded forward progress and body-forward velocity have opposite sign."""
-    if abs(vx_cmd) < cmd_threshold:
+def opposite_direction(
+    cmd_xy,
+    vel_xy,
+    cmd_threshold: float = 0.1,
+) -> float:
+    """LightLP Table I: max(0, -v · v̂) for a non-trivial planar command."""
+    if _is_batch(cmd_xy):
+        raise TypeError("opposite_direction helper is scalar; use the env reward for batches")
+    cmd_x, cmd_y = float(cmd_xy[0]), float(cmd_xy[1])
+    vel_x, vel_y = float(vel_xy[0]), float(vel_xy[1])
+    cmd_norm = (cmd_x * cmd_x + cmd_y * cmd_y) ** 0.5
+    if cmd_norm < cmd_threshold:
         return 0.0
-    return 1.0 if vx_cmd * vx_act < 0.0 else 0.0
+    return max(0.0, -(vel_x * cmd_x + vel_y * cmd_y) / cmd_norm)
+
+
+def illegal_from_foot_fractions(left_frac: float, right_frac: float) -> float:
+    """Eq. (4): sum contacted-foot illegal fractions, not the mean."""
+    return float(left_frac) + float(right_frac)
 
 
 def foot_accel_ema_step(
-    prev_ema: float,
-    foot_accel_mps2: float,
+    prev_e: float,
+    foot_accels_mps2,
     *,
     tau_s: float = 0.06,
     dt_s: float = 0.02,
     threshold_mps2: float = 30.0,
-) -> tuple[float, float]:
-    """LightLP filtered foot acceleration excess.
-
-    Returns ``(new_ema, excess)`` where ``excess = max(0, ema - threshold)`` and
-    ``ema`` tracks ``|a|`` with time constant ``tau_s``.
-    """
+) -> float:
+    """LightLP Eq. (5): ẽ = α ẽ + Σ max(|a_i|-ā, 0), α = exp(-Δt/τ)."""
     if tau_s <= 0.0:
         raise ValueError(f"tau_s must be positive, got {tau_s}")
-    alpha = 1.0 - pow(2.718281828459045, -dt_s / tau_s)
-    magnitude = abs(float(foot_accel_mps2))
-    ema = (1.0 - alpha) * float(prev_ema) + alpha * magnitude
-    excess = max(0.0, ema - threshold_mps2)
-    return ema, excess
+    if dt_s <= 0.0:
+        raise ValueError(f"dt_s must be positive, got {dt_s}")
+    alpha = math.exp(-float(dt_s) / float(tau_s))
+    if isinstance(foot_accels_mps2, (int, float)):
+        magnitudes = [abs(float(foot_accels_mps2))]
+    else:
+        magnitudes = [abs(float(value)) for value in foot_accels_mps2]
+    excess_sum = sum(max(mag - threshold_mps2, 0.0) for mag in magnitudes)
+    return alpha * float(prev_e) + excess_sum
+
+
+def random_level_reset_mask(draws, fraction: float = 0.10):
+    """True for the fraction of resets placed at a random level (paper line 150)."""
+    if isinstance(draws, (list, tuple)):
+        return [float(draw) < fraction for draw in draws]
+    return draws < fraction
 
 
 def tilt_from_upright_rad(gx, gy, gz):
