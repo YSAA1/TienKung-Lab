@@ -123,7 +123,15 @@ echo "[setup] build $DOCKER_IMAGE"
 docker build -t "$DOCKER_IMAGE" "$REPO_ROOT/docker/t4-isaac-jammy"
 
 if [[ -n "${DISPLAY:-}" ]]; then
-  xhost +SI:localuser:root >/dev/null 2>&1 || xhost +local: >/dev/null 2>&1 || true
+  # Grant only root (the container user) SI access. Do not fall back to
+  # `xhost +local:` — that disables X11 access control for every local user.
+  # On failure, local_run.sh still passes the XAUTHORITY cookie into the
+  # container, so GUI usually keeps working without any xhost grant.
+  xhost +SI:localuser:root >/dev/null 2>&1 || {
+    echo "[setup] WARN: xhost +SI:localuser:root failed; container GUI will" >&2
+    echo "       fall back to the XAUTHORITY cookie (local_run.sh), or run:" >&2
+    echo "       xhost +SI:localuser:root" >&2
+  }
 fi
 
 echo "[setup] IsaacLab pip deps into kit python (do not pin/replace torch)"
