@@ -4,7 +4,7 @@
 > Date: 2026-08-18
 > Spec: `docs/specs/2026-08-15--t4-stepping-stones-and-hurdle-stable.md`（目标规格；双老师路线已废）
 > 对照: `docs/research/2608.02653v1/auto/2608.02653v1.md` §IV（研究笔记非权威）
-> 取代: `docs/plans/2026-08-17--t4-sparse-lightlp-complete-plan.md`（s4 配方仍作历史，训练验收作废）
+> 取代: `docs/archive/plans/2026-08-17--t4-sparse-lightlp-complete-plan.md`（s4 配方仅作历史，训练验收作废）
 > Branch: `t4-train`
 > Planning surface: docs plan
 > GPU: 阶段 1–2 本机改代码。阶段 3 起 nubot 四卡从零训 `t_sparse_lightlp_s5`。zhuoqun 翻箱不动。Stage E 1155D 不覆盖。
@@ -19,7 +19,7 @@
 
 ## 已核实的 s4 现状（iter 12018，勿当梅花桩证据）
 
-来源：`logs/t4_loco_teacher_sparse/2026-08-18_16-01-39_t_sparse_lightlp_s4`，nubot TB `:8007`，EventAccumulator 全量标量。训练仍在跑（4×4090，约 7 GB / 40–48% util，~46k FPS）。
+来源：`logs/t4_loco_teacher_sparse/2026-08-18_16-01-39_t_sparse_lightlp_s4`，nubot TB `:8007`，EventAccumulator 全量标量（s4 已停，ckpt `model_12500.pt`）。
 
 真实列（IsaacLab 2.1.0：`index/num_cols+0.001 < cumsum(proportion)`）：
 
@@ -152,4 +152,4 @@ col 10-13 raised_pillars
 
 ## Next skill
 
-`implement`：阶段 1 列映射 helper + 监控 + pytest。未测绿前不开 s5、不改 accel/algebraic。
+`review`：阶段 4 健康门。s5 在训；Reset/* 日志已写入代码，当前进程未重载所以 TB 还没有这些曲线。

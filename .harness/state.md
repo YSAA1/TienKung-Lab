@@ -28,7 +28,7 @@
 
 ## 验证
 
-- 本机：`python -m pytest tests/test_t4_asset_migration.py tests/test_t4_observation_contracts.py tests/test_t4_sparse_reward_contracts.py tests/test_t4_sparse_monitor_contract.py -q`
+- 本机：`python -m pytest tests/test_t4_asset_migration.py tests/test_t4_observation_contracts.py tests/test_t4_sparse_reward_contracts.py tests/test_t4_sparse_monitor_contract.py tests/test_t4_terrain_column_map.py -q`
 - nubot：`scripts/nubot_run.sh`；zhuoqun：`scripts/zhuoqun_run.sh`
 - 长任务一律 tmux。
 
@@ -36,4 +36,6 @@
 
 - `docs/research/*` 历史调研：已用 `docs/research/README.md` 标明非权威，不搬迁。
 - `artifacts/eval/*` 与视频：可能是对照证据，未逐项核对 lineage，不删。
+- `artifacts/checkpoints/t4_depth_student_head35_model_20000.pt`：用户未跟踪 ckpt，本 cleanup 不动。
+- `scripts/setup_local_isaac_docker.sh`：会话前已有本地改动，本 cleanup 不混入提交。
 - 梅花桩学生蒸馏、G3 合并：等各自 teacher/G2 gate，不要提前写第二套执行计划。

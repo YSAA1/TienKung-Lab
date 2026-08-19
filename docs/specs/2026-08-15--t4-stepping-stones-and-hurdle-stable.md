@@ -1,7 +1,7 @@
 # Spec - T4 梅花桩 Stage E 课表与跨栏 0.30 稳定
 
 > 状态 / Status: user-approved (2026-08-15)；2026-08-17 / 08-18 修订执行面
-> 货架: living 目标规格，但文中「T-compat / T-paper 双老师」已不是执行路线。现行执行：`docs/plans/2026-08-17--t4-sparse-lightlp-complete-plan.md`（单阶段真洞，sparse Actor 1937D，Stage E 1155D 不动）。
+> 货架: living 目标规格，但文中「T-compat / T-paper 双老师」已不是执行路线。现行执行：`docs/plans/2026-08-18--t4-sparse-terrain-index-fix-plan.md`（s5 从零，sparse Actor 1937D，Stage E 1155D 不动）。
 > Owner: user
 > Date: 2026-08-15
 > 来源请求 / Source request: 走跑已可用；补 LightLP 稀疏落脚（梅花桩）并把跨栏稳定在 0.30–0.35，不继续加高。

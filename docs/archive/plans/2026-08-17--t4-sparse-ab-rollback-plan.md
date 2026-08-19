@@ -1,12 +1,12 @@
 # Executable Plan - 回退 S1d 厨房水槽实验，恢复 T-compat v2 配方
 
-> **Status: archived（非权威）** — 续训 v2 已被从零 LightLP 单阶段取代。现行梅花桩执行面：`docs/plans/2026-08-17--t4-sparse-lightlp-complete-plan.md`。入口：`docs/README.md`。
+> **Status: archived（非权威）** — 续训 v2 已被从零 LightLP 单阶段取代。现行梅花桩执行面：`docs/plans/2026-08-18--t4-sparse-terrain-index-fix-plan.md`。入口：`docs/README.md`。
 
 > Status: superseded
 > Date: 2026-08-17
 > Spec: `docs/specs/2026-08-15--t4-stepping-stones-and-hurdle-stable.md`（user-approved）
 > 取代: `docs/archive/plans/2026-08-15--t4-stepping-stones-and-hurdle-stable-plan.md` 的 S1d 执行面
-> 被取代: `docs/plans/2026-08-17--t4-sparse-lightlp-complete-plan.md`
+> 被取代: `docs/archive/plans/2026-08-17--t4-sparse-lightlp-complete-plan.md`
 > Branch: `t4-train`
 > Planning surface: docs plan
 > GPU: nubot 2 卡恢复 T-compat；另 2 卡空出。zhuoqun 翻箱不动

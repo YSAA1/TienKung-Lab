@@ -31,7 +31,7 @@
 
 - 代码改动后先跑最窄测试；T4 资产/motion 合同优先跑 `python -m pytest tests/test_t4_asset_migration.py`。
 - T4 观测合同改动跑 `python -m pytest tests/test_t4_observation_contracts.py`。
-- 稀疏奖励 / 终止合同改动跑 `python -m pytest tests/test_t4_sparse_reward_contracts.py tests/test_t4_sparse_monitor_contract.py`。
+- 稀疏奖励 / 终止 / 地形列映射合同改动跑 `python -m pytest tests/test_t4_sparse_reward_contracts.py tests/test_t4_sparse_monitor_contract.py tests/test_t4_terrain_column_map.py`。
 - 所有训练、GPU probe、批量 playback、evaluator、teacher rollout 采集等长运行命令必须用 tmux。
 - 不能用 reward、episode length、checkpoint 存在或 loss 下降替代行为验收；能力声明必须有 evaluator JSON、lineage manifest 和连续回放证据。
 

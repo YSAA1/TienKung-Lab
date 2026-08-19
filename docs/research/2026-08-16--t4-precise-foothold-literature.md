@@ -3,7 +3,7 @@
 > Date: 2026-08-16
 > Status: findings（非权威，不替代 plan / Spec）
 > Question: 踏石能学、圆桩学不会，对照精准落足主源，当前 MDP 还缺什么？要不要再加项？
-> 非权威研究笔记。现行梅花桩执行面：`docs/plans/2026-08-17--t4-sparse-lightlp-complete-plan.md`。
+> 非权威研究笔记。现行梅花桩执行面：`docs/plans/2026-08-18--t4-sparse-terrain-index-fix-plan.md`。
 
 ## 1. Verdict
 

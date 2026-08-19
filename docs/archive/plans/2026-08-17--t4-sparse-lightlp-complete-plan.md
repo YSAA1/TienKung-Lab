@@ -1,9 +1,11 @@
 # Executable Plan - LightLP §IV 梅花桩完整补全（从零、收窄踏石、新观测）
 
+> **Status: archived（非权威）** — living work surface: `.harness/work_index.md` → `docs/plans/2026-08-18--t4-sparse-terrain-index-fix-plan.md`。
+>
 > Status: superseded
 > Date: 2026-08-17
-> Updated: 2026-08-18 — 撤回 BeamDojo 软/硬二阶段。s4 训练因地形列号错位作废，执行面改到 `docs/plans/2026-08-18--t4-sparse-terrain-index-fix-plan.md`
-> Spec: `docs/specs/2026-08-15--t4-stepping-stones-and-hurdle-stable.md`（批准规格；执行以本文件为准，不再开 T-compat/T-paper 双老师）
+> Updated: 2026-08-19 — 撤回 BeamDojo 软/硬二阶段。s4 因列号错位作废，已归档。
+> Spec: `docs/specs/2026-08-15--t4-stepping-stones-and-hurdle-stable.md`（目标规格；执行以现行计划为准）
 > 对照: `docs/research/2608.02653v1/auto/2608.02653v1.md` §IV（研究笔记非权威）
 > 取代: `docs/archive/plans/2026-08-17--t4-sparse-ab-rollback-plan.md`
 > Branch: `t4-train`

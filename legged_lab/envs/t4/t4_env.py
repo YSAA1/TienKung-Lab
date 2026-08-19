@@ -369,6 +369,7 @@ class T4LocoEnv(VecEnv):
             device=self.device,
         )
         self.sparse_tile_mask = torch.zeros(self.num_envs, dtype=torch.bool, device=self.device)
+        self.reset_reason_masks: dict[str, torch.Tensor] = {}
 
         self.amp_builder = T4AmpFeatureBuilder(self.robot, self.device)
         self.init_obs_buffer()
@@ -799,7 +800,7 @@ class T4LocoEnv(VecEnv):
         accel = torch.norm((lin_vel - self.prev_root_lin_vel_w) / max(self.step_dt, 1.0e-6), dim=1)
         self.prev_root_lin_vel_w.copy_(lin_vel)
         gravity_b = self.robot.data.projected_gravity_b
-        reset_buf, time_out_buf = lightlp_timeout_and_reset(
+        reset_buf, time_out_buf, reasons = lightlp_timeout_and_reset(
             episode_timeout=self.episode_length_buf >= self.max_episode_length,
             offset_xy=offset,
             tile_size=tile,
@@ -826,6 +827,7 @@ class T4LocoEnv(VecEnv):
                     soft_terrain=False,
                 )
             )
+        self.reset_reason_masks = reasons
         return reset_buf, time_out_buf
 
     def reset(self, env_ids):
@@ -938,7 +940,20 @@ class T4LocoEnv(VecEnv):
             "Curriculum/episode_path_length": torch.mean(path_length),
             "Curriculum/episode_tracking_mean": torch.mean(tracking_mean),
         }
+        logs.update(self._reset_reason_log(env_ids))
         logs.update(self._terrain_metrics_log())
+        return logs
+
+    def _reset_reason_log(self, env_ids: torch.Tensor) -> dict[str, torch.Tensor]:
+        """Fractions of this reset batch attributed to each LightLP terminator."""
+        logs = {"Reset/n": torch.tensor(float(len(env_ids)), device=self.device)}
+        reasons = getattr(self, "reset_reason_masks", None)
+        if reasons:
+            for name, mask in reasons.items():
+                logs[f"Reset/{name}"] = mask[env_ids].float().mean()
+        if len(env_ids) > 0:
+            logs["Reset/pit_fall"] = self.pit_fall_buf[env_ids].float().mean()
+            logs["Reset/timeout"] = self.time_out_buf[env_ids].float().mean()
         return logs
 
     def _apply_random_level_resets(self, env_ids: torch.Tensor) -> None:
@@ -1033,12 +1048,6 @@ class T4LocoEnv(VecEnv):
             for column_id, column_name in enumerate(self.terrain_column_names):
                 on_col = types_all == column_id
                 logs[f"TerrainCol/{column_id:02d}_{column_name}/occupancy"] = on_col.float().mean()
-                if levels_all is not None and bool(on_col.any()):
-                    logs[f"TerrainCol/{column_id:02d}_{column_name}/mean_level"] = levels_all[on_col].float().mean()
-                else:
-                    logs[f"TerrainCol/{column_id:02d}_{column_name}/mean_level"] = torch.zeros(
-                        (), device=self.device, dtype=torch.float
-                    )
         if levels_all is not None:
             max_level = max(1, self.cfg.scene.terrain_generator.num_rows - 1)
             for level in range(max_level + 1):

@@ -153,7 +153,7 @@ def test_lightlp_timeout_and_reset_is_what_the_env_calls():
     assert "lightlp_timeout_and_reset(" in env_src
     assert "impact_immunity_from_draws(" in env_src
     n = 4
-    reset, timeout = sig.lightlp_timeout_and_reset(
+    reset, timeout, reasons = sig.lightlp_timeout_and_reset(
         episode_timeout=np.zeros(n, dtype=bool),
         offset_xy=np.array([[4.01, 0.0], [4.30, 0.0], [0.0, 0.0], [0.0, 0.0]]),
         tile_size=8.0,
@@ -171,8 +171,10 @@ def test_lightlp_timeout_and_reset_is_what_the_env_calls():
     assert not bool(timeout[0]) and not bool(reset[0])
     # 4.30 m: past OOB — timeout.
     assert bool(timeout[1]) and bool(reset[1])
+    assert bool(reasons["oob"][1]) and not bool(reasons["horizon"][1])
     # inverted gravity + draw 0: fall-over reset, not timeout.
     assert bool(reset[2]) and not bool(timeout[2])
+    assert bool(reasons["fall_over"][2])
     assert not bool(reset[3])
 
 

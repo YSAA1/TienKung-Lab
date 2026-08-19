@@ -210,7 +210,16 @@ def lightlp_timeout_and_reset(
     tilt = tilt_from_upright_rad(gravity_gx, gravity_gy, gravity_gz)
     fall_over = stochastic_fall_over(tilt, fall_draws)
     reset = time_out | impact_reset | fall_over
-    return reset, time_out
+    reasons = {
+        "horizon": episode_timeout,
+        "oob": oob,
+        "joint_vel": joint_to,
+        "torso": torso_hit & (~immunity),
+        "accel": hard_impact & (~immunity),
+        "fall_over": fall_over,
+        "immune_skip": (torso_hit | hard_impact) & immunity,
+    }
+    return reset, time_out, reasons
 
 
 def wrap_heading_error(yaw: float, heading_target: float) -> float:

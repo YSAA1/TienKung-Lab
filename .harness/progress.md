@@ -1,5 +1,9 @@
 # Progress
 
+## 2026-08-19 cleanup
+
+删除根目录审计草稿 `findings.md` / `progress.md` / `task_plan.md`（内容已进现行计划与 `.harness`）。s4 计划迁到 `docs/archive/plans/`。TB 抓数 scratch 不入库。
+
 ## 2026-08-19 开训 s5
 
 停 s4 tmux，ckpt 留到 `model_12500.pt`。nubot 工作区覆盖了列映射/MDP 源码后从零启动 `t_sparse_lightlp_s5`。logdir `logs/t4_loco_teacher_sparse/2026-08-19_00-20-19_t_sparse_lightlp_s5`，无 load ckpt。TB `:8008`。
