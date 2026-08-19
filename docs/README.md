@@ -14,6 +14,8 @@
 
 运行时切片与机器占用：`.harness/work_index.md`、`.harness/state.md`。
 
+2026-08-19 session 快照（不是计划）：仓库根目录 [`HANDOFF.md`](../HANDOFF.md)。
+
 ## 已经关掉的阶段
 
 不要把这些再当待办。
