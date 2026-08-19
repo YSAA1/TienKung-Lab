@@ -50,6 +50,10 @@ def test_opposite_direction_and_foot_accel_ema():
     assert sig.illegal_from_foot_fractions(0.5, 0.5) == 1.0
     flags = sig.random_level_reset_mask([0.05, 0.2, 0.09], fraction=0.10)
     assert flags == [True, False, True]
+    assert sig.random_level_reset_high(10, 4) == 4
+    assert sig.random_level_reset_high(3, 4) == 3
+    assert sig.random_level_reset_high(10, None) == 10
+    assert sig.random_level_reset_high(0, 4) == 1
 
 
 def test_sparse_pit_fall_only_applies_to_sparse_terrains():

@@ -7,8 +7,9 @@
 No IsaacLab imports: contract tests run on any machine. Tile frame matches
 ``hurdle_layout`` — x/y in ``[0, tile_size]``, ground z=0, spawn at center.
 
-v4 stones are intentionally narrow (slightly larger than the foot) so a 6 cm
-lateral bias drives the foot scanner off the top and ``illegal_footstep`` fires.
+s6 easy tops are wider than the foot so the first landing is a step, not a
+24 cm void. Hard still narrows; ``illegal_footstep`` is expected to stay quiet
+on easy and bite on a 6 cm bias only once the top is hard-narrow.
 """
 
 from __future__ import annotations
@@ -19,18 +20,19 @@ T4_STONE_TILE_SIZE = 8.0
 T4_STONE_PLATFORM_WIDTH = 1.6
 T4_STONE_BORDER_WIDTH = 0.25
 T4_FOOTHOLD_GRID_COUNT = 9
-# Narrow tops: easy ~26 cm, hard ~22 cm. Pitch stays tight so the first gap is a
-# step (3–10 cm easy, ≤18 cm hard), not a jump, and 9×9 still fits the 8 m tile.
-T4_FOOTHOLD_PITCH_RANGE = (0.50, 0.53)
-T4_STONE_WIDTH_RANGE = (0.26, 0.22)
-T4_STONE_HEIGHT_RANGE = (0.16, 0.30)
+# Easy: 40 cm top, 10 cm inter-stone void, 9 cm rise. The 1.6 m pad meets the
+# first stone edge (first_gap ≈ 0). Hard still narrows. 9×9 fits the 8 m tile.
+T4_FOOTHOLD_PITCH_RANGE = (0.50, 0.54)
+T4_STONE_WIDTH_RANGE = (0.40, 0.26)
+T4_STONE_HEIGHT_RANGE = (0.09, 0.24)
 T4_STONE_HEIGHT_JITTER_RANGE = (0.00, 0.04)
 T4_HOLE_DEPTH = -2.0
 
-# Pillars keep the v3 curriculum: easy first step ~5 cm onto a 50 cm disk.
+# Pillars keep v3 plan-view (50→38 cm disks, ~5 cm easy void). Only the rise
+# drops so the first foot does not have to clear a 14 cm curb.
 T4_PILLAR_PITCH_RANGE = (0.55, 0.58)
 T4_PILLAR_DIAMETER_RANGE = (0.50, 0.38)
-T4_PILLAR_HEIGHT_RANGE = (0.14, 0.32)
+T4_PILLAR_HEIGHT_RANGE = (0.08, 0.28)
 
 # Foot sole scan used by illegal-footstep contracts (matches FootScannerCfg).
 T4_FOOT_SCAN_SIZE = (0.16, 0.08)

@@ -60,6 +60,7 @@ from legged_lab.envs.t4.mdp.sparse_signals import (
     LIGHTLP_IMMUNITY_PERIOD,
     impact_immunity_from_draws,
     lightlp_timeout_and_reset,
+    random_level_reset_high,
     random_level_reset_mask,
     sparse_curriculum_moves,
     sparse_pit_fall_mask,
@@ -969,7 +970,10 @@ class T4LocoEnv(VecEnv):
         if not bool(pick.any()):
             return
         chosen = env_ids[pick]
-        max_level = int(terrain.max_terrain_level)
+        max_level = random_level_reset_high(
+            int(terrain.max_terrain_level),
+            getattr(self.cfg, "random_level_reset_max_level", None),
+        )
         terrain.terrain_levels[chosen] = torch.randint(
             0, max_level, (len(chosen),), device=self.device, dtype=terrain.terrain_levels.dtype
         )

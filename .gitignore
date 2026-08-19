@@ -4,6 +4,7 @@
 outputs
 logs
 VITAL_Lab/
+zl_deploy/
 artifacts/test
 artifacts/checkpoints/t4_depth_student_latest.pt
 artifacts/checkpoints/t4_depth_student_latest*.scp.*

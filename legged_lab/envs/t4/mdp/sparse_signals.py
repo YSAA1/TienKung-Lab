@@ -113,6 +113,17 @@ def random_level_reset_mask(draws, fraction: float = 0.10):
     return draws < fraction
 
 
+def random_level_reset_high(max_terrain_level: int, cap: int | None = None) -> int:
+    """Exclusive upper bound for ``torch.randint`` on random-level resets.
+
+    ``cap`` is exclusive (``4`` → levels 0–3). ``None`` keeps the terrain max.
+    """
+    high = int(max_terrain_level)
+    if cap is not None:
+        high = min(high, int(cap))
+    return max(1, high)
+
+
 def tilt_from_upright_rad(gx, gy, gz):
     """Angle from upright using body-frame projected gravity (down is −z).
 

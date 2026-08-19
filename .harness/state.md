@@ -3,15 +3,15 @@
 - Living index: `docs/README.md`
 - Context: `PROJECT_CONTEXT.md`
 - Dual track（各一份计划，不是双真相）:
-  - 梅花桩：`docs/plans/2026-08-18--t4-sparse-terrain-index-fix-plan.md`（s4 计划已 superseded）
+  - 梅花桩：`docs/plans/2026-08-19--t4-sparse-easy-geometry-s6-plan.md`（s5 计划已 superseded）
   - 翻箱：`docs/plans/2026-08-15--t4-vault-g1-g2-recovery-plan.md`
 - Approved specs: `docs/specs/2026-08-12--t4-unified-depth-locomotion.md`（走跑/学生合同）、`docs/specs/2026-08-13--t4-vault-loco-merge.md`（G1→G2→G3 目标）、`docs/specs/2026-08-15--t4-stepping-stones-and-hurdle-stable.md`（梅花桩目标；执行已改单阶段）
 
 ## 梅花桩（nubot）
 
-- 任务仍是 `t4_loco_teacher_sparse`。现行 lineage：`2026-08-19_00-20-19_t_sparse_lightlp_s5`，nubot 四卡从零，tmux `t4-sparse-lightlp-s5`。
-- s4（`2026-08-18_16-01-39_t_sparse_lightlp_s4`，最后 ckpt `model_12500.pt`）已停，仅作错误实现基线。
-- s5 TB `:8008`（`http://100.100.188.39:8008/`）。s4 对照仍在 `:8007`。父目录 `:8002` 也能看到两条 run。
+- 任务仍是 `t4_loco_teacher_sparse`。现行 lineage：`2026-08-19_12-51-05_t_sparse_lightlp_s6`，nubot 四卡从零，tmux `t4-sparse-lightlp-s6`。
+- s5（`2026-08-19_00-20-19_t_sparse_lightlp_s5`）已停，仅作第一脚负结果。s4 仍只当列号错位基线。
+- s6 TB `:8009`（`http://100.100.188.39:8009/`）。s5 对照 logdir 仍在磁盘上。
 - Stage E `t4_loco_teacher` 1155D 未改。
 - 旧 v4 软/硬与更早 sparse ckpt 只留对照，不加载。
 - 本切片不训学生。能力声明要等 evaluator + 回放。

@@ -1,5 +1,15 @@
 # Progress
 
+## 2026-08-19 s6 easy 几何
+
+s5 @17.5k 踏石/圆桩 `reach_2m` 仍 3%/2%、进度 1.1 m。回放第一脚 accel。代码改 easy 踏石 40/10/9 cm、圆桩高 8 cm、随机 level cap=4。pytest 50 passed。nubot 停 s5，从零 `2026-08-19_12-51-05_t_sparse_lightlp_s6`，`resume: false`，TB `:8009`。14:20 CST 刷新：训练/TB 存活，ckpt 到 `model_2000.pt`，step≈2171；两类 easy `reach_2m mean20` 仍约 1.1% / 2.3%，进度约 1.27 m，未到 3k 健康门，不提前停。
+
+14:56 CST 3k 健康门：踏石 easy 通过（`reach_2m mean20≈12.2%`、`progress≈1.40 m`），圆桩 easy 未通过（`reach_2m≈3.1%`、`progress≈1.22 m`）。S6 整体标高风险，但按计划继续到 5k 决策门；未授权不改配方。
+
+16:09 CST 5k 前：step≈4870。踏石 easy `reach_2m mean20≈29.3%`、`progress≈1.61 m`；圆桩 easy `reach_2m≈14.7%`、`progress≈1.33 m`，还没过 20%/1.40，但从 3k 持续上升，不是平台期。用户确认不要机械停；若 5k 仍上升且未触发硬停线，继续到 6k/7k 再判。
+
+16:17 CST 5k 后：踏石 easy 过门（`reach_2m mean20≈29.7%`、`progress≈1.60 m`）；圆桩 easy 未过 reach 门但接近 progress 门（`reach_2m≈15.9%`、`progress≈1.38 m`），仍在上升，未触发硬停线，继续训。hard 曲线全 0 因踏石/圆桩 `hard_episodes=0`；mid 样本很少，只作参考。
+
 ## 2026-08-19 cleanup
 
 删除根目录审计草稿 `findings.md` / `progress.md` / `task_plan.md`（内容已进现行计划与 `.harness`）。s4 计划迁到 `docs/archive/plans/`。TB 抓数 scratch 不入库。

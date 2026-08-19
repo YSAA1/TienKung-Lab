@@ -1,9 +1,11 @@
 # 交接：T4 梅花桩 s5（2026-08-19）
 
+> **已过期。** 现行执行：`docs/plans/2026-08-19--t4-sparse-easy-geometry-s6-plan.md`。下文是 s5 负结果快照，不要当开训指令。
+
 本文是 **session 交接快照**，不是执行计划。开训 / 改配方仍只认：
 
 - 入口：`docs/README.md`
-- 梅花桩计划：`docs/plans/2026-08-18--t4-sparse-terrain-index-fix-plan.md`
+- 梅花桩计划：`docs/plans/2026-08-19--t4-sparse-easy-geometry-s6-plan.md`
 - 规格：`docs/specs/2026-08-15--t4-stepping-stones-and-hurdle-stable.md`
 - 论文原文：`docs/research/2608.02653v1/auto/2608.02653v1.md`（只对照，不当计划）
 

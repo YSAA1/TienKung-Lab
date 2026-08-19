@@ -135,8 +135,14 @@ def play():
         env_cfg.scene.terrain_type = "plane"
 
     if env_cfg.scene.terrain_generator is not None:
-        env_cfg.scene.terrain_generator.num_rows = 5
-        env_cfg.scene.terrain_generator.num_cols = 5
+        # One tile per env so the robot sits in front of the default camera.
+        n_envs = args_cli.num_envs if args_cli.num_envs is not None else env_cfg.scene.num_envs
+        if n_envs <= 4:
+            env_cfg.scene.terrain_generator.num_rows = 1
+            env_cfg.scene.terrain_generator.num_cols = max(1, int(n_envs))
+        else:
+            env_cfg.scene.terrain_generator.num_rows = 5
+            env_cfg.scene.terrain_generator.num_cols = 5
         env_cfg.scene.terrain_generator.curriculum = False
         if args_cli.terrain_types:
             keep = [name.strip() for name in args_cli.terrain_types.split(",") if name.strip()]
@@ -182,6 +188,10 @@ def play():
         keyboard = Keyboard(env)  # noqa:F841
 
     obs, _ = env.get_observations()
+    if not args_cli.headless:
+        root0 = env.robot.data.root_pos_w[0].detach().cpu().tolist()
+        print(f"[INFO] robot root at ({root0[0]:.2f}, {root0[1]:.2f}, {root0[2]:.2f}); viewport will follow", flush=True)
+        _follow_gui_camera(env.robot.data.root_pos_w[0])
 
     if args_cli.record:
         _record_play_video(
@@ -200,6 +210,8 @@ def play():
         with torch.inference_mode():
             actions = policy(obs)
             obs, _, _, _ = env.step(actions)
+        if not args_cli.headless:
+            _follow_gui_camera(env.robot.data.root_pos_w[0])
 
 
 def _play_gym_manager_task(task: str) -> None:
@@ -308,6 +320,20 @@ def _parse_xyz(text: str) -> tuple[float, float, float]:
     if len(parts) != 3:
         raise ValueError(f"expected x,y,z got {text!r}")
     return parts[0], parts[1], parts[2]
+
+
+def _follow_gui_camera(root) -> None:
+    """Keep the Isaac viewport on the robot. GUI play has no default follow cam."""
+    try:
+        from isaacsim.core.utils.viewports import set_camera_view
+    except ImportError:
+        from omni.isaac.core.utils.viewports import set_camera_view
+
+    eye_off = torch.tensor(_parse_xyz(args_cli.cam_eye), device=root.device, dtype=root.dtype)
+    look_off = torch.tensor(_parse_xyz(args_cli.cam_look), device=root.device, dtype=root.dtype)
+    eye = (root + eye_off).detach().cpu().tolist()
+    target = (root + look_off).detach().cpu().tolist()
+    set_camera_view(eye=eye, target=target)
 
 
 def _record_event_line(env, step_idx: int, root) -> str | None:

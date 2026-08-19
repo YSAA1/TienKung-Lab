@@ -24,7 +24,7 @@ def test_paper_task_is_unregistered():
 
 def test_sparse_teacher_is_one_stage_lightlp():
     source = CFG.read_text()
-    assert "t_sparse_lightlp_s5" in source
+    assert "t_sparse_lightlp_s6" in source
     assert "use_lightlp_terminations" in source
     assert "append_critic_foot_scan" in source
     assert "append_critic_immunity" in source
@@ -32,6 +32,7 @@ def test_sparse_teacher_is_one_stage_lightlp():
     assert "foot_acceleration_penalty" in source
     assert "self.scene.max_init_terrain_level = 2" in source
     assert "random_level_reset_fraction = 0.10" in source
+    assert "random_level_reset_max_level = 4" in source
     assert "apply_soft_sparse_stage" not in source
     assert "soft_sparse_terrain" not in source
     assert "cfg.soft_fill = False" in source

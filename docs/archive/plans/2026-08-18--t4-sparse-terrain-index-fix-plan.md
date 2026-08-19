@@ -1,6 +1,8 @@
 # Executable Plan - 地形列号修复 + LightLP MDP 对齐 + s5 从零
 
-> Status: active
+> **Status: archived（非权威）** — living work surface: `docs/plans/2026-08-19--t4-sparse-easy-geometry-s6-plan.md`。
+>
+> Status: superseded
 > Date: 2026-08-18
 > Spec: `docs/specs/2026-08-15--t4-stepping-stones-and-hurdle-stable.md`（目标规格；双老师路线已废）
 > 对照: `docs/research/2608.02653v1/auto/2608.02653v1.md` §IV（研究笔记非权威）

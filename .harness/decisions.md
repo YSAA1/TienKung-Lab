@@ -1,5 +1,6 @@
 # Decisions
 
+- 2026-08-19：s5 不作梅花桩证据。卡点是 easy 第一脚（26 cm 砖 / 24 cm 石间空洞 / 16 cm 上台），不是某一条 LightLP 奖励。开 s6：踏石 easy 40 cm 顶、10 cm 缝、9 cm 上台；圆桩只降高到 8 cm；10% 随机 level 锁 0–3 行。不热补 s5，不改 accel/OOB，不加腿碰撞。
 - 2026-08-18：s4 不作梅花桩证据。P0 是 `terrain_types` 列号被当成 sub_terrain 下标。先修映射与 LightLP 10% 随机 level / Eq.4–5 / opposite / 路径晋级，再从零开 s5。不在 s4 ckpt 上热补；不改 accel 40、不打开 algebraic。
 - 2026-08-18：文档收口。现行只有两条执行轨道（梅花桩、翻箱 G1/G2）。入口改为 `docs/README.md`。撤回梅花桩软/硬二阶段，单阶段真洞。G2 学生与 G3 合并等过箱后再开。
 - 2026-08-17：梅花桩完整补全改从零。不续 `v2_resume`；不做旧学生短 FT；踏石必须收到 illegal 能咬偏脚；本任务 Actor 1155D 可打破（scan history=5 + 接触进 Actor，足底 scan 仍只进 Critic）。默认 Stage E 1155D 不动。**软→硬二阶段已于 2026-08-18 撤回。** 执行面 `docs/plans/2026-08-17--t4-sparse-lightlp-complete-plan.md`。

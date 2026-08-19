@@ -9,7 +9,7 @@
 
 | 轨道 | 现在做什么 | 执行计划 | 规格 |
 | --- | --- | --- | --- |
-| 梅花桩 | nubot 四卡从零 `t_sparse_lightlp_s5`（列号已修）。s4 只当错误基线。**本切片不蒸学生。** | [梅花桩计划](plans/2026-08-18--t4-sparse-terrain-index-fix-plan.md) | [稀疏规格](specs/2026-08-15--t4-stepping-stones-and-hurdle-stable.md) |
+| 梅花桩 | nubot 四卡从零 `t_sparse_lightlp_s6`（放宽 easy 几何）。s5 只当第一脚负结果。**本切片不蒸学生。** | [梅花桩计划](plans/2026-08-19--t4-sparse-easy-geometry-s6-plan.md) | [稀疏规格](specs/2026-08-15--t4-stepping-stones-and-hurdle-stable.md) |
 | 翻箱 | G1 跟踪专家 → G2 heightscan 技能（zhuoqun）。**G2 学生与 G3 合并（走跑+翻箱成一条策略）等 G2 过箱后再开。** | [翻箱 recovery](plans/2026-08-15--t4-vault-g1-g2-recovery-plan.md) | [合并规格](specs/2026-08-13--t4-vault-loco-merge.md) |
 
 运行时切片与机器占用：`.harness/work_index.md`、`.harness/state.md`。

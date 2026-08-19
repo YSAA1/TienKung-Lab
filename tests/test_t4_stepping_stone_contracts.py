@@ -20,40 +20,51 @@ _spec.loader.exec_module(layout)
 def test_stone_difficulty_narrows_and_widens_gaps():
     easy_w = layout.stone_width(0.0)
     hard_w = layout.stone_width(1.0)
-    assert 0.24 <= easy_w <= 0.30
-    assert 0.20 <= hard_w <= 0.24
-    assert hard_w < easy_w
+    assert easy_w >= 0.36
+    assert 0.24 <= hard_w < easy_w
+    assert layout.stone_gap(0.0) <= 0.10
     assert layout.stone_gap(0.0) < layout.stone_gap(1.0)
     assert layout.foothold_pitch(0.5) >= 0.50
-    assert layout.stone_gap(0.5) >= 0.22
 
 
 def test_stone_first_step_is_a_step_not_a_jump():
     easy = layout.platform_to_first_gap(0.0, layout.stone_width(0.0))
     hard = layout.platform_to_first_gap(1.0, layout.stone_width(1.0))
-    assert 0.03 <= easy <= 0.10
+    assert easy == pytest.approx(0.0, abs=1e-9)
     assert easy < hard <= 0.18
 
 
-def test_illegal_no_longer_silent_with_6cm_bias():
-    """Center stance ≈0; 6 cm edge bias must push the sole scan off a narrow top."""
-    d = 0.0
-    pitch = layout.foothold_pitch(d)
-    centers = layout.foothold_centers(pitch)
-    assert centers
-    # First cardinal foothold ahead of the spawn pad.
-    center = min((c for c in centers if c[0] > 4.0 and abs(c[1] - 4.0) < 1e-6), key=lambda c: c[0])
-    centered = layout.illegal_footstep_fraction_layout(center, kind="stepping_stones", difficulty=d)
-    assert centered == pytest.approx(0.0, abs=1e-9)
-    # Bias along the long sole axis (16 cm); 6 cm is enough to walk the toe grid off a 26 cm top.
-    biased = layout.illegal_footstep_fraction_layout(
-        (center[0] + 0.06, center[1]), kind="stepping_stones", difficulty=d
+def test_illegal_quiet_on_easy_and_bites_hard_6cm_bias():
+    """Easy 40 cm tops forgive a 6 cm bias; hard-narrow tops must not."""
+    easy_center = min(
+        (c for c in layout.foothold_centers(layout.foothold_pitch(0.0)) if c[0] > 4.0 and abs(c[1] - 4.0) < 1e-6),
+        key=lambda c: c[0],
     )
-    assert biased > 0.0
+    assert layout.illegal_footstep_fraction_layout(easy_center, kind="stepping_stones", difficulty=0.0) == pytest.approx(
+        0.0, abs=1e-9
+    )
+    easy_bias = layout.illegal_footstep_fraction_layout(
+        (easy_center[0] + 0.06, easy_center[1]), kind="stepping_stones", difficulty=0.0
+    )
+    assert easy_bias == pytest.approx(0.0, abs=1e-9)
+
+    hard_center = min(
+        (c for c in layout.foothold_centers(layout.foothold_pitch(1.0)) if c[0] > 4.0 and abs(c[1] - 4.0) < 1e-6),
+        key=lambda c: c[0],
+    )
+    assert layout.illegal_footstep_fraction_layout(hard_center, kind="stepping_stones", difficulty=1.0) == pytest.approx(
+        0.0, abs=1e-9
+    )
+    hard_bias = layout.illegal_footstep_fraction_layout(
+        (hard_center[0] + 0.06, hard_center[1]), kind="stepping_stones", difficulty=1.0
+    )
+    assert hard_bias > 0.0
 
 
 def test_soft_terrain_stands_but_reports_hole():
-    gap_xy = (4.0 + 0.5 * layout.T4_STONE_PLATFORM_WIDTH + 0.02, 4.0)
+    # Easy pad meets the first stone; sample the 10 cm void between ring 1 and 2.
+    first = 4.0 + layout.first_foothold_center_offset(layout.foothold_pitch(0.0))
+    gap_xy = (first + 0.5 * layout.stone_width(0.0) + 0.5 * layout.stone_gap(0.0), 4.0)
     assert layout.soft_physics_supports(gap_xy)
     assert layout.soft_reports_hole(gap_xy, kind="stepping_stones", difficulty=0.0)
     stone_xy = layout.foothold_centers(layout.foothold_pitch(0.0))[0]
@@ -75,10 +86,10 @@ def test_pillar_first_step_is_a_step_not_a_jump():
 
 
 def test_stone_and_pillar_height_curriculum_starts_reachable():
-    assert 0.15 <= layout.stone_height(0.0) <= 0.20
-    assert layout.stone_height(1.0) == 0.30
-    assert 0.12 <= layout.pillar_height(0.0) <= 0.16
-    assert layout.pillar_height(1.0) == 0.32
+    assert 0.08 <= layout.stone_height(0.0) <= 0.10
+    assert layout.stone_height(1.0) == pytest.approx(0.24)
+    assert 0.06 <= layout.pillar_height(0.0) <= 0.08
+    assert layout.pillar_height(1.0) == pytest.approx(0.28)
     assert layout.stone_height(0.0) < layout.stone_height(1.0)
     assert layout.pillar_height(0.0) < layout.pillar_height(1.0)
 
