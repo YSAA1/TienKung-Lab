@@ -56,6 +56,18 @@ parser.add_argument(
 )
 parser.add_argument("--record", type=str, default=None, help="Write an MP4 and exit instead of looping the GUI.")
 parser.add_argument("--duration", type=float, default=12.0, help="Recorded seconds when --record is set.")
+parser.add_argument(
+    "--cam_eye",
+    type=str,
+    default="-3.4,-2.6,2.4",
+    help="Follow-cam eye offset as x,y,z meters (used with --record).",
+)
+parser.add_argument(
+    "--cam_look",
+    type=str,
+    default="0.8,0.0,0.15",
+    help="Follow-cam look offset as x,y,z meters relative to the root (used with --record).",
+)
 
 # append RSL-RL cli arguments
 cli_args.add_rsl_rl_args(parser)
@@ -172,7 +184,15 @@ def play():
     obs, _ = env.get_observations()
 
     if args_cli.record:
-        _record_play_video(env, policy, obs, args_cli.record, args_cli.duration)
+        _record_play_video(
+            env,
+            policy,
+            obs,
+            args_cli.record,
+            args_cli.duration,
+            cam_eye=_parse_xyz(args_cli.cam_eye),
+            cam_look=_parse_xyz(args_cli.cam_look),
+        )
         return
 
     while simulation_app.is_running():
@@ -209,7 +229,15 @@ def _play_gym_manager_task(task: str) -> None:
     obs, _ = env.get_observations()
     print(f"[INFO] playing gym task {gym_task} from {resume_path}", flush=True)
     if args_cli.record:
-        _record_play_video(env, policy, obs, args_cli.record, args_cli.duration)
+        _record_play_video(
+            env,
+            policy,
+            obs,
+            args_cli.record,
+            args_cli.duration,
+            cam_eye=_parse_xyz(args_cli.cam_eye),
+            cam_look=_parse_xyz(args_cli.cam_look),
+        )
         return
     while simulation_app.is_running():
         with torch.inference_mode():
@@ -217,7 +245,117 @@ def _play_gym_manager_task(task: str) -> None:
             obs, _, _, _ = env.step(actions)
 
 
-def _record_play_video(env, policy, obs, output_path: str, duration_s: float) -> None:
+def _write_play_frames(output_path: str, frames: list, fps: int) -> str:
+    """Write MP4 via imageio or system ffmpeg; fall back to a subsampled GIF."""
+    import shutil
+    import subprocess
+
+    import imageio.v2 as imageio
+    import numpy as np
+
+    if not frames:
+        raise RuntimeError("no camera frames captured")
+    height, width = frames[0].shape[:2]
+    try:
+        imageio.mimwrite(output_path, frames, fps=fps, quality=8, macro_block_size=1)
+        return output_path
+    except Exception as imageio_err:
+        print(f"[WARN] imageio mp4 failed ({imageio_err}); trying ffmpeg", flush=True)
+    ffmpeg = shutil.which("ffmpeg")
+    if ffmpeg:
+        cmd = [
+            ffmpeg,
+            "-y",
+            "-f",
+            "rawvideo",
+            "-vcodec",
+            "rawvideo",
+            "-s",
+            f"{width}x{height}",
+            "-pix_fmt",
+            "rgb24",
+            "-r",
+            str(fps),
+            "-i",
+            "-",
+            "-an",
+            "-vcodec",
+            "libx264",
+            "-pix_fmt",
+            "yuv420p",
+            output_path,
+        ]
+        try:
+            proc = subprocess.Popen(cmd, stdin=subprocess.PIPE, stdout=subprocess.DEVNULL, stderr=subprocess.PIPE)
+            assert proc.stdin is not None
+            for frame in frames:
+                proc.stdin.write(np.ascontiguousarray(frame[..., :3], dtype=np.uint8).tobytes())
+            proc.stdin.close()
+            stderr = proc.communicate()[1]
+            if proc.returncode == 0 and os.path.isfile(output_path) and os.path.getsize(output_path) > 1000:
+                return output_path
+            print(f"[WARN] ffmpeg mp4 failed rc={proc.returncode}: {stderr[-400:]!r}", flush=True)
+        except Exception as ffmpeg_err:
+            print(f"[WARN] ffmpeg pipe failed ({ffmpeg_err})", flush=True)
+    gif_path = os.path.splitext(output_path)[0] + ".gif"
+    stride = max(1, int(round(fps / 12.5)))
+    imageio.mimwrite(gif_path, frames[::stride], fps=max(1, fps // stride), loop=0)
+    return gif_path
+
+
+def _parse_xyz(text: str) -> tuple[float, float, float]:
+    parts = [float(item.strip()) for item in text.split(",")]
+    if len(parts) != 3:
+        raise ValueError(f"expected x,y,z got {text!r}")
+    return parts[0], parts[1], parts[2]
+
+
+def _record_event_line(env, step_idx: int, root) -> str | None:
+    """One line per reset of env 0 so a recording can be read without guessing.
+
+    ``env.step`` already teleports the robot back to the pad, so the death pose
+    has to come from the pre-reset buffers.
+    """
+    reset_buf = getattr(env, "reset_buf", None)
+    if reset_buf is None or not bool(reset_buf[0].item()):
+        return None
+    death = getattr(env, "last_step_root_pos_w", None)
+    pose = death[0] if death is not None else root
+    origin = getattr(getattr(env, "scene", None), "env_origins", None)
+    if origin is not None:
+        radial = float(torch.norm(pose[:2] - origin[0, :2]).item())
+    else:
+        radial = float(torch.norm(pose[:2]).item())
+    peak = getattr(env, "last_step_episode_max_radial_dist", None)
+    if peak is not None:
+        radial_peak = float(peak[0].item())
+    else:
+        radial_peak = radial
+    flags = []
+    if bool(getattr(env, "time_out_buf", torch.zeros(1))[0].item()):
+        flags.append("timeout")
+    if bool(getattr(env, "pit_fall_buf", torch.zeros(1))[0].item()):
+        flags.append("pit")
+    reasons = getattr(env, "reset_reason_masks", None) or {}
+    for name, mask in reasons.items():
+        if bool(mask[0].item()):
+            flags.append(name)
+    return (
+        f"reset step={step_idx} xy=({float(pose[0]):.2f},{float(pose[1]):.2f}) "
+        f"z={float(pose[2]):.2f} r={radial:.2f} peak={radial_peak:.2f} "
+        f"flags={','.join(flags) or 'unknown'}"
+    )
+
+
+def _record_play_video(
+    env,
+    policy,
+    obs,
+    output_path: str,
+    duration_s: float,
+    cam_eye: tuple[float, float, float] = (-3.4, -2.6, 2.4),
+    cam_look: tuple[float, float, float] = (0.8, 0.0, 0.15),
+) -> None:
     import imageio.v2 as imageio
     import isaaclab.sim as sim_utils
     from isaaclab.sensors import Camera, CameraCfg
@@ -248,14 +386,20 @@ def _record_play_video(env, policy, obs, output_path: str, duration_s: float) ->
         robot = env.unwrapped.scene["robot"]
     n_steps = max(1, int(round(duration_s / step_dt)))
     frames: list = []
-    look_offset = torch.tensor([0.0, 0.0, 0.45], device=env.device)
-    eye_offset = torch.tensor([-2.8, -2.2, 1.6], device=env.device)
+    look_offset = torch.tensor(cam_look, device=env.device)
+    eye_offset = torch.tensor(cam_eye, device=env.device)
+    event_path = os.path.splitext(os.path.abspath(output_path))[0] + ".txt"
+    events: list[str] = []
 
-    for _ in range(n_steps):
+    for step_idx in range(n_steps):
         with torch.inference_mode():
             actions = policy(obs)
             obs, _, _, _ = env.step(actions)
         root = robot.data.root_pos_w[0]
+        event = _record_event_line(env, step_idx, root)
+        if event:
+            print(f"[RESET] {event}", flush=True)
+            events.append(event)
         camera.set_world_poses_from_view(
             eyes=(root + eye_offset).unsqueeze(0),
             targets=(root + look_offset).unsqueeze(0),
@@ -268,8 +412,11 @@ def _record_play_video(env, policy, obs, output_path: str, duration_s: float) ->
             frames.append(rgb.copy())
 
     os.makedirs(os.path.dirname(os.path.abspath(output_path)) or ".", exist_ok=True)
-    imageio.mimwrite(output_path, frames, fps=max(1, int(round(1.0 / step_dt))), quality=8, macro_block_size=1)
-    print(f"[INFO] wrote {output_path} ({len(frames)} frames)")
+    with open(event_path, "w", encoding="utf-8") as handle:
+        handle.write("\n".join(events) + ("\n" if events else ""))
+    fps = max(1, int(round(1.0 / step_dt)))
+    written = _write_play_frames(output_path, frames, fps)
+    print(f"[INFO] wrote {written} ({len(frames)} frames, {len(events)} resets)")
 
 
 if __name__ == "__main__":
