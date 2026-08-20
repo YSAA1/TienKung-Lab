@@ -1,5 +1,13 @@
 # Progress
 
+## 2026-08-20 S9 capsulefix 正确物理 lineage
+
+- nubot 隔离 worktree `/home/nubot/phn_ws/t4_train/TienKung-Lab-s9-capsulefix` 使用 HEAD `fd84ee3`，worktree clean。主 run 为 `2026-08-20_16-07-04_t_sparse_lightlp_s9_capsulefix`，tmux `t4-sparse-lightlp-s9-capsulefix`，TensorBoard `http://100.100.188.39:8012/`。
+- S9 从 s6 `model_31000.pt` warm-start，checkpoint SHA256 `55a459b96665594b9a09f98ac6eb270ed8ebe39c553e066e84a03ee6cfc92d33`；使用 fresh optimizer，不加载 S7/S8。保留 tile-filling grid、真实 `Trunk`/双 `Shank` collision 和 self-collision；`termination_penalty.weight=0.0`，`lin_vel_x=(-0.6, 1.0)`。
+- 2026-08-20 16:18 CST 刷新：训练和 TensorBoard 均存活，四卡显存约 7.3–7.6 GiB，日志到 `31143/40000` 附近，未见 Traceback/CUDA/NCCL/OOM/NaN。`Perf/total_fps` 最近 20 点约 43.3k。
+- 修复后的关键早期反证：`Episode_Reward/shank_contacts=0`，`undesired_contacts` 最近 20 点约 `-0.015`，远低于污染 lineage 的约 `-1.4〜-1.8`；`Reset/torso≈0.066`，`Reset/accel≈0.556`，`Reset/pit_fall≈0.029`。踏石 easy `reach_2m≈0.463/progress≈2.27 m`，圆桩 easy `reach_2m≈0.400/progress≈2.06 m`。这证明假 Shank-foot 自碰修复已进入实际训练 plant，但仍只是早期 TB 信号。
+- 下一门：不停训、不改速度/奖励/AMP。到 250/500 iter 刷新趋势；`model_31500.pt` 落盘后用 fixed evaluator + 连续回放判断真实行为。
+
 ## 2026-08-20 S8 model_33000 本地复评与 Shank 自碰修复
 
 - S8 已冻结在 `model_33000.pt`，训练 tmux 已停止。checkpoint 已拉到本地，SHA256 为 `472b482924ee82a47045dd9978a87dfc84cf68728982e5e70dcff158ba909831`。

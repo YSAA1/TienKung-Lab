@@ -11,7 +11,7 @@
 
 ## Objective
 
-s6 从零验证放宽 easy 几何是否能让稀疏地形起势。后续配对 evaluator 已推翻“策略不会抬脚”这个前提，并确认旧 9×9 格点与 4 m gate 不一致。S7/S8 随后同时铺满格点并激活躯干/小腿 primitive collision，但本地正式回放又确认第三个物理 bug：Isaac 将 0.28 m Shank cylinder 转成 capsule 后与脚 collider 持续自重叠。S8 已冻结，额外 `termination_penalty=-200` 撤回；下一 lineage 从未经历假自碰的 s6 `model_31000.pt` 在修复 plant 上重开。
+s6 从零验证放宽 easy 几何是否能让稀疏地形起势。后续配对 evaluator 已推翻“策略不会抬脚”这个前提，并确认旧 9×9 格点与 4 m gate 不一致。S7/S8 随后同时铺满格点并激活躯干/小腿 primitive collision，但本地正式回放又确认第三个物理 bug：Isaac 将 0.28 m Shank cylinder 转成 capsule 后与脚 collider 持续自重叠。S8 已冻结，额外 `termination_penalty=-200` 撤回；修复后的 S9 已从未经历假自碰的 s6 `model_31000.pt` 重开。
 
 ## Active Slice
 
@@ -176,21 +176,27 @@ TB `:8008`，任务 `2026-08-19_00-20-19_t_sparse_lightlp_s5`。列 occupancy �
 1. **已完成：scan 因果消融。** normal 明显优于 zero/permuted，观测断链被排除。
 2. **已完成：首次离垫 swing / touchdown instrumentation。** 脚会主动抬高；“软支撑用来教抬脚”这条分支不再需要。
 3. **已完成：旧 grid vs tile-filling grid 单变量对照。** 结果确认地形长度是当前第一修复项。
-4. **当前 lineage：同步 tile-filling grid + Trunk/双 Shank collision，从 s6 checkpoint warm-start。** 必须先过 USD asset smoke 与 flat/sparse 短回归，再开 1k–2k 适应。
-5. **s7 仍失败才进入落点控制分支。** 优先验证完整 5-frame contact history、条件 map encoder 或 soft-support foothold curriculum；从这里开始恢复每次只改一个变量。
+4. **当前 lineage S9：同步 tile-filling grid + 修复后的 Trunk/双 Shank collision，从 s6 checkpoint warm-start。** USD asset smoke 与 flat/sparse 短回归已通过，正在进行 1k–2k 适应。
+5. **S9 仍失败才进入落点控制分支。** 优先验证完整 5-frame contact history、条件 map encoder 或 soft-support foothold curriculum；从这里开始恢复每次只改一个变量。
 
 ## s8 termination cost 分支
 
 S7/S8 当时被解释为终止代价问题，但该解释已被更强的本地物理证据推翻。flat 正常姿态下双 Shank 每步约 20 kN，关闭 self-collision 后归零；根因是 Shank capsule 与脚 collider 持续重叠。早期 torso/accel 不能再作为“策略主动结束”证据。
 
-S8 已冻结在 `model_33000.pt`。保留 tile-filling grid、真实 `Trunk`/双 `Shank` collision 和机器人 self-collision；胫骨 cylinder segment 改为 0.20 m。sparse `termination_penalty.weight` 恢复为 0.0。下一 lineage 不加载 S7/S8，而从 s6 `model_31000.pt` 加载模型并重置 optimizer。
+S8 已冻结在 `model_33000.pt`。保留 tile-filling grid、真实 `Trunk`/双 `Shank` collision 和机器人 self-collision；胫骨 cylinder segment 改为 0.20 m。sparse `termination_penalty.weight` 恢复为 0.0。后续 S9 不加载 S7/S8，而从 s6 `model_31000.pt` 加载模型并重置 optimizer。
 
 250 iter gate（event step 31260）：`Reset/torso` 最近 20 点约 0.348，没有复现 S7 接近 1 的终止逃逸；但 `Reset/accel` 最近约 0.782，踏石/圆桩 easy progress 仅约 1.25–1.29 m，`reach_2m` 基本为 0。结论是继续到 500 iter / `model_31500.pt`，再跑 flat、easy 踏石、easy 圆桩 fixed evaluator；现在不能宣称 sparse 行为能力。
 
 500 iter gate：`model_31500.pt` fixed evaluator 产物在 `artifacts/eval/s8_model31500_fixed/`。flat d=0.85 strict 16/16、reach4 13/16；踏石 d=0 strict 0/16、reach2 0/16、pit 0、early 16/16；圆桩 d=0 strict 0/16、reach2 1/16、pit 0、early 16/16。两类 sparse 都是 accel 16/16，torso 8/16，平均约 139 steps、进度约 1.48–1.49 m。当时把改善归因于 `termination_penalty=-200`，但 `model_33000` 本地回放随后证明 S7/S8 均受 Shank-foot 假自碰污染，因此这条因果解释已撤回。
 
 1k gate：`model_32000.pt` 已落盘。当时窗口显示 S8 仍未过 sparse，但不是“机器人不动 timeout”：踏石/圆桩 easy 约 90% 为 fall，`Reset/accel` 和 `Reset/torso` 虽下降但仍高。后续根因更新后，不再做 termination-cost 或 2.0 m/s 速度 ablation；先在修复 Shank capsule 的 plant 上用原速度范围和 `termination_penalty=0` 重训，才能重新判断奖励和速度课程。
-6. **AMP reward blend 仍分开立项。** sparse task reward 从 0.7× 恢复到 1.0× 是否提升样本效率，只能在 s7 物理合同稳定后单独验证。
+
+## s9 capsulefix 分支
+
+S9 已在 nubot 隔离 worktree `/home/nubot/phn_ws/t4_train/TienKung-Lab-s9-capsulefix` 启动，HEAD `fd84ee3`，主 run `2026-08-20_16-07-04_t_sparse_lightlp_s9_capsulefix`。它从 s6 `model_31000.pt` 加载策略并重置 optimizer，不加载 S7/S8；`termination_penalty=0`，速度范围保持 `[-0.6, 1.0]`。
+
+启动后 event step `31143` 早期窗口中，`Episode_Reward/shank_contacts=0`，`undesired_contacts` 最近 20 点约 `-0.015`，`Reset/torso≈0.066`、`Reset/accel≈0.556`。踏石 easy `reach_2m≈0.463/progress≈2.27 m`，圆桩 easy `reach_2m≈0.400/progress≈2.06 m`。这组信号已经证伪“修复没进训练 plant”，但不替代 checkpoint evaluator。S9 保持配方不变到 250/500 iter，`model_31500.pt` 落盘后做 flat/踏石/圆桩 fixed evaluator 和连续回放。
+6. **AMP reward blend 仍分开立项。** sparse task reward 从 0.7× 恢复到 1.0× 是否提升样本效率，只能在 S9 物理合同和行为基线稳定后单独验证。
 
 ## 干预分类
 
@@ -204,7 +210,7 @@ S8 已冻结在 `model_33000.pt`。保留 tile-filling grid、真实 `Trunk`/双
 
 ## Final integration claim
 
-`final_integration_claim`: s6 证明策略会抬脚、踩上顶面并使用 scan；它的 strict 失败同时被有限 9×9 格点和缺失躯干/小腿碰撞污染。s7 使用 tile-filling grid + primitive collision 的组合修复；本切片不蒸学生、不热改 AMP/奖励/accel、不宣称单独碰撞因果或实机能力。
+`final_integration_claim`: s6 证明策略会抬脚、踩上顶面并使用 scan；它的 strict 失败同时被有限 9×9 格点和缺失躯干/小腿碰撞污染。S7/S8 又被 Shank-foot capsule 假自碰污染；S9 才是 tile-filling grid + 正确 primitive collision 的当前 lineage。本切片不蒸学生、不热改 AMP/奖励/accel，能力声明等 fixed evaluator 和连续回放。
 
 ## 工作项
 

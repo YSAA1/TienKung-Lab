@@ -9,13 +9,14 @@
 
 ## 梅花桩（nubot）
 
-- 任务仍是 `t4_loco_teacher_sparse`。S8 `2026-08-20_13-15-08_t_sparse_lightlp_s8_grid_collision_termcost` 已冻结在 `model_33000.pt`，训练 tmux 已停止；TensorBoard 可保留作历史查看。
+- 任务仍是 `t4_loco_teacher_sparse`。当前活跃 lineage 为 S9 `2026-08-20_16-07-04_t_sparse_lightlp_s9_capsulefix`，远端 worktree `/home/nubot/phn_ws/t4_train/TienKung-Lab-s9-capsulefix`，HEAD `fd84ee3`。训练 tmux `t4-sparse-lightlp-s9-capsulefix`，TensorBoard `http://100.100.188.39:8012/`。
 - s5（`2026-08-19_00-20-19_t_sparse_lightlp_s5`）已停，仅作第一脚负结果。s4 仍只当列号错位基线。
-- s6 已停，`model_31000.pt` 保留为下一正确 lineage 的 warm-start。S7/S8 均保留为失败证据：两者使用的 Shank capsule 与脚 collider 持续自重叠，不能再归因为 `termination_penalty=0` 的策略逃逸。sparse 额外 `termination_penalty` 已恢复为 0。
+- s6 已停，`model_31000.pt` 已作为 S9 warm-start，并重置 optimizer。S7/S8 均保留为失败证据：两者使用的 Shank capsule 与脚 collider 持续自重叠，不能再归因为 `termination_penalty=0` 的策略逃逸。S9 不加 `-200`，速度范围保持 `[-0.6, 1.0]`。
 - `model_6000.pt` 配对诊断已排除“不抬脚”与 scan 断链；旧 9×9 格点在踏石/圆桩只支撑到约 2.20/2.45 m，与 4 m 课程 path / evaluator 前进门槛不一致，OOB 在 4.25 m。隔离 tile-filling grid 因果对照显著改善进度、减少掉坑。
 - tile-filling grid 保留。`Trunk` box 保留；每侧 Shank 仍有膝部和胫骨 primitive collision。胫骨 URDF cylinder segment 已从 0.28 m 改为 0.20 m，使 Isaac capsule 的最终外包络为 0.28 m，与 MJCF 一致且不再插入脚 collider。
 - `model_33000.pt` 修复前 evaluator：flat strict 13/16，踏石/圆桩 strict 均 0/16。修复后同 checkpoint 三类场景均 0/16 strict，flat 也 16/16 early，证明策略已适应污染 plant，不能续训。证据：`artifacts/diagnostics/s8_model33000_local_replay/summary.md`。
-- 当前 active slice：完成资产/回归验证后，从 s6 `model_31000.pt` + fresh optimizer 在修复 plant 上开新 lineage；不加载 S7/S8，不加 `-200`，也不先把 max vx 改到 2.0。
+- S9 启动后 event step `31143` 早期窗口：`Episode_Reward/shank_contacts=0`，`undesired_contacts` 最近 20 点约 `-0.015`，`Reset/torso≈0.066`，`Reset/accel≈0.556`。假小腿接触未复现，但还没有新 checkpoint 的 fixed evaluator，不宣称稀疏地形能力。
+- 当前 active slice：保持 S9 配方不变跑到 250/500 iter 门，`model_31500.pt` 出炉后做 flat + easy 踏石 + easy 圆桩 fixed evaluator 和连续回放。
 - Stage E `t4_loco_teacher` 1155D 未改。
 - 旧 v4 软/硬与更早 sparse ckpt 只留对照，不加载。
 - 本切片不训学生。能力声明要等 evaluator + 回放。

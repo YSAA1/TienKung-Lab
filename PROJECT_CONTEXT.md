@@ -31,7 +31,7 @@ T4 约 1.4 m 站高，Trunk 在 0.9 m。资产在 `legged_lab/assets/t4/`，关�
 ## 还在推进
 
 1. **梅花桩**（nubot）  
-   LightLP §IV 单阶段真洞老师 `t4_loco_teacher_sparse`。旧 `t_sparse_lightlp_s6` 保留为 9×9 格点且缺失躯干/小腿碰撞的 baseline；固定 evaluator 已证明策略会抬脚且使用 scan。S7/S8 虽铺满 8 m tile 并激活 `Trunk` / 双侧 `Shank` primitive collision，但 Isaac 把 0.28 m 小腿 cylinder 转成 capsule 后与脚 collider 持续自重叠，训练 plant 已污染。当前已把 cylinder segment 改为 0.20 m，使 capsule 外包络与 MJCF 对齐；下一 lineage 从未经历假自碰的 s6 `model_31000.pt` 重开。
+   LightLP §IV 单阶段真洞老师 `t4_loco_teacher_sparse`。旧 `t_sparse_lightlp_s6` 保留为 9×9 格点且缺失躯干/小腿碰撞的 baseline；固定 evaluator 已证明策略会抬脚且使用 scan。S7/S8 的 0.28 m Shank cylinder 被 Isaac 转成与脚 collider 重叠的 capsule，因此已冻结为污染 lineage。修复后的 S9 已从 s6 `model_31000.pt` + fresh optimizer 重开，保留 tile-filling grid、真实 `Trunk`/双 `Shank` collision、原速度范围和 `termination_penalty=0`。启动后早期指标显示 Shank 假自碰已消失，但行为能力仍待 checkpoint evaluator。
    Actor 1937D（scan 史 ×5 + 接触）；足底 scan 只给 Critic。Stage E 1155D 不改。  
    本切片 **不** 训梅花桩学生。  
    计划：`docs/plans/2026-08-19--t4-sparse-easy-geometry-s6-plan.md`。
