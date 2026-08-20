@@ -206,6 +206,17 @@ def test_sparse_teacher_keeps_lightlp_terminal_cost_disabled():
     assert "termination_penalty = RewTerm(func=mdp.is_terminated, weight=0.0)" in sparse_rewards
 
 
+def test_sparse_teacher_hard_contact_termination_is_trunk_only():
+    root = Path(__file__).resolve().parents[1]
+    cfg_src = (root / "legged_lab" / "envs" / "t4" / "teacher_cfg.py").read_text()
+    teacher_env = cfg_src.split("class T4LocoTeacherEnvCfg", 1)[1].split("class T4LocoTeacherAgentCfg", 1)[0]
+    sparse_rewards = cfg_src.split("class T4SparseTeacherRewardCfg", 1)[1].split("@configclass", 1)[0]
+
+    assert 'terminate_contacts_body_names=["Trunk"]' in teacher_env
+    assert 'body_names=["A[LR]2", "A[LR]4", "Trunk", "Shank_.*"]' in sparse_rewards
+    assert "weight=-2.0" in sparse_rewards
+
+
 def test_train_can_reset_optimizer_for_a_changed_mdp_warm_start():
     root = Path(__file__).resolve().parents[1]
     cli_src = (root / "legged_lab" / "utils" / "cli_args.py").read_text()

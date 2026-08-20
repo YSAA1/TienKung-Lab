@@ -257,9 +257,9 @@ class T4LocoTeacherEnvCfg:
         actor_obs_history_length=PROPRIO_HISTORY_LENGTH,
         critic_obs_history_length=PROPRIO_HISTORY_LENGTH,
         action_scale=0.25,
-        # Shank contact stays a penalty rather than a termination: a knee brushing a
-        # stair riser is common on the up-stairs curriculum and must not end the episode.
-        terminate_contacts_body_names=["Trunk", "A[LR]2", "A[LR]4"],
+        # Arm and shank contacts stay penalties rather than terminations: brushing an
+        # obstacle must not end the episode, while a trunk collision remains a hard fall.
+        terminate_contacts_body_names=["Trunk"],
         feet_body_names=[".*_foot_link"],
     )
     reward = T4TeacherRewardCfg()
