@@ -458,6 +458,8 @@ class T4SparseTeacherRewardCfg(T4TeacherRewardCfg):
     )
     dof_pos_limits = RewTerm(func=mdp.joint_pos_limits, weight=-10.0)
     action_rate_l2 = RewTerm(func=mdp.action_rate_l2, weight=-0.1)
+    # LightLP sparse locomotion uses the paper reward table without an extra
+    # terminal cost. Physical falls remain terminations and lose future return.
     termination_penalty = RewTerm(func=mdp.is_terminated, weight=0.0)
     heading_error = RewTerm(func=mdp.heading_error, weight=-1.0)
     velocity_slack = RewTerm(func=mdp.velocity_slack, weight=1.5)

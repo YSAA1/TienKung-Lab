@@ -112,11 +112,28 @@ def test_foothold_centers_skip_platform_and_stay_in_border():
         assert not (abs(x - c) <= half and abs(y - c) <= half)
 
 
-def test_foothold_count_does_not_increase_with_difficulty():
+def test_foothold_count_fills_tile_without_increasing_with_difficulty():
     counts = [len(layout.foothold_centers(layout.foothold_pitch(d))) for d in (0.0, 0.5, 1.0)]
     assert counts[1] <= counts[0]
     assert counts[2] <= counts[1]
-    assert counts[1] <= 80
+    assert 150 <= counts[2] <= counts[0] <= 225
+
+
+@pytest.mark.parametrize("kind", ["stepping_stones", "raised_pillars"])
+@pytest.mark.parametrize("difficulty", [0.0, 1.0])
+def test_sparse_lattice_does_not_end_in_a_multi_stride_void(kind, difficulty):
+    if kind == "stepping_stones":
+        pitch = layout.foothold_pitch(difficulty)
+        support = layout.stone_width(difficulty)
+    else:
+        pitch = layout.foothold_pitch(difficulty, layout.T4_PILLAR_PITCH_RANGE)
+        support = layout.pillar_diameter(difficulty)
+
+    center = 0.5 * layout.T4_STONE_TILE_SIZE
+    last_center = max(x - center for x, _ in layout.foothold_centers(pitch))
+    terminal_void = 0.5 * layout.T4_STONE_TILE_SIZE - (last_center + 0.5 * support)
+
+    assert terminal_void <= pitch + layout.T4_STONE_BORDER_WIDTH
 
 
 def test_sparse_mix_is_large_enough_to_drive_learning():

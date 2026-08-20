@@ -26,10 +26,12 @@ T4 约 1.4 m 站高，Trunk 在 0.9 m。资产在 `legged_lab/assets/t4/`，关�
 
 跨栏是脚上地形，不是手上技能，因此并进 Stage E，不再单独开 lineage。
 
+2026-08-20 共享 URDF 激活了 `Trunk` 和双侧 `Shank` collision。这不删除旧 Stage E / depth / vault checkpoint，但会改变仿真 plant；旧 evaluator 结论不能自动迁移到新物理。
+
 ## 还在推进
 
 1. **梅花桩**（nubot）  
-   LightLP §IV 单阶段真洞老师 `t4_loco_teacher_sparse`。s5 列映射已对，但 easy 第一脚踩不上；现行从零 `t_sparse_lightlp_s6`（放宽 easy 顶面/缝/上台高）。
+   LightLP §IV 单阶段真洞老师 `t4_loco_teacher_sparse`。旧 `t_sparse_lightlp_s6` 保留为 9×9 格点且缺失躯干/小腿碰撞的 baseline；固定 evaluator 已证明策略会抬脚且使用 scan。S7/S8 虽铺满 8 m tile 并激活 `Trunk` / 双侧 `Shank` primitive collision，但 Isaac 把 0.28 m 小腿 cylinder 转成 capsule 后与脚 collider 持续自重叠，训练 plant 已污染。当前已把 cylinder segment 改为 0.20 m，使 capsule 外包络与 MJCF 对齐；下一 lineage 从未经历假自碰的 s6 `model_31000.pt` 重开。
    Actor 1937D（scan 史 ×5 + 接触）；足底 scan 只给 Critic。Stage E 1155D 不改。  
    本切片 **不** 训梅花桩学生。  
    计划：`docs/plans/2026-08-19--t4-sparse-easy-geometry-s6-plan.md`。

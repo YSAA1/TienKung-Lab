@@ -198,6 +198,24 @@ def test_stage_e_task_has_no_soft_hard_switch():
     assert schemas.TEACHER_ACTOR_OBS_DIM == 1155
 
 
+def test_sparse_teacher_keeps_lightlp_terminal_cost_disabled():
+    root = Path(__file__).resolve().parents[1]
+    cfg_src = (root / "legged_lab" / "envs" / "t4" / "teacher_cfg.py").read_text()
+    sparse_rewards = cfg_src.split("class T4SparseTeacherRewardCfg", 1)[1].split("@configclass", 1)[0]
+
+    assert "termination_penalty = RewTerm(func=mdp.is_terminated, weight=0.0)" in sparse_rewards
+
+
+def test_train_can_reset_optimizer_for_a_changed_mdp_warm_start():
+    root = Path(__file__).resolve().parents[1]
+    cli_src = (root / "legged_lab" / "utils" / "cli_args.py").read_text()
+    train_src = (root / "legged_lab" / "scripts" / "train.py").read_text()
+
+    assert '"--reset_optimizer"' in cli_src
+    assert "Loading model state with a fresh optimizer." in train_src
+    assert "runner.load(resume_path, load_optimizer=not args_cli.reset_optimizer)" in train_src
+
+
 def test_default_teacher_stays_1155_sparse_is_new_dim():
     assert schemas.TEACHER_ACTOR_OBS_DIM == 1155
     assert schemas.TEACHER_SPARSE_SCAN_HISTORY_LENGTH == 5

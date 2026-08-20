@@ -9,7 +9,7 @@
 
 | 轨道 | 现在做什么 | 执行计划 | 规格 |
 | --- | --- | --- | --- |
-| 梅花桩 | nubot 四卡从零 `t_sparse_lightlp_s6`（放宽 easy 几何）。s5 只当第一脚负结果。**本切片不蒸学生。** | [梅花桩计划](plans/2026-08-19--t4-sparse-easy-geometry-s6-plan.md) | [稀疏规格](specs/2026-08-15--t4-stepping-stones-and-hurdle-stable.md) |
+| 梅花桩 | S8 已冻结在 `model_33000.pt`。本地回放确认 Isaac 将 0.28 m 小腿 cylinder 转成 capsule 后与脚 collider 持续自重叠；已把 cylinder segment 改为 0.20 m，使 capsule 外包络与 MJCF 一致。S7/S8 属于污染 plant，不再续训；下一 lineage 从 s6 `model_31000.pt` 在修复物理上重新适应。**本切片不蒸学生。** | [梅花桩计划](plans/2026-08-19--t4-sparse-easy-geometry-s6-plan.md) | [稀疏规格](specs/2026-08-15--t4-stepping-stones-and-hurdle-stable.md) |
 | 翻箱 | G1 跟踪专家 → G2 heightscan 技能（zhuoqun）。**G2 学生与 G3 合并（走跑+翻箱成一条策略）等 G2 过箱后再开。** | [翻箱 recovery](plans/2026-08-15--t4-vault-g1-g2-recovery-plan.md) | [合并规格](specs/2026-08-13--t4-vault-loco-merge.md) |
 
 运行时切片与机器占用：`.harness/work_index.md`、`.harness/state.md`。
@@ -26,6 +26,8 @@
 - 失败或被取代的梅花桩尝试（旧 25k、S1d、软/硬 v4）只留对照 ckpt 与归档计划。
 
 走跑完成 **不等于** 100m `rule` 全路线、真机障碍验收、梅花桩能力或翻箱 G3。
+
+2026-08-20 共享 T4 URDF 新增了躯干/双小腿碰撞。旧 Stage E、depth student 和 vault checkpoint 仍是有效产物，但它们过去的仿真 evaluator 证据属于旧 plant；在新资产上做新能力声明前必须重评。
 
 ## 冻结合同（改了就开新 lineage）
 

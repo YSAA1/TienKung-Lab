@@ -1,5 +1,7 @@
 # Decisions
 
+- 2026-08-20：S8 冻结在 `model_33000.pt`。正式本地回放确认 `replace_cylinders_with_capsules=True` 把胫骨 0.28 m cylinder 扩成外包络 0.36 m，并与脚 collider 重叠约 3 mm，造成双 Shank 每步约 20 kN 假自碰和持续 `undesired_contacts`。胫骨 cylinder segment 改为 0.20 m，使 capsule 外包络与 MJCF 的 0.28 m 圆柱一致。S7/S8 checkpoint 不续训；sparse 额外 `termination_penalty=-200` 撤回，下一 lineage 从 s6 `model_31000.pt` 在修复 plant 上重开。
+- 2026-08-20：用户批准 `s7_grid_collision` 组合修复，覆盖 2026-08-19「不加腿碰撞」的临时限制。旧 9×9 格点与 4 m gate 存在硬合同 bug，改为按 tile/border/pitch 动态铺满；共享 URDF 激活与 MJCF 对齐的 `Trunk` box 和双侧 `Shank` primitive collision。从 s6 `model_31000.pt` warm-start 适应新 plant；本 lineage 不同时加 AMP、改奖励权重或放松 accel/OOB，也不单独归因 collision 收益。旧 Stage E / depth / vault checkpoint 保留，但旧物理 evaluator 不能自动迁移为新能力证据。
 - 2026-08-19：s5 不作梅花桩证据。卡点是 easy 第一脚（26 cm 砖 / 24 cm 石间空洞 / 16 cm 上台），不是某一条 LightLP 奖励。开 s6：踏石 easy 40 cm 顶、10 cm 缝、9 cm 上台；圆桩只降高到 8 cm；10% 随机 level 锁 0–3 行。不热补 s5，不改 accel/OOB，不加腿碰撞。
 - 2026-08-18：s4 不作梅花桩证据。P0 是 `terrain_types` 列号被当成 sub_terrain 下标。先修映射与 LightLP 10% 随机 level / Eq.4–5 / opposite / 路径晋级，再从零开 s5。不在 s4 ckpt 上热补；不改 accel 40、不打开 algebraic。
 - 2026-08-18：文档收口。现行只有两条执行轨道（梅花桩、翻箱 G1/G2）。入口改为 `docs/README.md`。撤回梅花桩软/硬二阶段，单阶段真洞。G2 学生与 G3 合并等过箱后再开。

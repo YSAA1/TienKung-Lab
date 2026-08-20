@@ -17,7 +17,9 @@
 # and is distributed under the BSD-3-Clause license.
 
 import argparse
+import json
 import os
+from collections import deque
 
 import torch
 from isaaclab.app import AppLauncher
@@ -37,6 +39,12 @@ parser = argparse.ArgumentParser(description="Train an RL agent with RSL-RL.")
 parser.add_argument("--task", type=str, default=None, help="Name of the task.")
 parser.add_argument("--num_envs", type=int, default=None, help="Number of environments to simulate.")
 parser.add_argument("--seed", type=int, default=None, help="Seed used for the environment")
+parser.add_argument("--command_vx", type=float, default=0.6, help="Fixed forward velocity command in m/s.")
+parser.add_argument(
+    "--disable_self_collisions",
+    action="store_true",
+    help="Diagnostic replay only: disable articulation self-collisions before spawning the robot.",
+)
 parser.add_argument(
     "--terrain",
     action="store_true",
@@ -117,13 +125,16 @@ def play():
         return
     env_cfg, agent_cfg = task_registry.get_cfgs(env_class_name)
 
+    if args_cli.disable_self_collisions:
+        env_cfg.scene.robot.spawn.articulation_props.enabled_self_collisions = False
+
     env_cfg.noise.add_noise = False
     env_cfg.domain_rand.events.push_robot = None
     env_cfg.scene.max_episode_length_s = 40.0
     env_cfg.scene.num_envs = 50
     env_cfg.scene.env_spacing = 2.5
     env_cfg.commands.rel_standing_envs = 0.0
-    env_cfg.commands.ranges.lin_vel_x = (0.6, 0.6)
+    env_cfg.commands.ranges.lin_vel_x = (args_cli.command_vx, args_cli.command_vx)
     env_cfg.commands.ranges.lin_vel_y = (0.0, 0.0)
     env_cfg.scene.height_scanner.drift_range = (0.0, 0.0)
 
@@ -345,14 +356,14 @@ def _record_event_line(env, step_idx: int, root) -> str | None:
     reset_buf = getattr(env, "reset_buf", None)
     if reset_buf is None or not bool(reset_buf[0].item()):
         return None
-    death = getattr(env, "last_step_root_pos_w", None)
+    death = getattr(env, "terminal_root_pos_w", None)
     pose = death[0] if death is not None else root
     origin = getattr(getattr(env, "scene", None), "env_origins", None)
     if origin is not None:
         radial = float(torch.norm(pose[:2] - origin[0, :2]).item())
     else:
         radial = float(torch.norm(pose[:2]).item())
-    peak = getattr(env, "last_step_episode_max_radial_dist", None)
+    peak = getattr(env, "terminal_episode_max_radial_dist", None)
     if peak is not None:
         radial_peak = float(peak[0].item())
     else:
@@ -366,11 +377,61 @@ def _record_event_line(env, step_idx: int, root) -> str | None:
     for name, mask in reasons.items():
         if bool(mask[0].item()):
             flags.append(name)
+    accel = getattr(env, "terminal_root_accel_mps2", None)
+    tilt = getattr(env, "terminal_tilt_rad", None)
+    contact = getattr(env, "terminal_diagnostic_contact_force_n", None)
+    contact_names = getattr(env, "diagnostic_contact_body_names", ())
+    contact_text = ""
+    if contact is not None:
+        values = contact[0].detach().cpu().tolist()
+        contact_text = " contacts=" + ",".join(
+            f"{name}:{float(value):.1f}N" for name, value in zip(contact_names, values)
+        )
     return (
         f"reset step={step_idx} xy=({float(pose[0]):.2f},{float(pose[1]):.2f}) "
         f"z={float(pose[2]):.2f} r={radial:.2f} peak={radial_peak:.2f} "
-        f"flags={','.join(flags) or 'unknown'}"
+        f"accel={float(accel[0]) if accel is not None else float('nan'):.1f}mps2 "
+        f"tilt={float(tilt[0]) if tilt is not None else float('nan'):.2f}rad "
+        f"flags={','.join(flags) or 'unknown'}{contact_text}"
     )
+
+
+def _record_diagnostic_snapshot(env, step_idx: int) -> dict:
+    """Capture env-0 impact state, using terminal buffers after automatic reset."""
+    reset = bool(getattr(env, "reset_buf", torch.zeros(1, device=env.device))[0].item())
+    if reset:
+        root_pos = env.terminal_root_pos_w[0]
+        root_vel = env.terminal_root_lin_vel_w[0]
+        accel = env.terminal_root_accel_mps2[0]
+        tilt = env.terminal_tilt_rad[0]
+        contact = env.terminal_diagnostic_contact_force_n[0]
+    else:
+        root_pos = env.robot.data.root_pos_w[0]
+        root_vel = env.robot.data.root_lin_vel_w[0]
+        accel = env.last_root_accel_mps2[0]
+        tilt = env.last_tilt_rad[0]
+        net_forces = env.contact_sensor.data.net_forces_w_history
+        contact = torch.max(
+            torch.norm(net_forces[0:1, :, env.diagnostic_contact_cfg.body_ids], dim=-1),
+            dim=1,
+        )[0][0]
+    reasons = getattr(env, "reset_reason_masks", None) or {}
+    return {
+        "step": step_idx,
+        "reset": reset,
+        "reset_reasons": [name for name, mask in reasons.items() if reset and bool(mask[0].item())],
+        "root_pos_w_m": [float(value) for value in root_pos.detach().cpu().tolist()],
+        "root_lin_vel_w_mps": [float(value) for value in root_vel.detach().cpu().tolist()],
+        "root_accel_mps2": float(accel.item()),
+        "tilt_rad": float(tilt.item()),
+        "contact_force_n": {
+            name: float(value)
+            for name, value in zip(
+                env.diagnostic_contact_body_names,
+                contact.detach().cpu().tolist(),
+            )
+        },
+    }
 
 
 def _record_play_video(
@@ -415,17 +476,26 @@ def _record_play_video(
     look_offset = torch.tensor(cam_look, device=env.device)
     eye_offset = torch.tensor(cam_eye, device=env.device)
     event_path = os.path.splitext(os.path.abspath(output_path))[0] + ".txt"
+    diagnostic_path = os.path.splitext(os.path.abspath(output_path))[0] + ".diagnostics.json"
     events: list[str] = []
+    diagnostic_events: list[dict] = []
+    diagnostic_trace: list[dict] = []
+    diagnostic_history = deque(maxlen=max(1, int(round(2.0 / step_dt))))
 
     for step_idx in range(n_steps):
         with torch.inference_mode():
             actions = policy(obs)
             obs, _, _, _ = env.step(actions)
         root = robot.data.root_pos_w[0]
+        diagnostic_snapshot = _record_diagnostic_snapshot(env, step_idx)
+        diagnostic_history.append(diagnostic_snapshot)
+        diagnostic_trace.append(diagnostic_snapshot)
         event = _record_event_line(env, step_idx, root)
         if event:
             print(f"[RESET] {event}", flush=True)
             events.append(event)
+            diagnostic_events.append({"event": event, "timeline": list(diagnostic_history)})
+            diagnostic_history.clear()
         camera.set_world_poses_from_view(
             eyes=(root + eye_offset).unsqueeze(0),
             targets=(root + look_offset).unsqueeze(0),
@@ -440,6 +510,17 @@ def _record_play_video(
     os.makedirs(os.path.dirname(os.path.abspath(output_path)) or ".", exist_ok=True)
     with open(event_path, "w", encoding="utf-8") as handle:
         handle.write("\n".join(events) + ("\n" if events else ""))
+    with open(diagnostic_path, "w", encoding="utf-8") as handle:
+        json.dump(
+            {
+                "contact_body_names": list(env.diagnostic_contact_body_names),
+                "events": diagnostic_events,
+                "trace": diagnostic_trace,
+            },
+            handle,
+            indent=2,
+        )
+        handle.write("\n")
     fps = max(1, int(round(1.0 / step_dt)))
     written = _write_play_frames(output_path, frames, fps)
     print(f"[INFO] wrote {written} ({len(frames)} frames, {len(events)} resets)")

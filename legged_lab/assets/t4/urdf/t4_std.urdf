@@ -76,14 +76,14 @@ Stephen Brawner (brawner@gmail.com)
           rgba="0.1 0.1 0.1 1.0" />
       </material>
     </visual>
-    <!-- <collision>
+    <collision>
       <origin
-        xyz="0 0 0.22"
+        xyz="0 0 0.12"
         rpy="0 0 0" />
       <geometry>
-        <box size="0.15 0.16 0.25" />
+        <box size="0.10 0.16 0.34" />
       </geometry>
-    </collision> -->
+    </collision>
     <!-- <collision>
       <origin
         xyz="0 0 0.4"
@@ -1516,22 +1516,22 @@ Stephen Brawner (brawner@gmail.com)
           rgba="0.418 0.418 0.418 1.0" />
       </material>
     </visual>
-    <!-- <collision>
+    <collision>
       <origin
         xyz="0.00 -0 -0.0"
-        rpy="1.57 0 0" />
+        rpy="1.57079632679 0 0" />
       <geometry>
         <cylinder radius="0.05" length="0.1" />
       </geometry>
-    </collision> -->
-    <!-- <collision>
+    </collision>
+    <collision>
       <origin
         xyz="0.00 -0 -0.16"
         rpy="0 0 0" />
       <geometry>
-        <cylinder radius="0.05" length="0.17" />
+        <cylinder radius="0.04" length="0.20" />
       </geometry>
-    </collision> -->
+    </collision>
   </link>
   <joint
     name="J_knee_l_pitch"
@@ -1969,22 +1969,22 @@ Stephen Brawner (brawner@gmail.com)
           rgba="0.418 0.418 0.418 1.0" />
       </material>
     </visual>
-    <!-- <collision>
+    <collision>
       <origin
         xyz="0.00 -0 -0.0"
-        rpy="1.57 0 0" />
+        rpy="1.57079632679 0 0" />
       <geometry>
         <cylinder radius="0.05" length="0.1" />
       </geometry>
-    </collision> -->
-    <!-- <collision>
+    </collision>
+    <collision>
       <origin
         xyz="0.00 -0 -0.16"
         rpy="0 0 0" />
       <geometry>
-        <cylinder radius="0.05" length="0.17" />
+        <cylinder radius="0.04" length="0.20" />
       </geometry>
-    </collision> -->
+    </collision>
   </link>
   <joint
     name="J_knee_r_pitch"

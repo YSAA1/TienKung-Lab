@@ -19,9 +19,10 @@ import math
 T4_STONE_TILE_SIZE = 8.0
 T4_STONE_PLATFORM_WIDTH = 1.6
 T4_STONE_BORDER_WIDTH = 0.25
-T4_FOOTHOLD_GRID_COUNT = 9
 # Easy: 40 cm top, 10 cm inter-stone void, 9 cm rise. The 1.6 m pad meets the
-# first stone edge (first_gap ≈ 0). Hard still narrows. 9×9 fits the 8 m tile.
+# first stone edge (first_gap ≈ 0). Hard still narrows. The lattice count is
+# derived from pitch so changing local step geometry cannot silently shorten the
+# traversable course inside the fixed 8 m tile.
 T4_FOOTHOLD_PITCH_RANGE = (0.50, 0.54)
 T4_STONE_WIDTH_RANGE = (0.40, 0.26)
 T4_STONE_HEIGHT_RANGE = (0.09, 0.24)
@@ -134,15 +135,16 @@ def foothold_centers(
     tile_size: float = T4_STONE_TILE_SIZE,
     platform_width: float = T4_STONE_PLATFORM_WIDTH,
     border_width: float = T4_STONE_BORDER_WIDTH,
-    grid_count: int = T4_FOOTHOLD_GRID_COUNT,
 ) -> list[tuple[float, float]]:
-    """Centers of a fixed square lattice that skips the spawn platform."""
+    """Centers of a tile-filling square lattice that skips the spawn platform."""
     if pitch <= 0.0:
         raise ValueError(f"pitch must be positive, got {pitch}")
-    if grid_count < 2:
-        raise ValueError(f"grid_count must be at least 2, got {grid_count}")
     c = tile_size / 2.0
-    half_span = 0.5 * (grid_count - 1) * pitch
+    max_ring = math.floor((c - border_width) / pitch)
+    if max_ring < 1:
+        raise ValueError(f"pitch={pitch} does not leave room for a foothold ring in tile={tile_size}")
+    grid_count = 2 * max_ring + 1
+    half_span = max_ring * pitch
     lo = c - half_span
     hi = c + half_span
     if lo <= border_width or hi >= tile_size - border_width:

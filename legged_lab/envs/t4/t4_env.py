@@ -64,6 +64,7 @@ from legged_lab.envs.t4.mdp.sparse_signals import (
     random_level_reset_mask,
     sparse_curriculum_moves,
     sparse_pit_fall_mask,
+    tilt_from_upright_rad,
 )
 from legged_lab.envs.t4.terrain_columns import (
     HURDLE_TERRAIN_NAMES,
@@ -80,6 +81,7 @@ from legged_lab.terrains.stepping_stone_layout import (
     T4_FOOTHOLD_PITCH_RANGE,
     T4_PILLAR_DIAMETER_RANGE,
     T4_PILLAR_PITCH_RANGE,
+    T4_STONE_BORDER_WIDTH,
     T4_STONE_PLATFORM_WIDTH,
     T4_STONE_TILE_SIZE,
     T4_STONE_WIDTH_RANGE,
@@ -238,6 +240,13 @@ class T4LocoEnv(VecEnv):
         self.termination_contact_cfg.resolve(self.scene)
         self.feet_cfg = SceneEntityCfg(name="contact_sensor", body_names=self.cfg.robot.feet_body_names)
         self.feet_cfg.resolve(self.scene)
+        self.diagnostic_contact_body_names = ("Trunk", "Shank_Left", "Shank_Right")
+        self.diagnostic_contact_cfg = SceneEntityCfg(
+            name="contact_sensor",
+            body_names=list(self.diagnostic_contact_body_names),
+            preserve_order=True,
+        )
+        self.diagnostic_contact_cfg.resolve(self.scene)
 
         # Policy-facing joint vectors always use the frozen T4 order; the simulator
         # order is an implementation detail of the USD conversion.
@@ -326,16 +335,56 @@ class T4LocoEnv(VecEnv):
         self.episode_tracking_steps = torch.zeros(
             self.num_envs, dtype=torch.float, device=self.device, requires_grad=False
         )
-        # Evaluators need the terminal state before ``reset()`` overwrites the
-        # just-finished environment with its initial pose.
-        self.last_step_root_pos_w = torch.zeros(
+        # Path length needs the previous control-step pose, while evaluators need
+        # a terminal snapshot that survives the automatic reset in ``step()``.
+        self.prev_step_root_pos_w = torch.zeros(
             self.num_envs, 3, dtype=torch.float, device=self.device, requires_grad=False
         )
-        self.last_step_root_quat_w = torch.zeros(
+        self.terminal_root_pos_w = torch.zeros(
+            self.num_envs, 3, dtype=torch.float, device=self.device, requires_grad=False
+        )
+        self.terminal_root_quat_w = torch.zeros(
             self.num_envs, 4, dtype=torch.float, device=self.device, requires_grad=False
         )
-        self.last_step_episode_max_radial_dist = torch.zeros(
+        self.terminal_episode_max_radial_dist = torch.zeros(
             self.num_envs, dtype=torch.float, device=self.device, requires_grad=False
+        )
+        self.terminal_feet_pos_w = torch.zeros(
+            self.num_envs,
+            len(self.feet_body_ids),
+            3,
+            dtype=torch.float,
+            device=self.device,
+            requires_grad=False,
+        )
+        self.terminal_feet_contact = torch.zeros(
+            self.num_envs,
+            len(self.feet_body_ids),
+            dtype=torch.bool,
+            device=self.device,
+            requires_grad=False,
+        )
+        self.last_root_accel_mps2 = torch.zeros(
+            self.num_envs, dtype=torch.float, device=self.device, requires_grad=False
+        )
+        self.last_tilt_rad = torch.zeros(
+            self.num_envs, dtype=torch.float, device=self.device, requires_grad=False
+        )
+        self.terminal_root_lin_vel_w = torch.zeros(
+            self.num_envs, 3, dtype=torch.float, device=self.device, requires_grad=False
+        )
+        self.terminal_root_accel_mps2 = torch.zeros(
+            self.num_envs, dtype=torch.float, device=self.device, requires_grad=False
+        )
+        self.terminal_tilt_rad = torch.zeros(
+            self.num_envs, dtype=torch.float, device=self.device, requires_grad=False
+        )
+        self.terminal_diagnostic_contact_force_n = torch.zeros(
+            self.num_envs,
+            len(self.diagnostic_contact_cfg.body_ids),
+            dtype=torch.float,
+            device=self.device,
+            requires_grad=False,
         )
 
         self.action = torch.zeros(
@@ -515,9 +564,11 @@ class T4LocoEnv(VecEnv):
         iy = torch.round(ry / pitch)
         dx = rx - ix * pitch
         dy = ry - iy * pitch
+        max_ring = torch.floor((c - T4_STONE_BORDER_WIDTH) / pitch)
+        within_lattice = (ix.abs() <= max_ring) & (iy.abs() <= max_ring)
         on_rect = (dx.abs() <= half_support) & (dy.abs() <= half_support)
         on_disk = (dx * dx + dy * dy) <= (half_support * half_support)
-        on_foothold = torch.where(is_stone.unsqueeze(1), on_rect, on_disk)
+        on_foothold = torch.where(is_stone.unsqueeze(1), on_rect, on_disk) & within_lattice
         on_support = on_platform | on_foothold
         return on_support & sparse.unsqueeze(1)
 
@@ -566,18 +617,21 @@ class T4LocoEnv(VecEnv):
             chunks.append(depth * self.obs_scales.height_scan)
         return torch.cat(chunks, dim=-1)
 
-    def algebraic_illegal_footstep(self, contact_threshold: float = 0.5) -> torch.Tensor:
-        """Vectorized illegal fraction from the true-hole lattice (soft-stage)."""
+    def algebraic_foot_illegal_fractions(
+        self,
+        foot_pos_w: torch.Tensor | None = None,
+        root_quat_w: torch.Tensor | None = None,
+    ) -> torch.Tensor:
+        """Per-foot unsupported fractions from the analytic sparse lattice."""
         sparse = self.sparse_tile_mask
         if not torch.any(sparse):
-            return torch.zeros(self.num_envs, device=self.device)
-        feet_force_w = self.contact_sensor.data.net_forces_w
-        if feet_force_w.ndim == 4:
-            feet_force_w = feet_force_w[:, -1]
-        feet_force = torch.norm(feet_force_w[:, self.feet_body_ids], dim=-1)
-        in_contact = feet_force > contact_threshold
-        foot_pos = self.robot.data.body_pos_w[:, self.feet_body_ids, :2]
-        yaw_q = yaw_quat(self.robot.data.root_quat_w)
+            return torch.zeros(self.num_envs, len(self.feet_body_ids), device=self.device)
+        if foot_pos_w is None:
+            foot_pos_w = self.robot.data.body_pos_w[:, self.feet_body_ids, :]
+        if root_quat_w is None:
+            root_quat_w = self.robot.data.root_quat_w
+        foot_pos = foot_pos_w[..., :2]
+        yaw_q = yaw_quat(root_quat_w)
         w, x, y, z = yaw_q[:, 0], yaw_q[:, 1], yaw_q[:, 2], yaw_q[:, 3]
         yaw = torch.atan2(2.0 * (w * z + x * y), 1.0 - 2.0 * (y * y + z * z))
         cos_y = torch.cos(yaw)
@@ -593,10 +647,18 @@ class T4LocoEnv(VecEnv):
             on_support = self._sparse_support_mask_xy(world_xy)
             # Non-sparse envs have all-false support mask; force full support so frac is 0.
             on_support = on_support | (~sparse).unsqueeze(1)
-            frac = (~on_support).float().mean(dim=-1)
-            penalties.append(frac * in_contact[:, foot_i].float())
-        penalty = torch.stack(penalties, dim=-1).sum(dim=-1) * sparse.float()
-        return penalty
+            penalties.append((~on_support).float().mean(dim=-1))
+        return torch.stack(penalties, dim=-1) * sparse.float().unsqueeze(-1)
+
+    def algebraic_illegal_footstep(self, contact_threshold: float = 0.5) -> torch.Tensor:
+        """Vectorized contacted-foot illegal fraction from the true-hole lattice."""
+        feet_force_w = self.contact_sensor.data.net_forces_w
+        if feet_force_w.ndim == 4:
+            feet_force_w = feet_force_w[:, -1]
+        feet_force = torch.norm(feet_force_w[:, self.feet_body_ids], dim=-1)
+        in_contact = feet_force > contact_threshold
+        fractions = self.algebraic_foot_illegal_fractions()
+        return torch.sum(fractions * in_contact.float(), dim=-1)
 
     def update_foot_accel_penalty(
         self,
@@ -713,7 +775,7 @@ class T4LocoEnv(VecEnv):
                 self._resample_impact_immunity()
         radial_dist = torch.norm(self.robot.data.root_pos_w[:, :2] - self.scene.env_origins[:, :2], dim=1)
         self.episode_max_radial_dist = torch.maximum(self.episode_max_radial_dist, radial_dist)
-        step_delta = torch.norm(self.robot.data.root_pos_w[:, :2] - self.last_step_root_pos_w[:, :2], dim=1)
+        step_delta = torch.norm(self.robot.data.root_pos_w[:, :2] - self.prev_step_root_pos_w[:, :2], dim=1)
         self.episode_path_length = self.episode_path_length + step_delta
         tracking = self._gait_tracking_scale()
         moving_cmd = torch.norm(self.command_generator.command[:, :2], dim=1) > STANDING_COMMAND_THRESHOLD
@@ -727,10 +789,31 @@ class T4LocoEnv(VecEnv):
 
         self.reset_buf, self.time_out_buf = self.check_reset()
         reward_buf = self.reward_manager.compute(self.step_dt)
-        self.last_step_root_pos_w.copy_(self.robot.data.root_pos_w)
-        self.last_step_root_quat_w.copy_(self.robot.data.root_quat_w)
-        self.last_step_episode_max_radial_dist.copy_(self.episode_max_radial_dist)
         self.reset_env_ids = self.reset_buf.nonzero(as_tuple=False).flatten()
+        self.prev_step_root_pos_w.copy_(self.robot.data.root_pos_w)
+        if len(self.reset_env_ids) > 0:
+            env_ids = self.reset_env_ids
+            self.terminal_root_pos_w[env_ids] = self.robot.data.root_pos_w[env_ids]
+            self.terminal_root_quat_w[env_ids] = self.robot.data.root_quat_w[env_ids]
+            self.terminal_root_lin_vel_w[env_ids] = self.robot.data.root_lin_vel_w[env_ids]
+            self.terminal_root_accel_mps2[env_ids] = self.last_root_accel_mps2[env_ids]
+            self.terminal_tilt_rad[env_ids] = self.last_tilt_rad[env_ids]
+            self.terminal_episode_max_radial_dist[env_ids] = self.episode_max_radial_dist[env_ids]
+            self.terminal_feet_pos_w[env_ids] = self.robot.data.body_pos_w[env_ids][:, self.feet_body_ids, :]
+            net_contact_forces = self.contact_sensor.data.net_forces_w_history
+            diagnostic_contact_force = torch.max(
+                torch.norm(net_contact_forces[:, :, self.diagnostic_contact_cfg.body_ids], dim=-1),
+                dim=1,
+            )[0]
+            self.terminal_diagnostic_contact_force_n[env_ids] = diagnostic_contact_force[env_ids]
+            feet_contact = (
+                torch.max(
+                    torch.norm(net_contact_forces[:, :, self.feet_cfg.body_ids], dim=-1),
+                    dim=1,
+                )[0]
+                > 0.5
+            )
+            self.terminal_feet_contact[env_ids] = feet_contact[env_ids]
         self.reset(self.reset_env_ids)
 
         actor_obs, critic_obs = self.compute_observations()
@@ -760,9 +843,8 @@ class T4LocoEnv(VecEnv):
         time_out_buf = self.episode_length_buf >= self.max_episode_length
         reset_buf |= time_out_buf
 
-        # Orientation fall termination (VITAL parity): the URDF keeps collision
-        # geometry only on the feet/hands, so trunk-contact termination can never
-        # fire and falls would otherwise run out the full episode.
+        # Orientation fall termination (VITAL parity) remains a geometric fallback:
+        # the trunk now has collision, but a large tilt can occur before contact.
         roll, pitch, _ = euler_xyz_from_quat(self.robot.data.root_quat_w)
         roll = torch.atan2(torch.sin(roll), torch.cos(roll))
         pitch = torch.atan2(torch.sin(pitch), torch.cos(pitch))
@@ -801,6 +883,10 @@ class T4LocoEnv(VecEnv):
         accel = torch.norm((lin_vel - self.prev_root_lin_vel_w) / max(self.step_dt, 1.0e-6), dim=1)
         self.prev_root_lin_vel_w.copy_(lin_vel)
         gravity_b = self.robot.data.projected_gravity_b
+        self.last_root_accel_mps2.copy_(accel)
+        self.last_tilt_rad.copy_(
+            tilt_from_upright_rad(gravity_b[:, 0], gravity_b[:, 1], gravity_b[:, 2])
+        )
         reset_buf, time_out_buf, reasons = lightlp_timeout_and_reset(
             episode_timeout=self.episode_length_buf >= self.max_episode_length,
             offset_xy=offset,
@@ -873,8 +959,7 @@ class T4LocoEnv(VecEnv):
 
         self.scene.write_data_to_sim()
         self.sim.forward()
-        self.last_step_root_pos_w[env_ids] = self.robot.data.root_pos_w[env_ids]
-        self.last_step_root_quat_w[env_ids] = self.robot.data.root_quat_w[env_ids]
+        self.prev_step_root_pos_w[env_ids] = self.robot.data.root_pos_w[env_ids]
 
     def update_terrain_levels(self, env_ids):
         """Apply terrain curriculum and update recent per-bucket behavior metrics."""

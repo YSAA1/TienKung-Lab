@@ -77,6 +77,74 @@ def test_t4_asset_bundle_is_self_contained() -> None:
     assert all(path.is_file() for path in mesh_paths)
 
 
+def test_t4_urdf_has_trunk_and_symmetric_shank_primitive_collisions() -> None:
+    root = ET.parse(T4_ASSET / "urdf/t4_std.urdf").getroot()
+    links = {link.attrib["name"]: link for link in root.findall("link")}
+
+    trunk_collisions = links["Trunk"].findall("collision")
+    assert len(trunk_collisions) == 1
+    trunk_collision = trunk_collisions[0]
+    assert trunk_collision.find("geometry/mesh") is None
+    assert np.allclose(
+        [
+            float(value)
+            for value in trunk_collision.find("origin").attrib["xyz"].split()
+        ],
+        [0, 0, 0.12],
+    )
+    assert np.allclose(
+        [
+            float(value)
+            for value in trunk_collision.find("geometry/box").attrib["size"].split()
+        ],
+        [0.10, 0.16, 0.34],
+    )
+
+    shank_contracts = []
+    for link_name in ("Shank_Left", "Shank_Right"):
+        collisions = links[link_name].findall("collision")
+        assert len(collisions) == 2
+        assert all(collision.find("geometry/mesh") is None for collision in collisions)
+
+        contract = []
+        for collision in collisions:
+            origin = collision.find("origin")
+            cylinder = collision.find("geometry/cylinder")
+            assert origin is not None
+            assert cylinder is not None
+            contract.append(
+                (
+                    tuple(float(value) for value in origin.attrib["xyz"].split()),
+                    tuple(float(value) for value in origin.attrib["rpy"].split()),
+                    float(cylinder.attrib["radius"]),
+                    float(cylinder.attrib["length"]),
+                )
+            )
+        shank_contracts.append(contract)
+
+    assert shank_contracts[0] == shank_contracts[1]
+    assert np.allclose(shank_contracts[0][0][0], [0, 0, 0])
+    assert np.allclose(shank_contracts[0][0][1], [1.57079632679, 0, 0])
+    assert shank_contracts[0][0][2:] == (0.05, 0.10)
+    assert np.allclose(shank_contracts[0][1][0], [0, 0, -0.16])
+    assert np.allclose(shank_contracts[0][1][1], [0, 0, 0])
+    assert shank_contracts[0][1][2:] == (0.04, 0.20)
+
+    # Isaac converts URDF cylinders to capsules.  The capsule extends one
+    # radius beyond each end of its cylindrical segment, so keep its lower
+    # surface at the ankle joint instead of overlapping the foot colliders.
+    lower_origin_z = shank_contracts[0][1][0][2]
+    lower_radius, lower_length = shank_contracts[0][1][2:]
+    capsule_bottom_z = lower_origin_z - 0.5 * lower_length - lower_radius
+    assert capsule_bottom_z == pytest.approx(-0.30)
+
+    asset_cfg_source = (T4_ASSET / "t4.py").read_text()
+    assert "force_usd_conversion=True" in asset_cfg_source
+    assert "replace_cylinders_with_capsules=True" in asset_cfg_source
+    assert "activate_contact_sensors=True" in asset_cfg_source
+    assert "enabled_self_collisions=True" in asset_cfg_source
+
+
 def test_t4_joint_order_matches_27dof_motion_columns() -> None:
     joint_order = _literal_assignment(T4_ASSET / "constants.py", "T4_JOINT_NAMES")
     assert joint_order == EXPECTED_JOINT_ORDER
@@ -188,6 +256,8 @@ def test_t4_isaaclab_smoke_script_applies_runtime_compat_patch() -> None:
     assert "patch_missing_physx_material_attributes()" in source
     assert "spawn_ground_plane" not in source
     assert "set(robot.joint_names)" in source
+    assert "Usd.TraverseInstanceProxies" in source
+    assert 'REQUIRED_COLLISION_BODIES = ("Trunk", "Shank_Left", "Shank_Right")' in source
     assert "SETTING_BACKWARD_COMPATIBILITY" in compat_source
     assert "improve_patch_friction" in compat_source
 
