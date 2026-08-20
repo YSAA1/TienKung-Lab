@@ -195,7 +195,7 @@ S8 已冻结在 `model_33000.pt`。保留 tile-filling grid、真实 `Trunk`/双
 
 S9 已在 nubot 隔离 worktree `/home/nubot/phn_ws/t4_train/TienKung-Lab-s9-capsulefix` 启动，HEAD `fd84ee3`，主 run `2026-08-20_16-07-04_t_sparse_lightlp_s9_capsulefix`。它从 s6 `model_31000.pt` 加载策略并重置 optimizer，不加载 S7/S8；`termination_penalty=0`，速度范围保持 `[-0.6, 1.0]`。
 
-启动后 event step `31143` 早期窗口中，`Episode_Reward/shank_contacts=0`，`undesired_contacts` 最近 20 点约 `-0.015`，`Reset/torso≈0.066`、`Reset/accel≈0.556`。踏石 easy `reach_2m≈0.463/progress≈2.27 m`，圆桩 easy `reach_2m≈0.400/progress≈2.06 m`。这组信号已经证伪“修复没进训练 plant”，但不替代 checkpoint evaluator。S9 保持配方不变到 250/500 iter，`model_31500.pt` 落盘后做 flat/踏石/圆桩 fixed evaluator 和连续回放。
+启动后 event step `31143` 早期窗口中，`Episode_Reward/shank_contacts=0`，`undesired_contacts` 最近 20 点约 `-0.015`，`Reset/torso≈0.066`、`Reset/accel≈0.556`。踏石 easy `reach_2m≈0.463/progress≈2.27 m`，圆桩 easy `reach_2m≈0.400/progress≈2.06 m`。这组信号已经证伪“修复没进训练 plant”，但不替代 checkpoint evaluator。250 iter gate 在 event step `31322` 继续保持 `shank_contacts=0`、`undesired_contacts≈-0.014`，踏石/圆桩 easy `reach_2m≈0.475/0.460`，因此配方不变继续到 500 iter；`model_31500.pt` 落盘后做 flat/踏石/圆桩 fixed evaluator 和连续回放。
 6. **AMP reward blend 仍分开立项。** sparse task reward 从 0.7× 恢复到 1.0× 是否提升样本效率，只能在 S9 物理合同和行为基线稳定后单独验证。
 
 ## 干预分类

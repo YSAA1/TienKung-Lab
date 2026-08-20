@@ -16,7 +16,7 @@
 - tile-filling grid 保留。`Trunk` box 保留；每侧 Shank 仍有膝部和胫骨 primitive collision。胫骨 URDF cylinder segment 已从 0.28 m 改为 0.20 m，使 Isaac capsule 的最终外包络为 0.28 m，与 MJCF 一致且不再插入脚 collider。
 - `model_33000.pt` 修复前 evaluator：flat strict 13/16，踏石/圆桩 strict 均 0/16。修复后同 checkpoint 三类场景均 0/16 strict，flat 也 16/16 early，证明策略已适应污染 plant，不能续训。证据：`artifacts/diagnostics/s8_model33000_local_replay/summary.md`。
 - S9 启动后 event step `31143` 早期窗口：`Episode_Reward/shank_contacts=0`，`undesired_contacts` 最近 20 点约 `-0.015`，`Reset/torso≈0.066`，`Reset/accel≈0.556`。假小腿接触未复现，但还没有新 checkpoint 的 fixed evaluator，不宣称稀疏地形能力。
-- 当前 active slice：保持 S9 配方不变跑到 250/500 iter 门，`model_31500.pt` 出炉后做 flat + easy 踏石 + easy 圆桩 fixed evaluator 和连续回放。
+- 250 iter gate 已在 event step `31322` 通过，Shank 假自碰未复现，踏石/圆桩 easy `reach_2m` 最近窗口约 `0.475/0.460`。当前 active slice：保持 S9 配方不变继续到 500 iter，`model_31500.pt` 出炉后做 flat + easy 踏石 + easy 圆桩 fixed evaluator 和连续回放。
 - Stage E `t4_loco_teacher` 1155D 未改。
 - 旧 v4 软/硬与更早 sparse ckpt 只留对照，不加载。
 - 本切片不训学生。能力声明要等 evaluator + 回放。
