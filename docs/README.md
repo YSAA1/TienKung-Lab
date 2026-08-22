@@ -9,7 +9,7 @@
 
 | 轨道 | 现在做什么 | 执行计划 | 规格 |
 | --- | --- | --- | --- |
-| 梅花桩 | S12 老师：0.75 m 收尾边框 + 踏石/圆桩 40% 轻转。S11b/S10 只作对照。TB success 不能当能力。GRU 学生代码已就绪（`t4_loco_sparse_depth_student`），开训等老师 10k 门。 | [S12 计划](plans/2026-08-22--t4-sparse-s12-rim-yaw-student-plan.md) | [稀疏规格](specs/2026-08-15--t4-stepping-stones-and-hurdle-stable.md) |
+| 梅花桩 | S12 老师冻在 `model_21500.pt`。GRU 学生 `fixed-v3-nanguard` 已因破坏性更新坍塌；本地 safe recurrent 修复已完成，尚未启动新远端 lineage。TB success 不能当能力。 | [S12 计划](plans/2026-08-22--t4-sparse-s12-rim-yaw-student-plan.md) | [稀疏规格](specs/2026-08-15--t4-stepping-stones-and-hurdle-stable.md) |
 | 翻箱 | G1 跟踪专家 → G2 heightscan 技能（zhuoqun）。**G2 学生与 G3 合并（走跑+翻箱成一条策略）等 G2 过箱后再开。** | [翻箱 recovery](plans/2026-08-15--t4-vault-g1-g2-recovery-plan.md) | [合并规格](specs/2026-08-13--t4-vault-loco-merge.md) |
 
 运行时切片与机器占用：`.harness/work_index.md`、`.harness/state.md`。

@@ -1,13 +1,16 @@
 """Distill an S12 sparse HeightScan teacher into a GRU depth student.
 
 Do not pass a Stage E 1155D checkpoint or ``stage_s_head35``. The teacher must
-be a ``t4_loco_teacher_sparse`` actor (1937D) from the S12 lineage. Open this
-after the S12 teacher fixed-evaluator gate, not from TB/reward.
+be a ``t4_loco_teacher_sparse`` actor (1937D) from the S12 lineage, and the
+launch must pass matching ``--teacher_eval_manifest`` JSON (or an explicit
+``--allow_ungated_teacher`` waiver). Open this after the teacher fixed-evaluator
+gate, not from TB/reward.
 """
 
 from __future__ import annotations
 
 import argparse
+import json
 import os
 from datetime import datetime
 from pathlib import Path
@@ -24,12 +27,41 @@ from rsl_rl.runners import OnPolicyRunner
 
 parser = argparse.ArgumentParser(description="Distill the S12 sparse teacher into a GRU depth student.")
 parser.add_argument("--teacher_checkpoint", type=str, required=True)
+parser.add_argument(
+    "--student_warmstart_checkpoint",
+    type=str,
+    default="",
+    help="Optional pre-collapse GRU student checkpoint. Loads student weights only; resets critic and optimizer.",
+)
+parser.add_argument(
+    "--teacher_eval_manifest",
+    action="append",
+    default=[],
+    help="Fixed evaluator JSON that lists this teacher checkpoint. Repeatable.",
+)
+parser.add_argument(
+    "--allow_ungated_teacher",
+    action="store_true",
+    help="Waive evaluator-manifest requirement after an explicit operator authorization.",
+)
 parser.add_argument("--task_num_envs", type=int, default=1024)
 parser.add_argument("--seed", type=int, default=None)
 add_rsl_rl_args(parser)
 patch_physx_backward_compatibility_setting(AppLauncher)
 AppLauncher.add_app_launcher_args(parser)
 args_cli, _ = parser.parse_known_args()
+
+from legged_lab.assets.t4.student_lineage import (  # noqa: E402
+    load_student_warmstart_checkpoint,
+    require_sparse_teacher_checkpoint,
+)
+
+teacher_gate_info = require_sparse_teacher_checkpoint(
+    Path(args_cli.teacher_checkpoint),
+    eval_manifests=[Path(item) for item in args_cli.teacher_eval_manifest],
+    allow_ungated=bool(args_cli.allow_ungated_teacher),
+)
+
 args_cli.enable_cameras = True
 app_launcher = AppLauncher(args_cli)
 simulation_app = app_launcher.app
@@ -76,6 +108,31 @@ def train():
         raise FileNotFoundError(f"teacher checkpoint not found: {teacher_path}")
     print(f"[INFO] Loading frozen S12 sparse teacher from: {teacher_path}")
     runner.load(str(teacher_path), load_optimizer=False)
+    warmstart_info = None
+    if args_cli.student_warmstart_checkpoint:
+        warmstart_path = Path(args_cli.student_warmstart_checkpoint)
+        warmstart_info = load_student_warmstart_checkpoint(runner.alg.policy, warmstart_path)
+        print(
+            "[INFO] Warm-started student control stack "
+            f"from {warmstart_path} (iter={warmstart_info['iter']}, keys={warmstart_info['loaded_keys']}); "
+            "critic, Adam, and safe-update counters reset."
+        )
+
+    if int(os.getenv("RANK", "0")) == 0:
+        log_dir.mkdir(parents=True, exist_ok=True)
+        lineage = {
+            "task": "t4_loco_sparse_depth_student",
+            "teacher_checkpoint": str(teacher_path.resolve()),
+            "teacher_gate": teacher_gate_info,
+            "student_warmstart": warmstart_info,
+            "algorithm": agent_cfg.algorithm.class_name,
+            "optimizer_reset": True,
+            "safe_update_counters_reset": True,
+        }
+        (log_dir / "student_lineage.json").write_text(
+            json.dumps(lineage, ensure_ascii=False, indent=2),
+            encoding="utf-8",
+        )
 
     dump_yaml(str(log_dir / "params" / "env.yaml"), env_cfg)
     dump_yaml(str(log_dir / "params" / "agent.yaml"), agent_cfg)

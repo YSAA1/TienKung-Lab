@@ -4,7 +4,8 @@
 
 | Work surface | Status | Active slice | Source |
 | --- | --- | --- | --- |
-| T4 梅花桩 LightLP teacher | active | S12 从 S11b `model_19000` 热启 5k（`t_sparse_lightlp_s12_from_s11b_5k`，19000→24000）。学生 waiter 等 `model_23999.pt` 后自动开 GRU 蒸馏 | `docs/plans/2026-08-22--t4-sparse-s12-rim-yaw-student-plan.md` |
+| T4 梅花桩 LightLP teacher | frozen | S12 从 S11b `model_19000` 热启后冻在 `model_21500.pt`（用户授权提前蒸学生，不再等 23999） | `docs/plans/2026-08-22--t4-sparse-s12-rim-yaw-student-plan.md` |
+| T4 梅花桩 GRU 深度学生 | repair ready | `fixed-v3-nanguard` 已策略坍塌并冻结取证。本地 safe recurrent updater 已实现；新 lineage 尚未远端启动，拟用 S12 `model_21500` + 可选 pre-collapse `model_3000` student-only warm-start | `docs/plans/2026-08-22--t4-sparse-s12-rim-yaw-student-plan.md` |
 | T4 翻箱 G1/G2 | active | G1 专家已可用；G2 蒸馏 / 学生跟车在 zhuoqun。G3 合并未开 | `docs/plans/2026-08-15--t4-vault-g1-g2-recovery-plan.md` |
 | T4 统一深度感知走跑 | done | Stage E + depth student；跨栏已并入 Stage E | `docs/specs/2026-08-12--t4-unified-depth-locomotion.md` |
 | T4 depth student ZL/direct 楼梯对齐 | done | `model_25746.pt`，`vx=0.8` 冷启动 3/3 | `docs/runbooks/t4-teacher-and-depth-deployment.md` |

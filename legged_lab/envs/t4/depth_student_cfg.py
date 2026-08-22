@@ -9,7 +9,6 @@ from legged_lab.assets.t4.schemas import (
     DEPTH_POLICY_SIZE,
     PROPRIO_FRAME_DIM,
     PROPRIO_HISTORY_LENGTH,
-    TEACHER_ACTOR_OBS_DIM,
     TEACHER_SCAN_DIM,
     sparse_teacher_latest_scan_range,
 )
@@ -87,25 +86,46 @@ class T4SparseDepthStudentPolicyCfg(T4DepthStudentPolicyCfg):
     recon_scan_dim: int = TEACHER_SCAN_DIM
     recon_scan_offset: int = sparse_teacher_latest_scan_range()[0]
     recon_hidden_dim: int = 128
+    critic_hidden_dims: list[int] = [512, 256, 128]
+    min_action_std: float = 0.05
+    max_action_std: float = 0.8
 
 
 @configclass
 class T4SparseDepthDistillationAlgCfg(T4DepthDistillationAlgCfg):
-    """DAgger action imitation plus PPO, with scan reconstruction."""
+    """Safe recurrent DAgger + PPO with critic/GAE and transactional KL guards."""
 
+    class_name: str = "SafeRecurrentDistillation"
+    num_mini_batches: int = 4
+    learning_rate: float = 3.0e-4
     collect_mode: str = "student"
     behavior_coef: float = 1.0
+    behavior_coef_end: float = 0.0
+    behavior_coef_decay_iters: int = 2000
     pg_coef: float = 0.5
     recon_coef: float = 1.0
     teacher_mix: float = 0.5
     teacher_mix_end: float = 0.0
     teacher_mix_decay_iters: int = 2000
+    gamma: float = 0.99
+    lam: float = 0.95
+    value_loss_coef: float = 1.0
+    entropy_coef: float = 0.0
+    desired_kl: float = 0.01
+    # Main trust-region gate over the global per-state KL distribution.
+    max_kl: float = 0.03
+    # A single rare state may exceed the p95 budget, but not catastrophically.
+    max_kl_emergency: float = 0.3
+    max_behavior_drift: float = 0.02
+    rollback_lr_factor: float = 0.5
+    min_learning_rate: float = 1.0e-5
+    max_learning_rate: float = 1.0e-3
 
 
 @configclass
 class T4SparseDepthStudentAgentCfg(T4DepthStudentAgentCfg):
     experiment_name: str = "t4_loco_sparse_depth_student"
-    run_name: str = "s12_gru_dagger_ppo"
+    run_name: str = "s12_gru_safe_recurrent"
     resume: bool = False
     policy: T4SparseDepthStudentPolicyCfg = T4SparseDepthStudentPolicyCfg()
     algorithm: T4SparseDepthDistillationAlgCfg = T4SparseDepthDistillationAlgCfg()

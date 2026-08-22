@@ -6,7 +6,7 @@
 > 取代: `docs/archive/plans/2026-08-21--t4-sparse-s11-mdp-repair-plan.md`（S11/S11b 配方保留为对照 lineage，本文件成为梅花桩轨道现行计划）
 > Branch: `t4-train`
 > Planning surface: docs plan
-> GPU: nubot 四卡开 S12 老师热启；学生 waiter 等 `model_23999.pt`；zhuoqun 翻箱不动
+> GPU: `fixed-v3-nanguard` 已策略坍塌；最近 SSH 探针超时，远端进程状态未刷新。本地 safe recurrent 修复已实现，新 lineage 尚未启动；zhuoqun 翻箱不动
 
 ## Objective
 
@@ -16,7 +16,16 @@
 
 ## Active slice
 
-**阶段 2（当前）**：nubot **从 S11b `model_19000` 热启** S12 老师（用户 2026-08-22 改口，不再冷启动）。worktree `TienKung-Lab-s12-from-s11b-5k`，run `t_sparse_lightlp_s12_from_s11b_5k`，`--reset_optimizer`，目标 19000→24000。阶段 1 边框+轻转合同与阶段 3 GRU 学生代码已落地；学生 waiter 等 `model_23999.pt`，不 resume `stage_s_head35`。
+**阶段 4 修复（当前）**：`fixed-v3-nanguard` 在 iteration 3305 左右由更新先触发策略坍塌，已冻结为失败取证 lineage。老师仍是只读 S12 `model_21500.pt`；S12 MDP、`random_level_reset_max_level=None` 与深度观测合同不改。本地已用 `SafeRecurrentDistillation` 替换破坏性 updater，新远端 lineage 尚未启动。不 resume `stage_s_head35`，也不续已崩的 `model_3500/4000`。
+
+## 学生坍塌根因与后继合同
+
+- 3302：PG≈0.023、behavior≈0.135、reward≈9.56；3305 环境指标尚未先坏，但 PG≈0.152、behavior≈0.896；3313 reward 才降到约 -2.57、episode length≈74。
+- `model_3000→3500` depth encoder 相对变化约 92%。触发器是 updater 对共享 CNN/GRU 的破坏性更新，不是 teacher mix、课程、命令、学习率、NaN/OOM 或 TensorBoard 断流。
+- 旧实现无 critic/GAE，逐时间步 replay，没有保存 recurrent initial hidden；optimizer step 发生在序列中间；behavior/PG/recon 直接争用共享 trunk；无候选提交门或回滚。
+- 后继实现保持 PPO：asymmetric critic+GAE、完整 trajectory replay、全局 advantage、analytic KL、global p95 主门、独立 emergency max、policy+Adam transaction rollback、LR 降档。
+- behavior imitation 与 teacher mix 都只随 **accepted update** 退火；behavior 从 1→0，后期教师只保留单步漂移安全门，不永久限制 PPO 超越教师。reconstruction 只有在与 control 梯度冲突时才投影，PPO 梯度不裁剪。
+- 新 lineage 可显式 warm-start 崩塌前 `model_3000` 的 CNN/GRU/actor/recon/std；teacher 重新加载，critic/Adam/安全计数重建。3500/4000 仅作失败证据。
 
 ## 冻结数值（本切片不再讨论）
 
@@ -72,7 +81,7 @@
 | HeightScan ×5 + 接触 2，无 RNN | 深度 CNN（沿用 T4 `DepthStudentTeacher` 编码器）+ 本体史 + 命令 + 上一动作 |
 | 不给 GRU | 融合后再进 **GRU**（`rnn_type=gru`，默认 1 层 hidden 256，老师 `teacher_recurrent=False`） |
 | 无重建头 | 训练期解码器 `D(h_t) → teacher scan`，`L_recon = MSE`；**导出时丢掉** |
-| PPO+AMP | DAgger（动作模仿）**同时**开 PPO（论文 DAgger+PPO；现成 `Distillation` 的 `pg_coef` 可复用） |
+| PPO+AMP | `SafeRecurrentDistillation`：DAgger 迁移 + PPO，自带 critic/GAE、序列 replay、KL/behavior transaction gate；behavior 接受更新退火到 0，不关闭 PPO |
 | 干净 scan | 深度噪声：`σ=0.005+0.02d`、全局尺度 ±5%、块 dropout、30–60 ms 延迟、约 30 Hz 持帧；然后再短 FT |
 
 明确 **不** 做（留给翻箱 G3）：多专家技能组合、vault transition 组、skill 标签。
@@ -88,9 +97,10 @@
 - 不恢复踏石站住、倒退、侧移、`heading_command` 随机大朝向。
 - 不改跨栏命令，不改 Stage E `t4_loco_teacher` 1155D。
 - 不在 S11b logdir 上原地热补；S12 用**新 worktree / 新 logdir**，从 `model_19000` 加载并 reset optimizer，再训 5k。
-- 老师未到 `model_23999.pt` 前不蒸学生；不 resume Stage E `stage_s_head35`。
+- 不 resume Stage E `stage_s_head35`。现行学生专家是用户授权的 S12 `model_21500.pt`，不是计划原文的 `model_23999.pt`。后续新开蒸馏必须过 `--teacher_eval_manifest` 门，或显式 `--allow_ungated_teacher`。
 - 不把 LightLP 的 vault / climb / transition 组搬进梅花桩学生。
 - 不动 zhuoqun 翻箱。
+- 不继续 `fixed-v3-nanguard`，不续 `model_3500/4000`，不把修复退化成纯蒸馏或永久 `pg_coef=0`。
 - 不用 TB、reward、ckpt 存在、episode length 宣称能力。
 - 不把 length 回到 1000 写成目标。
 
@@ -120,12 +130,14 @@ python -m pytest tests/test_t4_sparse_command_contract.py tests/test_t4_terrain_
   -> review
   -> 阶段 2 nubot 隔离 worktree 从 S11b `model_19000` 热启 5k
   -> ~24000 同一 fixed evaluator + play 边框收尾
-  -> `model_23999.pt` 后 waiter 开阶段 4 蒸馏（阶段 3 代码已绿）
+  -> 用户授权后用 S12 `model_21500.pt` 开 `fixed-v3-nanguard`（已在 3305 左右坍塌并冻结取证）
+  -> 本地 safe recurrent 修复 + review/commit
+  -> 新 logdir GPU smoke；可选 student-only warm-start `model_3000`，不续 3500/4000
 ```
 
 ### Verification path status
 
-`runnable`：阶段 1 本机 pytest 已过。阶段 2 热启已在 nubot 跑。阶段 4 蒸馏在 `model_23999.pt` 前 **gated**。
+`local runnable / GPU pending`：阶段 1 本机 pytest 已过，老师冻在 `model_21500.pt`。safe recurrent 代码与 Isaac-free 合同已绿；尚未同步 nubot、未做 Isaac GPU smoke、未启动新 lineage。`fixed-v3-nanguard` 不再计作 active training。
 
 ## Required capabilities
 
@@ -158,32 +170,33 @@ python -m pytest tests/test_t4_sparse_command_contract.py tests/test_t4_terrain_
   - verification_commands: `python -m pytest tests/test_t4_sparse_command_contract.py tests/test_t4_terrain_column_map.py tests/test_t4_sparse_reward_contracts.py tests/test_t4_sparse_monitor_contract.py tests/test_t4_sparse_evaluator_contract.py tests/test_t4_sparse_evaluator_contract.py -q` 以及新增 rim 布局测试
   - success_definition: 代码合同与上表一致，训练行为只改边框和轻转比例
 
-- [ ] 阶段 2：nubot 从 S11b `model_19000` 热启 5k 并对照（当前）
-  - acceptance_criteria: S11b 已停；worktree `TienKung-Lab-s12-from-s11b-5k`；run `t_sparse_lightlp_s12_from_s11b_5k`；reset optimizer；19000→24000；fixed evaluator + play 显示边框收尾而非掉洞
-  - verification_commands: nubot `tmux ls` / TB `:8016`；`artifacts/eval/` 同口径 JSON；短 play 回放
-  - success_definition: 新 lineage 在跑，且 24000 有与 S10/S11b 同口径的固定评估 + 边框观感，而不是 TB success 或 length→1000
+- [x] 阶段 2：nubot 从 S11b `model_19000` 热启（用户改口提前蒸学生，老师冻在 `model_21500.pt`）
+  - acceptance_criteria: S11b 已停；worktree `TienKung-Lab-s12-from-s11b-5k`；run `t_sparse_lightlp_s12_from_s11b_5k`；reset optimizer；19000 起热启。原目标 24000 被用户授权的 `model_21500` 学生开训取代，不在本切片补训到 23999
+  - verification_commands: nubot logdir `2026-08-22_14-54-33_t_sparse_lightlp_s12_from_s11b_5k/model_21500.pt`
+  - success_definition: 冻结专家文件存在且为学生蒸馏所用；老师 24000 对照评估不阻塞现行学生 run
 
 - [x] 阶段 3：sparse GRU 深度学生合同与实现（代码已落地，开训等阶段 2 门）
   - acceptance_criteria: 新 env cfg 继承 `T4LocoSparseTeacherEnvCfg`；`DepthStudentTeacher`+GRU；训练期 scan recon；export 无 recon；DAgger+PPO 系数可配；Isaac-free 模块测试；不改 Stage E 学生任务名
   - verification_commands: 新增 `tests/test_t4_sparse_depth_student_gru_contract.py` 以及现有 distillation/obs 合同
   - success_definition: 学生观测/网络/损失合同可蒸馏 S12 老师，且无特权泄漏
 
-- [ ] 阶段 4：学生蒸馏训练与验收（阶段 3 之后）
-  - acceptance_criteria: 冻结 S12 teacher ckpt 作 expert；DAgger+PPO 再噪声 FT；同一 fixed evaluator；深度消融；MuJoCo 深度 Sim2Sim 回放；lineage manifest
-  - verification_commands: `artifacts/eval/s12_student_*`；`sim2sim_t4_depth_student`（GRU export）；消融 JSON
-  - success_definition: 学生在冻结桶上接近老师，且打乱深度会掉能力；不靠 loss 宣称成功
+- [ ] 阶段 4：safe recurrent 学生新 lineage 与验收（当前）
+  - acceptance_criteria: 冻结 S12 `model_21500.pt`；新 logdir 使用 `SafeRecurrentDistillation`；可选 student-only warm-start `model_3000`，critic/Adam/counters 重置；候选更新记录 KL p95/max、ratio、rollback、accepted count、behavior schedule；DAgger+PPO 再噪声 FT；同一 fixed evaluator；深度消融；MuJoCo 连续回放；`student_lineage.json`
+  - verification_commands: 本机 safe/GRU/Sim2Sim/PPO 相邻合同；远端先 1–2 iteration GPU smoke，再新 tmux 正式 run。训练入口 `--teacher_checkpoint .../model_21500.pt --allow_ungated_teacher --student_warmstart_checkpoint .../model_3000.pt`；3500/4000 禁止使用
+  - success_definition: 学生在冻结桶上接近老师，且打乱深度会掉能力；不靠 loss / TB reward / episode length 宣称成功
 
 ## Commit units
 
 1. `sparse-s12-rim-yaw-contract`：阶段 1 布局/命令/测试 + 本计划落盘 + S11 superseded + recovery 同步。
 2. 训练产物不进 git。
 3. `sparse-s12-depth-student-gru`：阶段 3 代码与测试（老师门后另开）。
+4. `sparse-s12-safe-recurrent-repair`：阶段 4 的安全 updater、student-only warm-start、deploy strip、合同测试与权威文档；不含训练产物或远端动作。
 
 提交前置：该 unit 实现完成 + review 无 Critical + 对应 pytest 绿。
 
 ## Known risks / blockers
 
-- nubot 四卡现由 S12 热启占用。S11b ckpt 只读对照，不要第二份四卡训练。
+- nubot 的旧 tmux/process 状态本轮未刷新；同步/停旧进程/开 smoke 前先只读核对。S12 老师 `model_21500.pt` 与失败学生 ckpt 只读保留。
 - 边框若只加视觉 mesh、没进碰撞，观感仍会掉。测试必须覆盖 support 代数；开训后用 play 看脚是否踩在边上。
 - 扫描若仍把边框当洞，illegal_footstep 会罚合法收尾。边框必须进入 `point_on_support`。
 - 40% 轻转仍可能用 path_length 绕圈晋级。若 `promotion_rate` 升而 `reach_4m` 不升，下一刀是把晋级改回径向，而不是再加大 `wz`。
@@ -195,4 +208,4 @@ python -m pytest tests/test_t4_sparse_command_contract.py tests/test_t4_terrain_
 
 ## Next skill
 
-`review`
+`GPU smoke / verify`（需用户明确授权远端同步与启动）

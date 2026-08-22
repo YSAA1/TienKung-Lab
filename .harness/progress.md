@@ -1,5 +1,21 @@
 # Progress
 
+## 2026-08-23 student collapse root repair
+
+- `fixed-v3-nanguard` 已判失败：3305 更新指标先突变，环境回报随后坠落；不是课程、命令、teacher mix、NaN/OOM 或 TensorBoard 断流触发。
+- 本地新增 `SafeRecurrentDistillation`：critic/GAE、recurrent sequence minibatch、全局 advantage、KL/behavior transaction gate、policy+Adam rollback、LR 降档、目标梯度诊断与 recon-only conflict projection。
+- 非妥协 handoff：PPO 保持 `pg_coef=0.5`；behavior imitation 随 accepted update 从 1→0，teacher mix 也只随 accepted update 衰减。拒绝更新不会提前撤掉教师。
+- 新开训支持 `--student_warmstart_checkpoint <pre-collapse model_3000.pt>`：只迁移 CNN/GRU/actor/recon/std；teacher 重新加载，critic/Adam/counters 重置，并写 `student_lineage.json`。
+- 提交前深审补强：initial hidden 主动 detach；safe runner 未加载 teacher 时拒绝开训；manifest 采用 exact checkpoint path，并把 teacher/warm-start SHA256 写入 lineage。最终本机 9 文件回归 `83 passed, 2 deselected`，后两项仅缺 ZL vendor MJCF。
+- 本轮只改本地代码；未停止/同步/重启 nubot。最近 SSH 探针超时，远端进程状态未刷新。
+
+## 2026-08-22 student deploy gate + v3 lineage（后续坍塌，继续训练判断已推翻）
+
+- 当时判断：`fixed-v3-nanguard` 可继续训；该判断已被 2026-08-23 iteration 3305 坍塌证据推翻。
+- 落实：Sim2Sim / `build_depth_student_policy` 加载前剥离 teacher 与 scan decoder；`write_deployable_checkpoint` 写瘦身包。学生开训入口强制 1937D sparse teacher，并要求 `--teacher_eval_manifest`，现行 21500 只能走 `--allow_ungated_teacher`。
+- `random_level_reset_max_level=None` 写入 S12 学生 lineage：这是继承的老师课表，不是 v3 对照泄漏。
+- 根目录 `findings.md` 迁到 `docs/research/2026-08-22--s12-mdp-findings.md`。
+
 ## 2026-08-22 knowledge cleanup
 
 - `docs/plans/` 只留 S12 + 翻箱 G1/G2。S6/S11 迁到 `docs/archive/plans/`。根目录 S10 诊断草稿与 `artifacts/tmp_*` scratch 删除。`HANDOFF.md` 改成 S12 快照。

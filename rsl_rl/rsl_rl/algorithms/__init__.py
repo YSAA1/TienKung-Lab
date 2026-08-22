@@ -21,5 +21,6 @@
 from .amp_ppo import AMPPPO
 from .distillation import Distillation
 from .ppo import PPO
+from .safe_recurrent_distillation import SafeRecurrentDistillation
 
-__all__ = ["PPO", "Distillation", "AMPPPO"]
+__all__ = ["PPO", "Distillation", "SafeRecurrentDistillation", "AMPPPO"]

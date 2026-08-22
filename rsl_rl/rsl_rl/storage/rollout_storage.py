@@ -77,7 +77,7 @@ class RolloutStorage:
         self.dones = torch.zeros(num_transitions_per_env, num_envs, 1, device=self.device).byte()
 
         # for distillation
-        if training_type == "distillation":
+        if training_type in {"distillation", "safe_distillation"}:
             self.privileged_actions = torch.zeros(num_transitions_per_env, num_envs, *actions_shape, device=self.device)
             self.actions_log_prob = torch.zeros(num_transitions_per_env, num_envs, 1, device=self.device)
             self.student_action_mask = torch.zeros(
@@ -85,7 +85,7 @@ class RolloutStorage:
             )
 
         # for reinforcement learning
-        if training_type == "rl":
+        if training_type in {"rl", "safe_distillation"}:
             self.values = torch.zeros(num_transitions_per_env, num_envs, 1, device=self.device)
             self.actions_log_prob = torch.zeros(num_transitions_per_env, num_envs, 1, device=self.device)
             self.mu = torch.zeros(num_transitions_per_env, num_envs, *actions_shape, device=self.device)
@@ -118,7 +118,7 @@ class RolloutStorage:
         self.dones[self.step].copy_(transition.dones.view(-1, 1))
 
         # for distillation
-        if self.training_type == "distillation":
+        if self.training_type in {"distillation", "safe_distillation"}:
             self.privileged_actions[self.step].copy_(transition.privileged_actions)
             if transition.actions_log_prob is not None:
                 self.actions_log_prob[self.step].copy_(transition.actions_log_prob.view(-1, 1))
@@ -126,7 +126,7 @@ class RolloutStorage:
                 self.student_action_mask[self.step].copy_(transition.student_action_mask.view(-1, 1))
 
         # for reinforcement learning
-        if self.training_type == "rl":
+        if self.training_type in {"rl", "safe_distillation"}:
             self.values[self.step].copy_(transition.values)
             self.actions_log_prob[self.step].copy_(transition.actions_log_prob.view(-1, 1))
             self.mu[self.step].copy_(transition.action_mean)
@@ -145,9 +145,15 @@ class RolloutStorage:
     def _save_hidden_states(self, hidden_states):
         if hidden_states is None or hidden_states == (None, None):
             return
-        # make a tuple out of GRU hidden state sto match the LSTM format
-        hid_a = hidden_states[0] if isinstance(hidden_states[0], tuple) else (hidden_states[0],)
-        hid_c = hidden_states[1] if isinstance(hidden_states[1], tuple) else (hidden_states[1],)
+
+        # make a tuple out of GRU hidden state to match the LSTM format
+        def _hidden_tuple(hidden_state):
+            if hidden_state is None:
+                return ()
+            return hidden_state if isinstance(hidden_state, tuple) else (hidden_state,)
+
+        hid_a = _hidden_tuple(hidden_states[0])
+        hid_c = _hidden_tuple(hidden_states[1])
         # initialize if needed
         if self.saved_hidden_states_a is None:
             self.saved_hidden_states_a = [
@@ -159,6 +165,7 @@ class RolloutStorage:
         # copy the states
         for i in range(len(hid_a)):
             self.saved_hidden_states_a[i][self.step].copy_(hid_a[i])
+        for i in range(len(hid_c)):
             self.saved_hidden_states_c[i][self.step].copy_(hid_c[i])
 
     def clear(self):
@@ -340,4 +347,69 @@ class RolloutStorage:
                     hid_c_batch,
                 ), masks_batch, rnd_state_batch
 
+                first_traj = last_traj
+
+    def safe_recurrent_mini_batch_generator(self, num_mini_batches, num_epochs=1):
+        if self.training_type != "safe_distillation":
+            raise ValueError("This function is only available for safe recurrent distillation training.")
+        if self.saved_hidden_states_a is None:
+            raise RuntimeError("safe recurrent rollout did not record actor hidden states")
+
+        padded_obs_trajectories, trajectory_masks = split_and_pad_trajectories(self.observations, self.dones)
+        if self.privileged_observations is not None:
+            padded_privileged_obs_trajectories, _ = split_and_pad_trajectories(self.privileged_observations, self.dones)
+        else:
+            padded_privileged_obs_trajectories = padded_obs_trajectories
+
+        mini_batch_size = self.num_envs // num_mini_batches
+        for _ in range(num_epochs):
+            first_traj = 0
+            for batch_index in range(num_mini_batches):
+                start = batch_index * mini_batch_size
+                stop = (batch_index + 1) * mini_batch_size
+
+                dones = self.dones.squeeze(-1)
+                last_was_done = torch.zeros_like(dones, dtype=torch.bool)
+                last_was_done[1:] = dones[:-1]
+                last_was_done[0] = True
+                trajectories_batch_size = torch.sum(last_was_done[:, start:stop])
+                last_traj = first_traj + trajectories_batch_size
+
+                masks_batch = trajectory_masks[:, first_traj:last_traj]
+                obs_batch = padded_obs_trajectories[:, first_traj:last_traj]
+                privileged_obs_batch = padded_privileged_obs_trajectories[:, first_traj:last_traj]
+                actions_batch = self.actions[:, start:stop]
+                privileged_actions_batch = self.privileged_actions[:, start:stop]
+                student_action_mask_batch = self.student_action_mask[:, start:stop]
+                values_batch = self.values[:, start:stop]
+                advantages_batch = self.advantages[:, start:stop]
+                returns_batch = self.returns[:, start:stop]
+                old_actions_log_prob_batch = self.actions_log_prob[:, start:stop]
+                old_mu_batch = self.mu[:, start:stop]
+                old_sigma_batch = self.sigma[:, start:stop]
+
+                last_was_done = last_was_done.permute(1, 0)
+                hid_a_batch = [
+                    saved_hidden_states.permute(2, 0, 1, 3)[last_was_done][first_traj:last_traj]
+                    .transpose(1, 0)
+                    .contiguous()
+                    for saved_hidden_states in self.saved_hidden_states_a
+                ]
+                hid_a_batch = hid_a_batch[0] if len(hid_a_batch) == 1 else hid_a_batch
+
+                yield (
+                    obs_batch,
+                    privileged_obs_batch,
+                    actions_batch,
+                    privileged_actions_batch,
+                    student_action_mask_batch,
+                    values_batch,
+                    advantages_batch,
+                    returns_batch,
+                    old_actions_log_prob_batch,
+                    old_mu_batch,
+                    old_sigma_batch,
+                    hid_a_batch,
+                    masks_batch,
+                )
                 first_traj = last_traj

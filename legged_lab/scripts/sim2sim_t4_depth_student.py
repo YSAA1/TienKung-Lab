@@ -11,8 +11,9 @@ Replicates the Stage S deployment contract on the migrated T4 MJCF:
 - gait clock: ``gait_time += step_dt / cycle`` only while moving, phase
   offsets 0.38 / 0.88, air ratio 0.38 / 0.38
 
-The policy is the ``DepthStudentTeacher`` head of the rsl-rl checkpoint;
-the frozen teacher network is loaded but never queried.
+The policy is the deployable ``DepthStudentTeacher`` / GRU student.
+Teacher MLP, scan-decoder, and critic weights are stripped at load even
+if the file is a full training checkpoint.
 
 Usage (from the repo root so the vendored packages resolve):
 
@@ -51,7 +52,10 @@ ROOT = Path(__file__).resolve().parents[2]
 # resolves without installing the fork.
 sys.path.insert(0, str(ROOT / "rsl_rl"))
 
-from rsl_rl.modules.depth_student_teacher import build_depth_student_policy  # noqa: E402
+from rsl_rl.modules.depth_student_teacher import (  # noqa: E402
+    build_depth_student_policy,
+    strip_deployable_state_dict,
+)
 
 from legged_lab.assets.t4.constants import T4_JOINT_NAMES  # noqa: E402
 from legged_lab.assets.t4.navigation import (  # noqa: E402
@@ -75,6 +79,7 @@ from legged_lab.assets.t4.schemas import (  # noqa: E402
     PROPRIO_HISTORY_LENGTH,
     STUDENT_ACTOR_OBS_DIM,
     TEACHER_ACTOR_OBS_DIM,
+    TEACHER_SPARSE_ACTOR_OBS_DIM,
     depth_camera_mujoco_xyaxes,
     depth_camera_ros_quat_wxyz,
     sparse_teacher_latest_scan_range,
@@ -1217,15 +1222,18 @@ class DepthStudentSim:
         self.trunk_id = mujoco.mj_name2id(self.model, mujoco.mjtObj.mjOBJ_BODY, "Trunk")
         self._configure_position_servos()
 
-        # Policy: feed-forward Stage E student or S12 GRU student from the same
-        # checkpoint layout. Reconstruction decoder is dropped at deploy time.
+        # Policy: feed-forward Stage E student or S12 GRU student. Always strip
+        # teacher / scan-decoder / critic weights so a training checkpoint cannot
+        # load privileged weights into the MuJoCo inference path.
         state = torch.load(checkpoint, map_location="cpu", weights_only=True)
         if not isinstance(state, dict) or "model_state_dict" not in state:
             raise RuntimeError(f"checkpoint {checkpoint} does not contain model_state_dict")
+        model_state = strip_deployable_state_dict(state["model_state_dict"])
+        is_gru = any(key.startswith("memory_s") for key in model_state)
         self.policy = build_depth_student_policy(
-            state["model_state_dict"],
+            model_state,
             NUM_JOINTS,
-            num_teacher_obs=TEACHER_ACTOR_OBS_DIM,
+            num_teacher_obs=TEACHER_SPARSE_ACTOR_OBS_DIM if is_gru else TEACHER_ACTOR_OBS_DIM,
             depth_shape=(DEPTH_HISTORY_LENGTH, *DEPTH_POLICY_SIZE),
             proprio_obs_dim=PROPRIO_FRAME_DIM * PROPRIO_HISTORY_LENGTH,
             recon_scan_offset=sparse_teacher_latest_scan_range()[0],

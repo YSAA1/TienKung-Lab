@@ -26,7 +26,7 @@ from collections import deque
 import torch
 
 import rsl_rl
-from rsl_rl.algorithms import PPO, Distillation
+from rsl_rl.algorithms import PPO, Distillation, SafeRecurrentDistillation
 from rsl_rl.env import VecEnv
 from rsl_rl.modules import (
     ActorCritic,
@@ -58,6 +58,8 @@ class OnPolicyRunner:
             self.training_type = "rl"
         elif self.alg_cfg["class_name"] == "Distillation":
             self.training_type = "distillation"
+        elif self.alg_cfg["class_name"] == "SafeRecurrentDistillation":
+            self.training_type = "safe_distillation"
         else:
             raise ValueError(f"Training type not found for algorithm {self.alg_cfg['class_name']}.")
 
@@ -71,7 +73,7 @@ class OnPolicyRunner:
                 self.privileged_obs_type = "critic"  # actor-critic reinforcement learnig, e.g., PPO
             else:
                 self.privileged_obs_type = None
-        if self.training_type == "distillation":
+        if self.training_type in {"distillation", "safe_distillation"}:
             if "teacher" in extras["observations"]:
                 self.privileged_obs_type = "teacher"  # policy distillation
             else:
@@ -86,9 +88,14 @@ class OnPolicyRunner:
         # evaluate the policy class
         policy_class = eval(self.policy_cfg.pop("class_name"))
         policy_kwargs = filter_init_kwargs(policy_class.__init__, self.policy_cfg)
-        policy: ActorCritic | ActorCriticRecurrent | StudentTeacher | StudentTeacherRecurrent | DepthStudentTeacher | DepthStudentTeacherRecurrent = policy_class(
-            num_obs, num_privileged_obs, self.env.num_actions, **policy_kwargs
-        ).to(self.device)
+        policy: (
+            ActorCritic
+            | ActorCriticRecurrent
+            | StudentTeacher
+            | StudentTeacherRecurrent
+            | DepthStudentTeacher
+            | DepthStudentTeacherRecurrent
+        ) = policy_class(num_obs, num_privileged_obs, self.env.num_actions, **policy_kwargs).to(self.device)
 
         # resolve dimension of rnd gated state
         if "rnd_cfg" in self.alg_cfg and self.alg_cfg["rnd_cfg"] is not None:
@@ -110,7 +117,7 @@ class OnPolicyRunner:
 
         # initialize algorithm
         alg_class = eval(self.alg_cfg.pop("class_name"))
-        self.alg: PPO | Distillation = alg_class(
+        self.alg: PPO | Distillation | SafeRecurrentDistillation = alg_class(
             policy,
             device=self.device,
             **filter_init_kwargs(alg_class.__init__, self.alg_cfg),
@@ -176,7 +183,7 @@ class OnPolicyRunner:
                 raise ValueError("Logger type not found. Please choose 'neptune', 'wandb' or 'tensorboard'.")
 
         # check if teacher is loaded
-        if self.training_type == "distillation" and not self.alg.policy.loaded_teacher:
+        if self.training_type in {"distillation", "safe_distillation"} and not self.alg.policy.loaded_teacher:
             raise ValueError("Teacher model parameters not loaded. Please load a teacher model to distill.")
 
         # randomize initial episode lengths (for exploration)
@@ -275,7 +282,7 @@ class OnPolicyRunner:
                 start = stop
 
                 # compute returns
-                if self.training_type == "rl":
+                if self.training_type in {"rl", "safe_distillation"}:
                     self.alg.compute_returns(privileged_obs)
 
             # update policy
@@ -422,6 +429,8 @@ class OnPolicyRunner:
             "iter": self.current_learning_iteration,
             "infos": infos,
         }
+        if hasattr(self.alg, "checkpoint_state_dict"):
+            saved_dict["algorithm_state_dict"] = self.alg.checkpoint_state_dict()
         # -- Save RND model if used
         if self.alg.rnd:
             saved_dict["rnd_state_dict"] = self.alg.rnd.state_dict()
@@ -464,6 +473,13 @@ class OnPolicyRunner:
             # -- RND optimizer if used
             if self.alg.rnd:
                 self.alg.rnd_optimizer.load_state_dict(loaded_dict["rnd_optimizer_state_dict"])
+        if (
+            load_optimizer
+            and resumed_training
+            and "algorithm_state_dict" in loaded_dict
+            and hasattr(self.alg, "load_checkpoint_state_dict")
+        ):
+            self.alg.load_checkpoint_state_dict(loaded_dict["algorithm_state_dict"])
         # -- load current learning iteration
         if resumed_training:
             self.current_learning_iteration = loaded_dict["iter"]

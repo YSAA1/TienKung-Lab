@@ -32,8 +32,8 @@ T4 约 1.4 m 站高，Trunk 在 0.9 m。资产在 `legged_lab/assets/t4/`，关�
 
 1. **梅花桩**（nubot）  
    LightLP §IV 单阶段真洞老师 `t4_loco_teacher_sparse`。S10/S11b 保留为对照。当前执行是 S12：0.75 m 收尾边框 + 踏石/圆桩 40% 轻转，`vx max=2.0`。TB success 不能当能力。计划：`docs/plans/2026-08-22--t4-sparse-s12-rim-yaw-student-plan.md`。
-   Actor 1937D（scan 史 ×5 + 接触）；足底 scan 只给 Critic。Stage E 1155D 不改。  
-   GRU 深度学生代码已落地（任务 `t4_loco_sparse_depth_student`），**开训**仍等老师 10k evaluator 门，不 resume `stage_s_head35`。  
+   Actor 1937D（scan 史 ×5 + 接触）；足底 scan 只给 Critic。Stage E 1155D 不改。
+   GRU 深度学生 `fixed-v3-nanguard` 使用 S12 `model_21500.pt`，但在 iteration 3305 左右由更新先触发策略坍塌，已冻结为失败证据。本地 safe recurrent 后继实现已完成，新远端 lineage 尚未启动；不 resume `stage_s_head35`，也不续已崩的 3500/4000。
    S6–S11 计划已归档：`docs/archive/plans/2026-08-19--t4-sparse-easy-geometry-s6-plan.md`、`docs/archive/plans/2026-08-21--t4-sparse-s11-mdp-repair-plan.md`。
 
 2. **翻箱**（zhuoqun）  

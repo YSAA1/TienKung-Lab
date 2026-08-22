@@ -7,7 +7,9 @@
 from __future__ import annotations
 
 import importlib.util
+import json
 import sys
+import tempfile
 from pathlib import Path
 
 import numpy as np
@@ -25,6 +27,14 @@ from rsl_rl.modules.depth_student_teacher import (  # noqa: E402
     DepthStudentTeacher,
     DepthStudentTeacherRecurrent,
     build_depth_student_policy,
+    strip_deployable_state_dict,
+    write_deployable_checkpoint,
+)
+
+from legged_lab.assets.t4.student_lineage import (  # noqa: E402
+    StudentLineageError,
+    load_student_warmstart_checkpoint,
+    require_sparse_teacher_checkpoint,
 )
 
 _NOISE_PATH = ROOT / "legged_lab" / "envs" / "t4" / "mdp" / "depth_noise.py"
@@ -83,7 +93,7 @@ def test_sparse_student_env_inherits_s12_teacher_mdp():
     assert "pg_coef: float = 0.5" in cfg_src
     assert "recon_coef: float = 1.0" in cfg_src
     assert 'experiment_name: str = "t4_loco_sparse_depth_student"' in cfg_src
-    assert 'run_name: str = "s12_gru_dagger_ppo"' in cfg_src
+    assert 'run_name: str = "s12_gru_safe_recurrent"' in cfg_src
 
 
 def test_stage_e_student_lineage_is_unchanged():
@@ -105,6 +115,12 @@ def test_train_scripts_require_sparse_teacher_checkpoint():
     assert "T4LocoSparseDepthStudentEnvCfg" in train_src
     assert "T4SparseDepthStudentAgentCfg" in train_src
     assert "teacher_checkpoint" in train_src
+    assert "student_warmstart_checkpoint" in train_src
+    assert "student_lineage.json" in train_src
+    assert "teacher_eval_manifest" in train_src
+    assert "allow_ungated_teacher" in train_src
+    assert "require_sparse_teacher_checkpoint" in train_src
+    assert "legged_lab.assets.t4.student_lineage" in train_src
     assert "OnPolicyRunner" in train_src
     assert "T4LocoSparseDepthStudentFtEnvCfg" in ft_src
     assert "student_checkpoint" in ft_src
@@ -171,6 +187,84 @@ def test_deployable_reload_has_no_decoder():
     assert rebuilt.scan_decoder is None
     out = rebuilt.act_inference(_student_obs(2))
     assert out.shape == (2, 2)
+
+
+def _scratch_dir():
+    return tempfile.TemporaryDirectory(prefix="t4-student-gate-")
+
+
+def test_full_training_checkpoint_does_not_rebuild_decoder():
+    policy = _tiny_gru(critic_hidden_dims=[8])
+    policy.act_inference(_student_obs(2))
+    full = policy.state_dict()
+    assert "teacher.0.weight" in full
+    assert "scan_decoder.2.weight" in full
+    assert "critic.0.weight" in full
+    rebuilt = build_depth_student_policy(
+        full,
+        num_actions=2,
+        num_teacher_obs=12,
+        depth_shape=(1, 4, 4),
+        proprio_obs_dim=4,
+        recon_scan_offset=4,
+    )
+    assert rebuilt.scan_decoder is None
+    assert not any(key.startswith("scan_decoder") for key in rebuilt.state_dict())
+    stripped = strip_deployable_state_dict(full)
+    assert not any(key.startswith("teacher.") for key in stripped)
+    assert not any(key.startswith("scan_decoder") for key in stripped)
+    assert not any(key.startswith("critic.") for key in stripped)
+    with _scratch_dir() as raw:
+        scratch = Path(raw)
+        src = scratch / "model_500.pt"
+        dst = scratch / "model_500_deploy.pt"
+        torch.save(
+            {
+                "model_state_dict": full,
+                "optimizer_state_dict": {"not": "exported"},
+                "iter": 500,
+                "infos": None,
+            },
+            src,
+        )
+        written = write_deployable_checkpoint(src, dst)
+        assert written["deployable"] is True
+        assert "optimizer_state_dict" not in written
+        assert not any(key.startswith("teacher.") for key in written["model_state_dict"])
+        assert not any(key.startswith("scan_decoder") for key in written["model_state_dict"])
+        assert not any(key.startswith("critic.") for key in written["model_state_dict"])
+
+
+def test_student_warmstart_loads_control_stack_but_not_teacher_or_critic():
+    source = _tiny_gru(critic_hidden_dims=[8])
+    with torch.no_grad():
+        for name, parameter in source.named_parameters():
+            if name.startswith(("depth_encoder.", "memory_s.", "student.", "scan_decoder.")) or name == "std":
+                parameter.fill_(0.25)
+            elif name.startswith("teacher."):
+                parameter.fill_(0.75)
+            elif name.startswith("critic."):
+                parameter.fill_(0.9)
+
+    target = _tiny_gru(critic_hidden_dims=[8])
+    teacher_before = {name: value.clone() for name, value in target.teacher.state_dict().items()}
+    critic_before = {name: value.clone() for name, value in target.critic.state_dict().items()}
+
+    with _scratch_dir() as raw:
+        checkpoint = Path(raw) / "model_3000.pt"
+        torch.save({"model_state_dict": source.state_dict(), "iter": 3000}, checkpoint)
+        info = load_student_warmstart_checkpoint(target, checkpoint)
+
+    assert info["iter"] == 3000
+    assert info["loaded_keys"] > 0
+    assert len(info["sha256"]) == 64
+    for name, value in target.state_dict().items():
+        if name.startswith(("depth_encoder.", "memory_s.", "student.", "scan_decoder.")) or name == "std":
+            assert torch.allclose(value, torch.full_like(value, 0.25))
+    for name, value in target.teacher.state_dict().items():
+        assert torch.equal(value, teacher_before[name])
+    for name, value in target.critic.state_dict().items():
+        assert torch.equal(value, critic_before[name])
 
 
 def test_distillation_records_recon_and_pg_without_double_gru_step():
@@ -290,7 +384,109 @@ def test_feedforward_stage_e_policy_class_is_not_recurrent():
 def test_sim2sim_loads_gru_builder():
     source = SIM2SIM_PY.read_text(encoding="utf-8")
     assert "build_depth_student_policy" in source
+    assert "strip_deployable_state_dict" in source
     assert "sparse_teacher_latest_scan_range" in source
+
+
+def _write_teacher_ckpt(path, obs_dim, iter_n=21500):
+    torch.save(
+        {
+            "model_state_dict": {
+                "actor.0.weight": torch.zeros(8, obs_dim),
+                "actor.0.bias": torch.zeros(8),
+                "std": torch.ones(2),
+            },
+            "iter": iter_n,
+        },
+        path,
+    )
+
+
+def test_teacher_gate_accepts_sparse_1937_with_matching_manifest():
+    with _scratch_dir() as raw:
+        scratch = Path(raw)
+        ckpt = scratch / "model_21500.pt"
+        _write_teacher_ckpt(ckpt, schemas.TEACHER_SPARSE_ACTOR_OBS_DIM)
+        manifest = scratch / "eval.json"
+        manifest.write_text(
+            json.dumps(
+                {
+                    "evaluator": "t4_terrain_perception_v3",
+                    "task": "t4_loco_teacher_sparse",
+                    "checkpoint": str(ckpt),
+                }
+            ),
+            encoding="utf-8",
+        )
+        info = require_sparse_teacher_checkpoint(ckpt, eval_manifests=[manifest])
+        assert info["obs_dim"] == schemas.TEACHER_SPARSE_ACTOR_OBS_DIM
+        assert info["ungated"] is False
+        assert len(info["sha256"]) == 64
+
+
+def test_teacher_gate_rejects_stage_e_and_student_files():
+    with _scratch_dir() as raw:
+        scratch = Path(raw)
+        stage_e = scratch / "stage_e.pt"
+        _write_teacher_ckpt(stage_e, schemas.TEACHER_ACTOR_OBS_DIM)
+        with pytest.raises(StudentLineageError, match="Stage E 1155D"):
+            require_sparse_teacher_checkpoint(stage_e, allow_ungated=True)
+        student = scratch / "student.pt"
+        torch.save(
+            {
+                "model_state_dict": {
+                    "student.0.weight": torch.zeros(8, 4),
+                    "depth_encoder.0.weight": torch.zeros(2, 1, 3, 3),
+                }
+            },
+            student,
+        )
+        with pytest.raises(StudentLineageError, match="depth student"):
+            require_sparse_teacher_checkpoint(student, allow_ungated=True)
+
+
+def test_teacher_gate_requires_manifest_unless_ungated():
+    with _scratch_dir() as raw:
+        scratch = Path(raw)
+        ckpt = scratch / "model_21500.pt"
+        _write_teacher_ckpt(ckpt, schemas.TEACHER_SPARSE_ACTOR_OBS_DIM)
+        with pytest.raises(StudentLineageError, match="teacher_eval_manifest"):
+            require_sparse_teacher_checkpoint(ckpt)
+        info = require_sparse_teacher_checkpoint(ckpt, allow_ungated=True)
+        assert info["ungated"] is True
+        other = scratch / "wrong.json"
+        other.write_text(
+            json.dumps(
+                {
+                    "task": "t4_loco_teacher_sparse",
+                    "checkpoint": "/tmp/model_19000.pt",
+                }
+            ),
+            encoding="utf-8",
+        )
+        with pytest.raises(StudentLineageError, match="does not match teacher path"):
+            require_sparse_teacher_checkpoint(ckpt, eval_manifests=[other])
+
+
+def test_teacher_gate_rejects_same_filename_from_a_different_run():
+    with _scratch_dir() as raw:
+        scratch = Path(raw)
+        ckpt = scratch / "run_a" / "model_21500.pt"
+        ckpt.parent.mkdir()
+        _write_teacher_ckpt(ckpt, schemas.TEACHER_SPARSE_ACTOR_OBS_DIM)
+        wrong = scratch / "run_b" / "model_21500.pt"
+        manifest = scratch / "eval.json"
+        manifest.write_text(
+            json.dumps(
+                {
+                    "task": "t4_loco_teacher_sparse",
+                    "checkpoint": str(wrong),
+                }
+            ),
+            encoding="utf-8",
+        )
+        with pytest.raises(StudentLineageError, match="does not match teacher path"):
+            require_sparse_teacher_checkpoint(ckpt, eval_manifests=[manifest])
 
 
 def test_nan_guard_rejects_ingest_nan_before_storage():

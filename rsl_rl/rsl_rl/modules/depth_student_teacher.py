@@ -51,7 +51,10 @@ class DepthStudentTeacher(StudentTeacher):
         )
 
         activation_cls = nn.ELU if activation == "elu" else nn.ReLU
-        layers: list[nn.Module] = [nn.Linear(depth_hidden_dim + proprio_obs_dim, student_hidden_dims[0]), activation_cls()]
+        layers: list[nn.Module] = [
+            nn.Linear(depth_hidden_dim + proprio_obs_dim, student_hidden_dims[0]),
+            activation_cls(),
+        ]
         for index, width in enumerate(student_hidden_dims):
             if index == len(student_hidden_dims) - 1:
                 layers.append(nn.Linear(width, num_actions))
@@ -60,10 +63,13 @@ class DepthStudentTeacher(StudentTeacher):
         self.student = nn.Sequential(*layers)
 
     def _student_features(self, observations: torch.Tensor) -> torch.Tensor:
-        proprio = observations[:, : self.proprio_obs_dim]
-        depth = observations[:, self.proprio_obs_dim :]
-        depth = depth.reshape(observations.shape[0], *self.depth_shape)
-        return torch.cat([proprio, self.depth_encoder(depth)], dim=-1)
+        leading_shape = observations.shape[:-1]
+        flat_observations = observations.reshape(-1, observations.shape[-1])
+        proprio = flat_observations[:, : self.proprio_obs_dim]
+        depth = flat_observations[:, self.proprio_obs_dim :]
+        depth = depth.reshape(flat_observations.shape[0], *self.depth_shape)
+        features = torch.cat([proprio, self.depth_encoder(depth)], dim=-1)
+        return features.reshape(*leading_shape, features.shape[-1])
 
     def update_distribution(self, observations):
         mean = self.student(self._student_features(observations))
@@ -102,6 +108,9 @@ class DepthStudentTeacherRecurrent(DepthStudentTeacher):
         recon_scan_dim=0,
         recon_scan_offset=0,
         recon_hidden_dim=128,
+        critic_hidden_dims=None,
+        min_action_std=1.0e-3,
+        max_action_std=None,
         **kwargs,
     ):
         del kwargs
@@ -128,6 +137,8 @@ class DepthStudentTeacherRecurrent(DepthStudentTeacher):
         self.rnn_hidden_dim = int(rnn_hidden_dim)
         self.recon_scan_dim = int(recon_scan_dim)
         self.recon_scan_offset = int(recon_scan_offset)
+        self.min_action_std = float(min_action_std)
+        self.max_action_std = None if max_action_std is None else float(max_action_std)
         fused_dim = int(depth_hidden_dim) + int(proprio_obs_dim)
         self.memory_s = Memory(
             fused_dim, type=self.rnn_type, num_layers=int(rnn_num_layers), hidden_size=self.rnn_hidden_dim
@@ -148,19 +159,46 @@ class DepthStudentTeacherRecurrent(DepthStudentTeacher):
             )
         else:
             self.scan_decoder = None
+        if critic_hidden_dims is not None:
+            critic_widths = [int(width) for width in critic_hidden_dims]
+            if not critic_widths:
+                raise ValueError("critic_hidden_dims must contain at least one layer")
+            critic_layers: list[nn.Module] = [nn.Linear(num_teacher_obs, critic_widths[0]), activation_cls()]
+            for index, width in enumerate(critic_widths):
+                if index == len(critic_widths) - 1:
+                    critic_layers.append(nn.Linear(width, 1))
+                else:
+                    critic_layers.extend([nn.Linear(width, critic_widths[index + 1]), activation_cls()])
+            self.critic = nn.Sequential(*critic_layers)
+        else:
+            self.critic = None
         self._last_hidden = None
 
     def student_parameters(self):
-        params = list(self.depth_encoder.parameters()) + list(self.memory_s.parameters()) + list(self.student.parameters())
+        params = (
+            list(self.depth_encoder.parameters()) + list(self.memory_s.parameters()) + list(self.student.parameters())
+        )
         params.append(self.std)
         if self.scan_decoder is not None:
             params.extend(self.scan_decoder.parameters())
+        if self.critic is not None:
+            params.extend(self.critic.parameters())
         return params
 
-    def _step_memory(self, observations: torch.Tensor) -> torch.Tensor:
+    def shared_encoder_parameters(self):
+        return list(self.depth_encoder.parameters()) + list(self.memory_s.parameters())
+
+    def _bounded_std(self, mean: torch.Tensor) -> torch.Tensor:
+        if self.max_action_std is None:
+            std = torch.clamp(self.std, min=self.min_action_std)
+        else:
+            std = torch.clamp(self.std, min=self.min_action_std, max=self.max_action_std)
+        return std.expand_as(mean)
+
+    def _step_memory(self, observations: torch.Tensor, masks=None, hidden_states=None) -> torch.Tensor:
         fused = self._student_features(observations)
-        hidden = self.memory_s(fused)
-        if hidden.dim() == 3:
+        hidden = self.memory_s(fused, masks=masks, hidden_states=hidden_states)
+        if masks is None and hidden.dim() == 3:
             hidden = hidden.squeeze(0)
         self._last_hidden = hidden
         return hidden
@@ -179,16 +217,29 @@ class DepthStudentTeacherRecurrent(DepthStudentTeacher):
     def detach_hidden_states(self, dones=None):
         self.memory_s.detach_hidden_states(dones)
 
-    def update_distribution(self, observations):
-        mean = self.student(self._step_memory(observations))
-        std = self.std.expand_as(mean)
+    def update_distribution(self, observations, masks=None, hidden_states=None):
+        mean = self.student(self._step_memory(observations, masks=masks, hidden_states=hidden_states))
+        std = self._bounded_std(mean)
         self.distribution = torch.distributions.Normal(mean, std)
 
-    def act_inference(self, observations):
-        mean = self.student(self._step_memory(observations))
-        std = self.std.expand_as(mean)
+    def act(self, observations, masks=None, hidden_states=None):
+        self.update_distribution(observations, masks=masks, hidden_states=hidden_states)
+        return self.distribution.sample()
+
+    def act_inference(self, observations, masks=None, hidden_states=None):
+        mean = self.student(self._step_memory(observations, masks=masks, hidden_states=hidden_states))
+        std = self._bounded_std(mean)
         self.distribution = torch.distributions.Normal(mean, std)
         return mean
+
+    def evaluate_value(self, teacher_observations: torch.Tensor, masks=None) -> torch.Tensor:
+        if self.critic is None:
+            raise RuntimeError("safe recurrent distillation requires critic_hidden_dims")
+        if masks is not None:
+            from rsl_rl.utils import unpad_trajectories
+
+            teacher_observations = unpad_trajectories(teacher_observations, masks)
+        return self.critic(teacher_observations)
 
     def reconstruct(self) -> torch.Tensor:
         if self.scan_decoder is None:
@@ -202,12 +253,34 @@ class DepthStudentTeacherRecurrent(DepthStudentTeacher):
             raise RuntimeError("recon_scan_dim is 0")
         start = self.recon_scan_offset
         end = start + self.recon_scan_dim
-        return teacher_obs[:, start:end]
+        return teacher_obs[..., start:end]
 
     def deployable_state_dict(self):
         """Export: CNN + GRU + actor. No teacher, no recon decoder, no critic."""
-        skip = ("teacher.", "scan_decoder.")
-        return {key: value for key, value in self.state_dict().items() if not key.startswith(skip)}
+        return strip_deployable_state_dict(self.state_dict())
+
+
+DEPLOY_SKIP_PREFIXES = ("teacher.", "scan_decoder.", "critic.")
+
+
+def strip_deployable_state_dict(state_dict):
+    """Drop privileged teacher, scan-decoder, and critic weights from a training checkpoint."""
+    return {key: value for key, value in state_dict.items() if not key.startswith(DEPLOY_SKIP_PREFIXES)}
+
+
+def write_deployable_checkpoint(src, dst):
+    """Write a slim deploy package: no optimizer, teacher MLP, scan decoder, or critic."""
+    blob = torch.load(src, map_location="cpu", weights_only=False)
+    if not isinstance(blob, dict) or "model_state_dict" not in blob:
+        raise ValueError(f"{src} does not contain model_state_dict")
+    out = {
+        "model_state_dict": strip_deployable_state_dict(blob["model_state_dict"]),
+        "iter": blob.get("iter"),
+        "infos": blob.get("infos"),
+        "deployable": True,
+    }
+    torch.save(out, dst)
+    return out
 
 
 def _sequential_linear_out_dims(state_dict, prefix: str) -> list[int]:
@@ -239,9 +312,14 @@ def build_depth_student_policy(
     proprio_obs_dim=960,
     recon_scan_offset=0,
 ):
-    """Rebuild a depth student (feed-forward or GRU) from a checkpoint dict."""
-    if "teacher.0.weight" in state_dict:
-        num_teacher_obs = int(state_dict["teacher.0.weight"].shape[1])
+    """Rebuild a depth student (feed-forward or GRU) from a checkpoint dict.
+
+    Training checkpoints still contain teacher, scan-decoder, and critic weights.
+    This builder strips them before loading. The compatibility policy class may
+    still allocate an unused teacher shell, but no privileged weights enter the
+    deploy state or inference path.
+    """
+    state_dict = strip_deployable_state_dict(state_dict)
     student_outs = _sequential_linear_out_dims(state_dict, "student.")
     student_hidden_dims = student_outs[:-1] if len(student_outs) >= 2 else [512, 256, 128]
     depth_hidden_dim = 128
@@ -259,15 +337,12 @@ def build_depth_student_policy(
         "teacher_hidden_dims": student_hidden_dims,
     }
     if any(key.startswith("memory_s") for key in state_dict):
-        recon_dim = 0
-        if "scan_decoder.2.weight" in state_dict:
-            recon_dim = int(state_dict["scan_decoder.2.weight"].shape[0])
         rnn_hidden_dim = 256
         if "memory_s.rnn.weight_hh_l0" in state_dict:
             rnn_hidden_dim = int(state_dict["memory_s.rnn.weight_hh_l0"].shape[1])
         policy = DepthStudentTeacherRecurrent(
             **kwargs,
-            recon_scan_dim=recon_dim,
+            recon_scan_dim=0,
             recon_scan_offset=int(recon_scan_offset),
             rnn_hidden_dim=rnn_hidden_dim,
         )
