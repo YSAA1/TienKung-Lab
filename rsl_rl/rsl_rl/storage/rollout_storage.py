@@ -34,6 +34,7 @@ class RolloutStorage:
             self.dones = None
             self.values = None
             self.actions_log_prob = None
+            self.student_action_mask = None
             self.action_mean = None
             self.action_sigma = None
             self.hidden_states = None
@@ -79,6 +80,9 @@ class RolloutStorage:
         if training_type == "distillation":
             self.privileged_actions = torch.zeros(num_transitions_per_env, num_envs, *actions_shape, device=self.device)
             self.actions_log_prob = torch.zeros(num_transitions_per_env, num_envs, 1, device=self.device)
+            self.student_action_mask = torch.zeros(
+                num_transitions_per_env, num_envs, 1, dtype=torch.bool, device=self.device
+            )
 
         # for reinforcement learning
         if training_type == "rl":
@@ -118,6 +122,8 @@ class RolloutStorage:
             self.privileged_actions[self.step].copy_(transition.privileged_actions)
             if transition.actions_log_prob is not None:
                 self.actions_log_prob[self.step].copy_(transition.actions_log_prob.view(-1, 1))
+            if transition.student_action_mask is not None:
+                self.student_action_mask[self.step].copy_(transition.student_action_mask.view(-1, 1))
 
         # for reinforcement learning
         if self.training_type == "rl":
@@ -192,9 +198,14 @@ class RolloutStorage:
                 privileged_observations = self.privileged_observations[i]
             else:
                 privileged_observations = self.observations[i]
-            yield self.observations[i], privileged_observations, self.actions[i], self.privileged_actions[
-                i
-            ], self.dones[i]
+            yield (
+                self.observations[i],
+                privileged_observations,
+                self.actions[i],
+                self.privileged_actions[i],
+                self.dones[i],
+                self.student_action_mask[i],
+            )
 
     # for reinforcement learning with feedforward networks
     def mini_batch_generator(self, num_mini_batches, num_epochs=8):

@@ -48,6 +48,7 @@ class Distillation:
         teacher_mix=0.0,
         teacher_mix_end=None,
         teacher_mix_decay_iters=0,
+        recon_coef=0.0,
         # Distributed training parameters
         multi_gpu_cfg: dict | None = None,
     ):
@@ -68,7 +69,9 @@ class Distillation:
         self.policy = policy
         self.policy.to(self.device)
         self.storage = None  # initialized later
-        self.optimizer = optim.Adam(self.policy.student.parameters(), lr=learning_rate)
+        student_params = getattr(self.policy, "student_parameters", None)
+        params = list(student_params()) if callable(student_params) else list(self.policy.student.parameters())
+        self.optimizer = optim.Adam(params, lr=learning_rate)
         self.transition = RolloutStorage.Transition()
         self.last_hidden_states = None
 
@@ -86,6 +89,7 @@ class Distillation:
         self.teacher_mix = float(teacher_mix)
         self.teacher_mix_end = None if teacher_mix_end is None else float(teacher_mix_end)
         self.teacher_mix_decay_iters = int(teacher_mix_decay_iters)
+        self.recon_coef = float(recon_coef)
 
         # initialize the loss function
         if loss_type == "mse":
@@ -126,22 +130,27 @@ class Distillation:
 
     def act(self, obs, teacher_obs):
         student_actions = self.policy.act(obs)
-        student_log_prob = self.policy.distribution.log_prob(student_actions).sum(dim=-1).detach()
         student_actions = student_actions.detach()
         teacher_actions = self.policy.evaluate(teacher_obs).detach()
         self.transition.privileged_actions = teacher_actions
         self.transition.observations = obs
         self.transition.privileged_observations = teacher_obs
-        self.transition.actions_log_prob = student_log_prob
         mix = self.current_teacher_mix()
         if mix >= 1.0:
             executed = teacher_actions
+            student_action_mask = torch.zeros(student_actions.shape[0], dtype=torch.bool, device=student_actions.device)
         elif mix <= 0.0:
             executed = student_actions
+            student_action_mask = torch.ones(student_actions.shape[0], dtype=torch.bool, device=student_actions.device)
         else:
             take_teacher = torch.rand(student_actions.shape[0], device=student_actions.device) < mix
             executed = torch.where(take_teacher.unsqueeze(-1), teacher_actions, student_actions)
+            student_action_mask = ~take_teacher
         self.transition.actions = executed
+        self.transition.student_action_mask = student_action_mask
+        # Ratio must use log π of the action that actually ran, including DAgger
+        # teacher-mix rows. Storing the unused student sample makes pg garbage.
+        self.transition.actions_log_prob = self.policy.distribution.log_prob(executed).sum(dim=-1).detach()
         return executed
 
     def process_env_step(self, rewards, dones, infos):
@@ -168,22 +177,26 @@ class Distillation:
         self.num_updates += 1
         mean_behavior_loss = 0
         mean_pg_loss = 0
+        mean_recon_loss = 0
         loss = 0
         cnt = 0
         use_pg = self.pg_coef > 0.0 and self.collect_mode == "student"
+        use_recon = self.recon_coef > 0.0
         advantages = self._return_advantages() if use_pg else None
 
         for epoch in range(self.num_learning_epochs):
             self.policy.reset(hidden_states=self.last_hidden_states)
             self.policy.detach_hidden_states()
             step_index = 0
-            for obs, _, executed_actions, privileged_actions, dones in self.storage.generator():
+            loss = 0
+            for obs, privileged_obs, executed_actions, privileged_actions, dones, student_action_mask in self.storage.generator():
                 # Rollout collection runs under ``torch.inference_mode``.  The
                 # stored tensors therefore carry inference-mode metadata, but
                 # the student forward below must save activations for backward.
                 # Clone at the update boundary to materialize regular tensors.
                 with torch.inference_mode(False):
                     obs = obs.clone()
+                    privileged_obs = privileged_obs.clone()
                     privileged_actions = privileged_actions.clone()
                     executed_actions = executed_actions.clone()
 
@@ -194,15 +207,27 @@ class Distillation:
                 behavior_loss = self.loss_fn(actions, privileged_actions)
                 step_loss = self.behavior_coef * behavior_loss
                 if use_pg:
-                    self.policy.update_distribution(obs)
+                    if not getattr(self.policy, "is_recurrent", False):
+                        self.policy.update_distribution(obs)
+                    elif self.policy.distribution is None:
+                        self.policy.update_distribution(obs)
                     log_prob = self.policy.distribution.log_prob(executed_actions).sum(dim=-1)
                     old_log_prob = self.storage.actions_log_prob[step_index].squeeze(-1).detach()
-                    ratio = torch.exp(log_prob - old_log_prob)
-                    adv = advantages[step_index].squeeze(-1).detach()
-                    clipped = torch.clamp(ratio, 1.0 - self.clip_param, 1.0 + self.clip_param)
-                    pg_loss = -torch.min(ratio * adv, clipped * adv).mean()
+                    student_rows = student_action_mask.squeeze(-1)
+                    if student_rows.any():
+                        log_ratio = log_prob[student_rows] - old_log_prob[student_rows]
+                        ratio = torch.exp(log_ratio)
+                        adv = advantages[step_index].squeeze(-1).detach()[student_rows]
+                        clipped = torch.clamp(ratio, 1.0 - self.clip_param, 1.0 + self.clip_param)
+                        pg_loss = -torch.min(ratio * adv, clipped * adv).mean()
+                    else:
+                        pg_loss = actions.new_zeros(())
                     step_loss = self.behavior_coef * behavior_loss + self.pg_coef * pg_loss
                     mean_pg_loss += pg_loss.item()
+                if use_recon:
+                    recon_loss = self.loss_fn(self.policy.reconstruct(), self.policy.teacher_scan(privileged_obs))
+                    step_loss = step_loss + self.recon_coef * recon_loss
+                    mean_recon_loss += recon_loss.item()
 
                 # total loss
                 loss = loss + step_loss
@@ -224,6 +249,14 @@ class Distillation:
                 self.policy.reset(dones.view(-1))
                 self.policy.detach_hidden_states(dones.view(-1))
 
+            if isinstance(loss, torch.Tensor):
+                self.optimizer.zero_grad()
+                loss.backward()
+                if self.is_multi_gpu:
+                    self.reduce_parameters()
+                self.optimizer.step()
+                self.policy.detach_hidden_states()
+
         mean_behavior_loss /= cnt
         self.storage.clear()
         self.last_hidden_states = self.policy.get_hidden_states()
@@ -233,6 +266,8 @@ class Distillation:
         loss_dict = {"behavior": mean_behavior_loss, "teacher_mix": self.current_teacher_mix()}
         if use_pg:
             loss_dict["pg"] = mean_pg_loss / cnt
+        if use_recon:
+            loss_dict["recon"] = mean_recon_loss / cnt
 
         return loss_dict
 
