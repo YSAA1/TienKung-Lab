@@ -229,6 +229,13 @@ def loco_sparse_layout(
         shifted = dict(geom)
         shifted["name"] = f"loco_sparse_{geom['name']}"
         shifted["pos"] = (float(geom["pos"][0]) + LOCO_SPARSE_START_X, *geom["pos"][1:])
+        if geom["name"] == "start_platform":
+            # The preceding loco corridor is 2.2 m wide.  Preserve that width
+            # for the entry platform so its lateral state can transfer to the
+            # sparse lattice instead of falling through an artificial 30 cm
+            # step-in narrowing at the ground/pit boundary.
+            shifted["name"] = "loco_sparse_alignment_platform"
+            shifted["size"] = (geom["size"][0], 1.1, geom["size"][2])
         geoms.append(shifted)
     return {**layout, "terrain": "loco_sparse", "sparse_start_x": LOCO_SPARSE_START_X, "geoms": geoms}
 

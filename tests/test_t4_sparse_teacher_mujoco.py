@@ -81,6 +81,9 @@ def test_loco_sparse_scene_reuses_the_loco_lane_and_current_footholds():
     assert len([geom for geom in layout["geoms"] if geom["kind"] == "pillar"]) == 15 * 15
     assert model.geom("loco_hurdle_1_geom").id >= 0
     assert model.geom("loco_stair_up_1_geom").id >= 0
+    alignment = model.geom("loco_sparse_alignment_platform")
+    assert alignment.id >= 0
+    assert alignment.size[1] == pytest.approx(1.1)
     assert model.geom("loco_sparse_stone_0_7").id >= 0
     assert model.geom("loco_sparse_pillar_0_7").id >= 0
     assert model.geom("ground").type[0] == mujoco.mjtGeom.mjGEOM_BOX
