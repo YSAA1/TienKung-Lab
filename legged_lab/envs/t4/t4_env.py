@@ -58,12 +58,21 @@ from legged_lab.envs.t4.curriculum import (
 from legged_lab.envs.t4.mdp.sparse_signals import (
     LIGHTLP_IMMUNITY_FRAC,
     LIGHTLP_IMMUNITY_PERIOD,
+    LOG_COUNT_SUFFIX,
+    SPARSE_FOOTHOLD_GENTLE_YAW_RANGE,
+    SPARSE_FOOTHOLD_STRAIGHT_YAW_PROB,
+    SPARSE_FOOTHOLD_VX_RANGE,
     impact_immunity_from_draws,
+    lightlp_sparse_promotion_guard,
     lightlp_timeout_and_reset,
+    mask_recent_push_accel,
+    monitor_outcome_flags,
     random_level_reset_high,
     random_level_reset_mask,
+    sample_sparse_foothold_velocity,
     sparse_curriculum_moves,
     sparse_pit_fall_mask,
+    terrain_aware_commands_enabled,
     tilt_from_upright_rad,
 )
 from legged_lab.envs.t4.terrain_columns import (
@@ -82,6 +91,7 @@ from legged_lab.terrains.stepping_stone_layout import (
     T4_PILLAR_DIAMETER_RANGE,
     T4_PILLAR_PITCH_RANGE,
     T4_STONE_BORDER_WIDTH,
+    T4_SPARSE_RIM_WIDTH,
     T4_STONE_PLATFORM_WIDTH,
     T4_STONE_TILE_SIZE,
     T4_STONE_WIDTH_RANGE,
@@ -95,6 +105,8 @@ class T4LocoEnv(VecEnv):
     """PPO + AMP locomotion env for the T4 27-DoF humanoid."""
 
     _TERRAIN_METRIC_FIELDS = (
+        "promotion_rate",
+        "timeout_success_rate",
         "success_rate",
         "reach_1m_rate",
         "reach_2m_rate",
@@ -198,6 +210,7 @@ class T4LocoEnv(VecEnv):
             self.event_manager.apply(mode="startup")
         self.reset_env_ids = env_ids
         self.reset(env_ids)
+        self.extras.pop("log", None)
 
     """
     Setup.
@@ -411,6 +424,7 @@ class T4LocoEnv(VecEnv):
         self.impact_immunity = torch.zeros(self.num_envs, dtype=torch.bool, device=self.device)
         self._lightlp_step = 0
         self.prev_root_lin_vel_w = torch.zeros(self.num_envs, 3, dtype=torch.float, device=self.device)
+        self._push_step_marker = torch.full((self.num_envs,), -(10**9), dtype=torch.long, device=self.device)
         if self.use_lightlp_terminations:
             self._resample_impact_immunity()
         self._foot_scan_local = torch.tensor(
@@ -419,6 +433,8 @@ class T4LocoEnv(VecEnv):
             device=self.device,
         )
         self.sparse_tile_mask = torch.zeros(self.num_envs, dtype=torch.bool, device=self.device)
+        self._sparse_command = torch.zeros(self.num_envs, 3, dtype=torch.float, device=self.device)
+        self._sparse_command_active = torch.zeros(self.num_envs, dtype=torch.bool, device=self.device)
         self.reset_reason_masks: dict[str, torch.Tensor] = {}
 
         self.amp_builder = T4AmpFeatureBuilder(self.robot, self.device)
@@ -569,7 +585,11 @@ class T4LocoEnv(VecEnv):
         on_rect = (dx.abs() <= half_support) & (dy.abs() <= half_support)
         on_disk = (dx * dx + dy * dy) <= (half_support * half_support)
         on_foothold = torch.where(is_stone.unsqueeze(1), on_rect, on_disk) & within_lattice
-        on_support = on_platform | on_foothold
+        rim = T4_SPARSE_RIM_WIDTH
+        tile = T4_STONE_TILE_SIZE
+        in_overflow = (tile_x >= -rim) & (tile_x <= tile + rim) & (tile_y >= -rim) & (tile_y <= tile + rim)
+        on_rim = in_overflow & ((tile_x <= rim) | (tile_x >= tile - rim) | (tile_y <= rim) | (tile_y >= tile - rim))
+        on_support = on_platform | on_foothold | on_rim
         return on_support & sparse.unsqueeze(1)
 
     def _apply_algebraic_sparse_scan(self, height_scan: torch.Tensor) -> torch.Tensor:
@@ -784,6 +804,7 @@ class T4LocoEnv(VecEnv):
         self._update_gait()
 
         self.command_generator.compute(self.step_dt)
+        self._enforce_terrain_aware_commands()
         if "interval" in self.event_manager.available_modes:
             self.event_manager.apply(mode="interval", dt=self.step_dt)
 
@@ -815,6 +836,8 @@ class T4LocoEnv(VecEnv):
             )
             self.terminal_feet_contact[env_ids] = feet_contact[env_ids]
         self.reset(self.reset_env_ids)
+        if len(self.reset_env_ids) == 0:
+            self.extras.pop("log", None)
 
         actor_obs, critic_obs = self.compute_observations()
         self.extras["observations"] = {"critic": critic_obs}
@@ -887,13 +910,16 @@ class T4LocoEnv(VecEnv):
         self.last_tilt_rad.copy_(
             tilt_from_upright_rad(gravity_b[:, 0], gravity_b[:, 1], gravity_b[:, 2])
         )
+        accel_for_gate = mask_recent_push_accel(
+            accel, self.sim_step_counter, self._push_step_marker, int(self.cfg.sim.decimation)
+        )
         reset_buf, time_out_buf, reasons = lightlp_timeout_and_reset(
             episode_timeout=self.episode_length_buf >= self.max_episode_length,
             offset_xy=offset,
             tile_size=tile,
             max_abs_joint_vel=torch.max(torch.abs(self.robot.data.joint_vel), dim=1)[0],
             torso_hit=torso_hit,
-            accel_mps2=accel,
+            accel_mps2=accel_for_gate,
             elapsed_s=self.episode_length_buf.float() * self.step_dt,
             gravity_gx=gravity_b[:, 0],
             gravity_gy=gravity_b[:, 1],
@@ -943,6 +969,8 @@ class T4LocoEnv(VecEnv):
         self.extras["time_outs"] = self.time_out_buf
 
         self.command_generator.reset(env_ids)
+        self._resample_terrain_aware_commands(env_ids)
+        self._enforce_terrain_aware_commands()
         self.actor_obs_buffer.reset(env_ids)
         self.critic_obs_buffer.reset(env_ids)
         self.scan_obs_buffer.reset(env_ids)
@@ -999,6 +1027,8 @@ class T4LocoEnv(VecEnv):
         is_sparse = self._columns_mask(terrain_types, self.sparse_foothold_type_ids)
         timed_out = self.time_out_buf[env_ids]
         pit_fall = self.pit_fall_buf[env_ids]
+        if self.use_lightlp_terminations:
+            move_up = lightlp_sparse_promotion_guard(move_up, is_sparse, pit_fall)
         if not self.use_lightlp_terminations:
             move_up, move_down = sparse_curriculum_moves(
                 move_up=move_up,
@@ -1008,53 +1038,77 @@ class T4LocoEnv(VecEnv):
                 timed_out=timed_out,
                 pit_fall=pit_fall,
             )
-        strict_success = move_up & timed_out
+        promotion, timeout_success, _fall = monitor_outcome_flags(move_up, timed_out)
         self._update_terrain_metrics(
             terrain_types=terrain_types,
             terrain_levels=terrain_levels,
             moving=moving,
-            strict_success=strict_success,
+            promotion=promotion,
+            timeout_success=timeout_success,
             timed_out=timed_out,
             pit_fall=pit_fall,
             max_dist=max_dist,
         )
         self.scene.terrain.update_env_origins(env_ids, move_up, move_down)
-        self._apply_random_level_resets(env_ids)
+        random_reset_logs = self._apply_random_level_resets(env_ids)
+        n_all = torch.tensor(float(self.num_envs), device=self.device)
+        n_reset = torch.tensor(float(len(env_ids)), device=self.device)
         logs = {
             "Curriculum/terrain_levels": torch.mean(self.scene.terrain.terrain_levels.float()),
+            f"Curriculum/terrain_levels{LOG_COUNT_SUFFIX}": n_all,
             "Curriculum/episode_max_radial_dist": torch.mean(max_dist),
+            f"Curriculum/episode_max_radial_dist{LOG_COUNT_SUFFIX}": n_reset,
             "Curriculum/episode_path_length": torch.mean(path_length),
+            f"Curriculum/episode_path_length{LOG_COUNT_SUFFIX}": n_reset,
             "Curriculum/episode_tracking_mean": torch.mean(tracking_mean),
+            f"Curriculum/episode_tracking_mean{LOG_COUNT_SUFFIX}": n_reset,
         }
+        logs["Curriculum/promotion_rate"] = promotion.float().mean()
+        logs[f"Curriculum/promotion_rate{LOG_COUNT_SUFFIX}"] = n_reset
+        logs["Curriculum/timeout_success_rate"] = timeout_success.float().mean()
+        logs[f"Curriculum/timeout_success_rate{LOG_COUNT_SUFFIX}"] = n_reset
         logs.update(self._reset_reason_log(env_ids))
         logs.update(self._terrain_metrics_log())
+        logs.update(self._batch_terrain_outcome_log(env_ids, promotion, timeout_success, timed_out, terrain_types))
+        logs.update(random_reset_logs)
         return logs
 
     def _reset_reason_log(self, env_ids: torch.Tensor) -> dict[str, torch.Tensor]:
         """Fractions of this reset batch attributed to each LightLP terminator."""
-        logs = {"Reset/n": torch.tensor(float(len(env_ids)), device=self.device)}
+        n = torch.tensor(float(len(env_ids)), device=self.device)
+        logs = {"Reset/n": n}
         reasons = getattr(self, "reset_reason_masks", None)
         if reasons:
             for name, mask in reasons.items():
                 logs[f"Reset/{name}"] = mask[env_ids].float().mean()
+                logs[f"Reset/{name}{LOG_COUNT_SUFFIX}"] = n
         if len(env_ids) > 0:
             logs["Reset/pit_fall"] = self.pit_fall_buf[env_ids].float().mean()
+            logs[f"Reset/pit_fall{LOG_COUNT_SUFFIX}"] = n
             logs["Reset/timeout"] = self.time_out_buf[env_ids].float().mean()
+            logs[f"Reset/timeout{LOG_COUNT_SUFFIX}"] = n
         return logs
 
-    def _apply_random_level_resets(self, env_ids: torch.Tensor) -> None:
+    def _apply_random_level_resets(self, env_ids: torch.Tensor) -> dict[str, torch.Tensor]:
         """Place a fraction of resets on a random row, independent of performance."""
+        logs: dict[str, torch.Tensor] = {}
         fraction = float(getattr(self.cfg, "random_level_reset_fraction", 0.0) or 0.0)
+        n_reset = torch.tensor(float(max(len(env_ids), 1)), device=self.device)
         if fraction <= 0.0 or len(env_ids) == 0:
-            return
+            return logs
         terrain = self.scene.terrain
         if getattr(terrain, "terrain_origins", None) is None:
-            return
+            return logs
         draws = torch.rand(len(env_ids), device=self.device)
         pick = random_level_reset_mask(draws, fraction=fraction)
+        logs["Curriculum/random_level_reset_frac"] = pick.float().mean()
+        logs[f"Curriculum/random_level_reset_frac{LOG_COUNT_SUFFIX}"] = n_reset
         if not bool(pick.any()):
-            return
+            return logs
         chosen = env_ids[pick]
+        n_pick = torch.tensor(float(len(chosen)), device=self.device)
+        logs["Curriculum/random_level_before_mean"] = terrain.terrain_levels[chosen].float().mean()
+        logs[f"Curriculum/random_level_before_mean{LOG_COUNT_SUFFIX}"] = n_pick
         max_level = random_level_reset_high(
             int(terrain.max_terrain_level),
             getattr(self.cfg, "random_level_reset_max_level", None),
@@ -1065,6 +1119,9 @@ class T4LocoEnv(VecEnv):
         terrain.env_origins[chosen] = terrain.terrain_origins[
             terrain.terrain_levels[chosen], terrain.terrain_types[chosen]
         ]
+        logs["Curriculum/random_level_after_mean"] = terrain.terrain_levels[chosen].float().mean()
+        logs[f"Curriculum/random_level_after_mean{LOG_COUNT_SUFFIX}"] = n_pick
+        return logs
 
     def _update_terrain_metrics(
         self,
@@ -1072,7 +1129,8 @@ class T4LocoEnv(VecEnv):
         terrain_types: torch.Tensor,
         terrain_levels: torch.Tensor,
         moving: torch.Tensor,
-        strict_success: torch.Tensor,
+        promotion: torch.Tensor,
+        timeout_success: torch.Tensor,
         timed_out: torch.Tensor,
         pit_fall: torch.Tensor,
         max_dist: torch.Tensor,
@@ -1084,7 +1142,9 @@ class T4LocoEnv(VecEnv):
         band_ids = torch.clamp((terrain_levels * 3) // (max_level + 1), min=0, max=2)
         fall = ~timed_out
         values = (
-            strict_success.float(),
+            promotion.float(),
+            timeout_success.float(),
+            timeout_success.float(),
             (max_dist >= 1.0).float(),
             (max_dist >= 2.0).float(),
             (max_dist >= 4.0).float(),
@@ -1116,11 +1176,18 @@ class T4LocoEnv(VecEnv):
             self.terrain_metric_initialized[type_id, slot] = True
         self.terrain_metric_episodes[type_id, slot] += count
 
+    _TERRAIN_LOG_METRICS = ("reach_2m_rate", "reach_4m_rate", "progress_m")
+    _TERRAIN_BAND_LOG_METRICS = ("reach_2m_rate", "progress_m")
+
     def _terrain_metrics_log(self) -> dict[str, torch.Tensor]:
         logs: dict[str, torch.Tensor] = {}
+        keep = set(self._TERRAIN_LOG_METRICS)
+        band_keep = set(self._TERRAIN_BAND_LOG_METRICS)
         for type_id, name in enumerate(self.terrain_type_names):
             values = self.terrain_metric_ema[type_id, 0]
             for metric_id, metric in enumerate(self._TERRAIN_METRIC_FIELDS):
+                if metric not in keep:
+                    continue
                 logs[f"Terrain/{name}/{metric}"] = values[metric_id]
             logs[f"Terrain/{name}/episodes"] = self.terrain_metric_episodes[type_id, 0].float()
             if name not in SPARSE_FOOTHOLD_NAMES:
@@ -1128,19 +1195,18 @@ class T4LocoEnv(VecEnv):
             for band_id, band in enumerate(self._TERRAIN_METRIC_BANDS, start=1):
                 band_values = self.terrain_metric_ema[type_id, band_id]
                 for metric_id, metric in enumerate(self._TERRAIN_METRIC_FIELDS):
+                    if metric not in band_keep:
+                        continue
                     logs[f"Terrain/{name}/{band}_{metric}"] = band_values[metric_id]
                 logs[f"Terrain/{name}/{band}_episodes"] = self.terrain_metric_episodes[type_id, band_id].float()
         terrain = getattr(self.scene, "terrain", None)
-        types_all = getattr(terrain, "terrain_types", None)
         levels_all = getattr(terrain, "terrain_levels", None)
-        if types_all is not None and self.terrain_column_names:
-            for column_id, column_name in enumerate(self.terrain_column_names):
-                on_col = types_all == column_id
-                logs[f"TerrainCol/{column_id:02d}_{column_name}/occupancy"] = on_col.float().mean()
         if levels_all is not None:
             max_level = max(1, self.cfg.scene.terrain_generator.num_rows - 1)
+            n_all = torch.tensor(float(self.num_envs), device=self.device)
             for level in range(max_level + 1):
                 logs[f"Curriculum/level_{level}_frac"] = (levels_all == level).float().mean()
+                logs[f"Curriculum/level_{level}_frac{LOG_COUNT_SUFFIX}"] = n_all
         return logs
 
     """
@@ -1223,19 +1289,165 @@ class T4LocoEnv(VecEnv):
             self.refresh_sparse_tile_mask()
             self.gait_reward_scale = self.gait_reward_scale * (~self.sparse_tile_mask).float()
 
+    def _terrain_aware_commands_active(self) -> bool:
+        if not bool(getattr(self.cfg, "terrain_aware_commands", False)):
+            return False
+        ranges = self.cfg.commands.ranges
+        return terrain_aware_commands_enabled(
+            enabled=True,
+            lin_vel_x=ranges.lin_vel_x,
+            lin_vel_y=ranges.lin_vel_y,
+            ang_vel_z=ranges.ang_vel_z,
+        )
+
+    def _base_heading_w(self) -> torch.Tensor:
+        heading = getattr(self.robot.data, "heading_w", None)
+        if heading is not None:
+            return heading
+        return euler_xyz_from_quat(self.robot.data.root_quat_w)[2]
+
+    def _command_storage(self) -> torch.Tensor:
+        gen = self.command_generator
+        stored = getattr(gen, "vel_command_b", None)
+        command = gen.command
+        return stored if stored is not None else command
+
+    def _resample_terrain_aware_commands(self, env_ids: torch.Tensor) -> None:
+        if len(env_ids) == 0:
+            return
+        if not self._terrain_aware_commands_active():
+            self._sparse_command_active[env_ids] = False
+            return
+        self.refresh_sparse_tile_mask()
+        is_sparse = self.sparse_tile_mask[env_ids]
+        self._sparse_command_active[env_ids] = is_sparse
+        if not bool(is_sparse.any()):
+            return
+        chosen = env_ids[is_sparse]
+        n = int(chosen.numel())
+        vx_u = torch.rand(n, device=self.device)
+        yaw_mode_u = torch.rand(n, device=self.device)
+        yaw_u = torch.rand(n, device=self.device)
+        vx, vy, wz = sample_sparse_foothold_velocity(
+            vx_u,
+            yaw_mode_u,
+            yaw_u,
+            vx_range=getattr(self.cfg, "sparse_command_lin_vel_x", SPARSE_FOOTHOLD_VX_RANGE),
+            straight_prob=float(
+                getattr(self.cfg, "sparse_command_straight_yaw_prob", SPARSE_FOOTHOLD_STRAIGHT_YAW_PROB)
+            ),
+            gentle_yaw_range=getattr(self.cfg, "sparse_command_gentle_ang_vel_z", SPARSE_FOOTHOLD_GENTLE_YAW_RANGE),
+        )
+        self._sparse_command[chosen, 0] = vx
+        self._sparse_command[chosen, 1] = vy
+        self._sparse_command[chosen, 2] = wz
+
+    def _enforce_terrain_aware_commands(self) -> None:
+        if not self._terrain_aware_commands_active():
+            return
+        mask = self._sparse_command_active
+        if not bool(mask.any()):
+            return
+        storage = self._command_storage()
+        storage[mask] = self._sparse_command[mask]
+        command = self.command_generator.command
+        if command is not storage:
+            command[mask] = self._sparse_command[mask]
+        standing = getattr(self.command_generator, "is_standing_env", None)
+        if standing is not None:
+            standing[mask] = False
+        heading_env = getattr(self.command_generator, "is_heading_env", None)
+        if heading_env is not None:
+            heading_env[mask] = False
+        heading_target = getattr(self.command_generator, "heading_target", None)
+        if heading_target is not None:
+            heading_target[mask] = self._base_heading_w()[mask]
+
+    def _batch_terrain_outcome_log(
+        self,
+        env_ids: torch.Tensor,
+        promotion: torch.Tensor,
+        timeout_success: torch.Tensor,
+        timed_out: torch.Tensor,
+        terrain_types: torch.Tensor,
+    ) -> dict[str, torch.Tensor]:
+        """This-reset-batch rates with counts, so four ranks can be reduced by sum/count."""
+        logs: dict[str, torch.Tensor] = {}
+        if not self.terrain_type_names or len(env_ids) == 0:
+            return logs
+        for name in SPARSE_FOOTHOLD_NAMES:
+            columns = self.terrain_name_to_columns.get(name, [])
+            type_mask = self._columns_mask(terrain_types, columns)
+            count = type_mask.sum()
+            if int(count.item()) == 0:
+                continue
+            n = count.float()
+            logs[f"Terrain/{name}/promotion_rate"] = promotion[type_mask].float().mean()
+            logs[f"Terrain/{name}/promotion_rate{LOG_COUNT_SUFFIX}"] = n
+        return logs
+
     def command_provenance_log(self) -> dict:
         """Log what actually reached the reward, not just what was requested."""
         command = self.command_generator.command
-        return {
-            "Command/generated_lin_vel_x": torch.mean(command[:, 0]),
+        n_all = torch.tensor(float(self.num_envs), device=self.device)
+        vx = command[:, 0]
+        wz = command[:, 2]
+        lin = torch.norm(command[:, :2], dim=1)
+        standing = (lin < 0.1).float()
+        logs = {
+            "Command/generated_lin_vel_x": torch.mean(vx),
             "Command/generated_lin_vel_y": torch.mean(command[:, 1]),
-            "Command/generated_ang_vel_z": torch.mean(command[:, 2]),
-            "Command/standing_env_fraction": torch.mean((torch.norm(command, dim=1) < 0.1).float()),
+            "Command/generated_ang_vel_z": torch.mean(wz),
+            "Command/standing_env_fraction": torch.mean(standing),
+            "Command/bin_standing": torch.mean(standing),
+            "Command/bin_vx_reverse": (vx < 0.0).float().mean(),
+            "Command/bin_vx_low_forward": ((vx >= 0.0) & (vx < 0.6) & (lin >= 0.1)).float().mean(),
+            "Command/bin_vx_sparse_forward": ((vx >= 0.6) & (vx <= 2.0)).float().mean(),
+            "Command/bin_yaw_straight": (wz.abs() < 1.0e-6).float().mean(),
+            "Command/bin_yaw_gentle": ((wz.abs() >= 1.0e-6) & (wz.abs() <= 0.3)).float().mean(),
+            "Command/bin_yaw_full": (wz.abs() > 0.3).float().mean(),
             "Curriculum/terrain_difficulty": torch.mean(self.terrain_difficulty()),
             "Curriculum/amp_reward_coef_scale": torch.mean(self.amp_reward_coef_scale()),
             "Curriculum/gait_reward_scale": torch.mean(self.gait_reward_scale),
             "Curriculum/gait_tracking_scale": torch.mean(self._gait_tracking_scale()),
         }
+        counted = [
+            "Command/generated_lin_vel_x",
+            "Command/generated_lin_vel_y",
+            "Command/generated_ang_vel_z",
+            "Command/standing_env_fraction",
+            "Command/bin_standing",
+            "Command/bin_vx_reverse",
+            "Command/bin_vx_low_forward",
+            "Command/bin_vx_sparse_forward",
+            "Command/bin_yaw_straight",
+            "Command/bin_yaw_gentle",
+            "Command/bin_yaw_full",
+            "Curriculum/terrain_difficulty",
+            "Curriculum/amp_reward_coef_scale",
+            "Curriculum/gait_reward_scale",
+            "Curriculum/gait_tracking_scale",
+        ]
+        for key in counted:
+            logs[f"{key}{LOG_COUNT_SUFFIX}"] = n_all
+        is_sparse = self.sparse_tile_mask
+        logs["Command/sparse_env_fraction"] = is_sparse.float().mean()
+        logs[f"Command/sparse_env_fraction{LOG_COUNT_SUFFIX}"] = n_all
+        if bool(is_sparse.any()):
+            sparse_n = is_sparse.sum().float()
+            logs["Command/sparse_mean_vx"] = command[is_sparse, 0].mean()
+            logs["Command/sparse_zero_yaw_frac"] = (command[is_sparse, 2].abs() < 1.0e-6).float().mean()
+            logs["Command/sparse_standing_frac"] = standing[is_sparse].mean()
+            for key in ("Command/sparse_mean_vx", "Command/sparse_zero_yaw_frac", "Command/sparse_standing_frac"):
+                logs[f"{key}{LOG_COUNT_SUFFIX}"] = sparse_n
+        nonsparse = ~is_sparse
+        if bool(nonsparse.any()):
+            nonsparse_n = nonsparse.sum().float()
+            logs["Command/nonsparse_reverse_frac"] = (command[nonsparse, 0] < 0.0).float().mean()
+            logs["Command/nonsparse_standing_frac"] = standing[nonsparse].mean()
+            for key in ("Command/nonsparse_reverse_frac", "Command/nonsparse_standing_frac"):
+                logs[f"{key}{LOG_COUNT_SUFFIX}"] = nonsparse_n
+        return logs
 
     @staticmethod
     def seed(seed: int = -1) -> int:

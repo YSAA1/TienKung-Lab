@@ -26,6 +26,36 @@ from rsl_rl.modules import StudentTeacher, StudentTeacherRecurrent
 from rsl_rl.storage import RolloutStorage
 
 
+def assert_finite_tensor(tensor, name, *, step, rank, stage):
+    """Raise if ``tensor`` contains NaN/Inf. ``stage`` distinguishes ingest / loss / grad."""
+    if tensor is None or not torch.is_tensor(tensor):
+        return
+    if torch.isfinite(tensor).all():
+        return
+    n_nan = int(torch.isnan(tensor).sum().item())
+    n_inf = int(torch.isinf(tensor).sum().item())
+    raise RuntimeError(
+        f"non-finite {stage}: {name} step={step} rank={rank} shape={tuple(tensor.shape)} "
+        f"n_nan={n_nan} n_inf={n_inf} dtype={tensor.dtype}"
+    )
+
+
+def assert_finite_grads(named_params, *, step, rank):
+    """Raise on the first non-finite gradient so optimizer.step is never reached."""
+    for name, param in named_params:
+        if param.grad is None:
+            continue
+        if torch.isfinite(param.grad).all():
+            continue
+        grad = param.grad
+        n_nan = int(torch.isnan(grad).sum().item())
+        n_inf = int(torch.isinf(grad).sum().item())
+        raise RuntimeError(
+            f"non-finite gradient: {name} step={step} rank={rank} shape={tuple(grad.shape)} "
+            f"n_nan={n_nan} n_inf={n_inf}"
+        )
+
+
 class Distillation:
     """Distillation algorithm for training a student model to mimic a teacher model."""
 
@@ -49,6 +79,8 @@ class Distillation:
         teacher_mix_end=None,
         teacher_mix_decay_iters=0,
         recon_coef=0.0,
+        nan_guard=True,
+        max_grad_norm=1.0,
         # Distributed training parameters
         multi_gpu_cfg: dict | None = None,
     ):
@@ -90,6 +122,8 @@ class Distillation:
         self.teacher_mix_end = None if teacher_mix_end is None else float(teacher_mix_end)
         self.teacher_mix_decay_iters = int(teacher_mix_decay_iters)
         self.recon_coef = float(recon_coef)
+        self.nan_guard = bool(nan_guard)
+        self.max_grad_norm = float(max_grad_norm)
 
         # initialize the loss function
         if loss_type == "mse":
@@ -128,13 +162,44 @@ class Distillation:
         progress = min(float(self.num_updates) / float(decay), 1.0)
         return start + (end - start) * progress
 
+    def _guard_step(self):
+        storage_step = self.storage.step if self.storage is not None else -1
+        return f"update={self.num_updates},storage={storage_step}"
+
+    def _assert_finite(self, tensor, name, stage):
+        if not self.nan_guard:
+            return
+        assert_finite_tensor(tensor, name, step=self._guard_step(), rank=self.gpu_global_rank, stage=stage)
+
+    def _student_named_parameters(self):
+        opt_ids = {id(param) for group in self.optimizer.param_groups for param in group["params"]}
+        return [(name, param) for name, param in self.policy.named_parameters() if id(param) in opt_ids]
+
+    def _optimizer_step(self, loss):
+        self.optimizer.zero_grad()
+        loss.backward()
+        if self.is_multi_gpu:
+            self.reduce_parameters()
+        if self.nan_guard:
+            assert_finite_grads(
+                self._student_named_parameters(),
+                step=self._guard_step(),
+                rank=self.gpu_global_rank,
+            )
+        nn.utils.clip_grad_norm_(
+            [param for group in self.optimizer.param_groups for param in group["params"]],
+            self.max_grad_norm,
+        )
+        self.optimizer.step()
+        self.policy.detach_hidden_states()
+
     def act(self, obs, teacher_obs):
+        self._assert_finite(obs, "student_obs", "ingest")
+        self._assert_finite(teacher_obs, "teacher_obs", "ingest")
         student_actions = self.policy.act(obs)
         student_actions = student_actions.detach()
         teacher_actions = self.policy.evaluate(teacher_obs).detach()
-        self.transition.privileged_actions = teacher_actions
-        self.transition.observations = obs
-        self.transition.privileged_observations = teacher_obs
+        self._assert_finite(teacher_actions, "teacher_actions", "ingest")
         mix = self.current_teacher_mix()
         if mix >= 1.0:
             executed = teacher_actions
@@ -146,11 +211,17 @@ class Distillation:
             take_teacher = torch.rand(student_actions.shape[0], device=student_actions.device) < mix
             executed = torch.where(take_teacher.unsqueeze(-1), teacher_actions, student_actions)
             student_action_mask = ~take_teacher
-        self.transition.actions = executed
-        self.transition.student_action_mask = student_action_mask
+        self._assert_finite(executed, "executed_actions", "ingest")
         # Ratio must use log π of the action that actually ran, including DAgger
         # teacher-mix rows. Storing the unused student sample makes pg garbage.
-        self.transition.actions_log_prob = self.policy.distribution.log_prob(executed).sum(dim=-1).detach()
+        actions_log_prob = self.policy.distribution.log_prob(executed).sum(dim=-1).detach()
+        self._assert_finite(actions_log_prob, "actions_log_prob", "ingest")
+        self.transition.privileged_actions = teacher_actions
+        self.transition.observations = obs
+        self.transition.privileged_observations = teacher_obs
+        self.transition.actions = executed
+        self.transition.student_action_mask = student_action_mask
+        self.transition.actions_log_prob = actions_log_prob
         return executed
 
     def process_env_step(self, rewards, dones, infos):
@@ -175,9 +246,9 @@ class Distillation:
 
     def update(self):
         self.num_updates += 1
-        mean_behavior_loss = 0
-        mean_pg_loss = 0
-        mean_recon_loss = 0
+        behavior_acc = torch.zeros((), device=self.device)
+        pg_acc = torch.zeros((), device=self.device)
+        recon_acc = torch.zeros((), device=self.device)
         loss = 0
         cnt = 0
         use_pg = self.pg_coef > 0.0 and self.collect_mode == "student"
@@ -189,7 +260,14 @@ class Distillation:
             self.policy.detach_hidden_states()
             step_index = 0
             loss = 0
-            for obs, privileged_obs, executed_actions, privileged_actions, dones, student_action_mask in self.storage.generator():
+            for (
+                obs,
+                privileged_obs,
+                executed_actions,
+                privileged_actions,
+                dones,
+                student_action_mask,
+            ) in self.storage.generator():
                 # Rollout collection runs under ``torch.inference_mode``.  The
                 # stored tensors therefore carry inference-mode metadata, but
                 # the student forward below must save activations for backward.
@@ -205,6 +283,7 @@ class Distillation:
 
                 # behavior cloning loss
                 behavior_loss = self.loss_fn(actions, privileged_actions)
+                self._assert_finite(behavior_loss, "behavior_loss", "loss")
                 step_loss = self.behavior_coef * behavior_loss
                 if use_pg:
                     if not getattr(self.policy, "is_recurrent", False):
@@ -222,27 +301,24 @@ class Distillation:
                         pg_loss = -torch.min(ratio * adv, clipped * adv).mean()
                     else:
                         pg_loss = actions.new_zeros(())
+                    self._assert_finite(pg_loss, "pg_loss", "loss")
                     step_loss = self.behavior_coef * behavior_loss + self.pg_coef * pg_loss
-                    mean_pg_loss += pg_loss.item()
+                    pg_acc = pg_acc + pg_loss.detach()
                 if use_recon:
                     recon_loss = self.loss_fn(self.policy.reconstruct(), self.policy.teacher_scan(privileged_obs))
+                    self._assert_finite(recon_loss, "recon_loss", "loss")
                     step_loss = step_loss + self.recon_coef * recon_loss
-                    mean_recon_loss += recon_loss.item()
+                    recon_acc = recon_acc + recon_loss.detach()
 
-                # total loss
+                self._assert_finite(step_loss, "total_loss", "loss")
                 loss = loss + step_loss
-                mean_behavior_loss += behavior_loss.item()
+                behavior_acc = behavior_acc + behavior_loss.detach()
                 cnt += 1
                 step_index += 1
 
                 # gradient step
                 if cnt % self.gradient_length == 0:
-                    self.optimizer.zero_grad()
-                    loss.backward()
-                    if self.is_multi_gpu:
-                        self.reduce_parameters()
-                    self.optimizer.step()
-                    self.policy.detach_hidden_states()
+                    self._optimizer_step(loss)
                     loss = 0
 
                 # reset dones
@@ -250,14 +326,9 @@ class Distillation:
                 self.policy.detach_hidden_states(dones.view(-1))
 
             if isinstance(loss, torch.Tensor):
-                self.optimizer.zero_grad()
-                loss.backward()
-                if self.is_multi_gpu:
-                    self.reduce_parameters()
-                self.optimizer.step()
-                self.policy.detach_hidden_states()
+                self._optimizer_step(loss)
 
-        mean_behavior_loss /= cnt
+        mean_behavior_loss = (behavior_acc / cnt).item()
         self.storage.clear()
         self.last_hidden_states = self.policy.get_hidden_states()
         self.policy.detach_hidden_states()
@@ -265,9 +336,9 @@ class Distillation:
         # construct the loss dictionary
         loss_dict = {"behavior": mean_behavior_loss, "teacher_mix": self.current_teacher_mix()}
         if use_pg:
-            loss_dict["pg"] = mean_pg_loss / cnt
+            loss_dict["pg"] = (pg_acc / cnt).item()
         if use_recon:
-            loss_dict["recon"] = mean_recon_loss / cnt
+            loss_dict["recon"] = (recon_acc / cnt).item()
 
         return loss_dict
 

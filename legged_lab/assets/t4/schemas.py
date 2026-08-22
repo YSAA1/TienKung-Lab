@@ -297,6 +297,19 @@ STUDENT_ACTOR_OBS_DIM = (
 )
 
 
+def sparse_teacher_scan_range() -> tuple[int, int]:
+    """``[start, end)`` of the stacked HeightScan block in sparse teacher actor obs."""
+    start = PROPRIO_FRAME_DIM * PROPRIO_HISTORY_LENGTH
+    end = start + TEACHER_SCAN_DIM * TEACHER_SPARSE_SCAN_HISTORY_LENGTH
+    return start, end
+
+
+def sparse_teacher_latest_scan_range() -> tuple[int, int]:
+    """``[start, end)`` of the newest HeightScan frame (recon target)."""
+    start, end = sparse_teacher_scan_range()
+    return end - TEACHER_SCAN_DIM, end
+
+
 def proprio_field_slice(name: str) -> tuple[int, int]:
     """Return the ``[start, end)`` column range of one proprioceptive field."""
     start = 0

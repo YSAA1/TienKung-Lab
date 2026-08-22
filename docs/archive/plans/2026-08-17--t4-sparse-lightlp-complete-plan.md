@@ -1,6 +1,6 @@
 # Executable Plan - LightLP §IV 梅花桩完整补全（从零、收窄踏石、新观测）
 
-> **Status: archived（非权威）** — living work surface: `.harness/work_index.md` → `docs/plans/2026-08-19--t4-sparse-easy-geometry-s6-plan.md`。
+> **Status: archived（非权威）** — living 梅花桩: `docs/plans/2026-08-22--t4-sparse-s12-rim-yaw-student-plan.md`。入口: `docs/README.md`。
 >
 > Status: superseded
 > Date: 2026-08-17

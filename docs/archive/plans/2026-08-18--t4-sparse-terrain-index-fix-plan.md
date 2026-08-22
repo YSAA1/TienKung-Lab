@@ -1,6 +1,6 @@
 # Executable Plan - 地形列号修复 + LightLP MDP 对齐 + s5 从零
 
-> **Status: archived（非权威）** — living work surface: `docs/plans/2026-08-19--t4-sparse-easy-geometry-s6-plan.md`。
+> **Status: archived（非权威）** — living 梅花桩: `docs/plans/2026-08-22--t4-sparse-s12-rim-yaw-student-plan.md`。入口: `docs/README.md`。
 >
 > Status: superseded
 > Date: 2026-08-18

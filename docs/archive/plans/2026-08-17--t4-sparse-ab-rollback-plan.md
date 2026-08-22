@@ -1,6 +1,6 @@
 # Executable Plan - 回退 S1d 厨房水槽实验，恢复 T-compat v2 配方
 
-> **Status: archived（非权威）** — 续训 v2 已被从零 LightLP 单阶段取代。现行梅花桩执行面：`docs/plans/2026-08-18--t4-sparse-terrain-index-fix-plan.md`。入口：`docs/README.md`。
+> **Status: archived（非权威）** — 续训 v2 已被从零 LightLP 单阶段取代。living 梅花桩: `docs/plans/2026-08-22--t4-sparse-s12-rim-yaw-student-plan.md`。入口：`docs/README.md`。
 
 > Status: superseded
 > Date: 2026-08-17

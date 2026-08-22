@@ -51,7 +51,7 @@ ROOT = Path(__file__).resolve().parents[2]
 # resolves without installing the fork.
 sys.path.insert(0, str(ROOT / "rsl_rl"))
 
-from rsl_rl.modules.depth_student_teacher import DepthStudentTeacher  # noqa: E402
+from rsl_rl.modules.depth_student_teacher import build_depth_student_policy  # noqa: E402
 
 from legged_lab.assets.t4.constants import T4_JOINT_NAMES  # noqa: E402
 from legged_lab.assets.t4.navigation import (  # noqa: E402
@@ -77,6 +77,7 @@ from legged_lab.assets.t4.schemas import (  # noqa: E402
     TEACHER_ACTOR_OBS_DIM,
     depth_camera_mujoco_xyaxes,
     depth_camera_ros_quat_wxyz,
+    sparse_teacher_latest_scan_range,
 )
 
 MJCF = ROOT / "legged_lab/assets/t4/mjcf/t4_std.xml"
@@ -1216,19 +1217,22 @@ class DepthStudentSim:
         self.trunk_id = mujoco.mj_name2id(self.model, mujoco.mjtObj.mjOBJ_BODY, "Trunk")
         self._configure_position_servos()
 
-        # Policy: reconstruct DepthStudentTeacher and load the rsl-rl state dict.
-        self.policy = DepthStudentTeacher(
-            num_student_obs=STUDENT_ACTOR_OBS_DIM,
-            num_teacher_obs=TEACHER_ACTOR_OBS_DIM,
-            num_actions=NUM_JOINTS,
-            depth_shape=(DEPTH_HISTORY_LENGTH, *DEPTH_POLICY_SIZE),
-            proprio_obs_dim=PROPRIO_FRAME_DIM * PROPRIO_HISTORY_LENGTH,
-        )
+        # Policy: feed-forward Stage E student or S12 GRU student from the same
+        # checkpoint layout. Reconstruction decoder is dropped at deploy time.
         state = torch.load(checkpoint, map_location="cpu", weights_only=True)
         if not isinstance(state, dict) or "model_state_dict" not in state:
             raise RuntimeError(f"checkpoint {checkpoint} does not contain model_state_dict")
-        self.policy.load_state_dict(state["model_state_dict"])
+        self.policy = build_depth_student_policy(
+            state["model_state_dict"],
+            NUM_JOINTS,
+            num_teacher_obs=TEACHER_ACTOR_OBS_DIM,
+            depth_shape=(DEPTH_HISTORY_LENGTH, *DEPTH_POLICY_SIZE),
+            proprio_obs_dim=PROPRIO_FRAME_DIM * PROPRIO_HISTORY_LENGTH,
+            recon_scan_offset=sparse_teacher_latest_scan_range()[0],
+        )
         self.policy.eval()
+        if hasattr(self.policy, "reset"):
+            self.policy.reset()
         print(f"[INFO] loaded checkpoint {checkpoint} (iter {state.get('iter')})")
 
         # Depth renderer at the native sensor resolution. Training keeps the
@@ -1274,6 +1278,8 @@ class DepthStudentSim:
         self.gait_time = 0.0
         self.command[:] = 0.0
         self.targets = STANDING_POS.copy()
+        if hasattr(self.policy, "reset"):
+            self.policy.reset()
 
     def _configure_position_servos(self) -> None:
         """Mirror PhysX implicit joint drives with MuJoCo position servos."""

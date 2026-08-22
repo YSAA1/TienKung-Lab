@@ -18,6 +18,10 @@ LIGHTLP_ACCEL_WARMUP_S = 1.0
 LIGHTLP_IMMUNITY_FRAC = 0.10
 LIGHTLP_IMMUNITY_PERIOD = 200
 LIGHTLP_OOB_MARGIN_M = 0.25
+SPARSE_FOOTHOLD_VX_RANGE = (0.6, 2.0)
+SPARSE_FOOTHOLD_STRAIGHT_YAW_PROB = 0.60
+SPARSE_FOOTHOLD_GENTLE_YAW_RANGE = (-0.3, 0.3)
+LOG_COUNT_SUFFIX = "__n"
 
 
 def _is_batch(x) -> bool:
@@ -124,6 +128,93 @@ def random_level_reset_high(max_terrain_level: int, cap: int | None = None) -> i
     return max(1, high)
 
 
+def sample_sparse_foothold_velocity(
+    vx_u,
+    yaw_mode_u,
+    yaw_u,
+    *,
+    vx_range=SPARSE_FOOTHOLD_VX_RANGE,
+    straight_prob=SPARSE_FOOTHOLD_STRAIGHT_YAW_PROB,
+    gentle_yaw_range=SPARSE_FOOTHOLD_GENTLE_YAW_RANGE,
+):
+    """Map unit draws in ``[0, 1)`` to sparse foothold ``(vx, vy=0, wz)``.
+
+    Yaw has a discrete mass at 0 for ``yaw_mode_u < straight_prob``; the rest
+    is uniform in ``gentle_yaw_range``. Reverse and lateral speeds are never
+    produced.
+    """
+    if _is_batch(vx_u):
+        vx = vx_range[0] + vx_u * (vx_range[1] - vx_range[0])
+        gentle = yaw_mode_u >= straight_prob
+        wz_gentle = gentle_yaw_range[0] + yaw_u * (gentle_yaw_range[1] - gentle_yaw_range[0])
+        if hasattr(vx_u, "new_zeros"):
+            import torch
+
+            vy = torch.zeros_like(vx_u)
+            wz = torch.where(gentle, wz_gentle, torch.zeros_like(vx_u))
+            return vx, vy, wz
+        import numpy as np
+
+        vy = np.zeros_like(vx, dtype=float)
+        wz = np.where(gentle, wz_gentle, 0.0)
+        return vx, vy, wz
+    vx = float(vx_range[0]) + float(vx_u) * (float(vx_range[1]) - float(vx_range[0]))
+    vy = 0.0
+    if float(yaw_mode_u) < float(straight_prob):
+        wz = 0.0
+    else:
+        wz = float(gentle_yaw_range[0]) + float(yaw_u) * (float(gentle_yaw_range[1]) - float(gentle_yaw_range[0]))
+    return vx, vy, wz
+
+
+def overlay_sparse_foothold_commands(commands, is_sparse, vx_u, yaw_mode_u, yaw_u, **kwargs):
+    """Replace sparse rows of an ``(N, 3)`` command table; leave others unchanged."""
+    import numpy as np
+
+    out = np.array(commands, dtype=float, copy=True)
+    sparse = np.asarray(is_sparse, dtype=bool)
+    if out.ndim != 2 or out.shape[1] != 3:
+        raise ValueError(f"commands must have shape (N, 3), got {out.shape}")
+    if sparse.shape[0] != out.shape[0]:
+        raise ValueError("is_sparse length must match commands")
+    if not np.any(sparse):
+        return out
+    vx, vy, wz = sample_sparse_foothold_velocity(
+        np.asarray(vx_u, dtype=float)[sparse],
+        np.asarray(yaw_mode_u, dtype=float)[sparse],
+        np.asarray(yaw_u, dtype=float)[sparse],
+        **kwargs,
+    )
+    out[sparse, 0] = vx
+    out[sparse, 1] = vy
+    out[sparse, 2] = wz
+    return out
+
+
+def terrain_aware_commands_enabled(*, enabled: bool, lin_vel_x, lin_vel_y, ang_vel_z) -> bool:
+    """Skip overlay when disabled, or when play/eval has already pinned a single command."""
+    if not enabled:
+        return False
+
+    def _pinned(bounds) -> bool:
+        return float(bounds[0]) == float(bounds[1])
+
+    return not (_pinned(lin_vel_x) and _pinned(lin_vel_y) and _pinned(ang_vel_z))
+
+
+def monitor_outcome_flags(move_up, timed_out):
+    """Split curriculum promotion from the old timeout-gated TB success flag."""
+    if hasattr(move_up, "bitwise_and"):
+        promotion = move_up.bool() if hasattr(move_up, "bool") else move_up
+        timed = timed_out.bool() if hasattr(timed_out, "bool") else timed_out
+        return promotion, promotion & timed, ~timed
+    import numpy as np
+
+    promotion = np.asarray(move_up, dtype=bool)
+    timed = np.asarray(timed_out, dtype=bool)
+    return promotion, promotion & timed, ~timed
+
+
 def tilt_from_upright_rad(gx, gy, gz):
     """Angle from upright using body-frame projected gravity (down is −z).
 
@@ -195,6 +286,43 @@ def excessive_base_accel(
     if _is_batch(over) or _is_batch(warmed):
         return warmed & over
     return bool(warmed and over)
+
+
+def recent_push_mask(sim_step_counter, last_push_step, decimation: int):
+    """True for the control-step accel sample that still contains the push jump.
+
+    Interval push runs after the physics loop, when ``sim_step_counter`` is already
+    ``(k+1)*decimation``. Isaac Lab writes the new root velocity into ``robot.data``
+    immediately, so the gate can trip on the same control step (``diff == 0``).
+    If data were stale until the next ``scene.update``, the trip would be the next
+    control step (``diff == decimation``). ``diff >= 2*decimation`` is later motion.
+    """
+    dec = int(decimation)
+    if _is_batch(sim_step_counter) or _is_batch(last_push_step):
+        diff = sim_step_counter - last_push_step
+        return (diff >= 0) & (diff <= dec)
+    diff = int(sim_step_counter) - int(last_push_step)
+    return bool(0 <= diff <= dec)
+
+
+def mask_recent_push_accel(accel, sim_step_counter, last_push_step, decimation: int):
+    """Zero accel samples that are still the push-induced velocity jump."""
+    recent = recent_push_mask(sim_step_counter, last_push_step, decimation)
+    if _is_batch(accel) or _is_batch(recent):
+        if hasattr(accel, "new_zeros"):
+            return accel.where(~recent, accel.new_zeros(accel.shape))
+        import numpy as np
+
+        return np.where(recent, 0, accel)
+    return type(accel)(0) if recent else accel
+
+
+def lightlp_sparse_promotion_guard(move_up, is_sparse, pit_fall):
+    """Block LightLP promotion on sparse tiles that fell into the pit. No demotion."""
+    blocked = is_sparse & pit_fall
+    if _is_batch(move_up) or _is_batch(blocked):
+        return move_up & ~blocked
+    return bool(move_up and not blocked)
 
 
 def lightlp_timeout_and_reset(

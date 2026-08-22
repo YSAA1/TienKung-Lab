@@ -1,7 +1,7 @@
 # T4 工作背景与现状
 
 状态：T4 路线的 living context。入口与货架见 `docs/README.md`。
-已批准合同以 `docs/specs/` 为准；当前执行以 `docs/plans/` 里 **仅有的两份** active 计划为准。
+已批准合同以 `docs/specs/` 为准；当前执行以 `docs/plans/` 里 **仅有的两份** active 计划为准（梅花桩 S12、翻箱 G1/G2）。
 若本文与 Spec 冲突，以 Spec 为准。
 
 ## 这是什么项目
@@ -31,10 +31,10 @@ T4 约 1.4 m 站高，Trunk 在 0.9 m。资产在 `legged_lab/assets/t4/`，关�
 ## 还在推进
 
 1. **梅花桩**（nubot）  
-   LightLP §IV 单阶段真洞老师 `t4_loco_teacher_sparse`。旧 `t_sparse_lightlp_s6` 保留为 9×9 格点且缺失躯干/小腿碰撞的 baseline；固定 evaluator 已证明策略会抬脚且使用 scan。S7/S8 的 0.28 m Shank cylinder 被 Isaac 转成与脚 collider 重叠的 capsule，因此已冻结为污染 lineage。修复后的 S9 已从 s6 `model_31000.pt` + fresh optimizer 重开，保留 tile-filling grid、真实 `Trunk`/双 `Shank` collision、原速度范围和 `termination_penalty=0`。启动后早期指标显示 Shank 假自碰已消失，但行为能力仍待 checkpoint evaluator。
+   LightLP §IV 单阶段真洞老师 `t4_loco_teacher_sparse`。S10/S11b 保留为对照。当前执行是 S12：0.75 m 收尾边框 + 踏石/圆桩 40% 轻转，`vx max=2.0`。TB success 不能当能力。计划：`docs/plans/2026-08-22--t4-sparse-s12-rim-yaw-student-plan.md`。
    Actor 1937D（scan 史 ×5 + 接触）；足底 scan 只给 Critic。Stage E 1155D 不改。  
-   本切片 **不** 训梅花桩学生。  
-   计划：`docs/plans/2026-08-19--t4-sparse-easy-geometry-s6-plan.md`。
+   GRU 深度学生代码已落地（任务 `t4_loco_sparse_depth_student`），**开训**仍等老师 10k evaluator 门，不 resume `stage_s_head35`。  
+   S6–S11 计划已归档：`docs/archive/plans/2026-08-19--t4-sparse-easy-geometry-s6-plan.md`、`docs/archive/plans/2026-08-21--t4-sparse-s11-mdp-repair-plan.md`。
 
 2. **翻箱**（zhuoqun）  
    G1 mimic 专家 → G2 同 1155D 观测的 heightscan 技能。  
@@ -47,7 +47,7 @@ T4 约 1.4 m 站高，Trunk 在 0.9 m。资产在 `legged_lab/assets/t4/`，关�
 
 ## 明确不做（现在）
 
-- 用遥控 high 档 3 m/s 或 VITAL 草稿 3.5 m/s 冒充已训速度。现行命令 `vx ∈ [-0.6, 1.0]`。
+- 用遥控 high 档 3 m/s 或 VITAL 草稿 3.5 m/s 冒充已训速度。Stage E 仍是 `vx ∈ [-0.6, 1.0]`；S12 sparse 非洞 `[-0.6, 2.0]`，踏石/圆桩 `[0.6, 2.0]`。
 - 覆盖 Stage E 1155D，或把足底 scan / 接触真值写进导出学生。
 - 把失败的 S1d、软硬二阶段、旧 25k sparse ckpt 当梅花桩能力。
 - 用 TB 曲线代替 evaluator 与回放。

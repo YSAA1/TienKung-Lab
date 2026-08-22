@@ -25,7 +25,7 @@
 |--------|---------------------|
 | `PROJECT_CONTEXT.md` §7 | 已写明两阶段：①统一 depth-aware 基础 loco；② rough + 上下楼梯；route 是防绕障合同，不是第三段 PPO |
 | `docs/specs/2026-08-12--t4-unified-depth-locomotion.md` §累积式训练课程 | 能力顺序 1–5 是累积扩展，不是必须五次独立训练；拒绝一次性联训；拒绝 HeightScan teacher→student 默认路线 |
-| `docs/plans/2026-08-12--t4-unified-depth-locomotion-plan.md` §Stage T1–T5 | 把课程拆成五段正式预算（50k/30k/40k/50k/30k）与五次 Gate |
+| `docs/archive/plans/2026-08-12--t4-unified-depth-locomotion-plan.md` §Stage T1–T5 | 把课程拆成五段正式预算（50k/30k/40k/50k/30k）与五次 Gate |
 | `legged_lab/envs/tienkung/walk_cfg.py` | 现有 walk：`GRAVEL_TERRAINS_CFG`，`max_iterations=50000`，`num_steps_per_env=24`，`resume=False`，AMP walk expert |
 | `legged_lab/envs/tienkung/run_cfg.py` | 现有 run：同结构另一任务/另一 AMP 文件，`max_iterations=50000` — 历史是 **walk/run 两套 policy**，不是五段课程 |
 | `legged_lab/terrains/terrain_generator_cfg.py` | `GRAVEL_TERRAINS_CFG`（轻 rough，`curriculum=False`）；`ROUGH_TERRAINS_CFG`（stairs+boxes+rough+wave+pit，`curriculum=True`） |
@@ -196,7 +196,7 @@ python legged_lab/scripts/eval_t4_loco.py --stage route --checkpoint <B> --simul
 
 1. `PROJECT_CONTEXT.md` §7 — 两阶段任务设计原文  
 2. `docs/specs/2026-08-12--t4-unified-depth-locomotion.md` — 累积课程、拒绝联训、拒绝 HeightScan 默认蒸馏、route 边界  
-3. `docs/plans/2026-08-12--t4-unified-depth-locomotion-plan.md` — T1–T5 正式预算  
+3. `docs/archive/plans/2026-08-12--t4-unified-depth-locomotion-plan.md` — T1–T5 正式预算   
 4. `legged_lab/envs/tienkung/walk_cfg.py` / `run_cfg.py` — 50k × 2 历史训练粒度  
 5. `legged_lab/terrains/terrain_generator_cfg.py` — GRAVEL vs ROUGH(+stairs) curriculum  
 6. `legged_lab/scripts/train.py` — resume 加载  

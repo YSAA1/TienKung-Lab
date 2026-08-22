@@ -1,6 +1,6 @@
 # Executable Plan - T4 梅花桩双 teacher 与跨栏 0.30 学生微调
 
-> **Status: archived（非权威）** — 双 teacher / S1d 路线已否。现行梅花桩执行面：`docs/plans/2026-08-18--t4-sparse-terrain-index-fix-plan.md`。入口：`docs/README.md`。
+> **Status: archived（非权威）** — 双 teacher / S1d 路线已否。living 梅花桩: `docs/plans/2026-08-22--t4-sparse-s12-rim-yaw-student-plan.md`。入口：`docs/README.md`。
 
 > Status: superseded
 > Date: 2026-08-15
@@ -109,4 +109,4 @@ sparse v2 合同 pytest（本机 + nubot）
 
 ## Next skill
 
-本计划已 superseded。现行梅花桩执行面：`docs/plans/2026-08-18--t4-sparse-terrain-index-fix-plan.md`。
+本计划已 superseded。living 梅花桩：`docs/plans/2026-08-22--t4-sparse-s12-rim-yaw-student-plan.md`。

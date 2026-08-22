@@ -119,21 +119,64 @@ def test_foothold_count_fills_tile_without_increasing_with_difficulty():
     assert 150 <= counts[2] <= counts[0] <= 225
 
 
+def test_landing_rim_width_is_seventy_five_cm():
+    assert layout.T4_SPARSE_RIM_WIDTH == pytest.approx(0.75)
+    assert layout.rim_inner_offset() == pytest.approx(0.5 * layout.T4_STONE_TILE_SIZE - 0.75)
+
+
 @pytest.mark.parametrize("kind", ["stepping_stones", "raised_pillars"])
-@pytest.mark.parametrize("difficulty", [0.0, 1.0])
-def test_sparse_lattice_does_not_end_in_a_multi_stride_void(kind, difficulty):
-    if kind == "stepping_stones":
-        pitch = layout.foothold_pitch(difficulty)
-        support = layout.stone_width(difficulty)
-    else:
-        pitch = layout.foothold_pitch(difficulty, layout.T4_PILLAR_PITCH_RANGE)
-        support = layout.pillar_diameter(difficulty)
+@pytest.mark.parametrize("difficulty", [0.0, 0.39, 1.0])
+def test_sparse_lattice_meets_the_landing_rim(kind, difficulty):
+    last_edge = layout.last_cardinal_support_edge(kind, difficulty)
+    rim_local = layout.T4_STONE_TILE_SIZE - layout.T4_SPARSE_RIM_WIDTH
+    assert last_edge + 1.0e-9 >= rim_local
 
-    center = 0.5 * layout.T4_STONE_TILE_SIZE
-    last_center = max(x - center for x, _ in layout.foothold_centers(pitch))
-    terminal_void = 0.5 * layout.T4_STONE_TILE_SIZE - (last_center + 0.5 * support)
 
-    assert terminal_void <= pitch + layout.T4_STONE_BORDER_WIDTH
+def test_rim_slabs_are_the_four_frame_rectangles():
+    tile = layout.T4_STONE_TILE_SIZE
+    rim = layout.T4_SPARSE_RIM_WIDTH
+    slabs = layout.rim_slab_centers_and_sizes()
+    assert len(slabs) == 4
+    sizes = sorted(size for _, size in slabs)
+    assert sizes == [(rim, tile), (rim, tile), (tile, rim), (tile, rim)]
+    centers = {center for center, _ in slabs}
+    assert (0.5 * tile, 0.5 * rim) in centers
+    assert (0.5 * tile, tile - 0.5 * rim) in centers
+    assert (0.5 * rim, 0.5 * tile) in centers
+    assert (tile - 0.5 * rim, 0.5 * tile) in centers
+
+
+def test_rim_covers_oob_margin_and_does_not_shortcut_the_course():
+    tile = layout.T4_STONE_TILE_SIZE
+    center = 0.5 * tile
+    oob = center + 4.25
+    assert layout.point_on_rim((oob, center), overflow=True)
+    assert not layout.point_on_rim((oob, center), overflow=False)
+    neighbor_xy = (oob - tile, center)
+    assert neighbor_xy[0] == pytest.approx(0.25)
+    assert layout.point_on_rim(neighbor_xy, overflow=False)
+    assert layout.point_on_support((oob, center), kind="stepping_stones", difficulty=0.0)
+    assert layout.point_on_support((oob, center), kind="raised_pillars", difficulty=1.0)
+    assert layout.point_on_support(neighbor_xy, kind="stepping_stones", difficulty=1.0)
+    assert layout.point_on_support(neighbor_xy, kind="raised_pillars", difficulty=1.0)
+    pad_edge = center + 0.5 * layout.T4_STONE_PLATFORM_WIDTH
+    rim_inner = center + layout.rim_inner_offset()
+    assert rim_inner - pad_edge >= 2.0
+    first = center + layout.first_foothold_center_offset(layout.foothold_pitch(0.0))
+    gap_xy = (first + 0.5 * layout.stone_width(0.0) + 0.5 * layout.stone_gap(0.0), center)
+    assert not layout.point_on_rim(gap_xy)
+    assert not layout.point_on_platform(gap_xy)
+    assert not layout.point_on_support(gap_xy, kind="stepping_stones", difficulty=0.0)
+    rim_mid = (tile - 0.10, center)
+    assert layout.illegal_footstep_fraction_layout(rim_mid, kind="stepping_stones", difficulty=1.0) == pytest.approx(
+        0.0, abs=1e-9
+    )
+    assert layout.illegal_footstep_fraction_layout(
+        (oob, center), kind="stepping_stones", difficulty=1.0
+    ) == pytest.approx(0.0, abs=1e-9)
+    assert layout.illegal_footstep_fraction_layout(neighbor_xy, kind="raised_pillars", difficulty=1.0) == pytest.approx(
+        0.0, abs=1e-9
+    )
 
 
 def test_sparse_mix_is_large_enough_to_drive_learning():
@@ -142,6 +185,18 @@ def test_sparse_mix_is_large_enough_to_drive_learning():
     assert proportions["stepping_stones"] == 0.20
     assert proportions["raised_pillars"] == 0.20
     assert proportions["stepping_stones"] + proportions["raised_pillars"] == 0.40
+
+
+def test_sparse_mesh_cfg_declares_landing_rim():
+    cfg_path = Path(__file__).resolve().parents[1] / "legged_lab" / "terrains" / "terrain_generator_cfg.py"
+    text = cfg_path.read_text(encoding="utf-8")
+    assert "rim_width: float = T4_SPARSE_RIM_WIDTH" in text
+    assert "_sparse_rim_meshes" in text
+    assert "rim_slab_centers_and_sizes" in text
+    env_path = Path(__file__).resolve().parents[1] / "legged_lab" / "envs" / "t4" / "t4_env.py"
+    env_text = env_path.read_text(encoding="utf-8")
+    assert "T4_SPARSE_RIM_WIDTH" in env_text
+    assert "on_rim" in env_text
 
 
 def test_foothold_centers_reject_nonpositive_pitch():

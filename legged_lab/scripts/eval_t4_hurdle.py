@@ -1,8 +1,10 @@
 """Fixed-command behavior and perception evaluator for T4 terrain buckets.
 
 The evaluator keeps the command and reset seeds fixed, separates terminal causes,
-and can ablate only the actor height-scan block. It remains a diagnostic rather
-than the final zero-contact or exact-footstep acceptance gate.
+and can ablate only the actor height-scan block. Optional ``--spawn_y_offset_m`` /
+``--spawn_yaw_deg`` pin a pad-safe first-step pose on stepping stones and raised
+pillars. It remains a diagnostic rather than the final zero-contact or exact-footstep
+acceptance gate.
 """
 
 from __future__ import annotations
@@ -53,6 +55,18 @@ parser.add_argument(
     default=0,
     help="Seed for the fixed within-frame spatial scan permutation.",
 )
+parser.add_argument(
+    "--spawn_y_offset_m",
+    type=float,
+    default=None,
+    help="Pin reset y relative to the tile center in meters. Unset keeps the seeded random reset.",
+)
+parser.add_argument(
+    "--spawn_yaw_deg",
+    type=float,
+    default=None,
+    help="Pin reset yaw error in degrees. Unset keeps the seeded random reset.",
+)
 
 patch_physx_backward_compatibility_setting(AppLauncher)
 AppLauncher.add_app_launcher_args(parser)
@@ -73,9 +87,10 @@ from legged_lab.assets.t4.schemas import (  # noqa: E402
     TEACHER_SCAN_INVALID_VALUE,
 )
 from legged_lab.envs import *  # noqa: F401,F403,E402
-from legged_lab.terrains.stepping_stone_layout import (
+from legged_lab.terrains.stepping_stone_layout import (  # noqa: E402
     T4_STONE_PLATFORM_WIDTH,
-)  # noqa: E402
+    resolve_pinned_sparse_spawn,
+)
 from legged_lab.utils import task_registry  # noqa: E402
 from legged_lab.utils.cli_args import update_rsl_rl_cfg  # noqa: E402
 
@@ -109,6 +124,8 @@ def evaluate() -> dict:
     env_cfg.commands.ranges.lin_vel_y = (0.0, 0.0)
     env_cfg.commands.ranges.ang_vel_z = (0.0, 0.0)
     env_cfg.commands.ranges.heading = (0.0, 0.0)
+    if hasattr(env_cfg, "terrain_aware_commands"):
+        env_cfg.terrain_aware_commands = False
     env_cfg.noise.add_noise = False
     if not args_cli.keep_randomization:
         # Keep the seeded reset pose/joint perturbations. Removing both leaves a
@@ -118,6 +135,16 @@ def evaluate() -> dict:
         # part of this fixed-command behavior check.
         for name in ("physics_material", "add_base_mass", "push_robot"):
             setattr(env_cfg.domain_rand.events, name, None)
+    pinned_spawn = resolve_pinned_sparse_spawn(
+        args_cli.spawn_y_offset_m,
+        args_cli.spawn_yaw_deg,
+        terrain_type=args_cli.terrain_type,
+    )
+    if pinned_spawn is not None:
+        env_cfg.domain_rand.events.reset_base.params["pose_range"] = pinned_spawn["pose_range"]
+        env_cfg.domain_rand.events.reset_base.params["velocity_range"] = pinned_spawn["velocity_range"]
+        env_cfg.domain_rand.events.reset_robot_joints.params["position_range"] = pinned_spawn["joint_position_range"]
+        env_cfg.domain_rand.events.reset_robot_joints.params["velocity_range"] = pinned_spawn["joint_velocity_range"]
     env_cfg.scene.seed = agent_cfg.seed
     env_cfg.scene.terrain_generator.num_rows = 1
     env_cfg.scene.terrain_generator.num_cols = args_cli.num_envs
@@ -496,6 +523,9 @@ def evaluate() -> dict:
         "difficulty": args_cli.difficulty,
         "requested_command_vx_mps": args_cli.command_vx,
         "zero_actions": args_cli.zero_actions,
+        "spawn_pose_pinned": pinned_spawn is not None,
+        "spawn_y_offset_m": None if pinned_spawn is None else pinned_spawn["y_offset_m"],
+        "spawn_yaw_deg": None if pinned_spawn is None else pinned_spawn["yaw_deg"],
         "terrain_type": args_cli.terrain_type,
         "soft_sparse_terrain": False,
         "requested_episodes": args_cli.episodes,

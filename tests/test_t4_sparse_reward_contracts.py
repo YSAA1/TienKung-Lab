@@ -54,6 +54,13 @@ def test_opposite_direction_and_foot_accel_ema():
     assert sig.random_level_reset_high(3, 4) == 3
     assert sig.random_level_reset_high(10, None) == 10
     assert sig.random_level_reset_high(0, 4) == 1
+    promotion, timeout_success, fall = sig.monitor_outcome_flags(
+        move_up=np.array([True, True, False]),
+        timed_out=np.array([True, False, False]),
+    )
+    np.testing.assert_array_equal(promotion, np.array([True, True, False]))
+    np.testing.assert_array_equal(timeout_success, np.array([True, False, False]))
+    np.testing.assert_array_equal(fall, np.array([False, True, True]))
 
 
 def test_sparse_pit_fall_only_applies_to_sparse_terrains():
@@ -206,6 +213,22 @@ def test_sparse_teacher_keeps_lightlp_terminal_cost_disabled():
     assert "termination_penalty = RewTerm(func=mdp.is_terminated, weight=0.0)" in sparse_rewards
 
 
+def test_sparse_teacher_keeps_s10_upright_bonus_without_ori_penalty():
+    root = Path(__file__).resolve().parents[1]
+    cfg_src = (root / "legged_lab" / "envs" / "t4" / "teacher_cfg.py").read_text()
+    sparse_rewards = cfg_src.split("class T4SparseTeacherRewardCfg", 1)[1].split("@configclass", 1)[0]
+    teacher_rewards = cfg_src.split("class T4TeacherRewardCfg", 1)[1].split("class T4LocoTeacherEnvCfg", 1)[0]
+
+    assert "body_orientation_l2" in teacher_rewards
+    assert "weight=-2.0" in teacher_rewards
+    ori_block = sparse_rewards.split("body_orientation_l2", 1)[1].split("upright_orientation", 1)[0]
+    upright_block = sparse_rewards.split("upright_orientation", 1)[1].split("undesired_contacts", 1)[0]
+    assert "weight=0.0" in ori_block
+    assert "weight=-2.0" not in ori_block
+    assert "weight=1.0" in upright_block
+    assert "weight=-5.0" not in sparse_rewards
+
+
 def test_sparse_teacher_hard_contact_termination_is_trunk_only():
     root = Path(__file__).resolve().parents[1]
     cfg_src = (root / "legged_lab" / "envs" / "t4" / "teacher_cfg.py").read_text()
@@ -236,3 +259,50 @@ def test_default_teacher_stays_1155_sparse_is_new_dim():
     assert schemas.FOOT_SCAN_BOTH_DIM == 30
     assert schemas.TEACHER_SPARSE_IMMUNITY_DIM == 1
     assert "contact_truth" in schemas.TEACHER_FORBIDDEN_PRIVILEGE_FIELDS
+
+
+def test_recent_push_mask_window_boundaries():
+    dec = 4
+    assert sig.recent_push_mask(4, 4, dec) is True
+    assert sig.recent_push_mask(8, 4, dec) is True
+    assert sig.recent_push_mask(9, 4, dec) is False
+    assert sig.recent_push_mask(4, 5, dec) is False
+    assert sig.recent_push_mask(4, -(10**9), dec) is False
+    last = np.array([4, 4, 4, 4, -(10**9)])
+    sim = np.array([4, 8, 9, 3, 4])
+    np.testing.assert_array_equal(
+        sig.recent_push_mask(sim, last, dec),
+        np.array([True, True, False, False, False]),
+    )
+
+
+def test_push_velocity_jump_trips_accel_gate_until_masked():
+    rng = np.random.default_rng(0)
+    n = 20_000
+    dt = 0.02
+    v0 = np.broadcast_to(np.array([0.7, 0.0, 0.0]), (n, 3)).copy()
+    add_xy = rng.uniform(-1.0, 1.0, size=(n, 2))
+    v_add = v0.copy()
+    v_add[:, :2] += add_xy
+    accel_add = np.linalg.norm(v_add - v0, axis=1) / dt
+    set_xy = rng.uniform(-1.0, 1.0, size=(n, 2))
+    v_set = v0.copy()
+    v_set[:, :2] = set_xy
+    accel_set = np.linalg.norm(v_set - v0, axis=1) / dt
+    assert (accel_add > 40.0).mean() > 0.3
+    assert (accel_set > 40.0).mean() > 0.3
+    tagged = np.full(n, 4)
+    masked = sig.mask_recent_push_accel(accel_add, 4, tagged, decimation=4)
+    assert not (masked > 40.0).any()
+    later = sig.mask_recent_push_accel(accel_add, 12, tagged, decimation=4)
+    np.testing.assert_array_equal(later, accel_add)
+
+
+def test_lightlp_sparse_promotion_guard_blocks_pit_fall_only_on_sparse():
+    move_up = np.array([True, True, True])
+    is_sparse = np.array([True, True, False])
+    pit_fall = np.array([True, False, True])
+    guarded = sig.lightlp_sparse_promotion_guard(move_up, is_sparse, pit_fall)
+    np.testing.assert_array_equal(guarded, np.array([False, True, True]))
+    assert sig.lightlp_sparse_promotion_guard(True, True, True) is False
+    assert sig.lightlp_sparse_promotion_guard(True, False, True) is True

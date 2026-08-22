@@ -159,3 +159,23 @@ def test_lightlp_does_not_use_radial_displacement():
     cmd = np.array([0.5])
     move_up, move_down = lightlp_terrain_level_moves(path, tracking, cmd, TILE_SIZE)
     assert bool(move_up[0]) and not bool(move_down[0])
+
+
+def test_lightlp_sparse_path_does_not_promote_after_pit_fall():
+    sig_path = Path(__file__).resolve().parents[1] / "legged_lab" / "envs" / "t4" / "mdp" / "sparse_signals.py"
+    spec = importlib.util.spec_from_file_location("t4_sparse_signals_curr", sig_path)
+    sig = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(sig)
+
+    path = np.array([5.0, 5.0, 5.0])
+    tracking = np.array([0.9, 0.9, 0.9])
+    cmd = np.array([0.8, 0.8, 0.8])
+    move_up, move_down = lightlp_terrain_level_moves(path, tracking, cmd, TILE_SIZE)
+    assert move_up.all()
+    guarded = sig.lightlp_sparse_promotion_guard(
+        move_up,
+        is_sparse=np.array([True, True, False]),
+        pit_fall=np.array([True, False, True]),
+    )
+    np.testing.assert_array_equal(guarded, np.array([False, True, True]))
+    assert not move_down.any()

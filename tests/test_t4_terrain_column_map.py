@@ -53,6 +53,11 @@ def test_sparse_20_col_assignment_matches_isaaclab_formula():
     assert cols.columns_named(names, "raised_pillars") == [10, 11, 12, 13]
     assert cols.columns_named(names, "hurdles") == [5]
     assert cols.columns_named(names, *cols.SPARSE_FOOTHOLD_NAMES) == [6, 7, 8, 9, 10, 11, 12, 13]
+    for col in (6, 7, 8, 9, 10, 11, 12):
+        assert names[col + 1] in cols.SPARSE_FOOTHOLD_NAMES
+    assert names[13] == "raised_pillars"
+    assert names[14] != "stepping_stones"
+    assert names[14] != "raised_pillars"
 
 
 def test_name_index_is_not_a_column_id():
@@ -84,5 +89,5 @@ def test_env_and_rewards_do_not_index_subterrain_names_as_columns():
     assert "hurdle_terrain_type_ids" in reward_src
     assert "len(sub) == 1" in env_src
     assert "if type_ids is not None" in reward_src
-    assert "TerrainCol/" in env_src
+    assert "assign_curriculum_columns" in env_src
     assert "level_" in env_src and "_frac" in env_src

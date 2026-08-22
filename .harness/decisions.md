@@ -1,5 +1,10 @@
 # Decisions
 
+- 2026-08-22：用户改口 S12 老师不冷启动。S11b 已会走梅花桩，从最新 `model_19000` 在 S12 边框+40%轻转上短续 5000 iter（新 worktree、新 logdir、reset optimizer），到 24000 后立刻蒸 GRU 学生。不 resume `stage_s_head35`。
+- 2026-08-22：用户要求 S12 学生代码与老师合同一起写完，方便老师门后直接蒸。学生必须继承 `T4LocoSparseTeacherEnvCfg`，CNN+GRU，训练期 scan recon，DAgger+PPO 的 logπ 记实际执行动作（含 teacher_mix）。不 resume Stage E `stage_s_head35`。
+- 2026-08-22：S12 修踏石/圆桩收尾几何并略加轻转。边框 0.75 m（覆盖 hard 最后一块并接到邻砖 OOB 点）；轻转 20%→40%，`wz` 仍 ±0.3；不改 OOB 4.25 / 晋级 4.0 / 终止阈值；不恢复站住/倒退/侧移。S11b 冻结对照，S12 冷启动。GRU 深度学生等老师 10k 门，必须继承 S12 MDP。计划：`docs/plans/2026-08-22--t4-sparse-s12-rim-yaw-student-plan.md`。
+- 2026-08-21：用户覆盖 S11 配方。保留 10% random level 0–9、踏石/圆桩正向命令、监控 `promotion_rate`。**不加** `body_orientation_l2` 与 `upright_orientation`（权重 0）。sparse 全局 `vx` 上限改为 **2.0**（踏石/圆桩采样 `[0.6,2.0]`），不升到 3/4。冷启动 `t_sparse_lightlp_s11_vx2`，不热补 S10。计划已归档：`docs/archive/plans/2026-08-21--t4-sparse-s11-mdp-repair-plan.md`。
+- 2026-08-21：下一正式 sparse teacher lineage 采用最小 MDP 修复包，而不是只改 `random_level_reset_max_level`。S10 证明 easy/均值难度会走、hard d=1 仍是真实撞击；只放开 0–9 曝光不够。授权改动：10% random level 覆盖 0–9；仅踏石/圆桩正向命令；监控 `promotion_rate` 与跨 rank 归约。accel 40、Trunk 1 N、20 s resampling 仍不改。S11 必须冷启动。orientation 与 vx 上限以同日用户覆盖为准。
 - 2026-08-20：S8 冻结在 `model_33000.pt`。正式本地回放确认 `replace_cylinders_with_capsules=True` 把胫骨 0.28 m cylinder 扩成外包络 0.36 m，并与脚 collider 重叠约 3 mm，造成双 Shank 每步约 20 kN 假自碰和持续 `undesired_contacts`。胫骨 cylinder segment 改为 0.20 m，使 capsule 外包络与 MJCF 的 0.28 m 圆柱一致。S7/S8 checkpoint 不续训；sparse 额外 `termination_penalty=-200` 撤回，下一 lineage 从 s6 `model_31000.pt` 在修复 plant 上重开。
 - 2026-08-20：用户批准 `s7_grid_collision` 组合修复，覆盖 2026-08-19「不加腿碰撞」的临时限制。旧 9×9 格点与 4 m gate 存在硬合同 bug，改为按 tile/border/pitch 动态铺满；共享 URDF 激活与 MJCF 对齐的 `Trunk` box 和双侧 `Shank` primitive collision。从 s6 `model_31000.pt` warm-start 适应新 plant；本 lineage 不同时加 AMP、改奖励权重或放松 accel/OOB，也不单独归因 collision 收益。旧 Stage E / depth / vault checkpoint 保留，但旧物理 evaluator 不能自动迁移为新能力证据。
 - 2026-08-19：s5 不作梅花桩证据。卡点是 easy 第一脚（26 cm 砖 / 24 cm 石间空洞 / 16 cm 上台），不是某一条 LightLP 奖励。开 s6：踏石 easy 40 cm 顶、10 cm 缝、9 cm 上台；圆桩只降高到 8 cm；10% 随机 level 锁 0–3 行。不热补 s5，不改 accel/OOB，不加腿碰撞。

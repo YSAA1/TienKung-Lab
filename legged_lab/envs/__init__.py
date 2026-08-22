@@ -18,6 +18,8 @@
 
 from legged_lab.envs.base.base_env import BaseEnv
 from legged_lab.envs.base.base_env_config import BaseAgentCfg, BaseEnvCfg
+from legged_lab.envs.t4.depth_student_cfg import T4SparseDepthStudentAgentCfg
+from legged_lab.envs.t4.depth_student_env import T4LocoSparseDepthDistillEnv, T4LocoSparseDepthStudentEnvCfg
 from legged_lab.envs.t4.t4_env import T4LocoEnv
 from legged_lab.envs.t4.teacher_cfg import (
     T4LocoSparseTeacherAgentCfg,
@@ -52,4 +54,10 @@ task_registry.register(
 task_registry.register("t4_loco_teacher", T4LocoEnv, T4LocoTeacherEnvCfg(), T4LocoTeacherAgentCfg())
 task_registry.register(
     "t4_loco_teacher_sparse", T4LocoEnv, T4LocoSparseTeacherEnvCfg(), T4LocoSparseTeacherAgentCfg()
+)
+task_registry.register(
+    "t4_loco_sparse_depth_student",
+    T4LocoSparseDepthDistillEnv,
+    T4LocoSparseDepthStudentEnvCfg(),
+    T4SparseDepthStudentAgentCfg(),
 )

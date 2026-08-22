@@ -50,6 +50,7 @@ from .stepping_stone_layout import (
     T4_PILLAR_HEIGHT_RANGE,
     T4_PILLAR_PITCH_RANGE,
     T4_STONE_BORDER_WIDTH,
+    T4_SPARSE_RIM_WIDTH,
     T4_SPARSE_TERRAIN_PROPORTIONS,
     T4_STONE_HEIGHT_JITTER_RANGE,
     T4_STONE_HEIGHT_RANGE,
@@ -59,6 +60,7 @@ from .stepping_stone_layout import (
     foothold_pitch,
     pillar_diameter,
     pillar_height,
+    rim_slab_centers_and_sizes,
     stone_height,
     stone_height_jitter,
     stone_width,
@@ -117,18 +119,32 @@ class MeshHurdleRingsTerrainCfg(SubTerrainBaseCfg):
     bar_thickness: float = T4_HURDLE_BAR_THICKNESS
 
 
+def _sparse_rim_meshes(tile: float, rim_width: float):
+    """Four overlapping z=0 slabs forming a walkable frame around the pit."""
+    thickness = 0.10
+    z = -0.5 * thickness
+    meshes = []
+    for (cx, cy), (sx, sy) in rim_slab_centers_and_sizes(tile, rim_width):
+        box = trimesh.creation.box((sx, sy, thickness))
+        box.apply_translation((cx, cy, z))
+        meshes.append(box)
+    return meshes
+
+
 def _sparse_base_meshes(cfg, tile: float):
     """Spawn pad plus either a deep pit (hard) or a filled floor (soft)."""
     platform = make_plane((cfg.platform_width, cfg.platform_width), height=0.0, center_zero=False)
     platform.apply_translation((0.5 * (tile - cfg.platform_width), 0.5 * (tile - cfg.platform_width), 0.0))
+    rim_width = float(getattr(cfg, "rim_width", T4_SPARSE_RIM_WIDTH))
+    rim = _sparse_rim_meshes(tile, rim_width)
     if getattr(cfg, "soft_fill", False):
         # Soft stage: walkable floor at z=0. Scan / illegal still use the true-hole map.
         floor = trimesh.creation.box((tile, tile, 0.1))
         floor.apply_translation((0.5 * tile, 0.5 * tile, -0.05))
-        return [floor, platform]
+        return [floor, platform, *rim]
     pit = trimesh.creation.box((tile, tile, 0.1))
     pit.apply_translation((0.5 * tile, 0.5 * tile, cfg.hole_depth - 0.05))
-    return [pit, platform]
+    return [pit, platform, *rim]
 
 
 def stepping_stones_terrain(difficulty, cfg):
@@ -170,6 +186,7 @@ class MeshSteppingStonesTerrainCfg(SubTerrainBaseCfg):
     function = stepping_stones_terrain
     platform_width: float = T4_STONE_PLATFORM_WIDTH
     border_width: float = T4_STONE_BORDER_WIDTH
+    rim_width: float = T4_SPARSE_RIM_WIDTH
     foothold_pitch_range: tuple[float, float] = T4_FOOTHOLD_PITCH_RANGE
     stone_width_range: tuple[float, float] = T4_STONE_WIDTH_RANGE
     height_range: tuple[float, float] = T4_STONE_HEIGHT_RANGE
@@ -183,6 +200,7 @@ class MeshRaisedPillarsTerrainCfg(SubTerrainBaseCfg):
     function = raised_pillars_terrain
     platform_width: float = T4_STONE_PLATFORM_WIDTH
     border_width: float = T4_STONE_BORDER_WIDTH
+    rim_width: float = T4_SPARSE_RIM_WIDTH
     foothold_pitch_range: tuple[float, float] = T4_PILLAR_PITCH_RANGE
     diameter_range: tuple[float, float] = T4_PILLAR_DIAMETER_RANGE
     height_range: tuple[float, float] = T4_PILLAR_HEIGHT_RANGE

@@ -10,6 +10,9 @@ No IsaacLab imports: contract tests run on any machine. Tile frame matches
 s6 easy tops are wider than the foot so the first landing is a step, not a
 24 cm void. Hard still narrows; ``illegal_footstep`` is expected to stay quiet
 on easy and bite on a 6 cm bias only once the top is hard-narrow.
+
+S12 adds a walkable rim so an axis-aligned crossing lands on solid ground
+before Chebyshev OOB, instead of stepping into the pit past the last foothold.
 """
 
 from __future__ import annotations
@@ -19,6 +22,10 @@ import math
 T4_STONE_TILE_SIZE = 8.0
 T4_STONE_PLATFORM_WIDTH = 1.6
 T4_STONE_BORDER_WIDTH = 0.25
+# Walkable rim so the last foothold meets a landing instead of a pit. 0.75 m
+# covers the hard-stone last edge (~3.37 m from origin) and the 0.25 m OOB
+# overflow onto the neighboring tile.
+T4_SPARSE_RIM_WIDTH = 0.75
 # Easy: 40 cm top, 10 cm inter-stone void, 9 cm rise. The 1.6 m pad meets the
 # first stone edge (first_gap ≈ 0). Hard still narrows. The lattice count is
 # derived from pitch so changing local step geometry cannot silently shorten the
@@ -38,6 +45,12 @@ T4_PILLAR_HEIGHT_RANGE = (0.08, 0.28)
 # Foot sole scan used by illegal-footstep contracts (matches FootScannerCfg).
 T4_FOOT_SCAN_SIZE = (0.16, 0.08)
 T4_FOOT_SCAN_RESOLUTION = 0.04
+# Neutral stance width used only to keep a pinned eval spawn on the 1.6 m pad.
+# Must match ``T4_NOMINAL_FEET_Y_DISTANCE``; the evaluator never spawns in a gap.
+PINNED_SPARSE_SPAWN_FEET_Y_DISTANCE = 0.233
+PINNED_SPARSE_SPAWN_MAX_ABS_Y_M = 0.10
+PINNED_SPARSE_SPAWN_MAX_ABS_YAW_DEG = 10.0
+PINNED_SPARSE_SPAWN_TERRAINS = frozenset({"stepping_stones", "raised_pillars"})
 
 T4_SPARSE_TERRAIN_PROPORTIONS = {
     "flat": 0.04,
@@ -103,6 +116,73 @@ def pillar_gap(
 
 def pillar_height(difficulty: float, height_range: tuple[float, float] = T4_PILLAR_HEIGHT_RANGE) -> float:
     return _lerp(height_range[0], height_range[1], difficulty)
+
+
+def pinned_spawn_stays_on_platform(
+    y_offset_m: float,
+    yaw_rad: float,
+    *,
+    platform_width: float = T4_STONE_PLATFORM_WIDTH,
+    feet_y_distance: float = PINNED_SPARSE_SPAWN_FEET_Y_DISTANCE,
+    foot_size: tuple[float, float] = T4_FOOT_SCAN_SIZE,
+) -> bool:
+    """True when both feet stay inside the square spawn pad after the pinned pose."""
+    half_pad = 0.5 * float(platform_width)
+    half_stance = 0.5 * float(feet_y_distance)
+    half_x = 0.5 * float(foot_size[0])
+    half_y = 0.5 * float(foot_size[1])
+    cos_y = math.cos(float(yaw_rad))
+    sin_y = math.sin(float(yaw_rad))
+    y0 = float(y_offset_m)
+    for foot_y in (half_stance, -half_stance):
+        for lx, ly in ((-half_x, -half_y), (-half_x, half_y), (half_x, -half_y), (half_x, half_y)):
+            x = lx * cos_y - (ly + foot_y) * sin_y
+            y = y0 + lx * sin_y + (ly + foot_y) * cos_y
+            if abs(x) > half_pad + 1.0e-9 or abs(y) > half_pad + 1.0e-9:
+                return False
+    return True
+
+
+def resolve_pinned_sparse_spawn(
+    y_offset_m: float | None,
+    yaw_deg: float | None,
+    *,
+    terrain_type: str | None = None,
+) -> dict | None:
+    """Return reset ranges for a pad-safe pinned spawn, or None to keep random reset.
+
+    Either offset or yaw being set pins both (unset axis is 0). The robot stays on
+    the 1.6 m sparse pad; this is a first-step diagnostic, not a hole spawn.
+    """
+    if y_offset_m is None and yaw_deg is None:
+        return None
+    if terrain_type not in PINNED_SPARSE_SPAWN_TERRAINS:
+        raise ValueError(
+            f"pinned spawn is only valid on {sorted(PINNED_SPARSE_SPAWN_TERRAINS)}, got {terrain_type!r}"
+        )
+    y = 0.0 if y_offset_m is None else float(y_offset_m)
+    yaw_d = 0.0 if yaw_deg is None else float(yaw_deg)
+    if abs(y) > PINNED_SPARSE_SPAWN_MAX_ABS_Y_M + 1.0e-9:
+        raise ValueError(
+            f"pinned y offset {y} m exceeds {PINNED_SPARSE_SPAWN_MAX_ABS_Y_M} m first-step diagnostic cap"
+        )
+    if abs(yaw_d) > PINNED_SPARSE_SPAWN_MAX_ABS_YAW_DEG + 1.0e-9:
+        raise ValueError(
+            f"pinned yaw {yaw_d} deg exceeds {PINNED_SPARSE_SPAWN_MAX_ABS_YAW_DEG} deg first-step diagnostic cap"
+        )
+    yaw = math.radians(yaw_d)
+    if not pinned_spawn_stays_on_platform(y, yaw):
+        raise ValueError(f"pinned spawn y={y} m yaw={yaw_d} deg would leave the 1.6 m spawn pad")
+    zero6 = {axis: (0.0, 0.0) for axis in ("x", "y", "z", "roll", "pitch", "yaw")}
+    return {
+        "y_offset_m": y,
+        "yaw_deg": yaw_d,
+        "yaw_rad": yaw,
+        "pose_range": {"x": (0.0, 0.0), "y": (y, y), "yaw": (yaw, yaw)},
+        "velocity_range": zero6,
+        "joint_position_range": (1.0, 1.0),
+        "joint_velocity_range": (0.0, 0.0),
+    }
 
 
 def first_foothold_center_offset(
@@ -184,6 +264,69 @@ def point_on_platform(
     return point_on_rect(point_xy, (c, c), platform_width)
 
 
+def rim_inner_offset(tile_size: float = T4_STONE_TILE_SIZE, rim_width: float = T4_SPARSE_RIM_WIDTH) -> float:
+    """Distance from tile center to the inner edge of the landing rim."""
+    return 0.5 * float(tile_size) - float(rim_width)
+
+
+def rim_slab_centers_and_sizes(
+    tile_size: float = T4_STONE_TILE_SIZE,
+    rim_width: float = T4_SPARSE_RIM_WIDTH,
+) -> list[tuple[tuple[float, float], tuple[float, float]]]:
+    """Four axis-aligned landing slabs: (center_xy, size_xy) south/north/west/east.
+
+    Mesh generation must consume this so collision boxes cannot drift from the
+    algebraic ``point_on_rim`` frame. Corners overlap; that is intentional.
+    """
+    tile = float(tile_size)
+    rim = float(rim_width)
+    return [
+        ((0.5 * tile, 0.5 * rim), (tile, rim)),
+        ((0.5 * tile, tile - 0.5 * rim), (tile, rim)),
+        ((0.5 * rim, 0.5 * tile), (rim, tile)),
+        ((tile - 0.5 * rim, 0.5 * tile), (rim, tile)),
+    ]
+
+
+def point_on_rim(
+    point_xy: tuple[float, float],
+    tile_size: float = T4_STONE_TILE_SIZE,
+    rim_width: float = T4_SPARSE_RIM_WIDTH,
+    *,
+    overflow: bool = True,
+) -> bool:
+    """True on this tile's frame, or up to ``rim_width`` into the neighbor.
+
+    ``overflow=True`` covers the 0.25 m Chebyshev OOB margin, which sits on the
+    neighboring sparse tile's rim rather than in a pit.
+    """
+    x, y = float(point_xy[0]), float(point_xy[1])
+    lo = -float(rim_width) if overflow else 0.0
+    hi = float(tile_size) + (float(rim_width) if overflow else 0.0)
+    if x < lo or y < lo or x > hi or y > hi:
+        return False
+    return x <= rim_width or y <= rim_width or x >= tile_size - rim_width or y >= tile_size - rim_width
+
+
+def last_cardinal_support_edge(
+    kind: str,
+    difficulty: float,
+    tile_size: float = T4_STONE_TILE_SIZE,
+    platform_width: float = T4_STONE_PLATFORM_WIDTH,
+) -> float:
+    """+x outer edge of the farthest foothold, in tile-local coordinates."""
+    if kind == "stepping_stones":
+        pitch = foothold_pitch(difficulty, T4_FOOTHOLD_PITCH_RANGE)
+        half = 0.5 * stone_width(difficulty, T4_STONE_WIDTH_RANGE)
+    elif kind == "raised_pillars":
+        pitch = foothold_pitch(difficulty, T4_PILLAR_PITCH_RANGE)
+        half = 0.5 * pillar_diameter(difficulty, T4_PILLAR_DIAMETER_RANGE)
+    else:
+        raise ValueError(f"unknown sparse kind {kind!r}")
+    last_center = max(x for x, _ in foothold_centers(pitch, tile_size=tile_size, platform_width=platform_width))
+    return last_center + half
+
+
 def point_on_support(
     point_xy: tuple[float, float],
     *,
@@ -192,8 +335,10 @@ def point_on_support(
     tile_size: float = T4_STONE_TILE_SIZE,
     platform_width: float = T4_STONE_PLATFORM_WIDTH,
 ) -> bool:
-    """True when ``point_xy`` is on the spawn pad or a foothold (true-hole map)."""
+    """True when ``point_xy`` is on the spawn pad, landing rim, or a foothold."""
     if point_on_platform(point_xy, tile_size=tile_size, platform_width=platform_width):
+        return True
+    if point_on_rim(point_xy, tile_size=tile_size):
         return True
     if kind == "stepping_stones":
         pitch = foothold_pitch(difficulty, T4_FOOTHOLD_PITCH_RANGE)

@@ -19,7 +19,7 @@
 
 - `legged_lab/` - IsaacLab locomotion 环境、资产、脚本和 MDP 代码。
 - `legged_lab/assets/t4/` - T4 27DoF 资产；`constants.py::T4_JOINT_NAMES` 是唯一关节顺序真值。
-- `legged_lab/envs/t4/` - T4 任务包。已注册 `t4_loco_teacher`、`t4_loco_teacher_sparse`、`t4_vault_mimic`、`t4_vault_skill`。
+- `legged_lab/envs/t4/` - T4 任务包。已注册 `t4_loco_teacher`、`t4_loco_teacher_sparse`、`t4_loco_sparse_depth_student`、`t4_vault_mimic`、`t4_vault_skill`。Stage E 深度学生仍走独立 train 脚本，不改任务名。
 - `legged_lab/envs/t4/datasets/motion_source/` - 原始 T4 CSV，schema 为 `root_xyz(3) + root_quat_xyzw(4) + q27`。
 - `legged_lab/envs/t4/datasets/motion_visualization/` - 转换后的 playback 中间数据，不是最终 AMP expert。
 - `rsl_rl/` - 仓库内置 RSL-RL 训练库。
@@ -31,7 +31,8 @@
 
 - 代码改动后先跑最窄测试；T4 资产/motion 合同优先跑 `python -m pytest tests/test_t4_asset_migration.py`。
 - T4 观测合同改动跑 `python -m pytest tests/test_t4_observation_contracts.py`。
-- 稀疏奖励 / 终止 / 地形列映射合同改动跑 `python -m pytest tests/test_t4_sparse_reward_contracts.py tests/test_t4_sparse_monitor_contract.py tests/test_t4_terrain_column_map.py`。
+- 稀疏奖励 / 终止 / 地形列映射 / S12 命令与边框合同改动跑 `python -m pytest tests/test_t4_sparse_reward_contracts.py tests/test_t4_sparse_monitor_contract.py tests/test_t4_sparse_command_contract.py tests/test_t4_terrain_column_map.py tests/test_t4_stepping_stone_contracts.py tests/test_distributed_log_reduce.py`。
+- 梅花桩 GRU 学生合同改动跑 `python -m pytest tests/test_t4_sparse_depth_student_gru_contract.py`（需要 torch）。
 - 所有训练、GPU probe、批量 playback、evaluator、teacher rollout 采集等长运行命令必须用 tmux。
 - 不能用 reward、episode length、checkpoint 存在或 loss 下降替代行为验收；能力声明必须有 evaluator JSON、lineage manifest 和连续回放证据。
 

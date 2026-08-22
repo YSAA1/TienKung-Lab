@@ -37,6 +37,7 @@ from rsl_rl.modules import (
     StudentTeacherRecurrent,
 )
 from rsl_rl.utils import AMPLoader, Normalizer, store_code_state
+from rsl_rl.utils.distributed_logs import reduce_episode_log_dicts
 
 
 class AmpOnPolicyRunner:
@@ -335,7 +336,13 @@ class AmpOnPolicyRunner:
             stop = time.time()
             learn_time = stop - start
             self.current_learning_iteration = it
-            # log info
+            # Weighted reduce must run on every rank; only rank 0 writes TensorBoard.
+            if self.is_distributed or (self.log_dir is not None and not self.disable_logs):
+                reduced_ep_logs = reduce_episode_log_dicts(
+                    ep_infos, device=self.device, distributed=self.is_distributed
+                )
+            else:
+                reduced_ep_logs = {}
             if self.log_dir is not None and not self.disable_logs:
                 # Log information
                 self.log(locals())
@@ -368,7 +375,33 @@ class AmpOnPolicyRunner:
 
         # -- Episode info
         ep_string = ""
-        if locs["ep_infos"]:
+        console_keys = {
+            "Curriculum/terrain_levels",
+            "Curriculum/episode_path_length",
+            "Curriculum/promotion_rate",
+            "Reset/accel",
+            "Reset/torso",
+            "Reset/timeout",
+            "Command/sparse_mean_vx",
+            "Terrain/stepping_stones/progress_m",
+            "Terrain/stepping_stones/easy_reach_2m_rate",
+            "Terrain/raised_pillars/progress_m",
+            "Terrain/raised_pillars/easy_reach_2m_rate",
+        }
+        reduced_ep_logs = locs.get("reduced_ep_logs") or {}
+        if reduced_ep_logs:
+            for key, value in reduced_ep_logs.items():
+                if isinstance(value, torch.Tensor):
+                    scalar = value.detach().to(self.device).reshape(()).item()
+                else:
+                    scalar = float(value)
+                if "/" in key:
+                    self.writer.add_scalar(key, scalar, locs["it"])
+                else:
+                    self.writer.add_scalar("Episode/" + key, scalar, locs["it"])
+                if key in console_keys:
+                    ep_string += f"""{f'{key}:':>{pad}} {scalar:.4f}\n"""
+        elif locs["ep_infos"]:
             for key in locs["ep_infos"][0]:
                 infotensor = torch.tensor([], device=self.device)
                 for ep_info in locs["ep_infos"]:

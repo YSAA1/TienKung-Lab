@@ -489,8 +489,11 @@ class T4LocoSparseTeacherEnvCfg(T4LocoTeacherEnvCfg):
     use_algebraic_sparse_scan: bool = False
     terminate_on_pit_fall: bool = False
     random_level_reset_fraction: float = 0.10
-    # Exclusive. 4 → rows 0–3 (d ≤ 1/3) until easy stones actually get used.
-    random_level_reset_max_level: int | None = 4
+    random_level_reset_max_level: int | None = None
+    terrain_aware_commands: bool = True
+    sparse_command_lin_vel_x: tuple[float, float] = (0.6, 2.0)
+    sparse_command_straight_yaw_prob: float = 0.60
+    sparse_command_gentle_ang_vel_z: tuple[float, float] = (-0.3, 0.3)
 
     def __post_init__(self):
         self.scene.terrain_generator = T4_STAGE_E_SPARSE_TERRAINS_CFG
@@ -507,9 +510,15 @@ class T4LocoSparseTeacherEnvCfg(T4LocoTeacherEnvCfg):
         self.use_lightlp_terminations = True
         self.use_algebraic_sparse_scan = False
         self.random_level_reset_fraction = 0.10
-        self.random_level_reset_max_level = 4
+        self.random_level_reset_max_level = None
+        self.terrain_aware_commands = True
+        self.commands.ranges.lin_vel_x = (-0.6, 2.0)
+        self.sparse_command_lin_vel_x = (0.6, 2.0)
+        self.sparse_command_straight_yaw_prob = 0.60
+        self.sparse_command_gentle_ang_vel_z = (-0.3, 0.3)
         self.amp_terrain_schedule.enable = True
         self.noise.noise_scales.height_scan = 0.0
+        self.domain_rand.events.push_robot.func = mdp.push_by_setting_velocity_tagged
         generator = self.scene.terrain_generator
         sub = getattr(generator, "sub_terrains", None) or {}
         for name in ("stepping_stones", "raised_pillars"):
@@ -521,7 +530,7 @@ class T4LocoSparseTeacherEnvCfg(T4LocoTeacherEnvCfg):
 @configclass
 class T4LocoSparseTeacherAgentCfg(T4LocoTeacherAgentCfg):
     experiment_name = "t4_loco_teacher_sparse"
-    run_name = "t_sparse_lightlp_s6"
+    run_name = "t_sparse_lightlp_s12_rim_yaw40"
     neptune_project = "t4_loco_teacher_sparse"
     wandb_project = "t4_loco_teacher_sparse"
     max_iterations = 40000

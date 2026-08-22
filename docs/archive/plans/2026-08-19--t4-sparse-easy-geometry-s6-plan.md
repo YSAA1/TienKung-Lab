@@ -1,13 +1,16 @@
 # Executable Plan - s6 baseline 与 s7 格点/碰撞组合修复
 
-> Status: active
+> **Status: archived（非权威）** — living 梅花桩: `docs/plans/2026-08-22--t4-sparse-s12-rim-yaw-student-plan.md`。入口: `docs/README.md`。
+>
+> Status: superseded
 > Date: 2026-08-20
+> Superseded-by: `docs/archive/plans/2026-08-21--t4-sparse-s11-mdp-repair-plan.md`（后又被 S12 取代；S10 仅对照）
 > Spec: `docs/specs/2026-08-15--t4-stepping-stones-and-hurdle-stable.md`（目标规格；双老师路线已废）
 > 对照: `docs/research/2608.02653v1/auto/2608.02653v1.md` §IV（研究笔记非权威）
 > 取代: `docs/archive/plans/2026-08-18--t4-sparse-terrain-index-fix-plan.md`（s5 列映射/MDP 已落地；梅花桩能力未起）
 > Branch: `t4-train`
 > Planning surface: docs plan
-> GPU: nubot 四卡从零训 `t_sparse_lightlp_s6`。zhuoqun 翻箱不动。Stage E 1155D 不覆盖。
+> GPU: nubot 四卡当前跑 S10 `t_sparse_lightlp_s10_trunk_only_cold`（冷启动，硬终止仅 Trunk）。zhuoqun 翻箱不动。Stage E 1155D 不覆盖。session 快照：`HANDOFF.md`。
 
 ## Objective
 
@@ -15,7 +18,7 @@ s6 从零验证放宽 easy 几何是否能让稀疏地形起势。后续配对 e
 
 ## Active Slice
 
-阶段 3 健康门和深层诊断已完成。s6 已停，`model_31000.pt` 作为下一正确 lineage 的 warm-start；它属于旧 9×9 / 非足碰撞缺失 baseline，但没有经历 Shank 假自碰。S7/S8 已停止并保留为污染 plant 的失败证据。当前 active slice 是完成 0.20 m capsule-source 资产验证，然后从 s6 `model_31000.pt` + fresh optimizer 重开。
+S7/S8 已冻结为污染 plant。S9 capsulefix warm-start 已停（`model_34500.pt`）。当前 active slice 是 **S10 冷启动** `t_sparse_lightlp_s10_trunk_only_cold`：正确 capsule 物理、硬终止仅 `Trunk`，nubot 四卡约 31k/40k。`model_30000` 固定评估已证明 easy 与训练均值难度 d=0.39 上能朝前走过踏石/圆桩。课表均值 3.5 与 TB success 不是能力失败；改配方须新 lineage，见 `HANDOFF.md`。
 
 ## 已核实的 s5 卡点（iter ≈17500，勿当梅花桩证据）
 

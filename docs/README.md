@@ -9,12 +9,12 @@
 
 | 轨道 | 现在做什么 | 执行计划 | 规格 |
 | --- | --- | --- | --- |
-| 梅花桩 | S7/S8 因 Shank capsule 与脚 collider 假自碰已冻结。修复后的 S9 正在 nubot 从 s6 `model_31000.pt` + fresh optimizer 重新适应：保留 tile-filling grid 和真实躯干/小腿碰撞，`termination_penalty=0`，速度范围仍为 `[-0.6, 1.0]`。早期 contact/reset 信号健康，能力声明等 checkpoint evaluator + 连续回放。**本切片不蒸学生。** | [梅花桩计划](plans/2026-08-19--t4-sparse-easy-geometry-s6-plan.md) | [稀疏规格](specs/2026-08-15--t4-stepping-stones-and-hurdle-stable.md) |
+| 梅花桩 | S12 老师：0.75 m 收尾边框 + 踏石/圆桩 40% 轻转。S11b/S10 只作对照。TB success 不能当能力。GRU 学生代码已就绪（`t4_loco_sparse_depth_student`），开训等老师 10k 门。 | [S12 计划](plans/2026-08-22--t4-sparse-s12-rim-yaw-student-plan.md) | [稀疏规格](specs/2026-08-15--t4-stepping-stones-and-hurdle-stable.md) |
 | 翻箱 | G1 跟踪专家 → G2 heightscan 技能（zhuoqun）。**G2 学生与 G3 合并（走跑+翻箱成一条策略）等 G2 过箱后再开。** | [翻箱 recovery](plans/2026-08-15--t4-vault-g1-g2-recovery-plan.md) | [合并规格](specs/2026-08-13--t4-vault-loco-merge.md) |
 
 运行时切片与机器占用：`.harness/work_index.md`、`.harness/state.md`。
 
-2026-08-19 session 快照（不是计划）：仓库根目录 [`HANDOFF.md`](../HANDOFF.md)。
+2026-08-22 session 快照（不是计划）：仓库根目录 [`HANDOFF.md`](../HANDOFF.md)。
 
 ## 已经关掉的阶段
 
@@ -38,7 +38,7 @@
 | Sparse teacher Actor | 1937D（scan×5 + 接触 2）。独立任务 `t4_loco_teacher_sparse`。 |
 | 足底 scan | 只进 Critic / 奖励，不上 Actor、不上实机 |
 | 部署学生 | 深度 + 本体史 + 命令 + 上一动作；无 HeightScan / 接触真值 / 路线进度 |
-| 命令范围（现行走跑） | `vx ∈ [-0.6, 1.0]` m/s |
+| 命令范围（现行走跑） | Stage E：`vx ∈ [-0.6, 1.0]`。S12 sparse 非洞地形：`vx ∈ [-0.6, 2.0]`。踏石/圆桩：`vx ∈ [0.6, 2.0]`、`vy=0`、60% `wz=0` / 40% `[-0.3, 0.3]`。每块梅花桩砖有 0.75 m 实地边框 |
 | 能力声明 | evaluator JSON + lineage + 连续回放。Reward / TB / ckpt 存在都不算。 |
 
 架构规格：[特权老师 → 深度学生](specs/2026-08-12--t4-unified-depth-locomotion.md)。
@@ -53,9 +53,9 @@
 | 老师 / 深度学生上机合同 | [部署手册](runbooks/t4-teacher-and-depth-deployment.md) |
 | 资产合同 | `python -m pytest tests/test_t4_asset_migration.py` |
 | 观测合同 | `python -m pytest tests/test_t4_observation_contracts.py` |
-| 稀疏奖励 / 终止 / 列映射合同 | `python -m pytest tests/test_t4_sparse_reward_contracts.py tests/test_t4_sparse_monitor_contract.py tests/test_t4_terrain_column_map.py` |
+| 稀疏奖励 / 终止 / 列映射 / S12 命令与边框合同 | `python -m pytest tests/test_t4_sparse_reward_contracts.py tests/test_t4_sparse_monitor_contract.py tests/test_t4_sparse_command_contract.py tests/test_t4_terrain_column_map.py tests/test_t4_stepping_stone_contracts.py tests/test_distributed_log_reduce.py` |
 
-已注册 T4 任务：`t4_loco_teacher`、`t4_loco_teacher_sparse`、`t4_vault_mimic`、`t4_vault_skill`。上游 TienKung 的 `walk` / `run` 仍在，不是本 T4 路线。
+已注册 T4 任务：`t4_loco_teacher`、`t4_loco_teacher_sparse`、`t4_loco_sparse_depth_student`、`t4_vault_mimic`、`t4_vault_skill`。上游 TienKung 的 `walk` / `run` 仍在，不是本 T4 路线。Stage E 深度学生仍走独立 train 脚本，不改任务名。
 
 ## 文档货架
 

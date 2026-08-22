@@ -1,5 +1,25 @@
 # Progress
 
+## 2026-08-22 knowledge cleanup
+
+- `docs/plans/` 只留 S12 + 翻箱 G1/G2。S6/S11 迁到 `docs/archive/plans/`。根目录 S10 诊断草稿与 `artifacts/tmp_*` scratch 删除。`HANDOFF.md` 改成 S12 快照。
+
+## 2026-08-22 S12 收尾边框 + 40% 轻转
+
+- 诊断：S11b length~300 是 4.25 m OOB，走完踏石掉落是出界不是 fall_over。最后支撑 3.37–3.78 m，晋级/OOB 落在空洞里。
+- 现行计划：`docs/plans/2026-08-22--t4-sparse-s12-rim-yaw-student-plan.md`。S11 标 superseded。
+- 阶段 1 代码：`T4_SPARSE_RIM_WIDTH=0.75` 进入布局真值、碰撞 mesh 和 algebraic support；轻转 `straight_prob=0.60`；run_name `t_sparse_lightlp_s12_rim_yaw40`。Isaac-free `68 passed`（踏石/命令/列映射/奖励/监控/evaluator）。
+- 阶段 3 代码：`T4LocoSparseDepthStudentEnvCfg` 继承 S12 老师 MDP；`DepthStudentTeacherRecurrent`（CNN+GRU、scan recon 训练期、export 丢掉解码器）；DAgger+PPO 的 logπ 记在实际执行动作上。任务 `t4_loco_sparse_depth_student`。pytorch 环境 `test_t4_sparse_depth_student_gru_contract.py` + vault distillation `23 passed`。开训脚本 `legged_lab/scripts/train_t4_sparse_depth_student.py`，等阶段 2 的 10k 门。
+- 2026-08-22 14:54 CST：停 S11b，热启 S12。加载 `model_19000.pt`，`--reset_optimizer`，`Learning iteration 19002/24000` 已见。学生不并行，waiter 等 `model_23999.pt`。不把 length→1000 当成功。
+- 2026-08-22 第一步侧偏诊断：评估器加 `--spawn_y_offset_m` / `--spawn_yaw_deg`（台上钉死，不出洞）。nubot GPU3 与 S12 并行，ckpt=`S11b model_19000`，d=0.8，`vx=0.8`，32 局。踏石 0/8 cm 均为 32/32 reach_4m、legal first=1.0；圆桩 0 cm 28/32（accel 3 + torso 1）、8 cm 32/32。8 cm 没有更差。JSON：`artifacts/eval/s12_firststep_pin/`。不改课表、不热补 S12。
+
+## 2026-08-21 S11 MDP 修复包
+
+- 交接否决“只改 random level cap”。S11 计划现已归档：`docs/archive/plans/2026-08-21--t4-sparse-s11-mdp-repair-plan.md`。S10 不热补。
+- 阶段 1：terrain-aware sparse command、full-level 10% reset、orientation −2、TB promotion/跨 rank 归约。本机合同测试是本阶段证据；开训是阶段 2。
+- 2026-08-21 用户覆盖：不加 `body_orientation_l2` / `upright_orientation`（权重 0）；sparse `vx max=2.0`。本机合同 `58 passed`。
+- 2026-08-22：S11 vx2 在 ~1.8k 踏石/圆桩仍 ~0.9 m、torso~80%，用户要求停掉重开。新冷启动 `t_sparse_lightlp_s11b_upright_tbslim`：恢复 S10 `upright=+1`（ori 仍 0），砍 TerrainCol/逐地形 reset 原因，TB 控制台只打关键 tag，跨 rank 一次 all_reduce。TB `http://100.100.188.39:8015/`。vx2 日志保留。
+
 ## 2026-08-20 S9 capsulefix 正确物理 lineage
 
 - nubot 隔离 worktree `/home/nubot/phn_ws/t4_train/TienKung-Lab-s9-capsulefix` 使用 HEAD `fd84ee3`，worktree clean。主 run 为 `2026-08-20_16-07-04_t_sparse_lightlp_s9_capsulefix`，tmux `t4-sparse-lightlp-s9-capsulefix`，TensorBoard `http://100.100.188.39:8012/`。
@@ -116,7 +136,7 @@ s5 @17.5k 踏石/圆桩 `reach_2m` 仍 3%/2%、进度 1.1 m。回放第一脚 ac
 
 ## 2026-08-18 s4 列号审计与 TB 重读
 
-IsaacLab 2.1.0 `terrain_types` 是 20 列列号。s4 代码用 13 个 `sub_terrains` 下标，TB 名整体错位。nubot EventAccumulator @ iter 12018：连续地形 reach_2m 0.70–0.77、progress 3.3–3.5 m；四列踏石与三列可见圆桩 reach_2m 0.02–0.05、progress 1.17–1.30 m。他人「踏石 71%」实为跨栏列。执行面改到 `docs/plans/2026-08-18--t4-sparse-terrain-index-fix-plan.md`。
+IsaacLab 2.1.0 `terrain_types` 是 20 列列号。s4 代码用 13 个 `sub_terrains` 下标，TB 名整体错位。nubot EventAccumulator @ iter 12018：连续地形 reach_2m 0.70–0.77、progress 3.3–3.5 m；四列踏石与三列可见圆桩 reach_2m 0.02–0.05、progress 1.17–1.30 m。他人「踏石 71%」实为跨栏列。执行面当时改到列号修复计划（现已归档 `docs/archive/plans/2026-08-18--t4-sparse-terrain-index-fix-plan.md`）。
 
 ## 2026-08-18 文档收口与 s4
 

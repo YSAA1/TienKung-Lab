@@ -35,6 +35,7 @@ from rsl_rl.modules import (
     StudentTeacher,
     StudentTeacherRecurrent,
     DepthStudentTeacher,
+    DepthStudentTeacherRecurrent,
 )
 from rsl_rl.utils import filter_init_kwargs, store_code_state
 
@@ -85,7 +86,7 @@ class OnPolicyRunner:
         # evaluate the policy class
         policy_class = eval(self.policy_cfg.pop("class_name"))
         policy_kwargs = filter_init_kwargs(policy_class.__init__, self.policy_cfg)
-        policy: ActorCritic | ActorCriticRecurrent | StudentTeacher | StudentTeacherRecurrent = policy_class(
+        policy: ActorCritic | ActorCriticRecurrent | StudentTeacher | StudentTeacherRecurrent | DepthStudentTeacher | DepthStudentTeacherRecurrent = policy_class(
             num_obs, num_privileged_obs, self.env.num_actions, **policy_kwargs
         ).to(self.device)
 

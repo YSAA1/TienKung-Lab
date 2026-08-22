@@ -291,3 +291,86 @@ def test_sim2sim_loads_gru_builder():
     source = SIM2SIM_PY.read_text(encoding="utf-8")
     assert "build_depth_student_policy" in source
     assert "sparse_teacher_latest_scan_range" in source
+
+
+def test_nan_guard_rejects_ingest_nan_before_storage():
+    policy = _tiny_gru()
+    algorithm = Distillation(policy, collect_mode="student", teacher_mix=0.0, device="cpu", nan_guard=True)
+    obs = _student_obs(3)
+    obs[0, 0] = float("nan")
+    with pytest.raises(RuntimeError, match=r"non-finite ingest: student_obs"):
+        algorithm.act(obs, torch.zeros(3, 12))
+    assert algorithm.transition.actions is None
+
+
+def test_nan_guard_blocks_optimizer_step_on_inf_grad():
+    policy = _tiny_gru()
+    algorithm = Distillation(policy, device="cpu", nan_guard=True, max_grad_norm=1.0)
+    param = next(p for p in algorithm.optimizer.param_groups[0]["params"] if p.requires_grad)
+    handle = param.register_hook(lambda grad: torch.full_like(grad, float("inf")))
+    stepped = {"n": 0}
+    original_step = algorithm.optimizer.step
+
+    def _count_step(*args, **kwargs):
+        stepped["n"] += 1
+        return original_step(*args, **kwargs)
+
+    algorithm.optimizer.step = _count_step
+    try:
+        with pytest.raises(RuntimeError, match=r"non-finite gradient:"):
+            algorithm._optimizer_step(param.square().sum())
+    finally:
+        handle.remove()
+        algorithm.optimizer.step = original_step
+    assert stepped["n"] == 0
+
+
+def test_vectorized_block_stamp_matches_python_loop():
+    height, width, block_h, block_w = 48, 64, 1, 1
+    n_env = 7
+    env_ids = torch.arange(n_env)
+    torch.manual_seed(11)
+    row_draw = torch.rand(n_env)
+    rows = noise.edge_biased_block_rows(row_draw, height, block_h)
+    cols = torch.randint(0, width - block_w + 1, (n_env,))
+    vectorized = torch.zeros(n_env, height, width, dtype=torch.bool)
+    looped = torch.zeros(n_env, height, width, dtype=torch.bool)
+    noise.stamp_rectangular_blocks(vectorized, env_ids, rows, cols, block_h, block_w)
+    for env_id in range(n_env):
+        row = int(rows[env_id])
+        col = int(cols[env_id])
+        looped[env_id, row : row + block_h, col : col + block_w] = True
+    assert torch.equal(vectorized, looped)
+
+
+def test_policy_dropout_fills_max_range_not_near_clip():
+    depth = torch.zeros(2, 4, 4)
+    mask = torch.zeros(2, 4, 4, dtype=torch.bool)
+    mask[0, 1, 2] = True
+    filled = noise.apply_normalized_block_dropout(depth, mask, fill_value=1.0)
+    assert filled[0, 1, 2].item() == pytest.approx(1.0)
+    assert filled[1, 0, 0].item() == pytest.approx(0.0)
+
+
+def test_depth_refresh_plan_keeps_reset_and_skips_idle_steps():
+    assert noise.depth_refresh_plan(1, 3, False, False) == (False, False, False)
+    assert noise.depth_refresh_plan(0, 3, False, False) == (True, True, True)
+    assert noise.depth_refresh_plan(3, 3, False, False) == (True, True, True)
+    assert noise.depth_refresh_plan(1, 3, True, False) == (True, True, False)
+    assert noise.depth_refresh_plan(1, 3, False, True) == (True, False, False)
+
+
+def test_student_cfg_exposes_nan_guard_camera_period_and_noise_overrides():
+    cfg_src = CFG_PY.read_text(encoding="utf-8")
+    env_src = ENV_PY.read_text(encoding="utf-8")
+    assert "nan_guard: bool = True" in cfg_src
+    assert "max_grad_norm: float = 1.0" in cfg_src
+    assert "student_depth_camera_update_period: float = 0.02" in env_src
+    assert "student_depth_d455_sensor_noise: bool = False" in env_src
+    assert "student_depth_dropout_after_resize: bool = True" in env_src
+    assert "SensorNoiseCfg(enable=sensor_noise_enable)" in env_src
+    assert "if self.student_depth_noise:" in env_src
+    assert "stamp_rectangular_blocks" in env_src
+    assert "assert_finite_grads" in (ROOT / "rsl_rl" / "rsl_rl" / "algorithms" / "distillation.py").read_text(
+        encoding="utf-8"
+    )

@@ -134,8 +134,14 @@ def play():
     env_cfg.scene.num_envs = 50
     env_cfg.scene.env_spacing = 2.5
     env_cfg.commands.rel_standing_envs = 0.0
+    env_cfg.commands.rel_heading_envs = 0.0
+    env_cfg.commands.heading_command = False
     env_cfg.commands.ranges.lin_vel_x = (args_cli.command_vx, args_cli.command_vx)
     env_cfg.commands.ranges.lin_vel_y = (0.0, 0.0)
+    env_cfg.commands.ranges.ang_vel_z = (0.0, 0.0)
+    env_cfg.commands.ranges.heading = (0.0, 0.0)
+    if hasattr(env_cfg, "terrain_aware_commands"):
+        env_cfg.terrain_aware_commands = False
     env_cfg.scene.height_scanner.drift_range = (0.0, 0.0)
 
     if args_cli.terrain:

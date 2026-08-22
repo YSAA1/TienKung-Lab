@@ -30,6 +30,9 @@ def test_teacher_actor_dim_stays_1155_sparse_is_separate():
     assert schemas.TEACHER_SPARSE_ACTOR_OBS_DIM == 1937
     assert schemas.TEACHER_SPARSE_ACTOR_OBS_DIM != schemas.TEACHER_ACTOR_OBS_DIM
     assert schemas.TEACHER_PAPER_ACTOR_OBS_DIM == schemas.TEACHER_ACTOR_OBS_DIM + 2
+    start, end = schemas.sparse_teacher_latest_scan_range()
+    assert end - start == schemas.TEACHER_SCAN_DIM
+    assert end == schemas.TEACHER_SPARSE_ACTOR_OBS_DIM - schemas.TEACHER_SPARSE_CONTACT_DIM
 
 
 def test_sparse_actor_mirror_swaps_trailing_contact_and_scan_history():
