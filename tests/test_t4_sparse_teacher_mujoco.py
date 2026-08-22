@@ -45,6 +45,28 @@ def test_sparse_course_uses_training_layout_and_supports_both_teacher_contracts(
     assert not module.supported_actor_obs_dim(module.TEACHER_SPARSE_ACTOR_OBS_DIM + 1)
 
 
+def test_sparse_course_can_expand_the_local_diagnostic_scene_without_changing_defaults():
+    module = importlib.import_module("legged_lab.scripts.play_t4_sparse_teacher_mujoco")
+
+    default_layout = module.sparse_course_layout(0.39, terrain="stepping_stones")
+    expanded_layout = module.sparse_course_layout(
+        0.39,
+        terrain="stepping_stones",
+        lane_count=15,
+        foothold_rows=30,
+    )
+    default_stones = [geom for geom in default_layout["geoms"] if geom["kind"] == "stone"]
+    stones = [geom for geom in expanded_layout["geoms"] if geom["kind"] == "stone"]
+    finish = next(geom for geom in expanded_layout["geoms"] if geom["name"] == "finish_platform")
+
+    assert len(default_stones) == module.LANE_COUNT * module.FOOTHOLD_ROWS
+    assert len(stones) == 15 * 30
+    assert expanded_layout["lane_count"] == 15
+    assert expanded_layout["foothold_rows"] == 30
+    assert {geom["pos"][1] for geom in stones if geom["name"] == "stone_0_7"} == {0.0}
+    assert finish["pos"][0] - finish["size"][0] > max(geom["pos"][0] + geom["size"][0] for geom in stones)
+
+
 def test_teacher_scan_matches_isaac_xy_flatten_order():
     module = importlib.import_module("legged_lab.scripts.play_t4_sparse_teacher_mujoco")
 

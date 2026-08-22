@@ -100,11 +100,19 @@ def _platform(name: str, x_center: float, length: float, width: float = 2.0) -> 
 
 
 def sparse_course_layout(
-    difficulty: float, terrain: str = "sparse_course", geometry: str = "current"
+    difficulty: float,
+    terrain: str = "sparse_course",
+    geometry: str = "current",
+    lane_count: int = LANE_COUNT,
+    foothold_rows: int = FOOTHOLD_ROWS,
 ) -> dict:
     """Return a deterministic sparse corridor using the Isaac training dimensions."""
     if terrain not in {"sparse_course", "stepping_stones", "raised_pillars"}:
         raise ValueError(f"unsupported sparse terrain {terrain!r}")
+    if lane_count < 1 or lane_count % 2 == 0:
+        raise ValueError(f"lane_count must be a positive odd integer, got {lane_count}")
+    if foothold_rows < 1:
+        raise ValueError(f"foothold_rows must be positive, got {foothold_rows}")
     if geometry == "current":
         stone_width = _LAYOUT.stone_width(difficulty)
         stone_gap = _LAYOUT.stone_gap(difficulty)
@@ -141,8 +149,8 @@ def sparse_course_layout(
 
     if terrain in {"sparse_course", "stepping_stones"}:
         first_center = cursor + stone_leading_gap + 0.5 * stone_width
-        lane_y = [(lane - LANE_COUNT // 2) * stone_pitch for lane in range(LANE_COUNT)]
-        for row in range(FOOTHOLD_ROWS):
+        lane_y = [(lane - lane_count // 2) * stone_pitch for lane in range(lane_count)]
+        for row in range(foothold_rows):
             x = first_center + row * stone_pitch
             for lane, y in enumerate(lane_y):
                 height = max(0.04, stone_height + float(rng.uniform(-stone_jitter, stone_jitter)))
@@ -156,15 +164,15 @@ def sparse_course_layout(
                         "rgba": (0.72, 0.63, 0.42, 1.0),
                     }
                 )
-        cursor = first_center + (FOOTHOLD_ROWS - 1) * stone_pitch + 0.5 * stone_width + 0.30
+        cursor = first_center + (foothold_rows - 1) * stone_pitch + 0.5 * stone_width + 0.30
         if terrain == "sparse_course":
             geoms.append(_platform("transition_platform", cursor + 0.70, 1.40))
             cursor += 1.55
 
     if terrain in {"sparse_course", "raised_pillars"}:
         first_center = cursor + pillar_leading_gap + 0.5 * pillar_diameter
-        lane_y = [(lane - LANE_COUNT // 2) * pillar_pitch for lane in range(LANE_COUNT)]
-        for row in range(FOOTHOLD_ROWS):
+        lane_y = [(lane - lane_count // 2) * pillar_pitch for lane in range(lane_count)]
+        for row in range(foothold_rows):
             x = first_center + row * pillar_pitch
             for lane, y in enumerate(lane_y):
                 geoms.append(
@@ -177,13 +185,15 @@ def sparse_course_layout(
                         "rgba": (0.35, 0.58, 0.72, 1.0),
                     }
                 )
-        cursor = first_center + (FOOTHOLD_ROWS - 1) * pillar_pitch + 0.5 * pillar_diameter + 0.30
+        cursor = first_center + (foothold_rows - 1) * pillar_pitch + 0.5 * pillar_diameter + 0.30
 
     geoms.append(_platform("finish_platform", cursor + 1.0, 2.0))
     return {
         "difficulty": float(difficulty),
         "terrain": terrain,
         "geometry": geometry,
+        "lane_count": lane_count,
+        "foothold_rows": foothold_rows,
         "stone_width": stone_width,
         "stone_gap": stone_gap,
         "stone_height": stone_height,
@@ -205,9 +215,19 @@ def _geom_xml(geom: dict) -> str:
 
 
 def build_sparse_model_xml(
-    difficulty: float, terrain: str = "sparse_course", geometry: str = "current"
+    difficulty: float,
+    terrain: str = "sparse_course",
+    geometry: str = "current",
+    lane_count: int = LANE_COUNT,
+    foothold_rows: int = FOOTHOLD_ROWS,
 ) -> str:
-    layout = sparse_course_layout(difficulty, terrain=terrain, geometry=geometry)
+    layout = sparse_course_layout(
+        difficulty,
+        terrain=terrain,
+        geometry=geometry,
+        lane_count=lane_count,
+        foothold_rows=foothold_rows,
+    )
     xml = MJCF_PATH.read_text()
     xml = xml.replace('meshdir="../meshes/"', f'meshdir="{ASSET_DIR / "meshes"}"')
     pit = (
@@ -251,6 +271,8 @@ class T4SparseTeacherMujocoRunner:
         difficulty: float = 0.5,
         terrain: str = "sparse_course",
         geometry: str = "current",
+        lane_count: int = LANE_COUNT,
+        foothold_rows: int = FOOTHOLD_ROWS,
     ):
         self.actor, self.actor_obs_dim = load_actor(checkpoint)
         self.paper_contact_obs = self.actor_obs_dim in (
@@ -259,9 +281,21 @@ class T4SparseTeacherMujocoRunner:
         )
         self.sparse_scan_history = self.actor_obs_dim == TEACHER_SPARSE_ACTOR_OBS_DIM
         self.scan_history_length = TEACHER_SPARSE_SCAN_HISTORY_LENGTH if self.sparse_scan_history else 1
-        self.layout = sparse_course_layout(difficulty, terrain=terrain, geometry=geometry)
+        self.layout = sparse_course_layout(
+            difficulty,
+            terrain=terrain,
+            geometry=geometry,
+            lane_count=lane_count,
+            foothold_rows=foothold_rows,
+        )
         self.model = mujoco.MjModel.from_xml_string(
-            build_sparse_model_xml(difficulty, terrain=terrain, geometry=geometry)
+            build_sparse_model_xml(
+                difficulty,
+                terrain=terrain,
+                geometry=geometry,
+                lane_count=lane_count,
+                foothold_rows=foothold_rows,
+            )
         )
         self.model.opt.timestep = PHYSICS_DT
         apply_isaac_pd(self.model)
@@ -435,6 +469,18 @@ def main() -> None:
         help="Pin geometry to the current curriculum or the model_24999 training lineage.",
     )
     parser.add_argument("--vx", type=float, default=0.6)
+    parser.add_argument(
+        "--lane-count",
+        type=int,
+        default=LANE_COUNT,
+        help=f"Odd number of lateral foothold lanes for this local diagnostic scene (default: {LANE_COUNT}).",
+    )
+    parser.add_argument(
+        "--foothold-rows",
+        type=int,
+        default=FOOTHOLD_ROWS,
+        help=f"Number of longitudinal foothold rows for this local diagnostic scene (default: {FOOTHOLD_ROWS}).",
+    )
     args = parser.parse_args()
 
     runner = T4SparseTeacherMujocoRunner(
@@ -442,6 +488,8 @@ def main() -> None:
         difficulty=args.difficulty,
         terrain=args.terrain,
         geometry=args.geometry,
+        lane_count=args.lane_count,
+        foothold_rows=args.foothold_rows,
     )
     layout = runner.layout
     if runner.sparse_scan_history:
@@ -452,7 +500,8 @@ def main() -> None:
         contract = "T-compat 1155D"
     print(
         f"[INFO] loaded {contract}; terrain={args.terrain}; geometry={args.geometry}; "
-        f"difficulty={args.difficulty:.2f}; stone={layout['stone_width']:.3f}m "
+        f"difficulty={args.difficulty:.2f}; scene={layout['lane_count']} lanes x "
+        f"{layout['foothold_rows']} rows; stone={layout['stone_width']:.3f}m "
         f"gap={layout['stone_gap']:.3f}m height={layout['stone_height']:.3f}m; "
         f"pillar={layout['pillar_diameter']:.3f}m gap={layout['pillar_gap']:.3f}m "
         f"height={layout['pillar_height']:.3f}m",
