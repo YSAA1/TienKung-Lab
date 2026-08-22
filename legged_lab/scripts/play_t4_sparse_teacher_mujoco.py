@@ -27,7 +27,12 @@ import numpy as np
 import torch
 
 from legged_lab.assets.t4.constants import T4_JOINT_NAMES
-from legged_lab.assets.t4.mujoco_sim2sim import apply_isaac_contact_friction, apply_isaac_pd, isaac_pd_gains
+from legged_lab.assets.t4.mujoco_sim2sim import (
+    apply_isaac_contact_friction,
+    apply_isaac_pd,
+    isaac_pd_gains,
+)
+from legged_lab.assets.t4.navigation import CourseNavigator
 from legged_lab.assets.t4.schemas import (
     PROPRIO_FRAME_DIM,
     PROPRIO_HISTORY_LENGTH,
@@ -60,8 +65,9 @@ from legged_lab.scripts.play_t4_teacher_viser import (
     quat_rotate_inverse_wxyz,
 )
 
-
-_LAYOUT_PATH = Path(__file__).resolve().parents[1] / "terrains" / "stepping_stone_layout.py"
+_LAYOUT_PATH = (
+    Path(__file__).resolve().parents[1] / "terrains" / "stepping_stone_layout.py"
+)
 _LAYOUT_SPEC = importlib.util.spec_from_file_location("t4_sparse_layout", _LAYOUT_PATH)
 assert _LAYOUT_SPEC and _LAYOUT_SPEC.loader
 _LAYOUT = importlib.util.module_from_spec(_LAYOUT_SPEC)
@@ -79,7 +85,11 @@ LOCO_SPARSE_START_X = 41.0
 
 
 def supported_actor_obs_dim(num_obs: int) -> bool:
-    return num_obs in (TEACHER_ACTOR_OBS_DIM, TEACHER_PAPER_ACTOR_OBS_DIM, TEACHER_SPARSE_ACTOR_OBS_DIM)
+    return num_obs in (
+        TEACHER_ACTOR_OBS_DIM,
+        TEACHER_PAPER_ACTOR_OBS_DIM,
+        TEACHER_SPARSE_ACTOR_OBS_DIM,
+    )
 
 
 def teacher_scan_local_points() -> np.ndarray:
@@ -144,7 +154,9 @@ def sparse_course_layout(
     else:
         raise ValueError(f"unsupported sparse geometry {geometry!r}")
 
-    geoms = [_platform("start_platform", 0.0, 2.0, width=_LAYOUT.T4_STONE_PLATFORM_WIDTH)]
+    geoms = [
+        _platform("start_platform", 0.0, 2.0, width=_LAYOUT.T4_STONE_PLATFORM_WIDTH)
+    ]
     cursor = 1.0
     rng = np.random.default_rng(int(round(float(difficulty) * 1000.0)))
 
@@ -154,7 +166,9 @@ def sparse_course_layout(
         for row in range(foothold_rows):
             x = first_center + row * stone_pitch
             for lane, y in enumerate(lane_y):
-                height = max(0.04, stone_height + float(rng.uniform(-stone_jitter, stone_jitter)))
+                height = max(
+                    0.04, stone_height + float(rng.uniform(-stone_jitter, stone_jitter))
+                )
                 geoms.append(
                     {
                         "name": f"stone_{row}_{lane}",
@@ -165,7 +179,9 @@ def sparse_course_layout(
                         "rgba": (0.72, 0.63, 0.42, 1.0),
                     }
                 )
-        cursor = first_center + (foothold_rows - 1) * stone_pitch + 0.5 * stone_width + 0.30
+        cursor = (
+            first_center + (foothold_rows - 1) * stone_pitch + 0.5 * stone_width + 0.30
+        )
         if terrain == "sparse_course":
             geoms.append(_platform("transition_platform", cursor + 0.70, 1.40))
             cursor += 1.55
@@ -186,7 +202,12 @@ def sparse_course_layout(
                         "rgba": (0.35, 0.58, 0.72, 1.0),
                     }
                 )
-        cursor = first_center + (foothold_rows - 1) * pillar_pitch + 0.5 * pillar_diameter + 0.30
+        cursor = (
+            first_center
+            + (foothold_rows - 1) * pillar_pitch
+            + 0.5 * pillar_diameter
+            + 0.30
+        )
 
     geoms.append(_platform("finish_platform", cursor + 1.0, 2.0))
     return {
@@ -237,7 +258,40 @@ def loco_sparse_layout(
             shifted["name"] = "loco_sparse_alignment_platform"
             shifted["size"] = (geom["size"][0], 1.1, geom["size"][2])
         geoms.append(shifted)
-    return {**layout, "terrain": "loco_sparse", "sparse_start_x": LOCO_SPARSE_START_X, "geoms": geoms}
+    return {
+        **layout,
+        "terrain": "loco_sparse",
+        "sparse_start_x": LOCO_SPARSE_START_X,
+        "geoms": geoms,
+    }
+
+
+def loco_sparse_navigation_waypoints(layout: dict) -> np.ndarray:
+    """Return a collision-aware centerline for the local whole-course scene.
+
+    Stage E leaves its non-goal marker at x=38, so the centerline briefly
+    passes on its right before returning to the aligned sparse platform.  The
+    remaining points select the middle lane of each local foothold lattice.
+    """
+    points: list[tuple[float, float]] = [
+        (0.0, 0.0),
+        (35.8, 0.0),
+        (37.1, -0.7),
+        (39.0, -0.7),
+        (40.3, 0.0),
+    ]
+    centerline = [
+        geom
+        for geom in layout["geoms"]
+        if geom["kind"] in {"platform", "stone", "pillar"}
+        and abs(float(geom["pos"][1])) < 1e-6
+        and geom["pos"][0] >= LOCO_SPARSE_START_X
+    ]
+    for geom in sorted(centerline, key=lambda item: float(item["pos"][0])):
+        point = (float(geom["pos"][0]), float(geom["pos"][1]))
+        if point != points[-1]:
+            points.append(point)
+    return np.asarray(points, dtype=np.float64)
 
 
 def _geom_xml(geom: dict) -> str:
@@ -266,7 +320,9 @@ def build_sparse_model_xml(
             lane_count=lane_count,
             foothold_rows=foothold_rows,
         )
-        xml = MJCF_PATH.read_text().replace('meshdir="../meshes/"', f'meshdir="{ASSET_DIR / "meshes"}"')
+        xml = MJCF_PATH.read_text().replace(
+            'meshdir="../meshes/"', f'meshdir="{ASSET_DIR / "meshes"}"'
+        )
         # The continuous course is flat through x=40.  Past that edge the
         # sparse segment has a real -2 m pit beneath its platforms/footholds.
         ground = (
@@ -284,7 +340,10 @@ def build_sparse_model_xml(
             'condim="3" friction="1 0.005 0.0001"/>'
         )
         sparse_xml = "\n    ".join(_geom_xml(geom) for geom in layout["geoms"])
-        return xml.replace("</worldbody>", f"{build_loco_course()}\n    {pit}\n    {sparse_xml}\n  </worldbody>")
+        return xml.replace(
+            "</worldbody>",
+            f"{build_loco_course()}\n    {pit}\n    {sparse_xml}\n  </worldbody>",
+        )
 
     layout = sparse_course_layout(
         difficulty,
@@ -310,7 +369,11 @@ def load_actor(checkpoint_path: str) -> tuple[torch.nn.Module, int]:
     sys.path.insert(0, str(Path(__file__).resolve().parents[2] / "rsl_rl"))
     checkpoint = torch.load(checkpoint_path, map_location="cpu", weights_only=False)
     state = checkpoint["model_state_dict"]
-    actor_state = {key[len("actor.") :]: value for key, value in state.items() if key.startswith("actor.")}
+    actor_state = {
+        key[len("actor.") :]: value
+        for key, value in state.items()
+        if key.startswith("actor.")
+    }
     num_obs = int(actor_state["0.weight"].shape[1])
     if not supported_actor_obs_dim(num_obs):
         raise RuntimeError(
@@ -338,6 +401,8 @@ class T4SparseTeacherMujocoRunner:
         geometry: str = "current",
         lane_count: int = LANE_COUNT,
         foothold_rows: int = FOOTHOLD_ROWS,
+        nav: bool = False,
+        cruise: float = 0.6,
     ):
         self.actor, self.actor_obs_dim = load_actor(checkpoint)
         self.paper_contact_obs = self.actor_obs_dim in (
@@ -345,9 +410,16 @@ class T4SparseTeacherMujocoRunner:
             TEACHER_SPARSE_ACTOR_OBS_DIM,
         )
         self.sparse_scan_history = self.actor_obs_dim == TEACHER_SPARSE_ACTOR_OBS_DIM
-        self.scan_history_length = TEACHER_SPARSE_SCAN_HISTORY_LENGTH if self.sparse_scan_history else 1
+        self.scan_history_length = (
+            TEACHER_SPARSE_SCAN_HISTORY_LENGTH if self.sparse_scan_history else 1
+        )
         self.layout = (
-            loco_sparse_layout(difficulty, geometry=geometry, lane_count=lane_count, foothold_rows=foothold_rows)
+            loco_sparse_layout(
+                difficulty,
+                geometry=geometry,
+                lane_count=lane_count,
+                foothold_rows=foothold_rows,
+            )
             if terrain == "loco_sparse"
             else sparse_course_layout(
                 difficulty,
@@ -371,23 +443,46 @@ class T4SparseTeacherMujocoRunner:
         apply_isaac_contact_friction(self.model)
         self.data = mujoco.MjData(self.model)
 
-        self.qpos_adr = np.array([self.model.jnt_qposadr[self.model.joint(name).id] for name in T4_JOINT_NAMES])
-        self.qvel_adr = np.array([self.model.jnt_dofadr[self.model.joint(name).id] for name in T4_JOINT_NAMES])
-        self.ctrl_ids = np.array([self.model.actuator(f"M{name[1:]}").id for name in T4_JOINT_NAMES])
+        self.qpos_adr = np.array(
+            [
+                self.model.jnt_qposadr[self.model.joint(name).id]
+                for name in T4_JOINT_NAMES
+            ]
+        )
+        self.qvel_adr = np.array(
+            [
+                self.model.jnt_dofadr[self.model.joint(name).id]
+                for name in T4_JOINT_NAMES
+            ]
+        )
+        self.ctrl_ids = np.array(
+            [self.model.actuator(f"M{name[1:]}").id for name in T4_JOINT_NAMES]
+        )
         gains = np.array([isaac_pd_gains(name) for name in T4_JOINT_NAMES])
         self.kp, self.kd, self.effort_limit = gains[:, 0], gains[:, 1], gains[:, 2]
-        self.default_pos = np.array([T4_STANDING_JOINT_POS[name] for name in T4_JOINT_NAMES])
+        self.default_pos = np.array(
+            [T4_STANDING_JOINT_POS[name] for name in T4_JOINT_NAMES]
+        )
         self._ray_geomgroup = np.ones(6, dtype=np.uint8)
         self._robot_body_id = self.model.body("Trunk").id
         self._foot_geom_side: dict[int, int] = {}
         for geom_id in range(self.model.ngeom):
-            name = mujoco.mj_id2name(self.model, mujoco.mjtObj.mjOBJ_GEOM, geom_id) or ""
+            name = (
+                mujoco.mj_id2name(self.model, mujoco.mjtObj.mjOBJ_GEOM, geom_id) or ""
+            )
             if name.startswith("left_foot") and name.endswith("_collision"):
                 self._foot_geom_side[geom_id] = 0
             elif name.startswith("right_foot") and name.endswith("_collision"):
                 self._foot_geom_side[geom_id] = 1
 
         self.command = np.zeros(3, dtype=np.float32)
+        self.navigator = (
+            CourseNavigator(
+                loco_sparse_navigation_waypoints(self.layout), cruise_vx=cruise
+            )
+            if terrain == "loco_sparse" and nav
+            else None
+        )
         self.reset_count = 0
         self.reset()
 
@@ -397,16 +492,23 @@ class T4SparseTeacherMujocoRunner:
         self.data.qpos[3:7] = [1.0, 0.0, 0.0, 0.0]
         self.data.qpos[self.qpos_adr] = self.default_pos
         mujoco.mj_forward(self.model, self.data)
+        if self.navigator is not None:
+            self.navigator.reset()
+            self.command[:] = self.navigator.command(
+                self.data.qpos[:2], _root_yaw_wxyz(self.data.qpos[3:7])
+            )
         self.action = np.zeros(len(T4_JOINT_NAMES), dtype=np.float32)
         self.gait_time = 0.0
         self.gait_phase = PHASE_OFFSET % 1.0
         frame = self._proprio_frame()
         self.history: deque[np.ndarray] = deque(
-            [frame.copy() for _ in range(PROPRIO_HISTORY_LENGTH)], maxlen=PROPRIO_HISTORY_LENGTH
+            [frame.copy() for _ in range(PROPRIO_HISTORY_LENGTH)],
+            maxlen=PROPRIO_HISTORY_LENGTH,
         )
         scan = self._height_scan()
         self.scan_history: deque[np.ndarray] = deque(
-            [scan.copy() for _ in range(self.scan_history_length)], maxlen=self.scan_history_length
+            [scan.copy() for _ in range(self.scan_history_length)],
+            maxlen=self.scan_history_length,
         )
         self.reset_count += 1
 
@@ -427,7 +529,9 @@ class T4SparseTeacherMujocoRunner:
             ]
         ).astype(np.float32)
         if frame.shape[0] != PROPRIO_FRAME_DIM:
-            raise RuntimeError(f"proprio frame width {frame.shape[0]} != {PROPRIO_FRAME_DIM}")
+            raise RuntimeError(
+                f"proprio frame width {frame.shape[0]} != {PROPRIO_FRAME_DIM}"
+            )
         return frame
 
     def _height_scan(self) -> np.ndarray:
@@ -453,7 +557,9 @@ class T4SparseTeacherMujocoRunner:
             values.append(np.clip(baseline - terrain_z, *TEACHER_SCAN_CLIP))
         scan = np.asarray(values, dtype=np.float32)
         if scan.shape[0] != TEACHER_SCAN_DIM:
-            raise RuntimeError(f"height scan width {scan.shape[0]} != {TEACHER_SCAN_DIM}")
+            raise RuntimeError(
+                f"height scan width {scan.shape[0]} != {TEACHER_SCAN_DIM}"
+            )
         return scan
 
     def _feet_contact(self) -> np.ndarray:
@@ -461,7 +567,10 @@ class T4SparseTeacherMujocoRunner:
         force = np.zeros(6, dtype=np.float64)
         for index in range(self.data.ncon):
             item = self.data.contact[index]
-            sides = {self._foot_geom_side.get(int(item.geom1)), self._foot_geom_side.get(int(item.geom2))}
+            sides = {
+                self._foot_geom_side.get(int(item.geom1)),
+                self._foot_geom_side.get(int(item.geom2)),
+            }
             sides.discard(None)
             if not sides:
                 continue
@@ -479,10 +588,16 @@ class T4SparseTeacherMujocoRunner:
             parts.append(self._feet_contact())
         obs = np.concatenate(parts)
         if obs.shape[0] != self.actor_obs_dim:
-            raise RuntimeError(f"actor observation width {obs.shape[0]} != checkpoint width {self.actor_obs_dim}")
+            raise RuntimeError(
+                f"actor observation width {obs.shape[0]} != checkpoint width {self.actor_obs_dim}"
+            )
         return np.clip(obs, -CLIP_OBS, CLIP_OBS)
 
     def step(self) -> None:
+        if self.navigator is not None:
+            self.command[:] = self.navigator.command(
+                self.data.qpos[:2], _root_yaw_wxyz(self.data.qpos[3:7])
+            )
         obs = self.observe()
         with torch.no_grad():
             action = self.actor(torch.from_numpy(obs).unsqueeze(0)).squeeze(0).numpy()
@@ -496,14 +611,17 @@ class T4SparseTeacherMujocoRunner:
 
     @property
     def fallen(self) -> bool:
-        gravity_z = quat_rotate_inverse_wxyz(self.data.qpos[3:7], np.array([0.0, 0.0, -1.0]))[2]
+        gravity_z = quat_rotate_inverse_wxyz(
+            self.data.qpos[3:7], np.array([0.0, 0.0, -1.0])
+        )[2]
         return self.data.qpos[2] < 0.35 or gravity_z > -0.5
 
 
 def run_native_viewer(runner: T4SparseTeacherMujocoRunner, vx: float) -> None:
     import mujoco.viewer
 
-    runner.command[:] = [vx, 0.0, 0.0]
+    if runner.navigator is None:
+        runner.command[:] = [vx, 0.0, 0.0]
     step_dt = PHYSICS_DT * DECIMATION
     with mujoco.viewer.launch_passive(runner.model, runner.data) as viewer:
         viewer.cam.distance = 4.0
@@ -514,8 +632,13 @@ def run_native_viewer(runner: T4SparseTeacherMujocoRunner, vx: float) -> None:
             runner.step()
             if runner.fallen:
                 runner.reset()
-                runner.command[:] = [vx, 0.0, 0.0]
-            viewer.cam.lookat[:] = [runner.data.qpos[0] + 0.8, runner.data.qpos[1], 0.45]
+                if runner.navigator is None:
+                    runner.command[:] = [vx, 0.0, 0.0]
+            viewer.cam.lookat[:] = [
+                runner.data.qpos[0] + 0.8,
+                runner.data.qpos[1],
+                0.45,
+            ]
             viewer.sync()
             remaining = step_dt - (time.time() - start)
             if remaining > 0.0:
@@ -539,6 +662,17 @@ def main() -> None:
     )
     parser.add_argument("--vx", type=float, default=0.6)
     parser.add_argument(
+        "--nav",
+        action="store_true",
+        help="For loco_sparse only, follow the whole-course centerline with [vx, 0, wz] commands.",
+    )
+    parser.add_argument(
+        "--cruise",
+        type=float,
+        default=0.6,
+        help="Requested forward speed for --nav; it is clipped to the frozen vx command range.",
+    )
+    parser.add_argument(
         "--lane-count",
         type=int,
         default=LANE_COUNT,
@@ -551,6 +685,10 @@ def main() -> None:
         help=f"Number of longitudinal foothold rows for this local diagnostic scene (default: {FOOTHOLD_ROWS}).",
     )
     args = parser.parse_args()
+    if args.nav and args.terrain != "loco_sparse":
+        parser.error("--nav is available only with --terrain loco_sparse")
+    if args.cruise < 0.0:
+        parser.error("--cruise must be non-negative")
 
     runner = T4SparseTeacherMujocoRunner(
         args.checkpoint,
@@ -559,6 +697,8 @@ def main() -> None:
         geometry=args.geometry,
         lane_count=args.lane_count,
         foothold_rows=args.foothold_rows,
+        nav=args.nav,
+        cruise=args.cruise,
     )
     layout = runner.layout
     if runner.sparse_scan_history:
@@ -576,6 +716,12 @@ def main() -> None:
         f"height={layout['pillar_height']:.3f}m",
         flush=True,
     )
+    if args.nav:
+        goal = runner.navigator.waypoints[-1]
+        print(
+            f"[INFO] route navigation ON; cruise={args.cruise:.2f}; goal=({goal[0]:.1f}, {goal[1]:.1f})",
+            flush=True,
+        )
     run_native_viewer(runner, args.vx)
 
 

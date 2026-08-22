@@ -5,6 +5,8 @@ import pytest
 import numpy as np
 import pytest
 
+from legged_lab.assets.t4.navigation import CourseNavigator
+
 
 def test_sparse_course_uses_training_layout_and_supports_both_teacher_contracts():
     module = importlib.import_module("legged_lab.scripts.play_t4_sparse_teacher_mujoco")
@@ -13,12 +15,16 @@ def test_sparse_course_uses_training_layout_and_supports_both_teacher_contracts(
     assert layout["stone_width"] == pytest.approx(module._LAYOUT.stone_width(0.5))
     assert layout["stone_gap"] == pytest.approx(module._LAYOUT.stone_gap(0.5))
     assert layout["stone_height"] == pytest.approx(module._LAYOUT.stone_height(0.5))
-    assert layout["pillar_diameter"] == pytest.approx(module._LAYOUT.pillar_diameter(0.5))
+    assert layout["pillar_diameter"] == pytest.approx(
+        module._LAYOUT.pillar_diameter(0.5)
+    )
     assert layout["pillar_gap"] == pytest.approx(module._LAYOUT.pillar_gap(0.5))
     assert layout["pillar_height"] == pytest.approx(module._LAYOUT.pillar_height(0.5))
     assert {geom["kind"] for geom in layout["geoms"]} >= {"stone", "pillar", "platform"}
 
-    start_platform = next(geom for geom in layout["geoms"] if geom["name"] == "start_platform")
+    start_platform = next(
+        geom for geom in layout["geoms"] if geom["name"] == "start_platform"
+    )
     assert 2.0 * start_platform["size"][1] == module._LAYOUT.T4_STONE_PLATFORM_WIDTH
 
     for kind in ("stone", "pillar"):
@@ -32,12 +38,16 @@ def test_sparse_course_uses_training_layout_and_supports_both_teacher_contracts(
     model = mujoco.MjModel.from_xml_string(xml)
     assert model.geom("sparse_pit_floor").pos[2] == -2.05
     assert model.geom("stone_0_0").size[0] == pytest.approx(0.5 * layout["stone_width"])
-    assert model.geom("pillar_0_0").size[0] == pytest.approx(0.5 * layout["pillar_diameter"])
+    assert model.geom("pillar_0_0").size[0] == pytest.approx(
+        0.5 * layout["pillar_diameter"]
+    )
 
     start_front = start_platform["pos"][0] + start_platform["size"][0]
     first_stone = next(geom for geom in layout["geoms"] if geom["name"] == "stone_0_3")
     first_inner = first_stone["pos"][0] - first_stone["size"][0]
-    assert first_inner - start_front == pytest.approx(module._LAYOUT.platform_to_first_gap(0.5, layout["stone_width"]))
+    assert first_inner - start_front == pytest.approx(
+        module._LAYOUT.platform_to_first_gap(0.5, layout["stone_width"])
+    )
 
     assert module.supported_actor_obs_dim(module.TEACHER_ACTOR_OBS_DIM)
     assert module.supported_actor_obs_dim(module.TEACHER_PAPER_ACTOR_OBS_DIM)
@@ -55,16 +65,22 @@ def test_sparse_course_can_expand_the_local_diagnostic_scene_without_changing_de
         lane_count=15,
         foothold_rows=30,
     )
-    default_stones = [geom for geom in default_layout["geoms"] if geom["kind"] == "stone"]
+    default_stones = [
+        geom for geom in default_layout["geoms"] if geom["kind"] == "stone"
+    ]
     stones = [geom for geom in expanded_layout["geoms"] if geom["kind"] == "stone"]
-    finish = next(geom for geom in expanded_layout["geoms"] if geom["name"] == "finish_platform")
+    finish = next(
+        geom for geom in expanded_layout["geoms"] if geom["name"] == "finish_platform"
+    )
 
     assert len(default_stones) == module.LANE_COUNT * module.FOOTHOLD_ROWS
     assert len(stones) == 15 * 30
     assert expanded_layout["lane_count"] == 15
     assert expanded_layout["foothold_rows"] == 30
     assert {geom["pos"][1] for geom in stones if geom["name"] == "stone_0_7"} == {0.0}
-    assert finish["pos"][0] - finish["size"][0] > max(geom["pos"][0] + geom["size"][0] for geom in stones)
+    assert finish["pos"][0] - finish["size"][0] > max(
+        geom["pos"][0] + geom["size"][0] for geom in stones
+    )
 
 
 def test_loco_sparse_scene_reuses_the_loco_lane_and_current_footholds():
@@ -72,13 +88,17 @@ def test_loco_sparse_scene_reuses_the_loco_lane_and_current_footholds():
 
     layout = module.loco_sparse_layout(0.39, lane_count=15, foothold_rows=15)
     model = mujoco.MjModel.from_xml_string(
-        module.build_sparse_model_xml(0.39, terrain="loco_sparse", lane_count=15, foothold_rows=15)
+        module.build_sparse_model_xml(
+            0.39, terrain="loco_sparse", lane_count=15, foothold_rows=15
+        )
     )
 
     assert layout["terrain"] == "loco_sparse"
     assert layout["sparse_start_x"] == pytest.approx(module.LOCO_SPARSE_START_X)
     assert len([geom for geom in layout["geoms"] if geom["kind"] == "stone"]) == 15 * 15
-    assert len([geom for geom in layout["geoms"] if geom["kind"] == "pillar"]) == 15 * 15
+    assert (
+        len([geom for geom in layout["geoms"] if geom["kind"] == "pillar"]) == 15 * 15
+    )
     assert model.geom("loco_hurdle_1_geom").id >= 0
     assert model.geom("loco_stair_up_1_geom").id >= 0
     alignment = model.geom("loco_sparse_alignment_platform")
@@ -88,6 +108,30 @@ def test_loco_sparse_scene_reuses_the_loco_lane_and_current_footholds():
     assert model.geom("loco_sparse_pillar_0_7").id >= 0
     assert model.geom("ground").type[0] == mujoco.mjtGeom.mjGEOM_BOX
     assert model.geom("loco_sparse_pit_floor").pos[2] == pytest.approx(-2.05)
+
+
+def test_loco_sparse_navigation_tracks_centerline_and_corrects_lateral_drift():
+    module = importlib.import_module("legged_lab.scripts.play_t4_sparse_teacher_mujoco")
+
+    layout = module.loco_sparse_layout(0.8, lane_count=15, foothold_rows=15)
+    waypoints = module.loco_sparse_navigation_waypoints(layout)
+    navigator = CourseNavigator(waypoints, cruise_vx=0.8)
+
+    assert waypoints[0] == pytest.approx((0.0, 0.0))
+    assert any(
+        point[1] < -0.5 for point in waypoints
+    )  # detour around the Stage-E goal pole
+    finish = next(
+        geom
+        for geom in layout["geoms"]
+        if geom["name"] == "loco_sparse_finish_platform"
+    )
+    assert waypoints[-1] == pytest.approx(finish["pos"][:2])
+
+    command = navigator.command(np.array([4.0, 0.8]), yaw=0.0)
+    assert 0.0 <= command[0] <= 1.0
+    assert command[1] == pytest.approx(0.0)
+    assert -1.57 <= command[2] < 0.0
 
 
 def test_teacher_scan_matches_isaac_xy_flatten_order():
@@ -103,14 +147,19 @@ def test_teacher_scan_matches_isaac_xy_flatten_order():
         (module.TEACHER_SCAN_FORWARD_RANGE[1], module.TEACHER_SCAN_LATERAL_RANGE[0])
     )
     assert points[num_x] == pytest.approx(
-        (module.TEACHER_SCAN_FORWARD_RANGE[0], module.TEACHER_SCAN_LATERAL_RANGE[0] + 0.1)
+        (
+            module.TEACHER_SCAN_FORWARD_RANGE[0],
+            module.TEACHER_SCAN_LATERAL_RANGE[0] + 0.1,
+        )
     )
 
 
 def test_checkpoint_24999_geometry_is_pinned_to_its_training_lineage():
     module = importlib.import_module("legged_lab.scripts.play_t4_sparse_teacher_mujoco")
 
-    layout = module.sparse_course_layout(0.5, terrain="raised_pillars", geometry="checkpoint_24999")
+    layout = module.sparse_course_layout(
+        0.5, terrain="raised_pillars", geometry="checkpoint_24999"
+    )
     assert layout["pillar_diameter"] == pytest.approx(0.36)
     assert layout["pillar_gap"] == pytest.approx(0.13)
     assert layout["pillar_height"] == pytest.approx(0.36)
