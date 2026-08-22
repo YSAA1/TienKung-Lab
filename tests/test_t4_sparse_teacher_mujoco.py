@@ -67,6 +67,26 @@ def test_sparse_course_can_expand_the_local_diagnostic_scene_without_changing_de
     assert finish["pos"][0] - finish["size"][0] > max(geom["pos"][0] + geom["size"][0] for geom in stones)
 
 
+def test_loco_sparse_scene_reuses_the_loco_lane_and_current_footholds():
+    module = importlib.import_module("legged_lab.scripts.play_t4_sparse_teacher_mujoco")
+
+    layout = module.loco_sparse_layout(0.39, lane_count=15, foothold_rows=15)
+    model = mujoco.MjModel.from_xml_string(
+        module.build_sparse_model_xml(0.39, terrain="loco_sparse", lane_count=15, foothold_rows=15)
+    )
+
+    assert layout["terrain"] == "loco_sparse"
+    assert layout["sparse_start_x"] == pytest.approx(module.LOCO_SPARSE_START_X)
+    assert len([geom for geom in layout["geoms"] if geom["kind"] == "stone"]) == 15 * 15
+    assert len([geom for geom in layout["geoms"] if geom["kind"] == "pillar"]) == 15 * 15
+    assert model.geom("loco_hurdle_1_geom").id >= 0
+    assert model.geom("loco_stair_up_1_geom").id >= 0
+    assert model.geom("loco_sparse_stone_0_7").id >= 0
+    assert model.geom("loco_sparse_pillar_0_7").id >= 0
+    assert model.geom("ground").type[0] == mujoco.mjtGeom.mjGEOM_BOX
+    assert model.geom("loco_sparse_pit_floor").pos[2] == pytest.approx(-2.05)
+
+
 def test_teacher_scan_matches_isaac_xy_flatten_order():
     module = importlib.import_module("legged_lab.scripts.play_t4_sparse_teacher_mujoco")
 

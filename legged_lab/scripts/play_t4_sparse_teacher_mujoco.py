@@ -75,6 +75,7 @@ PLATFORM_THICKNESS = 0.10
 # the teacher's natural sim2sim drift while keeping the interactive scene small.
 LANE_COUNT = 7
 FOOTHOLD_ROWS = 10
+LOCO_SPARSE_START_X = 41.0
 
 
 def supported_actor_obs_dim(num_obs: int) -> bool:
@@ -204,6 +205,34 @@ def sparse_course_layout(
     }
 
 
+def loco_sparse_layout(
+    difficulty: float,
+    geometry: str = "current",
+    lane_count: int = LANE_COUNT,
+    foothold_rows: int = FOOTHOLD_ROWS,
+) -> dict:
+    """Append the sparse course to the reusable Stage-E continuous-locomotion lane.
+
+    The existing lane finishes on a finite flat section at ``x=40``.  The
+    sparse course starts immediately after it, preserving the current
+    stepping-stone and raised-pillar dimensions while keeping their real holes.
+    """
+    layout = sparse_course_layout(
+        difficulty,
+        terrain="sparse_course",
+        geometry=geometry,
+        lane_count=lane_count,
+        foothold_rows=foothold_rows,
+    )
+    geoms = []
+    for geom in layout["geoms"]:
+        shifted = dict(geom)
+        shifted["name"] = f"loco_sparse_{geom['name']}"
+        shifted["pos"] = (float(geom["pos"][0]) + LOCO_SPARSE_START_X, *geom["pos"][1:])
+        geoms.append(shifted)
+    return {**layout, "terrain": "loco_sparse", "sparse_start_x": LOCO_SPARSE_START_X, "geoms": geoms}
+
+
 def _geom_xml(geom: dict) -> str:
     pos = " ".join(f"{value:.8g}" for value in geom["pos"])
     size = " ".join(f"{value:.8g}" for value in geom["size"])
@@ -221,6 +250,35 @@ def build_sparse_model_xml(
     lane_count: int = LANE_COUNT,
     foothold_rows: int = FOOTHOLD_ROWS,
 ) -> str:
+    if terrain == "loco_sparse":
+        from legged_lab.scripts.sim2sim_t4_depth_student import build_loco_course
+
+        layout = loco_sparse_layout(
+            difficulty,
+            geometry=geometry,
+            lane_count=lane_count,
+            foothold_rows=foothold_rows,
+        )
+        xml = MJCF_PATH.read_text().replace('meshdir="../meshes/"', f'meshdir="{ASSET_DIR / "meshes"}"')
+        # The continuous course is flat through x=40.  Past that edge the
+        # sparse segment has a real -2 m pit beneath its platforms/footholds.
+        ground = (
+            '<geom name="ground" type="box" pos="12 0 -0.05" size="28 10 0.05" '
+            'material="matplane" condim="3" friction="1 0.005 0.0001"/>'
+        )
+        xml, replacements = re.subn(r'<geom name="ground"[^>]*/>', ground, xml, count=1)
+        if replacements != 1:
+            raise RuntimeError("failed to replace the stock MuJoCo ground plane")
+        left = min(geom["pos"][0] - geom["size"][0] for geom in layout["geoms"])
+        right = max(geom["pos"][0] + geom["size"][0] for geom in layout["geoms"])
+        pit = (
+            f'<geom name="loco_sparse_pit_floor" type="box" pos="{0.5 * (left + right):.8g} 0 -2.05" '
+            f'size="{0.5 * (right - left) + 1.0:.8g} 6 0.05" rgba="0.08 0.09 0.10 1" '
+            'condim="3" friction="1 0.005 0.0001"/>'
+        )
+        sparse_xml = "\n    ".join(_geom_xml(geom) for geom in layout["geoms"])
+        return xml.replace("</worldbody>", f"{build_loco_course()}\n    {pit}\n    {sparse_xml}\n  </worldbody>")
+
     layout = sparse_course_layout(
         difficulty,
         terrain=terrain,
@@ -281,12 +339,16 @@ class T4SparseTeacherMujocoRunner:
         )
         self.sparse_scan_history = self.actor_obs_dim == TEACHER_SPARSE_ACTOR_OBS_DIM
         self.scan_history_length = TEACHER_SPARSE_SCAN_HISTORY_LENGTH if self.sparse_scan_history else 1
-        self.layout = sparse_course_layout(
-            difficulty,
-            terrain=terrain,
-            geometry=geometry,
-            lane_count=lane_count,
-            foothold_rows=foothold_rows,
+        self.layout = (
+            loco_sparse_layout(difficulty, geometry=geometry, lane_count=lane_count, foothold_rows=foothold_rows)
+            if terrain == "loco_sparse"
+            else sparse_course_layout(
+                difficulty,
+                terrain=terrain,
+                geometry=geometry,
+                lane_count=lane_count,
+                foothold_rows=foothold_rows,
+            )
         )
         self.model = mujoco.MjModel.from_xml_string(
             build_sparse_model_xml(
@@ -458,7 +520,7 @@ def main() -> None:
     parser.add_argument("--checkpoint", required=True)
     parser.add_argument(
         "--terrain",
-        choices=("sparse_course", "stepping_stones", "raised_pillars"),
+        choices=("sparse_course", "stepping_stones", "raised_pillars", "loco_sparse"),
         default="sparse_course",
     )
     parser.add_argument("--difficulty", type=float, default=0.5)
