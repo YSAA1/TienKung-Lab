@@ -148,6 +148,19 @@ def test_gru_rejects_lstm_and_recurrent_teacher():
         _tiny_gru(teacher_recurrent=True)
 
 
+def test_gru_projects_raw_action_std_into_training_envelope():
+    policy = _tiny_gru(min_action_std=0.05, max_action_std=0.2)
+    with torch.no_grad():
+        policy.std.copy_(torch.tensor([-0.1, 0.4]))
+
+    policy.project_action_std_()
+    policy.update_distribution(_student_obs(2))
+
+    assert torch.allclose(policy.std, torch.tensor([0.05, 0.2]))
+    assert policy.action_std.min().item() == pytest.approx(0.05)
+    assert policy.action_std.max().item() == pytest.approx(0.2)
+
+
 def test_gru_forward_reset_and_recon_are_training_only():
     policy = _tiny_gru()
     obs = _student_obs(4)
@@ -265,6 +278,22 @@ def test_student_warmstart_loads_control_stack_but_not_teacher_or_critic():
         assert torch.equal(value, teacher_before[name])
     for name, value in target.critic.state_dict().items():
         assert torch.equal(value, critic_before[name])
+
+
+def test_student_warmstart_projects_legacy_std_to_target_envelope():
+    source = _tiny_gru(critic_hidden_dims=[8], min_action_std=0.05, max_action_std=0.8)
+    with torch.no_grad():
+        source.std.fill_(0.4)
+    target = _tiny_gru(critic_hidden_dims=[8], min_action_std=0.05, max_action_std=0.2)
+
+    with _scratch_dir() as raw:
+        checkpoint = Path(raw) / "model_3000.pt"
+        torch.save({"model_state_dict": source.state_dict(), "iter": 3000}, checkpoint)
+        info = load_student_warmstart_checkpoint(target, checkpoint)
+
+    assert torch.allclose(target.std, torch.full_like(target.std, 0.2))
+    assert info["source_action_std"]["max"] == pytest.approx(0.4)
+    assert info["effective_action_std"]["max"] == pytest.approx(0.2)
 
 
 def test_distillation_records_recon_and_pg_without_double_gru_step():

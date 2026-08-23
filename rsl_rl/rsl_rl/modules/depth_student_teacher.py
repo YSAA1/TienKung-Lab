@@ -139,6 +139,10 @@ class DepthStudentTeacherRecurrent(DepthStudentTeacher):
         self.recon_scan_offset = int(recon_scan_offset)
         self.min_action_std = float(min_action_std)
         self.max_action_std = None if max_action_std is None else float(max_action_std)
+        if self.min_action_std <= 0.0:
+            raise ValueError("min_action_std must be positive")
+        if self.max_action_std is not None and self.max_action_std < self.min_action_std:
+            raise ValueError("max_action_std must be greater than or equal to min_action_std")
         fused_dim = int(depth_hidden_dim) + int(proprio_obs_dim)
         self.memory_s = Memory(
             fused_dim, type=self.rnn_type, num_layers=int(rnn_num_layers), hidden_size=self.rnn_hidden_dim
@@ -194,6 +198,15 @@ class DepthStudentTeacherRecurrent(DepthStudentTeacher):
         else:
             std = torch.clamp(self.std, min=self.min_action_std, max=self.max_action_std)
         return std.expand_as(mean)
+
+    @torch.no_grad()
+    def project_action_std_(self) -> torch.Tensor:
+        """Keep the trainable raw std inside the same envelope used by the policy."""
+        if self.max_action_std is None:
+            self.std.clamp_(min=self.min_action_std)
+        else:
+            self.std.clamp_(min=self.min_action_std, max=self.max_action_std)
+        return self.std
 
     def _step_memory(self, observations: torch.Tensor, masks=None, hidden_states=None) -> torch.Tensor:
         fused = self._student_features(observations)

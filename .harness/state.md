@@ -11,8 +11,8 @@
 
 - 任务 `t4_loco_teacher_sparse`。S12 老师 worktree `/home/nubot/phn_ws/t4_train/TienKung-Lab-s12-from-s11b-5k`，run `t_sparse_lightlp_s12_from_s11b_5k`，从 S11b `model_19000` 加载后冻在 `model_21500.pt`。
 - 配方：0.75 m 收尾边框 + 踏石/圆桩 40% 轻转；`vx` 非洞 `[-0.6, 2.0]`，洞上 `[0.6, 2.0]`。终止阈值不改。`random_level_reset_max_level=None` 是 S11 起的老师课表，学生继承，不是 v3 单变量差。
-- 学生 `fixed-v3-nanguard` 已在 iteration 3305 左右策略坍塌，冻结为失败取证 lineage；不得续 `model_3500/4000`。最近 SSH 探针超时，tmux/进程是否仍存活未刷新。
-- 本地后继实现是 `SafeRecurrentDistillation`；新 lineage 尚未同步/启动。建议冻结教师 `model_21500` + 显式 warm-start 崩塌前 `model_3000` student stack，重建 critic/Adam/counters；若拿不到 3000 才冷启，不用 3500/4000。
+- 学生 `fixed-v3-nanguard` 已在 iteration 3305 左右策略坍塌；2026-08-23 只读刷新时仍跑到 8134+，占满四卡，仅作失败取证，不得续 `model_3500/4000`。TB 8017 进程仍活。
+- 本地后继实现是 `SafeRecurrentDistillation`；新 lineage 尚未同步/启动。冻结教师 `model_21500` + warm-start `model_3000` student stack，重建 critic/Adam/counters；raw/effective std 投影到 `[0.05,0.20]`，recon 共享梯度不超过 control 1.0 倍。
 - S11b 已停（`model_19000.pt`）。S10/S9/S6–S8 只读对照。S7/S8 是污染 plant，不续训。
 - Stage E `t4_loco_teacher` 1155D 未改。能力声明要等 evaluator + 回放；TB success / length→1000 不算。
 

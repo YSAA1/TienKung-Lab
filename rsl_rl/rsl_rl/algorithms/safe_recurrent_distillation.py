@@ -31,6 +31,7 @@ class SafeRecurrentDistillation:
         behavior_coef_decay_iters=2000,
         pg_coef=0.5,
         recon_coef=1.0,
+        max_recon_grad_ratio=1.0,
         teacher_mix=0.5,
         teacher_mix_end=0.0,
         teacher_mix_decay_iters=2000,
@@ -56,6 +57,8 @@ class SafeRecurrentDistillation:
             raise ValueError("max_kl must be non-negative")
         if max_kl_emergency < max_kl:
             raise ValueError("max_kl_emergency must be greater than or equal to max_kl")
+        if max_recon_grad_ratio < 0.0:
+            raise ValueError("max_recon_grad_ratio must be non-negative")
 
         self.device = device
         self.is_multi_gpu = multi_gpu_cfg is not None
@@ -85,6 +88,7 @@ class SafeRecurrentDistillation:
         self.behavior_coef_decay_iters = int(behavior_coef_decay_iters)
         self.pg_coef = float(pg_coef)
         self.recon_coef = float(recon_coef)
+        self.max_recon_grad_ratio = float(max_recon_grad_ratio)
         self.teacher_mix = float(teacher_mix)
         self.teacher_mix_end = float(teacher_mix_end)
         self.teacher_mix_decay_iters = int(teacher_mix_decay_iters)
@@ -272,6 +276,26 @@ class SafeRecurrentDistillation:
         projected = [aux - coefficient * reference for aux, reference in zip(auxiliary, control)]
         return projected, conflict.to(dtype=dot.dtype)
 
+    @classmethod
+    def _limit_auxiliary_gradient_norm(cls, auxiliary, control, *, coefficient, max_ratio):
+        auxiliary_norm = torch.sqrt(torch.clamp(cls._gradient_dot(auxiliary, auxiliary), min=0.0))
+        control_norm = torch.sqrt(torch.clamp(cls._gradient_dot(control, control), min=0.0))
+        weighted_coefficient = abs(float(coefficient))
+        if weighted_coefficient == 0.0 or float(max_ratio) == 0.0:
+            scale = auxiliary_norm.new_zeros(())
+        else:
+            denominator = torch.clamp(
+                auxiliary_norm * weighted_coefficient,
+                min=torch.finfo(auxiliary_norm.dtype).eps,
+            )
+            requested_scale = float(max_ratio) * control_norm / denominator
+            scale = torch.where(
+                (auxiliary_norm > 0.0) & (control_norm > 0.0),
+                torch.clamp(requested_scale, max=1.0),
+                auxiliary_norm.new_zeros(()),
+            )
+        return [gradient * scale for gradient in auxiliary], scale
+
     def _objective_gradients(self, loss, parameters):
         if not loss.requires_grad:
             return [torch.zeros_like(parameter) for parameter in parameters]
@@ -313,7 +337,13 @@ class SafeRecurrentDistillation:
             behavior_coef * behavior + self.pg_coef * pg for behavior, pg in zip(behavior_gradients, pg_gradients)
         ]
         projected_recon, recon_conflict = self._project_auxiliary_gradient(recon_gradients, control_gradients)
-        combined = [control + self.recon_coef * recon for control, recon in zip(control_gradients, projected_recon)]
+        limited_recon, recon_grad_scale = self._limit_auxiliary_gradient_norm(
+            projected_recon,
+            control_gradients,
+            coefficient=self.recon_coef,
+            max_ratio=self.max_recon_grad_ratio,
+        )
+        combined = [control + self.recon_coef * recon for control, recon in zip(control_gradients, limited_recon)]
         diagnostics = {
             "grad_norm_behavior": torch.sqrt(
                 torch.clamp(self._gradient_dot(behavior_gradients, behavior_gradients), min=0.0)
@@ -324,6 +354,7 @@ class SafeRecurrentDistillation:
             "grad_cos_behavior_recon": self._gradient_cosine(behavior_gradients, recon_gradients),
             "grad_cos_pg_recon": self._gradient_cosine(pg_gradients, recon_gradients),
             "grad_conflict_recon_control": recon_conflict,
+            "recon_grad_scale": recon_grad_scale,
         }
         return shared_parameters, combined, diagnostics
 
@@ -347,6 +378,7 @@ class SafeRecurrentDistillation:
             [parameter for group in self.optimizer.param_groups for parameter in group["params"]], self.max_grad_norm
         )
         self.optimizer.step()
+        self.policy.project_action_std_()
 
     def _batch_losses(self, batch):
         (
@@ -558,6 +590,7 @@ class SafeRecurrentDistillation:
                 "grad_cos_behavior_recon",
                 "grad_cos_pg_recon",
                 "grad_conflict_recon_control",
+                "recon_grad_scale",
             )
         }
         num_batches = 0
@@ -619,6 +652,9 @@ class SafeRecurrentDistillation:
                 "rollback_behavior": float(rollback_behavior),
                 "rollback_count": float(self.rollback_count),
                 "accepted_update_count": float(self.num_accepted_updates),
+                "action_std_min": self.policy.std.detach().min().item(),
+                "action_std_mean": self.policy.std.detach().mean().item(),
+                "action_std_max": self.policy.std.detach().max().item(),
             }
         )
         return report

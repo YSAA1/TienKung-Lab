@@ -12,7 +12,7 @@
 
 ## 一句话
 
-S12 老师冻在 `model_21500.pt`。GRU 学生 `fixed-v3-nanguard` 已在 iteration 3305 左右由破坏性更新触发策略坍塌，冻结为失败证据。本地 safe recurrent 后继已实现，但尚未同步或启动远端新 lineage。S10/S11b 只读对照；翻箱仍在 zhuoqun。
+S12 老师冻在 `model_21500.pt`。GRU 学生 `fixed-v3-nanguard` 已在 iteration 3305 左右由破坏性更新触发策略坍塌，虽仍跑到 8134+，但只作失败证据。本地 safe recurrent 后继与 std/recon 残余硬化已实现，尚未同步或启动远端新 lineage。S10/S11b 只读对照；翻箱仍在 zhuoqun。
 
 ## 当前 work surface
 
@@ -33,7 +33,7 @@ S12 老师冻在 `model_21500.pt`。GRU 学生 `fixed-v3-nanguard` 已在 iterat
 | --- | --- |
 | 训练机 | `nubot@100.100.188.39`（密码：一个空格） |
 | worktree | `/home/nubot/phn_ws/t4_train/TienKung-Lab-s12-from-s11b-5k` |
-| tmux | `fixed-v3` 最后会话名 `t4-sparse-s12-gru-student-21500-v3`；最近 SSH 探针超时，当前进程状态未刷新 |
+| tmux | `t4-sparse-s12-gru-student-21500-v3` 仍活到 8134+，占满四卡；只作失败证据。TB 8017 仍活 |
 | 老师专家 | `logs/t4_loco_teacher_sparse/2026-08-22_14-54-33_t_sparse_lightlp_s12_from_s11b_5k/model_21500.pt` |
 | 启动 | `unset LD_LIBRARY_PATH` 后 `bash scripts/nubot_run.sh ...` |
 | AMP | `T4_AMP_EXPERT_DIR=/home/nubot/phn_ws/t4_train/TienKung-Lab/artifacts/amp_expert_provisional` |
@@ -63,11 +63,12 @@ S11b `model_19000` 第一步侧偏钉死评估（d=0.8，`vx=0.8`，32 局）：
 
 ## 风险 / blocker
 
-- nubot 进程状态本轮未刷新；任何停训、同步或新启动前先做只读 tmux/process/GPU 核对。
+- nubot 已只读刷新：唯一训练是失败 v3，四卡被其占满；`model_3000` 已复制到独立 evidence 目录并核对 SHA256。新训练前只停止该失败会话，其他 TB/tmux 不动。
 - 新 lineage 的教师仍是用户授权的 `model_21500`，必须写明 `--allow_ungated_teacher`；学生 warm-start 只允许崩塌前 `model_3000`，并重建 critic/Adam/counters。
+- `model_3000` raw std 已达 min/mean/max=`0.242/0.421/0.515`，新实现加载后会投影到 `[0.05,0.20]`；这说明 std 是放大器而不是旧 cliff 的单一根因。
 - `random_level_reset_max_level=None` 是 S11/S12 老师课表，学生继承，不是 v3 相对 v2 的单变量差。
 - 翻箱 G3 仍被 G2 过箱挡住。
 
 ## 下一步（禁止只写 continue）
 
-本地 safe recurrent 修复已通过 review 与 9 文件回归。获得远端动作确认后，只读核对 nubot，再同步本提交；用新 run name 启动 `SafeRecurrentDistillation` GPU smoke。优先 `--student_warmstart_checkpoint <fixed-v3/model_3000.pt>`，该入口只迁移 CNN/GRU/actor/recon/std，teacher/critic/Adam/counters 全部重建。smoke 先看 `update_accepted`、KL p95/emergency、rollback、behavior coefficient，再决定正式 lineage；能力仍看 evaluator + 消融 + 连续回放。
+本地 safe recurrent 修复已通过 9 文件回归，残余 std/recon 硬化 focused 合同 `44 passed`。用户已授权同步与开训：先保护 `model_3000`，同步新提交到隔离 worktree，停止唯一的失败 v3 释放四卡，再用新 run name 做 `SafeRecurrentDistillation` 2-iteration smoke。smoke 看 `update_accepted`、KL p95/emergency、rollback、behavior coefficient、std min/mean/max 和 recon gradient scale；绿灯后开全新正式 lineage。能力仍看 evaluator + 消融 + 连续回放。

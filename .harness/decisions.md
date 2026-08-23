@@ -2,6 +2,7 @@
 
 - 2026-08-23：`fixed-v3-nanguard` 判定为更新触发的策略坍塌 lineage，不再继续或从 `model_3500/4000` 续训。iteration 3305 的 PG/behavior 先跳变，reward/length 后坠；`model_3000→3500` depth encoder 相对变化约 92%。保留日志/checkpoint 作故障证据。
 - 2026-08-23：后继学生保持 PPO，不改成纯蒸馏。采用 asymmetric critic+GAE、正确 recurrent trajectory replay、全局 KL p95 主门+0.3 emergency max、候选 policy/Adam 回滚、仅投影冲突的 reconstruction 梯度。teacher mix 与 behavior imitation 只随 accepted update 退火；behavior 最终降到 0，保留累计超越教师的空间。新 lineage 可显式迁移崩塌前 `model_3000` 的 student stack，但 critic/Adam/安全计数必须重建。
+- 2026-08-23：外部报告的 std/recon 风险只采纳为残余硬化，不接受低 PPO 或永久 teacher mix floor。远端 `model_3000` raw std min/mean/max=`0.242/0.421/0.515`，高于塌后 3500 均值，故 std 非 cliff 单因；新 lineage 将 raw/effective std 投影到 `[0.05,0.20]`。recon 不做 per-pixel 放大，改为共享 CNN/GRU 的加权梯度范数不超过 behavior+PPO control 的 1.0 倍，control 为零时不得独自推动 trunk。
 - 2026-08-22：用户授权用 S12 `model_21500.pt` 提前开 GRU 学生，不再等 `model_23999.pt`。现行 run `fixed-v3-nanguard` 是 v2 数值不稳后的 NaN-guard 重启，同一套 S12 MDP（含 `random_level_reset_max_level=None`）。新开训入口必须校验 1937D teacher + evaluator manifest，或显式 `--allow_ungated_teacher`。
 - 2026-08-22：用户改口 S12 老师不冷启动。S11b 已会走梅花桩，从最新 `model_19000` 在 S12 边框+40%轻转上短续 5000 iter（新 worktree、新 logdir、reset optimizer），到 24000 后立刻蒸 GRU 学生。不 resume `stage_s_head35`。**同日晚间被 `model_21500` 提前蒸学生覆盖。**
 - 2026-08-22：用户要求 S12 学生代码与老师合同一起写完，方便老师门后直接蒸。学生必须继承 `T4LocoSparseTeacherEnvCfg`，CNN+GRU，训练期 scan recon，DAgger+PPO 的 logπ 记实际执行动作（含 teacher_mix）。不 resume Stage E `stage_s_head35`。

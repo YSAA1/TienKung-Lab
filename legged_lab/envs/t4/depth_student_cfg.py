@@ -88,7 +88,7 @@ class T4SparseDepthStudentPolicyCfg(T4DepthStudentPolicyCfg):
     recon_hidden_dim: int = 128
     critic_hidden_dims: list[int] = [512, 256, 128]
     min_action_std: float = 0.05
-    max_action_std: float = 0.8
+    max_action_std: float = 0.2
 
 
 @configclass
@@ -104,6 +104,7 @@ class T4SparseDepthDistillationAlgCfg(T4DepthDistillationAlgCfg):
     behavior_coef_decay_iters: int = 2000
     pg_coef: float = 0.5
     recon_coef: float = 1.0
+    max_recon_grad_ratio: float = 1.0
     teacher_mix: float = 0.5
     teacher_mix_end: float = 0.0
     teacher_mix_decay_iters: int = 2000

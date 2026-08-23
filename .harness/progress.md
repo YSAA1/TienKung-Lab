@@ -7,7 +7,8 @@
 - 非妥协 handoff：PPO 保持 `pg_coef=0.5`；behavior imitation 随 accepted update 从 1→0，teacher mix 也只随 accepted update 衰减。拒绝更新不会提前撤掉教师。
 - 新开训支持 `--student_warmstart_checkpoint <pre-collapse model_3000.pt>`：只迁移 CNN/GRU/actor/recon/std；teacher 重新加载，critic/Adam/counters 重置，并写 `student_lineage.json`。
 - 提交前深审补强：initial hidden 主动 detach；safe runner 未加载 teacher 时拒绝开训；manifest 采用 exact checkpoint path，并把 teacher/warm-start SHA256 写入 lineage。最终本机 9 文件回归 `83 passed, 2 deselected`，后两项仅缺 ZL vendor MJCF。
-- 本轮只改本地代码；未停止/同步/重启 nubot。最近 SSH 探针超时，远端进程状态未刷新。
+- 外部报告复核后新增两条硬合同：每次 Adam step 与 legacy warm-start 后投影 raw std，S12 上限 0.20；recon 进入共享 CNN/GRU 的加权梯度范数最多为 control 的 1.0 倍。focused RED→GREEN 为 `44 passed`。
+- nubot 只读刷新：旧 v3 仍到 8134+，四卡各约 18 GiB、20–22% 利用率；TB 8017 存活。`model_3000.pt` SHA256=`df50a89a...332ad5`，raw std min/mean/max=`0.242/0.421/0.515`。尚未停止旧进程、同步或启动新 lineage。
 
 ## 2026-08-22 student deploy gate + v3 lineage（后续坍塌，继续训练判断已推翻）
 

@@ -127,6 +127,15 @@ def _is_student_warmstart_key(name: str) -> bool:
     return name == "std" or name.startswith(STUDENT_WARMSTART_PREFIXES)
 
 
+def _tensor_stats(tensor: torch.Tensor) -> dict[str, float]:
+    values = tensor.detach().float()
+    return {
+        "min": values.min().item(),
+        "mean": values.mean().item(),
+        "max": values.max().item(),
+    }
+
+
 def load_student_warmstart_checkpoint(policy, path: str | Path) -> dict[str, Any]:
     """Load only the deployable/reconstruction student stack and reset all training state.
 
@@ -156,10 +165,14 @@ def load_student_warmstart_checkpoint(policy, path: str | Path) -> dict[str, Any
         )
 
     selected_state = {name: source_state[name] for name in sorted(expected_keys)}
+    source_action_std = _tensor_stats(selected_state["std"])
     try:
         torch.nn.Module.load_state_dict(policy, selected_state, strict=False)
     except RuntimeError as exc:
         raise StudentLineageError(f"{checkpoint_path} student warm-start shape mismatch: {exc}") from exc
+    if not hasattr(policy, "project_action_std_"):
+        raise StudentLineageError("target student policy does not expose project_action_std_()")
+    policy.project_action_std_()
 
     return {
         "path": str(checkpoint_path),
@@ -168,4 +181,6 @@ def load_student_warmstart_checkpoint(policy, path: str | Path) -> dict[str, Any
         "loaded_keys": len(selected_state),
         "optimizer_reset": True,
         "critic_reset": True,
+        "source_action_std": source_action_std,
+        "effective_action_std": _tensor_stats(policy.std),
     }

@@ -165,10 +165,14 @@ def test_safe_update_uses_sequence_batches_without_mutating_live_hidden():
         "grad_cos_behavior_recon",
         "grad_cos_pg_recon",
         "grad_conflict_recon_control",
+        "recon_grad_scale",
         "behavior_coef",
         "rollback_kl_p95",
         "rollback_kl_emergency",
         "accepted_update_count",
+        "action_std_min",
+        "action_std_mean",
+        "action_std_max",
     ):
         assert key in report
         assert torch.isfinite(torch.tensor(report[key]))
@@ -373,6 +377,49 @@ def test_reconstruction_gradient_is_projected_when_it_conflicts_with_control():
     assert torch.equal(control[0], torch.tensor([1.0, 0.0]))
 
 
+def test_reconstruction_gradient_norm_is_capped_relative_to_control():
+    control = [torch.tensor([1.0, 0.0])]
+    reconstruction = [torch.tensor([100.0, 100.0])]
+
+    limited, scale = SafeRecurrentDistillation._limit_auxiliary_gradient_norm(
+        reconstruction,
+        control,
+        coefficient=1.0,
+        max_ratio=1.0,
+    )
+
+    control_norm = torch.sqrt(SafeRecurrentDistillation._gradient_dot(control, control))
+    limited_norm = torch.sqrt(SafeRecurrentDistillation._gradient_dot(limited, limited))
+    assert scale.item() < 0.01
+    assert limited_norm.item() <= control_norm.item() + 1.0e-6
+
+
+def test_reconstruction_cannot_move_shared_trunk_without_control_gradient():
+    control = [torch.zeros(2)]
+    reconstruction = [torch.tensor([1.0, 2.0])]
+
+    limited, scale = SafeRecurrentDistillation._limit_auxiliary_gradient_norm(
+        reconstruction,
+        control,
+        coefficient=1.0,
+        max_ratio=1.0,
+    )
+
+    assert scale.item() == pytest.approx(0.0)
+    assert torch.equal(limited[0], torch.zeros(2))
+
+
+def test_optimizer_step_projects_trainable_action_std():
+    algorithm = _algorithm(learning_rate=0.1)
+    algorithm.policy.max_action_std = 0.2
+    with torch.no_grad():
+        algorithm.policy.std.fill_(0.19)
+
+    algorithm._optimizer_step(-100.0 * algorithm.policy.std.sum())
+
+    assert torch.allclose(algorithm.policy.std, torch.full_like(algorithm.policy.std, 0.2))
+
+
 def test_training_critic_is_removed_from_deployable_state():
     policy = _tiny_policy()
     assert any(name.startswith("critic.") for name in policy.state_dict())
@@ -392,6 +439,8 @@ def test_sparse_student_cfg_selects_safe_recurrent_improvement():
     assert "behavior_coef_end: float = 0.0" in source
     assert "behavior_coef_decay_iters: int = 2000" in source
     assert "pg_coef: float = 0.5" in source
+    assert "max_recon_grad_ratio: float = 1.0" in source
+    assert "max_action_std: float = 0.2" in source
 
 
 def test_runner_maps_safe_algorithm_to_teacher_observation_contract():

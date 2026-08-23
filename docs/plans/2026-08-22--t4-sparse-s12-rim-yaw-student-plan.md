@@ -6,7 +6,7 @@
 > 取代: `docs/archive/plans/2026-08-21--t4-sparse-s11-mdp-repair-plan.md`（S11/S11b 配方保留为对照 lineage，本文件成为梅花桩轨道现行计划）
 > Branch: `t4-train`
 > Planning surface: docs plan
-> GPU: `fixed-v3-nanguard` 已策略坍塌；最近 SSH 探针超时，远端进程状态未刷新。本地 safe recurrent 修复已实现，新 lineage 尚未启动；zhuoqun 翻箱不动
+> GPU: `fixed-v3-nanguard` 已策略坍塌但进程仍跑到 8134+，占满 nubot 四卡；TB 8017 仍活。本地 safe recurrent 修复与残余硬化已实现，新 lineage 尚未启动；zhuoqun 翻箱不动
 
 ## Objective
 
@@ -16,7 +16,7 @@
 
 ## Active slice
 
-**阶段 4 修复（当前）**：`fixed-v3-nanguard` 在 iteration 3305 左右由更新先触发策略坍塌，已冻结为失败取证 lineage。老师仍是只读 S12 `model_21500.pt`；S12 MDP、`random_level_reset_max_level=None` 与深度观测合同不改。本地已用 `SafeRecurrentDistillation` 替换破坏性 updater，新远端 lineage 尚未启动。不 resume `stage_s_head35`，也不续已崩的 `model_3500/4000`。
+**阶段 4 修复（当前）**：`fixed-v3-nanguard` 在 iteration 3305 左右由更新先触发策略坍塌，进程虽仍运行到 8134+，但只作失败取证。老师仍是只读 S12 `model_21500.pt`；S12 MDP、`random_level_reset_max_level=None` 与深度观测合同不改。本地已用 `SafeRecurrentDistillation` 替换破坏性 updater，并补上动作 std 参数投影与 reconstruction 共享梯度范数门；新远端 lineage 尚未启动。不 resume `stage_s_head35`，也不续已崩的 `model_3500/4000`。
 
 ## 学生坍塌根因与后继合同
 
@@ -24,8 +24,10 @@
 - `model_3000→3500` depth encoder 相对变化约 92%。触发器是 updater 对共享 CNN/GRU 的破坏性更新，不是 teacher mix、课程、命令、学习率、NaN/OOM 或 TensorBoard 断流。
 - 旧实现无 critic/GAE，逐时间步 replay，没有保存 recurrent initial hidden；optimizer step 发生在序列中间；behavior/PG/recon 直接争用共享 trunk；无候选提交门或回滚。
 - 后继实现保持 PPO：asymmetric critic+GAE、完整 trajectory replay、全局 advantage、analytic KL、global p95 主门、独立 emergency max、policy+Adam transaction rollback、LR 降档。
-- behavior imitation 与 teacher mix 都只随 **accepted update** 退火；behavior 从 1→0，后期教师只保留单步漂移安全门，不永久限制 PPO 超越教师。reconstruction 只有在与 control 梯度冲突时才投影，PPO 梯度不裁剪。
+- behavior imitation 与 teacher mix 都只随 **accepted update** 退火；behavior 从 1→0，后期教师只保留单步漂移安全门，不永久限制 PPO 超越教师。reconstruction 先投影与 control 冲突的分量，再受共享梯度范数门约束；PPO 梯度不裁剪。
 - 新 lineage 可显式 warm-start 崩塌前 `model_3000` 的 CNN/GRU/actor/recon/std；teacher 重新加载，critic/Adam/安全计数重建。3500/4000 仅作失败证据。
+- 外部报告把 std 增长列为主因，但远端实测 `model_3000` 的 raw std 已是 min/mean/max=`0.242/0.421/0.515`，反而高于塌后 `model_3500` 的均值约 0.303，因此 std 是风险放大器而不是 cliff 的充分解释。新实现仍把有效/原始 std 都硬投影到 `[0.05, 0.20]`，避免再进入旧高噪声区。
+- reconstruction 与 behavior 都是逐元素 mean MSE，195D 并不会仅因维数自动放大 7 倍；不做缺乏统计依据的 per-pixel std 归一化。更直接的合同是：先去掉与 behavior+PPO control 冲突的分量，再把 reconstruction 进入共享 CNN/GRU 的加权梯度范数限制在 control 梯度的 1.0 倍；control 为零时 recon 不得单独移动共享 trunk。
 
 ## 冻结数值（本切片不再讨论）
 
@@ -137,7 +139,7 @@ python -m pytest tests/test_t4_sparse_command_contract.py tests/test_t4_terrain_
 
 ### Verification path status
 
-`local runnable / GPU pending`：阶段 1 本机 pytest 已过，老师冻在 `model_21500.pt`。safe recurrent 代码与 Isaac-free 合同已绿；尚未同步 nubot、未做 Isaac GPU smoke、未启动新 lineage。`fixed-v3-nanguard` 不再计作 active training。
+`local runnable / GPU pending`：阶段 1 本机 pytest 已过，老师冻在 `model_21500.pt`。safe recurrent 与残余硬化 focused 合同 `44 passed`；尚未同步 nubot、未做 Isaac GPU smoke、未启动新 lineage。`fixed-v3-nanguard` 虽仍占卡运行，但不计作 active lineage。
 
 ## Required capabilities
 
@@ -181,7 +183,7 @@ python -m pytest tests/test_t4_sparse_command_contract.py tests/test_t4_terrain_
   - success_definition: 学生观测/网络/损失合同可蒸馏 S12 老师，且无特权泄漏
 
 - [ ] 阶段 4：safe recurrent 学生新 lineage 与验收（当前）
-  - acceptance_criteria: 冻结 S12 `model_21500.pt`；新 logdir 使用 `SafeRecurrentDistillation`；可选 student-only warm-start `model_3000`，critic/Adam/counters 重置；候选更新记录 KL p95/max、ratio、rollback、accepted count、behavior schedule；DAgger+PPO 再噪声 FT；同一 fixed evaluator；深度消融；MuJoCo 连续回放；`student_lineage.json`
+  - acceptance_criteria: 冻结 S12 `model_21500.pt`；新 logdir 使用 `SafeRecurrentDistillation`；可选 student-only warm-start `model_3000`，critic/Adam/counters 重置且 std 投影到 `[0.05,0.20]`；候选更新记录 KL p95/max、ratio、rollback、accepted count、behavior schedule、std min/mean/max 与 recon gradient scale；DAgger+PPO 再噪声 FT；同一 fixed evaluator；深度消融；MuJoCo 连续回放；`student_lineage.json`
   - verification_commands: 本机 safe/GRU/Sim2Sim/PPO 相邻合同；远端先 1–2 iteration GPU smoke，再新 tmux 正式 run。训练入口 `--teacher_checkpoint .../model_21500.pt --allow_ungated_teacher --student_warmstart_checkpoint .../model_3000.pt`；3500/4000 禁止使用
   - success_definition: 学生在冻结桶上接近老师，且打乱深度会掉能力；不靠 loss / TB reward / episode length 宣称成功
 
@@ -208,4 +210,4 @@ python -m pytest tests/test_t4_sparse_command_contract.py tests/test_t4_terrain_
 
 ## Next skill
 
-`GPU smoke / verify`（需用户明确授权远端同步与启动）
+`GPU smoke / verify`（用户已授权；smoke 绿后启动全新正式 lineage）
