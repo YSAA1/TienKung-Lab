@@ -231,6 +231,8 @@ def test_play_recording_reads_the_terminal_snapshot_contract():
     assert 'diagnostic_path = os.path.splitext(os.path.abspath(output_path))[0] + ".diagnostics.json"' in source
     assert '"contact_body_names": list(env.diagnostic_contact_body_names)' in source
     assert '"trace": diagnostic_trace' in source
+    assert source.count("runner.alg.policy.reset(dones)") >= 2
+    assert "policy_module.reset(dones)" in source
 
 
 def test_terminal_snapshot_includes_impact_diagnostics():

@@ -84,7 +84,8 @@ patch_physx_backward_compatibility_setting(AppLauncher)
 AppLauncher.add_app_launcher_args(parser)
 args_cli, hydra_args = parser.parse_known_args()
 # Start camera rendering
-if "sensor" in args_cli.task:
+task_name = args_cli.task or ""
+if "sensor" in task_name or "depth_student" in task_name:
     args_cli.enable_cameras = True
 if args_cli.record:
     args_cli.enable_cameras = True
@@ -219,6 +220,7 @@ def play():
             args_cli.duration,
             cam_eye=_parse_xyz(args_cli.cam_eye),
             cam_look=_parse_xyz(args_cli.cam_look),
+            policy_module=runner.alg.policy,
         )
         return
 
@@ -226,7 +228,8 @@ def play():
 
         with torch.inference_mode():
             actions = policy(obs)
-            obs, _, _, _ = env.step(actions)
+            obs, _, dones, _ = env.step(actions)
+            runner.alg.policy.reset(dones)
         if not args_cli.headless:
             _follow_gui_camera(env.robot.data.root_pos_w[0])
 
@@ -266,12 +269,14 @@ def _play_gym_manager_task(task: str) -> None:
             args_cli.duration,
             cam_eye=_parse_xyz(args_cli.cam_eye),
             cam_look=_parse_xyz(args_cli.cam_look),
+            policy_module=runner.alg.policy,
         )
         return
     while simulation_app.is_running():
         with torch.inference_mode():
             actions = policy(obs)
-            obs, _, _, _ = env.step(actions)
+            obs, _, dones, _ = env.step(actions)
+            runner.alg.policy.reset(dones)
 
 
 def _write_play_frames(output_path: str, frames: list, fps: int) -> str:
@@ -448,6 +453,7 @@ def _record_play_video(
     duration_s: float,
     cam_eye: tuple[float, float, float] = (-3.4, -2.6, 2.4),
     cam_look: tuple[float, float, float] = (0.8, 0.0, 0.15),
+    policy_module=None,
 ) -> None:
     import imageio.v2 as imageio
     import isaaclab.sim as sim_utils
@@ -491,7 +497,9 @@ def _record_play_video(
     for step_idx in range(n_steps):
         with torch.inference_mode():
             actions = policy(obs)
-            obs, _, _, _ = env.step(actions)
+            obs, _, dones, _ = env.step(actions)
+            if policy_module is not None:
+                policy_module.reset(dones)
         root = robot.data.root_pos_w[0]
         diagnostic_snapshot = _record_diagnostic_snapshot(env, step_idx)
         diagnostic_history.append(diagnostic_snapshot)
