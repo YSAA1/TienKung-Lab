@@ -39,3 +39,9 @@ def evaluate_counterfactual_actions(policy, inference_fn, observations_by_mode, 
     finally:
         policy.reset(hidden_states=_clone_state(state_after_selected))
     return actions
+
+
+def reset_recurrent_policy(policy, dones):
+    """Reset inference-created recurrent state inside the matching torch mode."""
+    with torch.inference_mode():
+        policy.reset(dones)

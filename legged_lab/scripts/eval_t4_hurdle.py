@@ -89,7 +89,10 @@ from legged_lab.assets.t4.schemas import (  # noqa: E402
     TEACHER_SCAN_INVALID_VALUE,
 )
 from legged_lab.envs import *  # noqa: F401,F403,E402
-from legged_lab.scripts.recurrent_policy_eval import evaluate_counterfactual_actions  # noqa: E402
+from legged_lab.scripts.recurrent_policy_eval import (  # noqa: E402
+    evaluate_counterfactual_actions,
+    reset_recurrent_policy,
+)
 from legged_lab.terrains.stepping_stone_layout import (  # noqa: E402
     T4_STONE_PLATFORM_WIDTH,
     resolve_pinned_sparse_spawn,
@@ -345,7 +348,7 @@ def evaluate() -> dict:
         joint_action_samples += active_count
 
         obs, _, dones, extras = env.step(actions)
-        runner.alg.policy.reset(dones)
+        reset_recurrent_policy(runner.alg.policy, dones)
         episode_steps[active_envs] += 1
 
         done_tensor_ids = torch.nonzero(dones, as_tuple=False).flatten()

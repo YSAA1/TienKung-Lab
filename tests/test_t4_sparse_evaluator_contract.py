@@ -3,7 +3,7 @@ from pathlib import Path
 import pytest
 import torch
 
-from legged_lab.scripts.recurrent_policy_eval import evaluate_counterfactual_actions
+from legged_lab.scripts.recurrent_policy_eval import evaluate_counterfactual_actions, reset_recurrent_policy
 
 SCRIPT = Path(__file__).resolve().parents[1] / "legged_lab" / "scripts" / "eval_t4_hurdle.py"
 ENV = Path(__file__).resolve().parents[1] / "legged_lab" / "envs" / "t4" / "t4_env.py"
@@ -20,8 +20,10 @@ class _StatefulPolicy:
         return self.hidden, None
 
     def reset(self, dones=None, hidden_states=None):
-        assert dones is None
-        self.hidden = hidden_states[0].clone()
+        if dones is not None:
+            self.hidden[dones.bool()] = 0.0
+        else:
+            self.hidden = hidden_states[0].clone()
 
     def infer(self, observations):
         self.hidden = self.hidden + observations
@@ -48,7 +50,17 @@ def test_sparse_evaluator_resets_recurrent_state_at_episode_boundaries():
     source = SCRIPT.read_text()
 
     assert "obs, _, dones, extras = env.step(actions)" in source
-    assert "runner.alg.policy.reset(dones)" in source
+    assert "reset_recurrent_policy(runner.alg.policy, dones)" in source
+
+
+def test_recurrent_reset_accepts_hidden_state_created_in_inference_mode():
+    policy = _StatefulPolicy()
+    with torch.inference_mode():
+        policy.hidden = torch.ones(1, 2)
+
+    reset_recurrent_policy(policy, torch.ones(1))
+
+    assert torch.equal(policy.hidden, torch.zeros(1, 2))
 
 
 def test_sparse_progress_evaluator_accepts_both_foothold_terrains():
