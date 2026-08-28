@@ -5,16 +5,14 @@
 
 ## 当前工作面
 
-两条并行轨道，各有一份执行计划。不要再开第三份「唯一计划」。
+当前唯一执行轨道是翻箱 G1/G2。S12 梅花桩 teacher 与 GRU 深度学生训练已完成仿真验收；后续真机或更严格落脚验收需要另开计划。
 
 | 轨道 | 现在做什么 | 执行计划 | 规格 |
 | --- | --- | --- | --- |
-| 梅花桩 | S12 老师冻在 `model_21500.pt`。GRU 学生 `fixed-v3-nanguard` 已因破坏性更新坍塌；本地 safe recurrent 修复已完成，尚未启动新远端 lineage。TB success 不能当能力。 | [S12 计划](plans/2026-08-22--t4-sparse-s12-rim-yaw-student-plan.md) | [稀疏规格](specs/2026-08-15--t4-stepping-stones-and-hurdle-stable.md) |
+| 梅花桩 | done：S12 老师冻在 `model_21500.pt`；GRU 学生 Phase B `model_5999.pt` 已通过修正后的 student-only easy/hard gate、连续回放与部署导出。Phase C 跳过 | [S12 归档计划](archive/plans/2026-08-22--t4-sparse-s12-rim-yaw-student-plan.md)；[门控学生归档计划](archive/plans/2026-08-26--t4-sparse-s12-gated-dagger-joint-ft-plan.md) | [稀疏规格](specs/2026-08-15--t4-stepping-stones-and-hurdle-stable.md) |
 | 翻箱 | G1 跟踪专家 → G2 heightscan 技能（zhuoqun）。**G2 学生与 G3 合并（走跑+翻箱成一条策略）等 G2 过箱后再开。** | [翻箱 recovery](plans/2026-08-15--t4-vault-g1-g2-recovery-plan.md) | [合并规格](specs/2026-08-13--t4-vault-loco-merge.md) |
 
 运行时切片与机器占用：`.harness/work_index.md`、`.harness/state.md`。
-
-2026-08-22 session 快照（不是计划）：仓库根目录 [`HANDOFF.md`](../HANDOFF.md)。
 
 ## 已经关掉的阶段
 
@@ -61,12 +59,12 @@
 
 | 目录 | 角色 |
 | --- | --- |
-| 本文、`PROJECT_CONTEXT.md`、`AGENTS.md` | 入口。不写 session 流水。 |
+| 本文、`AGENTS.md` | 入口。不写 session 流水。 |
+| `.harness/` | 工作面索引与短状态。 |
 | `docs/specs/` | 已批准行为 / 架构。half-living 的文头会标明。 |
-| `docs/plans/` | **只放现行执行计划**（现在就上面两份）。 |
+| `docs/plans/` | **只放现行执行计划**（梅花桩 S12 + 部署向 RTX 蒸馏、翻箱 G1/G2）。 |
 | `docs/runbooks/` | 现在还能照着跑的操作。 |
 | `docs/research/` | 调研与论文摘录，非权威。 |
-| `docs/archive/` | 已完成或已取代的执行纸。 |
+| `docs/archive/` | 已完成或已取代的执行纸（含已交付的学生成本/RTX 切片）。 |
 
-背景与边界的短文：[PROJECT_CONTEXT.md](../PROJECT_CONTEXT.md)。
 上游框架安装与 walk/run 演示仍在仓库根 [README.md](../README.md)。

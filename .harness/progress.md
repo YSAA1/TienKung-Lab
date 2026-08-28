@@ -1,5 +1,117 @@
 # Progress
 
+## 2026-08-29 S12 Phase B 最终验收与部署导出
+
+- evaluator 根因是 GRU 学生在同一物理步依次跑 normal/zero/permuted counterfactual，污染 live hidden；episode reset 也未完全清状态。修复后 `model_5999.pt` 无需重训。
+- student-only gate：easy 踏石/圆桩 strict `32/32`、`29/32`；hard 踏石/圆桩 strict `18/32`、`27/32`，reach_2m `28/32`、`30/32`。两类 hard 连续回放已人工复核。
+- 源 checkpoint SHA256 `d799a966dddf039a54d0c9a4896953de0d39dca8126c15645876f0d6de5fa20c`；lineage SHA256 `3ce965c4b72b0a44b6136b59cce271eb941bd33521577c172a5505302df42f9e`。
+- deploy-only 包只含 `depth_encoder/memory_s/student/std`，SHA256 `f06d29a316fe012ef449d41eb5001f27554bcf10a73ea543b9d1cfd058942bf5`。本机 3168-D → 27-D finite inference 与 GRU reset 验证通过。
+- Phase B 作为最终候选。Phase C `pg=0.5` 因无必要且已有 KL/actor 破坏风险而跳过，不重新训练。交付清单：`artifacts/checkpoints/nubot/s12_rtx_gated_joint/delivery_manifest.json`。
+
+## 2026-08-26 S12 门控三阶段学生
+
+- 未启动的 D5 hardmix 被替换为三个独立 lineage：`s12_rtx_gated_dagger`、`s12_rtx_gated_joint`、`s12_rtx_deploy_ft_v2`。阶段切换只认 student-only evaluator JSON。
+- 代码已拆分 DAgger / Joint / DeployFt 配置。continuation 只加载完整 student/GRU/decoder/critic，逐张量核对 parent teacher 与固定 S12 teacher；optimizer、iteration、算法计数重置，std=0.08。
+- 本机相邻合同：`149 passed, 1 skipped`。
+- Gate 0 已在当前 plant 完成：S12 `model_21500.pt` 踏石 d=0/d=0.8 strict `32/32`、`28/32`；圆桩 `32/32`、`32/32`。四份 JSON 在远端 `artifacts/eval/s12_teacher_gate0_model21500/`。RTX checksum probe `ok=true`。
+- 2-iteration GPU2×8 smoke 通过，生成 `model_0.pt`/`model_1.pt`，lineage 字段齐，无异常。
+- 正式 Phase A 已开：tmux `t4-s12-rtx-gated-dagger`，GPU2×256，logdir `2026-08-26_18-57-45_s12_rtx_gated_dagger`，TB `:8024`。@iter 140：teacher mix 0.859、PG 0、std 0.10、LR 1e-4；无 Traceback/OOM/NaN/NCCL。下一能力检查是 2k student-only evaluator（只诊断）。
+- Phase A 在 `model_6000.pt` 过门并停止：easy 踏石/圆桩 strict `32/32`、`27/32`；hard 踏石/圆桩 strict `4/32`、`5/32`，reach_2m `10/32`、`15/32`。JSON：远端 `artifacts/eval/s12_rtx_gated_dagger_m6000_student_only/`。
+- nubot 漏同步的 `train_t4_sparse_depth_student_ft.py` 会静默忽略 gated continuation 参数；已备份旧文件并按本机现行文件单点同步。严格 Phase B smoke 生成 `model_0.pt`/`model_1.pt`，lineage 含 phase、parent/teacher SHA、四份 gate SHA、std `0.08` 与 reset 合同。
+- 正式 Phase B 已开：tmux `t4-s12-rtx-gated-joint`，GPU2×256，logdir `2026-08-27_00-49-57_s12_rtx_gated_joint`，TB `:8025`。@iter 9：critic-only，PG `0`，KL mean `~0.0004`、p95 `~0.0005-0.0006`、max `<=0.0019`，无 Traceback/OOM/NaN/NCCL。连续视频因 nubot Isaac play USD stage 冲突、MuJoCo 缺包未补；不据此宣称能力。
+
+## 2026-08-26 D5 hardmix
+
+- 本节是被覆盖的历史提案；D5 未启动，现行执行面见上一节门控三阶段计划。
+- D4 hard 门失败后用户「你来定」。诊断：不是第一脚掉坑，也不是只缺 RTX 眼睛（D1 warp 同样 d=0.8 reach_2m 0/32）。课表：mix 2k 归零 + 课表停在 ~4.5 + 25% 均匀 random reset，硬桩成功轨迹不够。
+- 原拟执行面 `s12_rtx_hardmix` 已 superseded。D4 计划标 done。不 FT `model_13999`。
+- 配方差：mix/pg_delay **6000**；`random_level_reset_fraction=0.50`；`random_level_reset_min_level=6`；`max_iterations=18000`；`run_name=s12_rtx_hardmix`。眼睛与 pg=0.2/BC=1 不变。
+
+## 2026-08-25 D4 部署向 RTX 蒸馏
+
+- 当时学生切片现已归档：`docs/archive/plans/2026-08-25--t4-sparse-s12-rtx-deploy-distill-plan.md`。08-23 配方计划 superseded。
+- 本机合同：`tests/test_t4_sparse_depth_student_gru_contract.py` + `test_safe_recurrent_distillation.py` + `test_sim2sim_t4_depth_student.py` + `test_t4_sparse_reward_contracts.py` + `test_t4_stepping_stone_contracts.py` → **122 passed / 1 skipped**（isaaclab 对象测试在无 Isaac 的本机 env 跳过；源码断言已覆盖 D4 数值）。
+- nubot checksum probe（GPU 2，8 env / 24 step）：`ok=true`，`backend=tiled_rtx`，`has_rtx_sensors=true`，`has_warp_depth_camera=false`，`finite_frac≈0.93`，`collection_s≈1.96`。JSON：`artifacts/diagnostics/s12_rtx_deploy_probe.json`。外参抖动必须从 spawn 后的 native pose 扰动，不能把 ROS offset 直接 `set_local_poses`。
+- 远端 worktree `TienKung-Lab-s12-gru-ppo` 与本机 D4 关键文件 SHA256 前 16 位一致。残留 probe PID 已 `kill -9`，GPU 2/3 空闲。
+- **用户授权双卡试开（2026-08-25 23:07）：** `CUDA_VISIBLE_DEVICES=2,3`、`nproc_per_node=2`、`--task_num_envs 256` 两次 PhysX「无合适 CUDA GPU」后退 software 挂死，已杀。日志：`artifacts/diagnostics/s12_rtx_deploy_train_2gpu.log`。
+- **用户改单卡（2026-08-25 23:34）：** `CUDA_VISIBLE_DEVICES=2`、256 env、无 distributed。tmux `t4-s12-rtx-deploy`。logdir `2026-08-25_23-35-06_s12_rtx_deploy_distill`。`student_lineage.json` 合同齐（mix 2k、pg_delay 2k、noise/外参/demote、warmstart null）。已见 Learning iteration ~33/14000，GPU2 ~7.6 GiB / ~27%。日志：`artifacts/diagnostics/s12_rtx_deploy_train_1gpu.log`。不是过桩。
+- **14k 结束（2026-08-26 12:24）：** 末 ckpt `model_13999.pt`。tmux 已退出。末窗 TB 约 reward 22 / length 300 / behavior 0.06 / std 0.194。本地已拉 `artifacts/checkpoints/nubot/s12_rtx_deploy_distill/model_13999.pt`。
+- **Isaac student-only 32 局（GPU1，vx=0.8，钉出生）：** `artifacts/eval/s12_rtx_deploy_student_only/`。踏石 d=0 **31/32** strict（D1 21/32）；圆桩 d=0 **16/32**（D1 26/32）；**d=0.8 踏石/圆桩均 0/32**。未过 hard 门，**不准开 D4c**。不是过桩。
+- 四卡默认命令（等 0/1 空闲）：
+
+```text
+cd /home/nubot/phn_ws/t4_train/TienKung-Lab-s12-gru-ppo
+tmux new-session -d -s t4-s12-rtx-deploy -c /home/nubot/phn_ws/t4_train/TienKung-Lab-s12-gru-ppo \
+  'bash scripts/nubot_run.sh -m torch.distributed.run --nnodes=1 --nproc_per_node=4 \
+    legged_lab/scripts/train_t4_sparse_depth_student.py \
+    --teacher_checkpoint /home/nubot/phn_ws/t4_train/TienKung-Lab-s12-from-s11b-5k/logs/t4_loco_teacher_sparse/2026-08-22_14-54-33_t_sparse_lightlp_s12_from_s11b_5k/model_21500.pt \
+    --allow_ungated_teacher --task_num_envs 256 --distributed --headless --seed 42 \
+    --run_name s12_rtx_deploy_distill'
+```
+
+- 实现目标：tiled RTX 48×64、噪声从 0、外参 DR、D4a→D4b 开训入口已落地。D4c / 真机不在本 slice。不是过桩。
+
+## 2026-08-25 D3c FT 评估
+
+- D3c 1000 iter 跑完，末 ckpt `model_999.pt`（10:30）。warmup 按合同：actor 冻到 199、`pg_coef` 200 起爬、400 到 0.1、LR 固定 `1e-4`。iter 200 第一步 PPO `kl_mean=7.36` / `kl_max=97.9`（停训门 0.05），课表 5.04→4.25@400 后回 5.17；`Reset/torso` 0.03→0.20；std 0.10→0.166。不是 D3b 那种腰斩，但是 actor 已被打偏。
+- Isaac student-only `eval_t4_hurdle.py`，`vx=0.8`，钉出生，32 局。JSON：`artifacts/eval/s12_d3c_vs_d1_student_only/`。easy d=0：D1 踏石 21/32 / 圆桩 26/32；D3c 1/32 / 0/32。d=0.8 两边 0/32。老师对照 S11b `model_19000` 踏石 d=0.8 曾是 32/32。不续 D3c。保留 D1。不是过桩。
+
+## 2026-08-25 D3c FT pg0.1 ramp
+
+- D3/D3b 都在 PPO 碰到 actor 时崩（KL 61.8 / 32）。D3c 改成 `pg_coef` 目标 0.1、warmup 200 后再 200 步缓升，BC=0.5，fixed LR。
+- 已开训：tmux `t4-s12-lightlp-ft-pg01`，logdir `logs/t4_loco_sparse_depth_student_ft/2026-08-25_09-48-56_s12_gru_ft_pg01_ramp`，父 ckpt=D1 `2026-08-24_11-23-54_s12_lightlp_dagger_only/model_10000.pt`。开训后约 1 min 已到 iter ~40/1000，warmup 期 `Mean pg_coef loss: 0.0000`，四卡显存 ~9 GiB。不是过桩。
+- 本机：`tests/test_safe_recurrent_distillation.py` + `tests/test_t4_sparse_depth_student_gru_contract.py` 56 passed / 1 skipped。
+
+## 2026-08-24 sim2sim student sparse tile (not a pier)
+
+- 用户在 easy 踏石上「直接就炸了」。loco 同一 ckpt 能走十几米：策略/PD 不是全坏。
+- 根因：MuJoCo 踏石沿用老师 viewer 的 7 车道窄栈桥+深坑；Isaac 训练是 8 m 方格、1.6 m 中心台、0.75 m 可走边框。侧向一步即掉坑，接触 NaN 看起来像爆炸。
+- 学生 `--course stepping_stones|raised_pillars|sparse` 改为 `isaac_sparse_tile_geoms`。GRU 深度相机 fovy 按 48×64 + 87° HFOV 重算。`observe()` 与 `_proprio_frame` 共用步态相位。
+- 本机：`tests/test_t4_stepping_stone_contracts.py` + `tests/test_sim2sim_t4_depth_student.py` + `tests/test_t4_sparse_teacher_mujoco.py` + GRU 合同 80 passed。不是过桩。
+
+## 2026-08-23 student distill recipe plan
+
+- 阶段 1 本机落地：`teacher_mix=0`、`schedule=fixed`、`learning_rate=1e-4`、`behavior_coef_end=0.25`、`critic_warmup_iters=500`、`max_iterations=14000`、`run_name=s12_lightlp_mix0_fixedlr`；FT 仍 `schedule=adaptive`。`SafeRecurrentDistillation` 在 `pg_coef>0` 且 mix≠0 时 raise；`update()` 对 shared encoder 做 recon 投影+限幅，并写 `recon_control_cosine` / 两边范数。
+- grok 复审 **PASS**（[审查](a93ff6f9-4c1c-4384-ba80-c2cbe404662e)）：无 Critical/Important。DDP Important #1 关闭（先 all-reduce 克隆再投影；投影路径无 `_reduce_gradients()`）。`nan_guard` 仍只扫最后 minibatch，记 Minor/延期。
+- 停旧 tmux `t4-s12-lightlp-raycast`；末 ckpt `model_14000.pt`。未 rsync Windows `scripts/nubot_run.sh`。
+- D3 FT 崩塌后改配方重开 D3b `s12_gru_ft_critic_bc`：冻 actor 预热 critic 200 步、BC=0.5、fixed LR。父 ckpt 仍是 D1 `model_10000.pt`；不续 `model_10500`。本机合同覆盖 warmup 冻 actor。mix0 仍不 FT。不是过桩。
+- 用户覆盖：D1 训到 10k 即停，从 `model_10000.pt` 开 §VI 噪声 FT。已停 `t4-s12-lightlp-dagger`（D1 logdir 只读保留）。第一次 FT `s12_gru_depth_noise_ft` 因无 BC + adaptive KL + 未预热 critic 崩掉，已杀。
+- D1 已开训：tmux `t4-s12-lightlp-dagger`，logdir `2026-08-24_11-23-54_s12_lightlp_dagger_only`，已见 iter 0–6/14000。lineage：`pg_coef=0`、BC=1 不退火、mix 1→0/1000、warmstart null。TB `:8021` 已改指 D1。mix0 logdir 仍在。等 200 iter 健康门。
+- 当时执行面现已归档：`docs/archive/plans/2026-08-23--t4-sparse-s12-student-distill-recipe-plan.md`。成本切片标 `done`。不去特权老师。不热补 raycast。
+
+## 2026-08-23 LightLP distill cost (warp + 3168/MLP + single backward)
+
+- 19:37 CST 健康核对（~7740/15000）：进程仍活，无 NaN/OOM；**不是** v3@3305 那种 updater 坍塌（PG≈0.04、behavior 仍降、std 0.086、length≈200）。4k 后缓降：课表 2.47→1.82，踏石 easy `reach_2m` 仍约 0.62。LR 从 iter 50 钉在 `1e-5`；`teacher_mix` 现约 0.24。TB 单点 reward≈6–8 是噪声，最近 40 步在 7–14 震荡。不是过桩。
+- 20:00 判断：前 2k 证明 warp+MLP 能学；**按现行配方把 15k 跑完，指望它自己变成能过桩的学生希望不大。** 主因是老师 PPO 的 mean-KL 自适应 LR（`desired_kl=0.01`）把蒸馏 BC 当成过大更新，第 50 步就把 LR 钉死，同时 `teacher_mix` 还在往 0 撤。behavior 4k→7k 几乎不动（0.28→0.26）。感知/网络不是当前死路。
+- 停 `t4-s12-gru-ppo-rtx167`。第一次 1024-env probe 因把课表压成 `num_rows=1, num_cols=1024` 炸了 curriculum；改回默认 10×20 后 probe `ok=true`，`collection_s=1.833`，`has_rtx_sensors=false`。
+- 新 tmux `t4-s12-lightlp-raycast`，logdir `2026-08-23_14-26-19_s12_lightlp_raycast`。`student_lineage.json`：teacher 1937D / `model_21500`，`student_warmstart: null`，`max_iterations: 15000`，`update_period: 0.06`。
+- early perf n=16：collection p50 2.202 s（旧 5.391）、learn p50 0.142 s（旧 1.128 / p90 3.732）、total p50 2.342 s；显存 8.4–8.8 GiB。本机合同 `74 passed`。
+- 不是过桩。阶段 5 未开。
+
+## 2026-08-23 student headless RTX schedule
+
+- 根因：headless `t4_env.step` 从未 `sim.render()`，16.7 Hz 只是读缓存。
+- 代码：物理循环内按 12 physics step 调度 RTX；reset 行缺 post-reset tick 不写入 depth history；play/eval 对学生任务 `enable_cameras`。
+- Probe 16 env / 24 step：`ok=true`，render 相位 2/5/8…，idle checksum 不变，finite_frac≈0.98。
+- 新 lineage：tmux `t4-s12-gru-ppo-rtx167`。第一次 `13-04-08` 因 GPU0 残留 probe 5.3 GiB，iter 7 learn 期 OOM。清卡后重开 `2026-08-23_13-13-19_s12_gru_ppo_rtx167`，env.yaml `update_period: 0.06`，已过 iter 5，~9–13 s/iter，独占余量约 1.2 GiB。不 resume nansync。
+
+## 2026-08-23 16.7 Hz distill camera
+
+- 干净蒸馏默认 `student_depth_camera_update_period = 0.02 * DEPTH_UPDATE_DECIMATION`（16.7 Hz），与策略 3 步持帧同相。不砍 1024/卡。
+- 墙钟拆分：老师无相机 ~2.4 s/iter；学生 ~5.3 s，采集多 2.3 s、学习多 0.66 s。hold-only 相对 50 Hz 只省 0.12 s。下一步已把 CUDA ingest nan_guard 降到每个 rollout 一次，run `s12_gru_ppo_nansync`。
+
+## 2026-08-23 reuse teacher PPO
+
+- 学生不再自写 clip / GAE / mean-KL LR。`SafeRecurrentDistillation` 改为 `PPO` 子类；DAgger mix 走 `mix_teacher_student_actions`；recurrent minibatch 与老师共用 `_padded_recurrent_minibatches`。
+- 仍保留的学生侧：critic warmup、BC 退火、recon 冲突投影、std 投影、student-only Adam。
+- 远端尚未同步。
+
+## 2026-08-23 safe recurrent 根因复核
+
+- 用户否决「拧 KL 门 / 回滚 / 降 recon 比例」这类 fallback。3305 cliff 的根因是旧 `Distillation`：GRU 序列中途 step+detach，以及无 critic 的 MC return 冒充 PPO。
+- 修法：sequence GAE、先拟合 critic 再开 `pg_coef=0.5`、老师同款 mean-KL 自适应 LR、recon 冲突投影。去掉 transactional p95/emergency/behavior-drift 回滚。
+- warm-start 仍重置 std=0.1（开局卫生）。远端尚未同步。
+
 ## 2026-08-23 student collapse root repair
 
 - `fixed-v3-nanguard` 已判失败：3305 更新指标先突变，环境回报随后坠落；不是课程、命令、teacher mix、NaN/OOM 或 TensorBoard 断流触发。
@@ -24,7 +136,7 @@
 ## 2026-08-22 S12 收尾边框 + 40% 轻转
 
 - 诊断：S11b length~300 是 4.25 m OOB，走完踏石掉落是出界不是 fall_over。最后支撑 3.37–3.78 m，晋级/OOB 落在空洞里。
-- 现行计划：`docs/plans/2026-08-22--t4-sparse-s12-rim-yaw-student-plan.md`。S11 标 superseded。
+- 当时现行计划现已归档：`docs/archive/plans/2026-08-22--t4-sparse-s12-rim-yaw-student-plan.md`。S11 标 superseded。
 - 阶段 1 代码：`T4_SPARSE_RIM_WIDTH=0.75` 进入布局真值、碰撞 mesh 和 algebraic support；轻转 `straight_prob=0.60`；run_name `t_sparse_lightlp_s12_rim_yaw40`。Isaac-free `68 passed`（踏石/命令/列映射/奖励/监控/evaluator）。
 - 阶段 3 代码：`T4LocoSparseDepthStudentEnvCfg` 继承 S12 老师 MDP；`DepthStudentTeacherRecurrent`（CNN+GRU、scan recon 训练期、export 丢掉解码器）；DAgger+PPO 的 logπ 记在实际执行动作上。任务 `t4_loco_sparse_depth_student`。pytorch 环境 `test_t4_sparse_depth_student_gru_contract.py` + vault distillation `23 passed`。开训脚本 `legged_lab/scripts/train_t4_sparse_depth_student.py`，等阶段 2 的 10k 门。
 - 2026-08-22 14:54 CST：停 S11b，热启 S12。加载 `model_19000.pt`，`--reset_optimizer`，`Learning iteration 19002/24000` 已见。学生不并行，waiter 等 `model_23999.pt`。不把 length→1000 当成功。

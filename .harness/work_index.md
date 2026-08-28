@@ -4,8 +4,10 @@
 
 | Work surface | Status | Active slice | Source |
 | --- | --- | --- | --- |
-| T4 梅花桩 LightLP teacher | frozen | S12 从 S11b `model_19000` 热启后冻在 `model_21500.pt`（用户授权提前蒸学生，不再等 23999） | `docs/plans/2026-08-22--t4-sparse-s12-rim-yaw-student-plan.md` |
-| T4 梅花桩 GRU 深度学生 | repair ready | `fixed-v3-nanguard` 已策略坍塌并冻结取证。本地 safe recurrent updater 已实现；新 lineage 尚未远端启动，拟用 S12 `model_21500` + 可选 pre-collapse `model_3000` student-only warm-start | `docs/plans/2026-08-22--t4-sparse-s12-rim-yaw-student-plan.md` |
+| T4 梅花桩 LightLP teacher | frozen | S12 从 S11b `model_19000` 热启后冻在 `model_21500.pt`（用户授权提前蒸学生，不再等 23999） | `docs/archive/plans/2026-08-22--t4-sparse-s12-rim-yaw-student-plan.md` |
+| T4 梅花桩 GRU 深度学生 | done | Phase B `model_5999.pt` 通过修正后的 easy/hard student-only gate 与连续回放；deploy-only 包已验证。Phase C 因无必要且高 PPO/KL 风险跳过 | `docs/archive/plans/2026-08-26--t4-sparse-s12-gated-dagger-joint-ft-plan.md` |
+| T4 梅花桩学生 LightLP 成本 | done | warp + 3168/MLP + 单次 backward；collection p50 ~2.2 s。质量未过，已转配方修复 | `docs/archive/plans/2026-08-23--t4-sparse-s12-student-lightlp-distill-cost-plan.md` |
+| T4 学生 headless RTX 出图正确性 | done | `sim.render()` 调度 + checksum probe 绿；`s12_gru_ppo_rtx167` 已按 16.7 Hz 真出图 | `docs/archive/plans/2026-08-23--t4-sparse-s12-student-rtx-correctness-plan.md` |
 | T4 翻箱 G1/G2 | active | G1 专家已可用；G2 蒸馏 / 学生跟车在 zhuoqun。G3 合并未开 | `docs/plans/2026-08-15--t4-vault-g1-g2-recovery-plan.md` |
 | T4 统一深度感知走跑 | done | Stage E + depth student；跨栏已并入 Stage E | `docs/specs/2026-08-12--t4-unified-depth-locomotion.md` |
 | T4 depth student ZL/direct 楼梯对齐 | done | `model_25746.pt`，`vx=0.8` 冷启动 3/3 | `docs/runbooks/t4-teacher-and-depth-deployment.md` |
