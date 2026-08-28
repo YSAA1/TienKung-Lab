@@ -178,6 +178,8 @@ def play():
         env_cfg.scene.num_envs = args_cli.num_envs
 
     agent_cfg = update_rsl_rl_cfg(agent_cfg, args_cli)
+    if hasattr(agent_cfg, "algorithm") and hasattr(agent_cfg.algorithm, "num_mini_batches"):
+        agent_cfg.algorithm.num_mini_batches = 1
     env_cfg.scene.seed = agent_cfg.seed
 
     env_class = task_registry.get_task_class(env_class_name)
@@ -258,6 +260,8 @@ def _play_gym_manager_task(task: str) -> None:
     else:
         env_cfg.scene.num_envs = 1
     agent_cfg = update_rsl_rl_cfg(agent_cfg, args_cli)
+    if hasattr(agent_cfg, "algorithm") and hasattr(agent_cfg.algorithm, "num_mini_batches"):
+        agent_cfg.algorithm.num_mini_batches = 1
     env_cfg.seed = agent_cfg.seed
     env_cfg.sim.device = args_cli.device if args_cli.device is not None else agent_cfg.device
     env = RslRlVecEnvWrapper(gym.make(gym_task, cfg=env_cfg))
