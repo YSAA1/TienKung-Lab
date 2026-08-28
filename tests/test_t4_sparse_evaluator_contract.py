@@ -235,6 +235,7 @@ def test_play_recording_reads_the_terminal_snapshot_contract():
     assert 'parser.add_argument("--checkpoint_path", type=str, default=None' in source
     assert "Path(args_cli.checkpoint_path).expanduser().resolve()" in source
     assert "if not resume_path.is_file()" in source
+    assert 'getattr(agent_cfg, "runner_class_name", "OnPolicyRunner")' in source
     assert 'parser.add_argument("--command_vx", type=float, default=0.6' in source
     assert "(args_cli.command_vx, args_cli.command_vx)" in source
     assert '"--disable_self_collisions"' in source
