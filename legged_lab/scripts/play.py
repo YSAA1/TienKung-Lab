@@ -20,6 +20,7 @@ import argparse
 import json
 import os
 from collections import deque
+from pathlib import Path
 
 import torch
 from isaaclab.app import AppLauncher
@@ -39,6 +40,7 @@ parser = argparse.ArgumentParser(description="Train an RL agent with RSL-RL.")
 parser.add_argument("--task", type=str, default=None, help="Name of the task.")
 parser.add_argument("--num_envs", type=int, default=None, help="Number of environments to simulate.")
 parser.add_argument("--seed", type=int, default=None, help="Seed used for the environment")
+parser.add_argument("--checkpoint_path", type=str, default=None, help="Load this exact checkpoint path.")
 parser.add_argument("--command_vx", type=float, default=0.6, help="Fixed forward velocity command in m/s.")
 parser.add_argument(
     "--disable_self_collisions",
@@ -184,7 +186,13 @@ def play():
     log_root_path = os.path.join("logs", agent_cfg.experiment_name)
     log_root_path = os.path.abspath(log_root_path)
     print(f"[INFO] Loading experiment from directory: {log_root_path}")
-    resume_path = get_checkpoint_path(log_root_path, agent_cfg.load_run, agent_cfg.load_checkpoint)
+    if args_cli.checkpoint_path:
+        resume_path = Path(args_cli.checkpoint_path).expanduser().resolve()
+        if not resume_path.is_file():
+            raise FileNotFoundError(f"checkpoint does not exist: {resume_path}")
+        resume_path = str(resume_path)
+    else:
+        resume_path = get_checkpoint_path(log_root_path, agent_cfg.load_run, agent_cfg.load_checkpoint)
     log_dir = os.path.dirname(resume_path)
 
     runner_class: OnPolicyRunner | AmpOnPolicyRunner = eval(agent_cfg.runner_class_name)
@@ -254,7 +262,13 @@ def _play_gym_manager_task(task: str) -> None:
 
     log_root_path = os.path.abspath(os.path.join("logs", agent_cfg.experiment_name))
     print(f"[INFO] Loading experiment from directory: {log_root_path}")
-    resume_path = get_checkpoint_path(log_root_path, agent_cfg.load_run, agent_cfg.load_checkpoint)
+    if args_cli.checkpoint_path:
+        resume_path = Path(args_cli.checkpoint_path).expanduser().resolve()
+        if not resume_path.is_file():
+            raise FileNotFoundError(f"checkpoint does not exist: {resume_path}")
+        resume_path = str(resume_path)
+    else:
+        resume_path = get_checkpoint_path(log_root_path, agent_cfg.load_run, agent_cfg.load_checkpoint)
     runner = OnPolicyRunner(env, agent_cfg.to_dict(), log_dir=os.path.dirname(resume_path), device=env.device)
     runner.load(resume_path, load_optimizer=False)
     policy = runner.get_inference_policy(device=env.device)
