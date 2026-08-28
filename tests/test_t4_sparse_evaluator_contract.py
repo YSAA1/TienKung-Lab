@@ -1,10 +1,54 @@
 from pathlib import Path
 
 import pytest
+import torch
+
+from legged_lab.scripts.recurrent_policy_eval import evaluate_counterfactual_actions
 
 SCRIPT = Path(__file__).resolve().parents[1] / "legged_lab" / "scripts" / "eval_t4_hurdle.py"
 ENV = Path(__file__).resolve().parents[1] / "legged_lab" / "envs" / "t4" / "t4_env.py"
 PLAY = Path(__file__).resolve().parents[1] / "legged_lab" / "scripts" / "play.py"
+
+
+class _StatefulPolicy:
+    is_recurrent = True
+
+    def __init__(self):
+        self.hidden = torch.zeros(1, 2)
+
+    def get_hidden_states(self):
+        return self.hidden, None
+
+    def reset(self, dones=None, hidden_states=None):
+        assert dones is None
+        self.hidden = hidden_states[0].clone()
+
+    def infer(self, observations):
+        self.hidden = self.hidden + observations
+        return self.hidden.clone()
+
+
+def test_counterfactual_actions_advance_recurrent_state_only_for_selected_observation():
+    observations = {
+        "normal": torch.tensor([[1.0, 2.0]]),
+        "zero": torch.tensor([[0.0, 0.0]]),
+        "permuted": torch.tensor([[2.0, 1.0]]),
+    }
+    policy = _StatefulPolicy()
+
+    actions = evaluate_counterfactual_actions(policy, policy.infer, observations, selected_mode="normal")
+
+    assert torch.equal(actions["normal"], torch.tensor([[1.0, 2.0]]))
+    assert torch.equal(actions["zero"], torch.tensor([[0.0, 0.0]]))
+    assert torch.equal(actions["permuted"], torch.tensor([[2.0, 1.0]]))
+    assert torch.equal(policy.hidden, torch.tensor([[1.0, 2.0]]))
+
+
+def test_sparse_evaluator_resets_recurrent_state_at_episode_boundaries():
+    source = SCRIPT.read_text()
+
+    assert "obs, _, dones, extras = env.step(actions)" in source
+    assert "runner.alg.policy.reset(dones)" in source
 
 
 def test_sparse_progress_evaluator_accepts_both_foothold_terrains():

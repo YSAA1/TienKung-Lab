@@ -72,6 +72,8 @@ patch_physx_backward_compatibility_setting(AppLauncher)
 AppLauncher.add_app_launcher_args(parser)
 args_cli, _ = parser.parse_known_args()
 args_cli.headless = True
+if "depth_student" in (args_cli.task or ""):
+    args_cli.enable_cameras = True
 app_launcher = AppLauncher(args_cli)
 simulation_app = app_launcher.app
 
@@ -87,6 +89,7 @@ from legged_lab.assets.t4.schemas import (  # noqa: E402
     TEACHER_SCAN_INVALID_VALUE,
 )
 from legged_lab.envs import *  # noqa: F401,F403,E402
+from legged_lab.scripts.recurrent_policy_eval import evaluate_counterfactual_actions  # noqa: E402
 from legged_lab.terrains.stepping_stone_layout import (  # noqa: E402
     T4_STONE_PLATFORM_WIDTH,
     resolve_pinned_sparse_spawn,
@@ -160,7 +163,7 @@ def evaluate() -> dict:
                 args_cli.checkpoint,
             )
         )
-    runner_class = eval(agent_cfg.runner_class_name)
+    runner_class = eval(getattr(agent_cfg, "runner_class_name", "OnPolicyRunner"))
     runner = runner_class(env, agent_cfg.to_dict(), log_dir=str(root.parent), device=env.device)
     runner.load(str(root), load_optimizer=False)
     deterministic_policy = runner.get_inference_policy(device=env.device)
@@ -294,13 +297,21 @@ def evaluate() -> dict:
 
         observations_by_mode = {mode: apply_scan_mode(obs, mode) for mode in ("normal", "zero", "permuted")}
         with torch.inference_mode():
-            deterministic_actions = {
-                mode: deterministic_policy(policy_obs) for mode, policy_obs in observations_by_mode.items()
-            }
+            deterministic_actions = evaluate_counterfactual_actions(
+                runner.alg.policy,
+                deterministic_policy,
+                observations_by_mode,
+                selected_mode=args_cli.scan_mode,
+            )
             if args_cli.zero_actions:
                 actions = torch.zeros_like(deterministic_actions[args_cli.scan_mode])
             elif args_cli.stochastic:
-                actions = stochastic_policy(observations_by_mode[args_cli.scan_mode])
+                if getattr(runner.alg.policy, "is_recurrent", False):
+                    mean = deterministic_actions[args_cli.scan_mode]
+                    std = runner.alg.policy._bounded_std(mean)
+                    actions = torch.distributions.Normal(mean, std).sample()
+                else:
+                    actions = stochastic_policy(observations_by_mode[args_cli.scan_mode])
             else:
                 actions = deterministic_actions[args_cli.scan_mode]
 
@@ -334,6 +345,7 @@ def evaluate() -> dict:
         joint_action_samples += active_count
 
         obs, _, dones, extras = env.step(actions)
+        runner.alg.policy.reset(dones)
         episode_steps[active_envs] += 1
 
         done_tensor_ids = torch.nonzero(dones, as_tuple=False).flatten()
