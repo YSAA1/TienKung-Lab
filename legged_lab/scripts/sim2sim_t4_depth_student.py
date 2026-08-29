@@ -269,6 +269,18 @@ def camera_look_axes(xyaxes: tuple[float, ...] | np.ndarray) -> dict[str, np.nda
     return {"right": right, "up": up, "look": look}
 
 
+def body_velocities_world(model: mujoco.MjModel, data: mujoco.MjData) -> tuple[np.ndarray, np.ndarray]:
+    """Return body linear/angular velocities in world coordinates for MuJoCo 3.x."""
+    linear = np.empty((model.nbody, 3), dtype=np.float64)
+    angular = np.empty((model.nbody, 3), dtype=np.float64)
+    spatial = np.empty(6, dtype=np.float64)
+    for body_id in range(model.nbody):
+        mujoco.mj_objectVelocity(model, data, mujoco.mjtObj.mjOBJ_BODY, body_id, spatial, 0)
+        angular[body_id] = spatial[:3]
+        linear[body_id] = spatial[3:]
+    return linear, angular
+
+
 def root_yaw_wxyz(quat: np.ndarray) -> float:
     """Yaw of a MuJoCo floating-base ``(w, x, y, z)`` quaternion."""
     w, x, y, z = (float(value) for value in quat)
@@ -1301,7 +1313,8 @@ class DepthStudentSim:
             self.model.actuator_ctrllimited[actuator_id] = 0
             self.model.actuator_forcelimited[actuator_id] = 1
             self.model.actuator_forcerange[actuator_id] = (-self.effort_limit[i], self.effort_limit[i])
-            self.model.dof_damping[self.dof_adr[i]] += self.kd[i]
+            self.model.dof_damping[self.dof_adr[i]] = self.kd[i]
+            self.model.dof_frictionloss[self.dof_adr[i]] = 0.0
 
     def _apply_position_targets(self, targets: np.ndarray) -> None:
         self.data.ctrl[self.actuator_ids] = targets
@@ -1646,12 +1659,13 @@ def recorded_run(
     }
 
     def capture() -> None:
+        body_lin_vel_w, body_ang_vel_w = body_velocities_world(sim.model, sim.data)
         rollout["joint_pos"].append(sim.qpos[sim.qpos_adr].copy())
         rollout["joint_vel"].append(sim.qvel[sim.dof_adr].copy())
         rollout["body_pos_w"].append(sim.data.xpos.copy())
         rollout["body_quat_w"].append(sim.data.xquat.copy())
-        rollout["body_lin_vel_w"].append(sim.data.xvelp.copy())
-        rollout["body_ang_vel_w"].append(sim.data.xvelr.copy())
+        rollout["body_lin_vel_w"].append(body_lin_vel_w)
+        rollout["body_ang_vel_w"].append(body_ang_vel_w)
         rollout["action"].append(sim.previous_action.copy())
         rollout["command"].append(sim.command.copy())
 
