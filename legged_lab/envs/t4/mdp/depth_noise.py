@@ -5,7 +5,8 @@
 """LightLP §VI depth noise/latency algebra (Isaac-free).
 
 Applied to metric depth in metres before the student normalizes and resizes.
-Stage E distillation stays on clean simulated depth; sparse FT turns this on.
+Sparse deploy distill turns this on from iteration 0; Stage E distillation
+stays on clean simulated depth.
 """
 
 from __future__ import annotations
@@ -101,14 +102,54 @@ def apply_normalized_block_dropout(policy_depth, mask, fill_value: float = 1.0):
     return policy_depth.masked_fill(mask, fill_value)
 
 
+def apply_depth_boundary_corruption(
+    depth_m,
+    *,
+    dropout_draw,
+    false_hit_draw,
+    probability: float,
+    edge_threshold_m: float,
+    invalid_depth_m: float,
+):
+    """Flip hit/no-hit labels on both sides of metric-depth discontinuities.
+
+    The near side can disappear to max range, while the far/no-hit side can
+    inherit the nearest 3x3 hit. This models edge quantization without changing
+    the global valid-pixel fraction uniformly across the image.
+    """
+    import torch
+    import torch.nn.functional as F
+
+    probability = float(probability)
+    if probability <= 0.0:
+        return depth_m
+    squeeze_channel = depth_m.ndim == 3
+    depth = depth_m.unsqueeze(1) if squeeze_channel else depth_m
+    drop = dropout_draw.unsqueeze(1) if dropout_draw.ndim == 3 else dropout_draw
+    hit = false_hit_draw.unsqueeze(1) if false_hit_draw.ndim == 3 else false_hit_draw
+    local_max = F.max_pool2d(depth, kernel_size=3, stride=1, padding=1)
+    local_min = -F.max_pool2d(-depth, kernel_size=3, stride=1, padding=1)
+    near_edge = depth < local_max - float(edge_threshold_m)
+    far_edge = depth > local_min + float(edge_threshold_m)
+    result = depth.clone()
+    result = torch.where(near_edge & (drop < probability), torch.as_tensor(invalid_depth_m, device=depth.device), result)
+    result = torch.where(far_edge & (hit < probability), local_min, result)
+    return result.squeeze(1) if squeeze_channel else result
+
+
 def depth_refresh_plan(counter: int, hold: int, reset_any: bool, noise_on: bool):
     """Decide whether to ingest camera/delay and whether to run clamp+resize.
 
     Non-refresh steps reuse the last policy frame; delay/noise still ingest every
-    control step when ``noise_on``. Reset rows always materialize immediately.
+    control step when ``noise_on``. Clean distill must not ingest just because a
+    subset of envs reset: tiled ``annotator.get_data()`` always captures every
+    camera, so one reset would otherwise force a full 4096-wide RTX render at
+    50 Hz. Reset rows already zero their history and wait for the next hold.
+    Noise FT still postprocesses reset rows immediately because it already
+    ingests every control step.
     """
     hold = max(1, int(hold))
     write_all = int(counter) == 0 or int(counter) % hold == 0
-    postprocess = write_all or bool(reset_any)
-    ingest = bool(noise_on) or postprocess
+    ingest = bool(noise_on) or write_all
+    postprocess = write_all or (bool(reset_any) and bool(noise_on))
     return ingest, postprocess, write_all

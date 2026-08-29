@@ -40,6 +40,21 @@ def assert_finite_tensor(tensor, name, *, step, rank, stage):
     )
 
 
+def mix_teacher_student_actions(student_actions, teacher_actions, mix):
+    """DAgger action mix used by both Distillation and the PPO student subclass."""
+    if mix >= 1.0:
+        executed = teacher_actions
+        student_action_mask = torch.zeros(student_actions.shape[0], dtype=torch.bool, device=student_actions.device)
+    elif mix <= 0.0:
+        executed = student_actions
+        student_action_mask = torch.ones(student_actions.shape[0], dtype=torch.bool, device=student_actions.device)
+    else:
+        take_teacher = torch.rand(student_actions.shape[0], device=student_actions.device) < mix
+        executed = torch.where(take_teacher.unsqueeze(-1), teacher_actions, student_actions)
+        student_action_mask = ~take_teacher
+    return executed, student_action_mask
+
+
 def assert_finite_grads(named_params, *, step, rank):
     """Raise on the first non-finite gradient so optimizer.step is never reached."""
     for name, param in named_params:
@@ -200,17 +215,9 @@ class Distillation:
         student_actions = student_actions.detach()
         teacher_actions = self.policy.evaluate(teacher_obs).detach()
         self._assert_finite(teacher_actions, "teacher_actions", "ingest")
-        mix = self.current_teacher_mix()
-        if mix >= 1.0:
-            executed = teacher_actions
-            student_action_mask = torch.zeros(student_actions.shape[0], dtype=torch.bool, device=student_actions.device)
-        elif mix <= 0.0:
-            executed = student_actions
-            student_action_mask = torch.ones(student_actions.shape[0], dtype=torch.bool, device=student_actions.device)
-        else:
-            take_teacher = torch.rand(student_actions.shape[0], device=student_actions.device) < mix
-            executed = torch.where(take_teacher.unsqueeze(-1), teacher_actions, student_actions)
-            student_action_mask = ~take_teacher
+        executed, student_action_mask = mix_teacher_student_actions(
+            student_actions, teacher_actions, self.current_teacher_mix()
+        )
         self._assert_finite(executed, "executed_actions", "ingest")
         # Ratio must use log π of the action that actually ran, including DAgger
         # teacher-mix rows. Storing the unused student sample makes pg garbage.

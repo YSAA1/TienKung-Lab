@@ -137,12 +137,20 @@ class DepthStudentTeacherRecurrent(DepthStudentTeacher):
         self.rnn_hidden_dim = int(rnn_hidden_dim)
         self.recon_scan_dim = int(recon_scan_dim)
         self.recon_scan_offset = int(recon_scan_offset)
+        self.init_noise_std = float(init_noise_std)
         self.min_action_std = float(min_action_std)
         self.max_action_std = None if max_action_std is None else float(max_action_std)
         if self.min_action_std <= 0.0:
             raise ValueError("min_action_std must be positive")
         if self.max_action_std is not None and self.max_action_std < self.min_action_std:
             raise ValueError("max_action_std must be greater than or equal to min_action_std")
+        flat_in = int(self.depth_shape[0]) * int(self.depth_shape[1]) * int(self.depth_shape[2])
+        activation_cls = nn.ELU if activation == "elu" else nn.ReLU
+        self.depth_encoder = nn.Sequential(
+            nn.Flatten(),
+            nn.Linear(flat_in, int(depth_hidden_dim)),
+            activation_cls(),
+        )
         fused_dim = int(depth_hidden_dim) + int(proprio_obs_dim)
         self.memory_s = Memory(
             fused_dim, type=self.rnn_type, num_layers=int(rnn_num_layers), hidden_size=self.rnn_hidden_dim
@@ -269,7 +277,7 @@ class DepthStudentTeacherRecurrent(DepthStudentTeacher):
         return teacher_obs[..., start:end]
 
     def deployable_state_dict(self):
-        """Export: CNN + GRU + actor. No teacher, no recon decoder, no critic."""
+        """Export: MLP depth encoder + GRU + actor. No teacher, no recon decoder, no critic."""
         return strip_deployable_state_dict(self.state_dict())
 
 

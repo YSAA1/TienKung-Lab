@@ -87,6 +87,7 @@ def test_sparse_teacher_cfg_enables_s12_command_and_full_level_reset():
 
     assert "random_level_reset_max_level: int | None = None" in sparse
     assert "self.random_level_reset_max_level = None" in sparse
+    assert "self.random_level_reset_min_level = None" in sparse
     assert "self.random_level_reset_max_level = 4" not in sparse
     assert "terrain_aware_commands: bool = True" in sparse
     assert "sparse_command_lin_vel_x" in sparse

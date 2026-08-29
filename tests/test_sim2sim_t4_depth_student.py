@@ -12,6 +12,8 @@ from legged_lab.scripts.sim2sim_t4_depth_student import (
     D455_ROS_ROT_WXYZ,
     DEPTH_CAM_POS,
     DEPTH_CAM_XYAXES,
+    DEPTH_FOVY,
+    DEPTH_HFOV_DEG,
     HEADING_STIFFNESS,
     LOCO_GOAL_XY,
     LOCO_STAIR2_RISE,
@@ -27,6 +29,7 @@ from legged_lab.scripts.sim2sim_t4_depth_student import (
     heading_velocity_command,
     polyline_lookahead,
     render_standing_sensor_depth,
+    depth_vertical_fov_deg,
     resolve_control_mode,
     resolve_course,
     ros_offset_to_mujoco_xyaxes,
@@ -175,5 +178,150 @@ def test_wrap_to_pi_and_default_control_mode():
     assert resolve_course(args) == "loco"
     args.course = "flat"
     assert resolve_course(args) == "flat"
+    args.course = "stepping_stones"
+    assert resolve_course(args) == "stepping_stones"
     args.control = "auto"
     assert resolve_control_mode(args) == "auto"
+
+
+def test_gru_depth_vertical_fov_matches_native_48x64():
+    native = depth_vertical_fov_deg(48, 64)
+    wide = depth_vertical_fov_deg(270, 480)
+    expected = math.degrees(2.0 * math.atan(math.tan(math.radians(DEPTH_HFOV_DEG / 2.0)) * 48.0 / 64.0))
+    assert native == pytest.approx(expected)
+    assert wide == pytest.approx(DEPTH_FOVY)
+    assert abs(native - wide) > 5.0
+
+
+def test_stepping_stones_course_has_square_footholds_and_a_pit():
+    from legged_lab.scripts.play_t4_sparse_teacher_mujoco import _LAYOUT as layout
+    foothold_centers = layout.foothold_centers
+    foothold_pitch = layout.foothold_pitch
+
+    xml = Path(build_model_xml(course="stepping_stones", difficulty=0.0)).read_text()
+    expected_stones = len(foothold_centers(foothold_pitch(0.0)))
+    assert xml.count('name="stone_') == expected_stones
+    assert expected_stones != 70
+    assert 'name="pillar_0_0"' not in xml
+    assert 'name="start_platform"' in xml
+    assert 'name="finish_platform"' in xml
+    assert 'name="rim_' in xml
+    assert 'name="sparse_pit_floor"' in xml
+    assert 'name="ground"' not in xml
+    import mujoco
+
+    model = mujoco.MjModel.from_xml_path(build_model_xml(course="stepping_stones", difficulty=0.0))
+    start = mujoco.mj_name2id(model, mujoco.mjtObj.mjOBJ_GEOM, "start_platform")
+    assert start >= 0
+    np.testing.assert_allclose(model.geom_size[start, :2], 0.8)
+    points = course_waypoints_from_model(model)
+    assert points[0, 0] <= 0.05
+    assert 3.0 < points[-1, 0] < 4.5
+
+
+def test_raised_pillars_course_has_cylinders_not_boxes():
+    from legged_lab.scripts.play_t4_sparse_teacher_mujoco import _LAYOUT as layout
+    T4_PILLAR_PITCH_RANGE = layout.T4_PILLAR_PITCH_RANGE
+    foothold_centers = layout.foothold_centers
+    foothold_pitch = layout.foothold_pitch
+
+    xml = Path(build_model_xml(course="raised_pillars", difficulty=0.0)).read_text()
+    expected_pillars = len(foothold_centers(foothold_pitch(0.0, T4_PILLAR_PITCH_RANGE)))
+    assert xml.count('name="pillar_') == expected_pillars
+    assert expected_pillars != 70
+    assert 'type="cylinder"' in xml
+    assert 'name="stone_0_0"' not in xml
+    assert 'name="sparse_pit_floor"' in xml
+    import mujoco
+
+    model = mujoco.MjModel.from_xml_path(build_model_xml(course="raised_pillars", difficulty=0.0))
+    points = course_waypoints_from_model(model)
+    assert 3.0 < points[-1, 0] < 4.5
+
+
+def test_sparse_course_chains_stones_then_pillars():
+    from legged_lab.scripts.play_t4_sparse_teacher_mujoco import _LAYOUT as layout
+    T4_PILLAR_PITCH_RANGE = layout.T4_PILLAR_PITCH_RANGE
+    foothold_centers = layout.foothold_centers
+    foothold_pitch = layout.foothold_pitch
+
+    xml = Path(build_model_xml(course="sparse", difficulty=0.0)).read_text()
+    assert xml.count('name="stone_') == len(foothold_centers(foothold_pitch(0.0)))
+    assert xml.count('name="pillar_') == len(foothold_centers(foothold_pitch(0.0, T4_PILLAR_PITCH_RANGE)))
+    assert 'name="transition_platform"' in xml
+
+
+def test_stepping_stones_depth_mask_hides_feet_and_keeps_terrain():
+    import mujoco
+
+    from legged_lab.scripts.sim2sim_t4_depth_student import (
+        DEPTH_TERRAIN_GEOM_GROUP,
+        apply_terrain_only_depth_groups,
+        depth_source_size_for_student,
+        terrain_only_depth_option,
+    )
+
+    xml_path = build_model_xml(course="stepping_stones", difficulty=0.0)
+    xml = Path(xml_path).read_text()
+    assert 'name="stone_0_0"' in xml
+    assert 'group="3"' in xml
+    assert depth_source_size_for_student(is_gru=True) == schemas.DEPTH_POLICY_SIZE
+
+    model = mujoco.MjModel.from_xml_path(xml_path)
+    apply_terrain_only_depth_groups(model)
+    stone = mujoco.mj_name2id(model, mujoco.mjtObj.mjOBJ_GEOM, "stone_0_0")
+    foot = mujoco.mj_name2id(model, mujoco.mjtObj.mjOBJ_GEOM, "left_foot1_collision")
+    start = mujoco.mj_name2id(model, mujoco.mjtObj.mjOBJ_GEOM, "start_platform")
+    assert stone >= 0 and foot >= 0 and start >= 0
+    assert int(model.geom_group[stone]) == DEPTH_TERRAIN_GEOM_GROUP
+    assert int(model.geom_group[start]) == DEPTH_TERRAIN_GEOM_GROUP
+    assert int(model.geom_group[foot]) != DEPTH_TERRAIN_GEOM_GROUP
+    assert int(terrain_only_depth_option().geomgroup[DEPTH_TERRAIN_GEOM_GROUP]) == 1
+    assert int(terrain_only_depth_option().geomgroup[0]) == 0
+
+
+def test_deploy_depth_option_shows_robot_and_terrain():
+    from legged_lab.scripts.sim2sim_t4_depth_student import robot_and_terrain_depth_option
+
+    option = robot_and_terrain_depth_option()
+    assert int(option.geomgroup[0]) == 1
+    assert int(option.geomgroup[3]) == 1
+
+
+def test_sim2sim_cli_exposes_depth_noise_and_keeps_robot_in_view_by_default():
+    from legged_lab.scripts import sim2sim_t4_depth_student as sim2sim
+
+    source = Path(sim2sim.__file__).read_text(encoding="utf-8")
+    assert "robot_and_terrain_depth_option" in source
+    assert "include_robot_in_depth: bool = True" in source
+    assert "--depth-noise" in source
+    assert "--terrain-only-depth" in source
+    assert "apply_metric_depth_noise" in source
+
+
+def test_easy_stepping_stones_warp_style_depth_sees_the_platform():
+    import mujoco
+
+    from legged_lab.scripts.sim2sim_t4_depth_student import (
+        SPAWN_Z,
+        apply_terrain_only_depth_groups,
+        terrain_only_depth_option,
+    )
+
+    xml_path = build_model_xml(course="stepping_stones", difficulty=0.0)
+    model = mujoco.MjModel.from_xml_path(xml_path)
+    apply_terrain_only_depth_groups(model)
+    data = mujoco.MjData(model)
+    data.qpos[2] = SPAWN_Z
+    mujoco.mj_forward(model, data)
+    cam_id = mujoco.mj_name2id(model, mujoco.mjtObj.mjOBJ_CAMERA, "depth_cam")
+    height, width = schemas.DEPTH_POLICY_SIZE
+    renderer = mujoco.Renderer(model, height=height, width=width)
+    try:
+        renderer.enable_depth_rendering()
+        renderer.update_scene(data, camera=cam_id, scene_option=terrain_only_depth_option())
+        depth = renderer.render()
+    finally:
+        renderer.close()
+    hit = (depth > 0.05) & (depth < 3.0)
+    assert float(hit.mean()) > 0.25, "terrain-only depth should see the start platform / nearby stones"

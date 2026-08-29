@@ -54,6 +54,10 @@ def test_opposite_direction_and_foot_accel_ema():
     assert sig.random_level_reset_high(3, 4) == 3
     assert sig.random_level_reset_high(10, None) == 10
     assert sig.random_level_reset_high(0, 4) == 1
+    assert sig.random_level_reset_low(None, 10) == 0
+    assert sig.random_level_reset_low(6, 10) == 6
+    assert sig.random_level_reset_low(10, 10) == 9
+    assert sig.random_level_reset_low(-1, 10) == 0
     promotion, timeout_success, fall = sig.monitor_outcome_flags(
         move_up=np.array([True, True, False]),
         timed_out=np.array([True, False, False]),
@@ -95,6 +99,15 @@ def test_sparse_curriculum_requires_timeout_success_and_demotes_early_falls():
     )
     np.testing.assert_array_equal(move_up, np.array([True, False, False, False]))
     np.testing.assert_array_equal(move_down, np.array([False, True, True, True]))
+
+
+def test_distill_can_keep_failed_sparse_rows_in_the_distribution():
+    move_down = np.array([False, True, True, True])
+    is_sparse = np.array([True, True, True, False])
+    kept = sig.mask_sparse_curriculum_demote(move_down, is_sparse, demote_sparse=False)
+    np.testing.assert_array_equal(kept, np.array([False, False, False, True]))
+    same = sig.mask_sparse_curriculum_demote(move_down, is_sparse, demote_sparse=True)
+    np.testing.assert_array_equal(same, move_down)
 
 
 def test_sparse_difficulty_bands_cover_all_ten_rows():

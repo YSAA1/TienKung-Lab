@@ -1,0 +1,22 @@
+{
+  "ok": true,
+  "host": "nubot",
+  "date": "2026-08-29",
+  "num_envs": 8,
+  "gpu": 3,
+  "action_delay": {
+    "min": 0,
+    "max": 2
+  },
+  "stiffness_ratio_bounds": [0.9000203609466553, 1.0990797281265259],
+  "damping_ratio_bounds": [0.9001819491386414, 1.0990601778030396],
+  "armature_ratio_bounds": [0.8010590672492981, 1.1992205381393433],
+  "effort_actuator_sim_match": true,
+  "effort_max_env_spread_ratio": 1.2121864557266235,
+  "depth_finite": true,
+  "depth_min": 0.23974914848804474,
+  "depth_max": 1.0,
+  "boundary_corruption": true,
+  "pillar_variation": true,
+  "note": "Core runtime checks passed before the temporary probe hit a probe-only missing env.close method."
+}

@@ -30,6 +30,7 @@ class RolloutStorage:
             self.privileged_observations = None
             self.actions = None
             self.privileged_actions = None
+            self.reference_actions = None
             self.rewards = None
             self.dones = None
             self.values = None
@@ -79,6 +80,7 @@ class RolloutStorage:
         # for distillation
         if training_type in {"distillation", "safe_distillation"}:
             self.privileged_actions = torch.zeros(num_transitions_per_env, num_envs, *actions_shape, device=self.device)
+            self.reference_actions = torch.zeros(num_transitions_per_env, num_envs, *actions_shape, device=self.device)
             self.actions_log_prob = torch.zeros(num_transitions_per_env, num_envs, 1, device=self.device)
             self.student_action_mask = torch.zeros(
                 num_transitions_per_env, num_envs, 1, dtype=torch.bool, device=self.device
@@ -120,6 +122,8 @@ class RolloutStorage:
         # for distillation
         if self.training_type in {"distillation", "safe_distillation"}:
             self.privileged_actions[self.step].copy_(transition.privileged_actions)
+            if transition.reference_actions is not None:
+                self.reference_actions[self.step].copy_(transition.reference_actions)
             if transition.actions_log_prob is not None:
                 self.actions_log_prob[self.step].copy_(transition.actions_log_prob.view(-1, 1))
             if transition.student_action_mask is not None:
@@ -276,90 +280,29 @@ class RolloutStorage:
                     None,
                 ), None, rnd_state_batch
 
-    # for reinfrocement learning with recurrent networks
-    def recurrent_mini_batch_generator(self, num_mini_batches, num_epochs=8):
-        if self.training_type != "rl":
-            raise ValueError("This function is only available for reinforcement learning training.")
+    @staticmethod
+    def _hidden_batch(saved_hidden_states, last_was_done, first_traj, last_traj):
+        if not saved_hidden_states:
+            return None
+        hid_batch = [
+            hidden.permute(2, 0, 1, 3)[last_was_done][first_traj:last_traj].transpose(1, 0).contiguous()
+            for hidden in saved_hidden_states
+        ]
+        return hid_batch[0] if len(hid_batch) == 1 else hid_batch
+
+    def _padded_recurrent_minibatches(self, num_mini_batches, num_epochs):
+        """Shared padded-trajectory slicing used by teacher PPO and the GRU student."""
+        if self.saved_hidden_states_a is None:
+            raise RuntimeError("recurrent rollout did not record actor hidden states")
         padded_obs_trajectories, trajectory_masks = split_and_pad_trajectories(self.observations, self.dones)
         if self.privileged_observations is not None:
             padded_privileged_obs_trajectories, _ = split_and_pad_trajectories(self.privileged_observations, self.dones)
         else:
             padded_privileged_obs_trajectories = padded_obs_trajectories
-
         if self.rnd_state_shape is not None:
             padded_rnd_state_trajectories, _ = split_and_pad_trajectories(self.rnd_state, self.dones)
         else:
             padded_rnd_state_trajectories = None
-
-        mini_batch_size = self.num_envs // num_mini_batches
-        for ep in range(num_epochs):
-            first_traj = 0
-            for i in range(num_mini_batches):
-                start = i * mini_batch_size
-                stop = (i + 1) * mini_batch_size
-
-                dones = self.dones.squeeze(-1)
-                last_was_done = torch.zeros_like(dones, dtype=torch.bool)
-                last_was_done[1:] = dones[:-1]
-                last_was_done[0] = True
-                trajectories_batch_size = torch.sum(last_was_done[:, start:stop])
-                last_traj = first_traj + trajectories_batch_size
-
-                masks_batch = trajectory_masks[:, first_traj:last_traj]
-                obs_batch = padded_obs_trajectories[:, first_traj:last_traj]
-                privileged_obs_batch = padded_privileged_obs_trajectories[:, first_traj:last_traj]
-
-                if padded_rnd_state_trajectories is not None:
-                    rnd_state_batch = padded_rnd_state_trajectories[:, first_traj:last_traj]
-                else:
-                    rnd_state_batch = None
-
-                actions_batch = self.actions[:, start:stop]
-                old_mu_batch = self.mu[:, start:stop]
-                old_sigma_batch = self.sigma[:, start:stop]
-                returns_batch = self.returns[:, start:stop]
-                advantages_batch = self.advantages[:, start:stop]
-                values_batch = self.values[:, start:stop]
-                old_actions_log_prob_batch = self.actions_log_prob[:, start:stop]
-
-                # reshape to [num_envs, time, num layers, hidden dim] (original shape: [time, num_layers, num_envs, hidden_dim])
-                # then take only time steps after dones (flattens num envs and time dimensions),
-                # take a batch of trajectories and finally reshape back to [num_layers, batch, hidden_dim]
-                last_was_done = last_was_done.permute(1, 0)
-                hid_a_batch = [
-                    saved_hidden_states.permute(2, 0, 1, 3)[last_was_done][first_traj:last_traj]
-                    .transpose(1, 0)
-                    .contiguous()
-                    for saved_hidden_states in self.saved_hidden_states_a
-                ]
-                hid_c_batch = [
-                    saved_hidden_states.permute(2, 0, 1, 3)[last_was_done][first_traj:last_traj]
-                    .transpose(1, 0)
-                    .contiguous()
-                    for saved_hidden_states in self.saved_hidden_states_c
-                ]
-                # remove the tuple for GRU
-                hid_a_batch = hid_a_batch[0] if len(hid_a_batch) == 1 else hid_a_batch
-                hid_c_batch = hid_c_batch[0] if len(hid_c_batch) == 1 else hid_c_batch
-
-                yield obs_batch, privileged_obs_batch, actions_batch, values_batch, advantages_batch, returns_batch, old_actions_log_prob_batch, old_mu_batch, old_sigma_batch, (
-                    hid_a_batch,
-                    hid_c_batch,
-                ), masks_batch, rnd_state_batch
-
-                first_traj = last_traj
-
-    def safe_recurrent_mini_batch_generator(self, num_mini_batches, num_epochs=1):
-        if self.training_type != "safe_distillation":
-            raise ValueError("This function is only available for safe recurrent distillation training.")
-        if self.saved_hidden_states_a is None:
-            raise RuntimeError("safe recurrent rollout did not record actor hidden states")
-
-        padded_obs_trajectories, trajectory_masks = split_and_pad_trajectories(self.observations, self.dones)
-        if self.privileged_observations is not None:
-            padded_privileged_obs_trajectories, _ = split_and_pad_trajectories(self.privileged_observations, self.dones)
-        else:
-            padded_privileged_obs_trajectories = padded_obs_trajectories
 
         mini_batch_size = self.num_envs // num_mini_batches
         for _ in range(num_epochs):
@@ -367,49 +310,79 @@ class RolloutStorage:
             for batch_index in range(num_mini_batches):
                 start = batch_index * mini_batch_size
                 stop = (batch_index + 1) * mini_batch_size
-
                 dones = self.dones.squeeze(-1)
                 last_was_done = torch.zeros_like(dones, dtype=torch.bool)
                 last_was_done[1:] = dones[:-1]
                 last_was_done[0] = True
-                trajectories_batch_size = torch.sum(last_was_done[:, start:stop])
-                last_traj = first_traj + trajectories_batch_size
-
-                masks_batch = trajectory_masks[:, first_traj:last_traj]
-                obs_batch = padded_obs_trajectories[:, first_traj:last_traj]
-                privileged_obs_batch = padded_privileged_obs_trajectories[:, first_traj:last_traj]
-                actions_batch = self.actions[:, start:stop]
-                privileged_actions_batch = self.privileged_actions[:, start:stop]
-                student_action_mask_batch = self.student_action_mask[:, start:stop]
-                values_batch = self.values[:, start:stop]
-                advantages_batch = self.advantages[:, start:stop]
-                returns_batch = self.returns[:, start:stop]
-                old_actions_log_prob_batch = self.actions_log_prob[:, start:stop]
-                old_mu_batch = self.mu[:, start:stop]
-                old_sigma_batch = self.sigma[:, start:stop]
-
+                last_traj = first_traj + torch.sum(last_was_done[:, start:stop])
                 last_was_done = last_was_done.permute(1, 0)
-                hid_a_batch = [
-                    saved_hidden_states.permute(2, 0, 1, 3)[last_was_done][first_traj:last_traj]
-                    .transpose(1, 0)
-                    .contiguous()
-                    for saved_hidden_states in self.saved_hidden_states_a
-                ]
-                hid_a_batch = hid_a_batch[0] if len(hid_a_batch) == 1 else hid_a_batch
-
-                yield (
-                    obs_batch,
-                    privileged_obs_batch,
-                    actions_batch,
-                    privileged_actions_batch,
-                    student_action_mask_batch,
-                    values_batch,
-                    advantages_batch,
-                    returns_batch,
-                    old_actions_log_prob_batch,
-                    old_mu_batch,
-                    old_sigma_batch,
-                    hid_a_batch,
-                    masks_batch,
-                )
+                batch = {
+                    "obs": padded_obs_trajectories[:, first_traj:last_traj],
+                    "privileged_obs": padded_privileged_obs_trajectories[:, first_traj:last_traj],
+                    "actions": self.actions[:, start:stop],
+                    "values": self.values[:, start:stop],
+                    "advantages": self.advantages[:, start:stop],
+                    "returns": self.returns[:, start:stop],
+                    "old_actions_log_prob": self.actions_log_prob[:, start:stop],
+                    "old_mu": self.mu[:, start:stop],
+                    "old_sigma": self.sigma[:, start:stop],
+                    "hid_a": self._hidden_batch(self.saved_hidden_states_a, last_was_done, first_traj, last_traj),
+                    "hid_c": self._hidden_batch(self.saved_hidden_states_c, last_was_done, first_traj, last_traj),
+                    "masks": trajectory_masks[:, first_traj:last_traj],
+                    "rnd_state": (
+                        None
+                        if padded_rnd_state_trajectories is None
+                        else padded_rnd_state_trajectories[:, first_traj:last_traj]
+                    ),
+                    "privileged_actions": (
+                        None if not hasattr(self, "privileged_actions") else self.privileged_actions[:, start:stop]
+                    ),
+                    "reference_actions": (
+                        None if not hasattr(self, "reference_actions") else self.reference_actions[:, start:stop]
+                    ),
+                    "student_action_mask": (
+                        None if not hasattr(self, "student_action_mask") else self.student_action_mask[:, start:stop]
+                    ),
+                }
+                yield batch
                 first_traj = last_traj
+
+    def recurrent_mini_batch_generator(self, num_mini_batches, num_epochs=8):
+        if self.training_type != "rl":
+            raise ValueError("This function is only available for reinforcement learning training.")
+        for batch in self._padded_recurrent_minibatches(num_mini_batches, num_epochs):
+            yield (
+                batch["obs"],
+                batch["privileged_obs"],
+                batch["actions"],
+                batch["values"],
+                batch["advantages"],
+                batch["returns"],
+                batch["old_actions_log_prob"],
+                batch["old_mu"],
+                batch["old_sigma"],
+                (batch["hid_a"], batch["hid_c"]),
+                batch["masks"],
+                batch["rnd_state"],
+            )
+
+    def safe_recurrent_mini_batch_generator(self, num_mini_batches, num_epochs=1):
+        if self.training_type != "safe_distillation":
+            raise ValueError("This function is only available for safe recurrent distillation training.")
+        for batch in self._padded_recurrent_minibatches(num_mini_batches, num_epochs):
+            yield (
+                batch["obs"],
+                batch["privileged_obs"],
+                batch["actions"],
+                batch["privileged_actions"],
+                batch["reference_actions"],
+                batch["student_action_mask"],
+                batch["values"],
+                batch["advantages"],
+                batch["returns"],
+                batch["old_actions_log_prob"],
+                batch["old_mu"],
+                batch["old_sigma"],
+                batch["hid_a"],
+                batch["masks"],
+            )

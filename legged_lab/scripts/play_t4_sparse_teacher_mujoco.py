@@ -300,7 +300,7 @@ def _geom_xml(geom: dict) -> str:
     rgba = " ".join(f"{value:.8g}" for value in geom["rgba"])
     return (
         f'<geom name="{geom["name"]}" type="{geom["shape"]}" pos="{pos}" size="{size}" '
-        f'rgba="{rgba}" condim="3" friction="1 0.005 0.0001"/>'
+        f'rgba="{rgba}" condim="3" friction="1 0.005 0.0001" group="3"/>'
     )
 
 

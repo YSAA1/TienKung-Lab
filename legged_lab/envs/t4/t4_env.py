@@ -68,8 +68,10 @@ from legged_lab.envs.t4.mdp.sparse_signals import (
     mask_recent_push_accel,
     monitor_outcome_flags,
     random_level_reset_high,
+    random_level_reset_low,
     random_level_reset_mask,
     sample_sparse_foothold_velocity,
+    mask_sparse_curriculum_demote,
     sparse_curriculum_moves,
     sparse_pit_fall_mask,
     terrain_aware_commands_enabled,
@@ -97,7 +99,7 @@ from legged_lab.terrains.stepping_stone_layout import (
     T4_STONE_WIDTH_RANGE,
     foot_scan_local_offsets,
 )
-from legged_lab.utils.env_utils.scene import SceneCfg
+from legged_lab.utils.env_utils.scene import SceneCfg, rtx_render_due, sensor_is_warp_raycast
 from rsl_rl.env import VecEnv
 
 
@@ -303,6 +305,9 @@ class T4LocoEnv(VecEnv):
 
         self.episode_length_buf = torch.zeros(self.num_envs, device=self.device, dtype=torch.long)
         self.sim_step_counter = 0
+        self.last_rtx_sim_step = -1
+        self.schedule_rtx_render = True
+        self._rtx_reset_sim_step = torch.full((self.num_envs,), -1, dtype=torch.long, device=self.device)
         self.time_out_buf = torch.zeros(self.num_envs, device=self.device, dtype=torch.bool)
         self.pit_fall_buf = torch.zeros(self.num_envs, device=self.device, dtype=torch.bool)
 
@@ -755,6 +760,55 @@ class T4LocoEnv(VecEnv):
         """66D AMP state built by the shared feature builder."""
         return self.amp_builder.compute()
 
+    def _depth_camera_sensor(self):
+        sensors = getattr(self.scene, "sensors", None)
+        if isinstance(sensors, dict):
+            camera = sensors.get("depth_camera")
+            if camera is not None:
+                return camera
+        if sensors is not None:
+            try:
+                if "depth_camera" in sensors:
+                    return sensors["depth_camera"]
+            except TypeError:
+                pass
+        return getattr(self, "depth_camera", None)
+
+    def _has_warp_depth_camera(self) -> bool:
+        return sensor_is_warp_raycast(self._depth_camera_sensor())
+
+    def _has_rtx_sensors(self) -> bool:
+        camera = self._depth_camera_sensor()
+        if camera is not None:
+            return not sensor_is_warp_raycast(camera)
+        checker = getattr(self.sim, "has_rtx_sensors", None)
+        if callable(checker):
+            return bool(checker())
+        return False
+
+    def _depth_camera_update_period(self) -> float:
+        camera = None
+        sensors = getattr(self.scene, "sensors", None)
+        if isinstance(sensors, dict):
+            camera = sensors.get("depth_camera")
+        if camera is None:
+            camera = getattr(self, "depth_camera", None)
+        period = getattr(getattr(camera, "cfg", None), "update_period", None)
+        if period is not None and float(period) > 0.0:
+            return float(period)
+        scene_cam = getattr(self.cfg.scene, "depth_camera", None)
+        period = getattr(scene_cam, "update_period", None)
+        if period is not None and float(period) > 0.0:
+            return float(period)
+        return float(self.step_dt)
+
+    def _pending_post_reset_rtx_mask(self) -> torch.Tensor:
+        reset_at = getattr(self, "_rtx_reset_sim_step", None)
+        last = int(getattr(self, "last_rtx_sim_step", -1))
+        if reset_at is None:
+            return torch.zeros(self.num_envs, dtype=torch.bool, device=self.device)
+        return reset_at >= last
+
     """
     Stepping.
     """
@@ -770,12 +824,22 @@ class T4LocoEnv(VecEnv):
 
         self.avg_feet_force_per_step.zero_()
         self.avg_feet_speed_per_step.zero_()
+        schedule_ticks = bool(getattr(self, "schedule_rtx_render", True))
+        has_rtx = schedule_ticks and self._has_rtx_sensors()
+        has_warp = self._has_warp_depth_camera()
+        sensor_period = self._depth_camera_update_period() if (has_rtx or has_warp) else self.step_dt
         for _ in range(self.cfg.sim.decimation):
             self.sim_step_counter += 1
             self.robot.set_joint_position_target(processed_actions)
             self.scene.write_data_to_sim()
             self.sim.step(render=False)
+            sensor_due = rtx_render_due(self.sim_step_counter, self.physics_dt, sensor_period)
+            if has_rtx and sensor_due:
+                self.sim.render()
+                self.last_rtx_sim_step = int(self.sim_step_counter)
             self.scene.update(dt=self.physics_dt)
+            if has_warp and schedule_ticks and sensor_due:
+                self.last_rtx_sim_step = int(self.sim_step_counter)
 
             self.avg_feet_force_per_step += torch.norm(
                 self.contact_sensor.data.net_forces_w[:, self.feet_cfg.body_ids, :3], dim=-1
@@ -987,6 +1051,8 @@ class T4LocoEnv(VecEnv):
 
         self.scene.write_data_to_sim()
         self.sim.forward()
+        if hasattr(self, "_rtx_reset_sim_step"):
+            self._rtx_reset_sim_step[env_ids] = int(self.sim_step_counter)
         self.prev_step_root_pos_w[env_ids] = self.robot.data.root_pos_w[env_ids]
 
     def update_terrain_levels(self, env_ids):
@@ -1038,6 +1104,11 @@ class T4LocoEnv(VecEnv):
                 timed_out=timed_out,
                 pit_fall=pit_fall,
             )
+        move_down = mask_sparse_curriculum_demote(
+            move_down,
+            is_sparse,
+            demote_sparse=bool(getattr(self.cfg, "sparse_curriculum_demote", True)),
+        )
         promotion, timeout_success, _fall = monitor_outcome_flags(move_up, timed_out)
         self._update_terrain_metrics(
             terrain_types=terrain_types,
@@ -1113,8 +1184,12 @@ class T4LocoEnv(VecEnv):
             int(terrain.max_terrain_level),
             getattr(self.cfg, "random_level_reset_max_level", None),
         )
+        min_level = random_level_reset_low(
+            getattr(self.cfg, "random_level_reset_min_level", None),
+            max_level,
+        )
         terrain.terrain_levels[chosen] = torch.randint(
-            0, max_level, (len(chosen),), device=self.device, dtype=terrain.terrain_levels.dtype
+            min_level, max_level, (len(chosen),), device=self.device, dtype=terrain.terrain_levels.dtype
         )
         terrain.env_origins[chosen] = terrain.terrain_origins[
             terrain.terrain_levels[chosen], terrain.terrain_types[chosen]

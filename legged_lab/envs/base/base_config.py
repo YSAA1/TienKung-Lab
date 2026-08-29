@@ -18,6 +18,7 @@
 
 import math
 from dataclasses import MISSING
+from typing import Any
 
 from isaaclab.assets.articulation import ArticulationCfg
 from isaaclab.managers import EventTermCfg as EventTerm
@@ -70,7 +71,7 @@ class BaseSceneCfg:
     height_scanner: HeightScannerCfg = HeightScannerCfg()
     foot_scanner: FootScannerCfg = FootScannerCfg()
     lidar: LidarCfg = LidarCfg()
-    depth_camera: TiledCameraCfg = TiledCameraCfg()
+    depth_camera: Any = TiledCameraCfg()
     disable_visual_assets: bool = False
 
 

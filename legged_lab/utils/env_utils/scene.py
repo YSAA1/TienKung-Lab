@@ -32,6 +32,56 @@ if TYPE_CHECKING:
     from legged_lab.envs.base.base_env_config import BaseSceneCfg
 
 
+def resolve_depth_camera_update_period(configured_period, step_dt):
+    """Keep a task-set camera period.
+
+    Isaac uses ``update_period=0`` to mean every physics substep. Scene construction
+    historically mapped that to control-rate ``step_dt`` so tiled depth does not
+    render at 200 Hz. A positive configured period (for example 0.06 s) must be
+    preserved; unconditionally writing ``step_dt`` made 16.7 Hz student configs a
+    no-op.
+    """
+    if configured_period is None or configured_period <= 0:
+        return step_dt
+    return configured_period
+
+
+def rtx_render_interval_physics(update_period, physics_dt) -> int:
+    """Physics substeps between RTX ticks. 0.06 s / 0.005 s = 12."""
+    if update_period is None or physics_dt is None:
+        return 1
+    period = float(update_period)
+    dt = float(physics_dt)
+    if period <= 0.0 or dt <= 0.0:
+        return 1
+    return max(1, int(round(period / dt)))
+
+
+def rtx_render_due(sim_step_counter, physics_dt, update_period) -> bool:
+    """True on physics steps that should call ``sim.render()`` for RTX sensors."""
+    interval = rtx_render_interval_physics(update_period, physics_dt)
+    return int(sim_step_counter) % interval == 0
+
+
+def pending_post_reset_rtx(reset_sim_step, last_rtx_sim_step) -> bool:
+    """True when this env reset at or after the last RTX tick (image is pre-teleport)."""
+    return int(reset_sim_step) >= int(last_rtx_sim_step)
+
+
+def sensor_is_warp_raycast(sensor) -> bool:
+    """True for Isaac Lab ``RayCasterCamera`` / ``RayCaster`` (warp, not RTX)."""
+    if sensor is None:
+        return False
+    names = [type(sensor).__name__]
+    cfg = getattr(sensor, "cfg", None)
+    if cfg is not None:
+        names.append(type(cfg).__name__)
+        class_type = getattr(cfg, "class_type", None)
+        if class_type is not None:
+            names.append(getattr(class_type, "__name__", ""))
+    return any("RayCaster" in name for name in names)
+
+
 @configclass
 class SceneCfg(InteractiveSceneCfg):
     """Configuration for a cart-pole scene."""
@@ -135,7 +185,11 @@ class SceneCfg(InteractiveSceneCfg):
             # Preserve the configured sensor class (regular Camera vs tiled
             # Camera). Rebuilding every sensor as TiledCamera silently breaks
             # depth-only tasks that intentionally use one render product per env.
+            camera_update_period = resolve_depth_camera_update_period(
+                getattr(config.depth_camera, "update_period", 0.0),
+                step_dt,
+            )
             self.depth_camera = config.depth_camera.replace(
                 prim_path="{ENV_REGEX_NS}/Robot/" + config.depth_camera.prim_body_name,
-                update_period=step_dt,
+                update_period=camera_update_period,
             )

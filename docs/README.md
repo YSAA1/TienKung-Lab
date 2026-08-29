@@ -9,7 +9,7 @@
 
 | 轨道 | 现在做什么 | 执行计划 | 规格 |
 | --- | --- | --- | --- |
-| 梅花桩 | done：S12 老师冻在 `model_21500.pt`；GRU 学生 Phase B `model_5999.pt` 已通过修正后的 student-only easy/hard gate、连续回放与部署导出。Phase C 跳过 | [S12 归档计划](archive/plans/2026-08-22--t4-sparse-s12-rim-yaw-student-plan.md)；[门控学生归档计划](archive/plans/2026-08-26--t4-sparse-s12-gated-dagger-joint-ft-plan.md) | [稀疏规格](specs/2026-08-15--t4-stepping-stones-and-hurdle-stable.md) |
+| 梅花桩 | active：保留已验收的 Phase B `model_5999.pt`；从该完整 checkpoint 开 targeted robustness FT 新 lineage，补动作/执行器/深度边界与圆桩制造误差域。旧 Phase C 仍跳过 | [targeted FT 决策](../artifacts/diagnostics/s12_targeted_ft_decision.md)；[门控学生归档计划](archive/plans/2026-08-26--t4-sparse-s12-gated-dagger-joint-ft-plan.md) | [稀疏规格](specs/2026-08-15--t4-stepping-stones-and-hurdle-stable.md) |
 | 翻箱 | G1 跟踪专家 → G2 heightscan 技能（zhuoqun）。**G2 学生与 G3 合并（走跑+翻箱成一条策略）等 G2 过箱后再开。** | [翻箱 recovery](plans/2026-08-15--t4-vault-g1-g2-recovery-plan.md) | [合并规格](specs/2026-08-13--t4-vault-loco-merge.md) |
 
 运行时切片与机器占用：`.harness/work_index.md`、`.harness/state.md`。

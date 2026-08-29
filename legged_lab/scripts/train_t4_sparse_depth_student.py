@@ -44,7 +44,7 @@ parser.add_argument(
     action="store_true",
     help="Waive evaluator-manifest requirement after an explicit operator authorization.",
 )
-parser.add_argument("--task_num_envs", type=int, default=1024)
+parser.add_argument("--task_num_envs", type=int, default=256)
 parser.add_argument("--seed", type=int, default=None)
 add_rsl_rl_args(parser)
 patch_physx_backward_compatibility_setting(AppLauncher)
@@ -53,6 +53,7 @@ args_cli, _ = parser.parse_known_args()
 
 from legged_lab.assets.t4.student_lineage import (  # noqa: E402
     load_student_warmstart_checkpoint,
+    require_json_gate,
     require_sparse_teacher_checkpoint,
 )
 
@@ -115,17 +116,55 @@ def train():
         print(
             "[INFO] Warm-started student control stack "
             f"from {warmstart_path} (iter={warmstart_info['iter']}, keys={warmstart_info['loaded_keys']}); "
-            "critic, Adam, and safe-update counters reset."
+            "critic, Adam, and safe-update counters reset; "
+            f"action std reset to init={warmstart_info['init_action_std']:.3f} "
+            f"(source max={warmstart_info['source_action_std']['max']:.3f})."
         )
 
     if int(os.getenv("RANK", "0")) == 0:
         log_dir.mkdir(parents=True, exist_ok=True)
         lineage = {
             "task": "t4_loco_sparse_depth_student",
+            "phase": "dagger",
             "teacher_checkpoint": str(teacher_path.resolve()),
+            "teacher_sha256": teacher_gate_info["sha256"],
             "teacher_gate": teacher_gate_info,
+            "capability_gate_json": [
+                require_json_gate(item, label="teacher capability gate")
+                for item in teacher_gate_info["manifests"]
+            ],
             "student_warmstart": warmstart_info,
             "algorithm": agent_cfg.algorithm.class_name,
+            "teacher_mix": float(agent_cfg.algorithm.teacher_mix),
+            "teacher_mix_end": float(agent_cfg.algorithm.teacher_mix_end),
+            "teacher_mix_decay_iters": int(agent_cfg.algorithm.teacher_mix_decay_iters),
+            "pg_coef": float(agent_cfg.algorithm.pg_coef),
+            "pg_coef_ramp_iters": int(getattr(agent_cfg.algorithm, "pg_coef_ramp_iters", 0)),
+            "pg_delay_iters": int(getattr(agent_cfg.algorithm, "pg_delay_iters", 0)),
+            "schedule": str(agent_cfg.algorithm.schedule),
+            "learning_rate": float(agent_cfg.algorithm.learning_rate),
+            "behavior_coef": float(agent_cfg.algorithm.behavior_coef),
+            "behavior_coef_end": float(agent_cfg.algorithm.behavior_coef_end),
+            "behavior_coef_decay_iters": int(agent_cfg.algorithm.behavior_coef_decay_iters),
+            "critic_warmup_iters": int(agent_cfg.algorithm.critic_warmup_iters),
+            "recon_coef": float(agent_cfg.algorithm.recon_coef),
+            "action_std_reset": None,
+            "max_iterations": int(agent_cfg.max_iterations),
+            "enable_cameras": True,
+            "num_envs": int(env_cfg.scene.num_envs),
+            "student_depth_noise": bool(getattr(env_cfg, "student_depth_noise", False)),
+            "student_camera_pos_jitter_m": float(getattr(env_cfg, "student_camera_pos_jitter_m", 0.0)),
+            "student_camera_ori_jitter_rad": float(getattr(env_cfg, "student_camera_ori_jitter_rad", 0.0)),
+            "noise_model": {
+                "depth_noise": bool(getattr(env_cfg, "student_depth_noise", False)),
+                "depth_hold_steps": int(getattr(env_cfg, "student_depth_hold_steps", 0)),
+                "depth_delay_steps": list(getattr(env_cfg, "student_depth_delay_steps", ())),
+                "camera_pos_jitter_m": float(getattr(env_cfg, "student_camera_pos_jitter_m", 0.0)),
+                "camera_ori_jitter_rad": float(getattr(env_cfg, "student_camera_ori_jitter_rad", 0.0)),
+            },
+            "sparse_curriculum_demote": bool(getattr(env_cfg, "sparse_curriculum_demote", True)),
+            "random_level_reset_fraction": float(getattr(env_cfg, "random_level_reset_fraction", 0.0)),
+            "random_level_reset_min_level": getattr(env_cfg, "random_level_reset_min_level", None),
             "optimizer_reset": True,
             "safe_update_counters_reset": True,
         }

@@ -128,6 +128,16 @@ def random_level_reset_high(max_terrain_level: int, cap: int | None = None) -> i
     return max(1, high)
 
 
+def random_level_reset_low(min_level: int | None, high: int) -> int:
+    """Inclusive lower bound for ``torch.randint``, clamped to ``[0, high)``."""
+    if min_level is None:
+        return 0
+    low = max(0, int(min_level))
+    if low >= int(high):
+        return max(0, int(high) - 1)
+    return low
+
+
 def sample_sparse_foothold_velocity(
     vx_u,
     yaw_mode_u,
@@ -391,6 +401,13 @@ def sparse_curriculum_moves(move_up, move_down, is_sparse, moving, timed_out, pi
     adjusted_down = move_down | (sparse_failure & ~strict_sparse_success)
     adjusted_down = adjusted_down & ~adjusted_up
     return adjusted_up, adjusted_down
+
+
+def mask_sparse_curriculum_demote(move_down, is_sparse, *, demote_sparse: bool = True):
+    """Keep hard sparse rows in the distill distribution by skipping demotion."""
+    if demote_sparse:
+        return move_down
+    return move_down & ~is_sparse
 
 
 def terrain_difficulty_band(level: int, max_level: int) -> str:

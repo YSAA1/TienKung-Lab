@@ -18,6 +18,7 @@ from legged_lab.assets.t4.schemas import TEACHER_ACTOR_OBS_DIM, TEACHER_SPARSE_A
 
 SPARSE_TEACHER_TASK = "t4_loco_teacher_sparse"
 STUDENT_WARMSTART_PREFIXES = ("depth_encoder.", "memory_s.", "student.", "scan_decoder.")
+STUDENT_CONTINUATION_PREFIXES = STUDENT_WARMSTART_PREFIXES + ("critic.",)
 
 
 class StudentLineageError(ValueError):
@@ -51,6 +52,21 @@ def _checkpoint_sha256(path: Path) -> str:
         for chunk in iter(lambda: stream.read(1024 * 1024), b""):
             digest.update(chunk)
     return digest.hexdigest()
+
+
+def require_json_gate(path: str | Path, *, label: str = "capability gate") -> dict[str, Any]:
+    """Require a readable JSON object and return its auditable path/hash."""
+
+    gate_path = Path(path)
+    if not gate_path.is_file():
+        raise StudentLineageError(f"{label} JSON not found: {gate_path}")
+    try:
+        payload = json.loads(gate_path.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError) as exc:
+        raise StudentLineageError(f"{label} is not valid JSON: {gate_path}: {exc}") from exc
+    if not isinstance(payload, dict):
+        raise StudentLineageError(f"{label} must be a JSON object: {gate_path}")
+    return {"path": str(gate_path.resolve()), "sha256": _checkpoint_sha256(gate_path)}
 
 
 def _require_eval_manifests(
@@ -141,7 +157,8 @@ def load_student_warmstart_checkpoint(policy, path: str | Path) -> dict[str, Any
 
     Teacher and critic parameters stay at their current values. The caller owns a
     freshly constructed optimizer, so Adam moments and safe-update counters are
-    deliberately not migrated.
+    deliberately not migrated. Trainable action std is reset to the target
+    ``init_noise_std`` instead of inheriting the legacy inflated scale.
     """
 
     checkpoint_path = Path(path)
@@ -172,6 +189,12 @@ def load_student_warmstart_checkpoint(policy, path: str | Path) -> dict[str, Any
         raise StudentLineageError(f"{checkpoint_path} student warm-start shape mismatch: {exc}") from exc
     if not hasattr(policy, "project_action_std_"):
         raise StudentLineageError("target student policy does not expose project_action_std_()")
+    # Keep CNN/GRU/actor/decoder from the pre-collapse stack, but do not inherit the
+    # inflated exploration scale. Clamping 0.42→0.20 would start the new lineage
+    # sitting on the noise ceiling.
+    init_std = float(getattr(policy, "init_noise_std", 0.1))
+    with torch.no_grad():
+        policy.std.fill_(init_std)
     policy.project_action_std_()
 
     return {
@@ -181,6 +204,91 @@ def load_student_warmstart_checkpoint(policy, path: str | Path) -> dict[str, Any
         "loaded_keys": len(selected_state),
         "optimizer_reset": True,
         "critic_reset": True,
+        "reset_action_std": True,
+        "init_action_std": init_std,
+        "source_action_std": source_action_std,
+        "effective_action_std": _tensor_stats(policy.std),
+    }
+
+
+def load_student_continuation_checkpoint(
+    policy,
+    parent_path: str | Path,
+    teacher_path: str | Path,
+    *,
+    reset_action_std: float = 0.08,
+) -> dict[str, Any]:
+    """Start a new phase from a complete student/GRU/decoder/critic checkpoint.
+
+    The parent optimizer, iteration, algorithm counters, and action std are not
+    migrated. The parent teacher must exactly match the separately supplied S12
+    teacher, which is then reloaded as the sole teacher source.
+    """
+
+    parent_checkpoint = Path(parent_path)
+    teacher_checkpoint = Path(teacher_path)
+    parent_blob = _load_checkpoint_blob(parent_checkpoint)
+    teacher_blob = _load_checkpoint_blob(teacher_checkpoint)
+    if parent_blob.get("deployable"):
+        raise StudentLineageError(f"{parent_checkpoint} is deployable-only; continuation requires critic state")
+    parent_state = parent_blob.get("model_state_dict")
+    teacher_state = teacher_blob.get("model_state_dict")
+    if not isinstance(parent_state, Mapping) or not isinstance(teacher_state, Mapping):
+        raise StudentLineageError("continuation checkpoints require model_state_dict mappings")
+
+    target_state = policy.state_dict()
+    expected = {
+        name
+        for name in target_state
+        if name == "std" or name.startswith(STUDENT_CONTINUATION_PREFIXES)
+    }
+    missing = sorted(name for name in expected if name not in parent_state)
+    if missing:
+        raise StudentLineageError(
+            f"{parent_checkpoint} is not a complete student continuation checkpoint; missing {missing[:5]}"
+        )
+
+    parent_teacher = {name: value for name, value in parent_state.items() if name.startswith("teacher.")}
+    expected_teacher = {name: value for name, value in target_state.items() if name.startswith("teacher.")}
+    missing_parent_teacher = sorted(set(expected_teacher) - set(parent_teacher))
+    if missing_parent_teacher:
+        raise StudentLineageError(
+            f"{parent_checkpoint} has no auditable embedded teacher; missing {missing_parent_teacher[:5]}"
+        )
+    for target_name in sorted(expected_teacher):
+        actor_name = target_name.replace("teacher.", "actor.", 1)
+        if actor_name not in teacher_state:
+            raise StudentLineageError(f"{teacher_checkpoint} is missing {actor_name}")
+        if not torch.equal(parent_teacher[target_name].detach().cpu(), teacher_state[actor_name].detach().cpu()):
+            raise StudentLineageError(
+                f"parent embedded teacher does not match supplied S12 teacher at {target_name}"
+            )
+
+    selected = {name: parent_state[name] for name in sorted(expected)}
+    source_action_std = _tensor_stats(selected["std"])
+    try:
+        torch.nn.Module.load_state_dict(policy, selected, strict=False)
+    except RuntimeError as exc:
+        raise StudentLineageError(f"{parent_checkpoint} continuation shape mismatch: {exc}") from exc
+    if not hasattr(policy, "project_action_std_"):
+        raise StudentLineageError("target student policy does not expose project_action_std_()")
+    with torch.no_grad():
+        policy.std.fill_(float(reset_action_std))
+    policy.project_action_std_()
+    resumed = policy.load_state_dict(teacher_state)
+    if resumed:
+        raise StudentLineageError(f"{teacher_checkpoint} unexpectedly looks like a student checkpoint")
+
+    return {
+        "path": str(parent_checkpoint.resolve()),
+        "sha256": _checkpoint_sha256(parent_checkpoint),
+        "iter": parent_blob.get("iter"),
+        "loaded_keys": len(selected),
+        "teacher_sha256": _checkpoint_sha256(teacher_checkpoint),
+        "optimizer_reset": True,
+        "iteration_reset": True,
+        "algorithm_counters_reset": True,
+        "reset_action_std": float(reset_action_std),
         "source_action_std": source_action_std,
         "effective_action_std": _tensor_stats(policy.std),
     }

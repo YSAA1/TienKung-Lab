@@ -64,6 +64,7 @@ from .stepping_stone_layout import (
     stone_height,
     stone_height_jitter,
     stone_width,
+    targeted_layout_seed,
 )
 
 
@@ -155,7 +156,11 @@ def stepping_stones_terrain(difficulty, cfg):
     jitter = stone_height_jitter(difficulty, cfg.height_jitter_range)
     tile = float(min(cfg.size))
     meshes = _sparse_base_meshes(cfg, tile)
-    rng = np.random.default_rng(int(round(float(difficulty) * 1000.0)))
+    if getattr(cfg, "targeted_layout_seed", False):
+        rng_seed = targeted_layout_seed(difficulty, base_seed=getattr(cfg, "seed", 0) or 0, stream=1)
+    else:
+        rng_seed = int(round(float(difficulty) * 1000.0))
+    rng = np.random.default_rng(rng_seed)
     for x, y in foothold_centers(pitch, tile_size=tile, platform_width=cfg.platform_width, border_width=cfg.border_width):
         h = base_height + float(rng.uniform(-jitter, jitter))
         h = max(0.04, h)
@@ -171,11 +176,30 @@ def raised_pillars_terrain(difficulty, cfg):
     diameter = pillar_diameter(difficulty, cfg.diameter_range)
     pitch = foothold_pitch(difficulty, cfg.foothold_pitch_range)
     height = pillar_height(difficulty, cfg.height_range)
+    targeted = bool(getattr(cfg, "targeted_manufacturing_variation", False))
+    rng = None
+    if targeted:
+        rng = np.random.default_rng(
+            targeted_layout_seed(difficulty, base_seed=getattr(cfg, "seed", 0) or 0, stream=2)
+        )
+        diameter *= float(rng.uniform(1.0 - cfg.diameter_scale_jitter, 1.0 + cfg.diameter_scale_jitter))
+        pitch *= float(rng.uniform(1.0 - cfg.pitch_scale_jitter, 1.0 + cfg.pitch_scale_jitter))
     tile = float(min(cfg.size))
     meshes = _sparse_base_meshes(cfg, tile)
     for x, y in foothold_centers(pitch, tile_size=tile, platform_width=cfg.platform_width, border_width=cfg.border_width):
-        cyl = trimesh.creation.cylinder(radius=0.5 * diameter, height=height)
-        cyl.apply_translation((x, y, 0.5 * height))
+        post_height = height
+        post_x, post_y = x, y
+        tilt_x = tilt_y = 0.0
+        if targeted:
+            post_x += float(rng.uniform(-cfg.xy_jitter_m, cfg.xy_jitter_m))
+            post_y += float(rng.uniform(-cfg.xy_jitter_m, cfg.xy_jitter_m))
+            post_height = max(0.04, height + float(rng.uniform(-cfg.height_jitter_m, cfg.height_jitter_m)))
+            tilt_x = float(rng.uniform(-cfg.top_tilt_rad, cfg.top_tilt_rad))
+            tilt_y = float(rng.uniform(-cfg.top_tilt_rad, cfg.top_tilt_rad))
+        cyl = trimesh.creation.cylinder(radius=0.5 * diameter, height=post_height)
+        if targeted:
+            cyl.apply_transform(trimesh.transformations.euler_matrix(tilt_x, tilt_y, 0.0, axes="sxyz"))
+        cyl.apply_translation((post_x, post_y, 0.5 * post_height))
         meshes.append(cyl)
     origin = np.array([0.5 * tile, 0.5 * tile, 0.0])
     return meshes, origin
@@ -193,6 +217,7 @@ class MeshSteppingStonesTerrainCfg(SubTerrainBaseCfg):
     height_jitter_range: tuple[float, float] = T4_STONE_HEIGHT_JITTER_RANGE
     hole_depth: float = T4_HOLE_DEPTH
     soft_fill: bool = False
+    targeted_layout_seed: bool = False
 
 
 @configclass
@@ -206,6 +231,12 @@ class MeshRaisedPillarsTerrainCfg(SubTerrainBaseCfg):
     height_range: tuple[float, float] = T4_PILLAR_HEIGHT_RANGE
     hole_depth: float = T4_HOLE_DEPTH
     soft_fill: bool = False
+    targeted_manufacturing_variation: bool = False
+    xy_jitter_m: float = 0.0
+    height_jitter_m: float = 0.0
+    top_tilt_rad: float = 0.0
+    diameter_scale_jitter: float = 0.0
+    pitch_scale_jitter: float = 0.0
 
 
 GRAVEL_TERRAINS_CFG = TerrainGeneratorCfg(

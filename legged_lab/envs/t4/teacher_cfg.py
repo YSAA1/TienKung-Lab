@@ -233,6 +233,7 @@ class T4LocoTeacherEnvCfg:
     device: str = "cuda:0"
     random_level_reset_fraction: float = 0.0
     random_level_reset_max_level: int | None = None
+    random_level_reset_min_level: int | None = None
     scene: BaseSceneCfg = BaseSceneCfg(
         max_episode_length_s=20.0,
         # Formal starting point for the first Stage E lineage; the capacity probe
@@ -511,6 +512,7 @@ class T4LocoSparseTeacherEnvCfg(T4LocoTeacherEnvCfg):
         self.use_algebraic_sparse_scan = False
         self.random_level_reset_fraction = 0.10
         self.random_level_reset_max_level = None
+        self.random_level_reset_min_level = None
         self.terrain_aware_commands = True
         self.commands.ranges.lin_vel_x = (-0.6, 2.0)
         self.sparse_command_lin_vel_x = (0.6, 2.0)

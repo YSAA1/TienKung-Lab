@@ -26,11 +26,18 @@ Usage (from the repo root so the vendored packages resolve):
         # default: training-scale loco course + goal nav, no keyboard needed
     python -m legged_lab.scripts.sim2sim_t4_depth_student --course flat
     python -m legged_lab.scripts.sim2sim_t4_depth_student --course rule
+    python -m legged_lab.scripts.sim2sim_t4_depth_student --course stepping_stones --difficulty 0
+    python -m legged_lab.scripts.sim2sim_t4_depth_student --course raised_pillars --difficulty 0
+    python -m legged_lab.scripts.sim2sim_t4_depth_student --course sparse --difficulty 0
+
+Sparse courses are the Isaac 8 m tile (1.6 m center pad, lattice, 0.75 m rim)
+over a pit, not a 7-lane pier. Spawn is the pad center, same as training.
 """
 
 from __future__ import annotations
 
 import argparse
+import importlib.util
 import json
 import math
 import re
@@ -78,12 +85,22 @@ from legged_lab.assets.t4.schemas import (  # noqa: E402
     PROPRIO_FRAME_DIM,
     PROPRIO_HISTORY_LENGTH,
     STUDENT_ACTOR_OBS_DIM,
+    STUDENT_DEPTH_HISTORY_LENGTH,
+    STUDENT_PROPRIO_HISTORY_LENGTH,
     TEACHER_ACTOR_OBS_DIM,
     TEACHER_SPARSE_ACTOR_OBS_DIM,
     depth_camera_mujoco_xyaxes,
     depth_camera_ros_quat_wxyz,
     sparse_teacher_latest_scan_range,
 )
+
+_DEPTH_NOISE_PATH = ROOT / "legged_lab" / "envs" / "t4" / "mdp" / "depth_noise.py"
+_depth_noise_spec = importlib.util.spec_from_file_location("t4_sim2sim_depth_noise", _DEPTH_NOISE_PATH)
+_depth_noise = importlib.util.module_from_spec(_depth_noise_spec)
+assert _depth_noise_spec.loader is not None
+_depth_noise_spec.loader.exec_module(_depth_noise)
+LIGHTLP_DEPTH_SCALE_JITTER = _depth_noise.LIGHTLP_DEPTH_SCALE_JITTER
+apply_metric_depth_noise = _depth_noise.apply_metric_depth_noise
 
 MJCF = ROOT / "legged_lab/assets/t4/mjcf/t4_std.xml"
 DEFAULT_CHECKPOINT = ROOT / "artifacts" / "checkpoints" / "t4_depth_student_latest.pt"
@@ -227,11 +244,27 @@ DEPTH_HFOV_DEG = 87.0
 DEPTH_WIDTH, DEPTH_HEIGHT = 480, 270
 DEPTH_MAX_RANGE = 15.0  # D455 max_range; farther pixels are no-hit in IsaacLab
 DEPTH_FOVY = math.degrees(2 * math.atan(math.tan(math.radians(DEPTH_HFOV_DEG / 2)) * DEPTH_HEIGHT / DEPTH_WIDTH))
+
+
+def depth_vertical_fov_deg(
+    image_height: int,
+    image_width: int,
+    horizontal_fov_deg: float = DEPTH_HFOV_DEG,
+) -> float:
+    """Vertical FOV that keeps ``horizontal_fov_deg`` at this image aspect."""
+    return math.degrees(
+        2.0 * math.atan(math.tan(math.radians(horizontal_fov_deg / 2.0)) * image_height / image_width)
+    )
+
+
 DEPTH_CAM_POS = DEPTH_CAMERA_SITE_POS
 D455_ROS_ROT_WXYZ = depth_camera_ros_quat_wxyz()
 DEPTH_CAM_XYAXES = depth_camera_mujoco_xyaxes()
 
 SPAWN_Z = 0.85
+# Warp training only hits `/World/ground`. Put MuJoCo terrain in this group and
+# hide robot collision (default group 0) from the depth camera.
+DEPTH_TERRAIN_GEOM_GROUP = 3
 
 
 def quat_wxyz_to_mat(quat: tuple[float, float, float, float] | np.ndarray) -> np.ndarray:
@@ -357,10 +390,42 @@ def course_waypoints_from_model(model: mujoco.MjModel) -> np.ndarray:
     return np.asarray(points, dtype=np.float64)
 
 
-def render_standing_sensor_depth(*, hurdles: bool = False, rule_contract: bool = False) -> np.ndarray:
+def depth_source_size_for_student(*, is_gru: bool) -> tuple[int, int]:
+    """GRU LightLP students train on native 48x64 tiled RTX; Stage E still uses 270x480."""
+    if is_gru:
+        return DEPTH_POLICY_SIZE
+    return (DEPTH_HEIGHT, DEPTH_WIDTH)
+
+
+def terrain_only_depth_option() -> mujoco.MjvOption:
+    """Hide robot geoms. Kept for ablations; deploy eval must see the body."""
+    option = mujoco.MjvOption()
+    option.geomgroup = np.zeros(6, dtype=np.uint8)
+    option.geomgroup[DEPTH_TERRAIN_GEOM_GROUP] = 1
+    return option
+
+
+def robot_and_terrain_depth_option() -> mujoco.MjvOption:
+    """RTX-style depth: terrain and robot both visible (self-occlusion)."""
+    option = mujoco.MjvOption()
+    option.geomgroup = np.ones(6, dtype=np.uint8)
+    return option
+
+
+def apply_terrain_only_depth_groups(model: mujoco.MjModel) -> None:
+    """Move the MJCF ground plane onto the terrain depth group."""
+    ground_id = mujoco.mj_name2id(model, mujoco.mjtObj.mjOBJ_GEOM, "ground")
+    if ground_id >= 0:
+        model.geom_group[ground_id] = DEPTH_TERRAIN_GEOM_GROUP
+
+
+def render_standing_sensor_depth(
+    *, hurdles: bool = False, rule_contract: bool = False, include_robot: bool = True
+) -> np.ndarray:
     """Render one raw MuJoCo depth frame at the T4 standing pose."""
     xml_path = build_model_xml(hurdles, rule_contract)
     model = mujoco.MjModel.from_xml_path(xml_path)
+    apply_terrain_only_depth_groups(model)
     data = mujoco.MjData(model)
     data.qpos[2] = SPAWN_Z
     for name, target in zip(T4_JOINT_NAMES, STANDING_POS):
@@ -371,9 +436,8 @@ def render_standing_sensor_depth(*, hurdles: bool = False, rule_contract: bool =
     renderer = mujoco.Renderer(model, height=DEPTH_HEIGHT, width=DEPTH_WIDTH)
     try:
         renderer.enable_depth_rendering()
-        option = mujoco.MjvOption()
-        option.geomgroup = np.array([1, 0, 0, 0, 0, 0], dtype=np.uint8)
-        renderer.update_scene(data, camera=cam_id, scene_option=option)
+        scene_option = robot_and_terrain_depth_option() if include_robot else terrain_only_depth_option()
+        renderer.update_scene(data, camera=cam_id, scene_option=scene_option)
         return np.ascontiguousarray(renderer.render()[:, ::-1])
     finally:
         renderer.close()
@@ -411,6 +475,7 @@ def _xml_box_geom(
     if rgba is not None:
         attrs.append(f'rgba="{" ".join(f"{value:.4f}" for value in rgba)}"')
     attrs.append(f'density="{density:.1f}"')
+    attrs.append(f'group="{DEPTH_TERRAIN_GEOM_GROUP}"')
     return f"<geom {' '.join(attrs)}/>"
 
 
@@ -431,6 +496,7 @@ def _xml_cylinder_geom(
     if rgba is not None:
         attrs.append(f'rgba="{" ".join(f"{value:.4f}" for value in rgba)}"')
     attrs.append(f'density="{density:.1f}"')
+    attrs.append(f'group="{DEPTH_TERRAIN_GEOM_GROUP}"')
     return f"<geom {' '.join(attrs)}/>"
 
 
@@ -1146,7 +1212,57 @@ def build_stair_probe_course(*, include_goal: bool = True) -> str:
     return "".join(parts)
 
 
-def build_model_xml(hurdles: bool = False, rule_contract: bool = False, course: str | None = None) -> str:
+SPARSE_COURSE_TERRAIN = {
+    "stepping_stones": "stepping_stones",
+    "raised_pillars": "raised_pillars",
+    "sparse": "sparse_course",
+}
+_GROUND_GEOM_RE = re.compile(r'<geom name="ground"[^>]*/>')
+
+
+def build_sparse_foothold_course(course: str, difficulty: float = 0.0) -> str:
+    """Isaac 8 m sparse tile (center pad + lattice + rim) over a real pit."""
+    from legged_lab.scripts.play_t4_sparse_teacher_mujoco import _LAYOUT, _geom_xml
+
+    T4_STONE_TILE_SIZE = _LAYOUT.T4_STONE_TILE_SIZE
+    isaac_sparse_tile_geoms = _LAYOUT.isaac_sparse_tile_geoms
+
+    if course not in SPARSE_COURSE_TERRAIN:
+        raise ValueError(f"unsupported sparse course {course!r}")
+    if course == "stepping_stones":
+        geoms = isaac_sparse_tile_geoms(difficulty, "stepping_stones")
+    elif course == "raised_pillars":
+        geoms = isaac_sparse_tile_geoms(difficulty, "raised_pillars")
+    else:
+        geoms = isaac_sparse_tile_geoms(difficulty, "stepping_stones", finish_name=None)
+        geoms.extend(
+            isaac_sparse_tile_geoms(
+                difficulty,
+                "raised_pillars",
+                origin_xy=(T4_STONE_TILE_SIZE, 0.0),
+                platform_name="transition_platform",
+                finish_name="finish_platform",
+                name_prefix="b_",
+            )
+        )
+    left = min(float(geom["pos"][0]) - float(geom["size"][0]) for geom in geoms)
+    right = max(float(geom["pos"][0]) + float(geom["size"][0]) for geom in geoms)
+    pit = (
+        f'\n    <geom name="sparse_pit_floor" type="box" pos="{0.5 * (left + right):.8g} 0 -2.05" '
+        f'size="{0.5 * (right - left) + 1.0:.8g} 6 0.05" rgba="0.08 0.09 0.10 1" '
+        f'condim="3" friction="1 0.005 0.0001" group="{DEPTH_TERRAIN_GEOM_GROUP}"/>'
+    )
+    terrain_xml = "\n    ".join(_geom_xml(geom) for geom in geoms)
+    finish = next(geom for geom in geoms if geom["name"] == "finish_platform")
+    return pit + "\n    " + terrain_xml + _goal_xml(float(finish["pos"][0]), 0.0)
+
+
+def build_model_xml(
+    hurdles: bool = False,
+    rule_contract: bool = False,
+    course: str | None = None,
+    difficulty: float = 0.0,
+) -> str:
     """Return a patched MJCF: camera on Trunk, optional obstacle course, all world geoms collision-active."""
     if course is None:
         course = "rule" if rule_contract else "hurdles" if hurdles else "flat"
@@ -1159,6 +1275,10 @@ def build_model_xml(hurdles: bool = False, rule_contract: bool = False, course: 
     # terrain is frictional, so restore a frictional ground plane.
     xml = xml.replace('geom name="ground" type="plane" pos="0 0 0" size="0 0 1" material="matplane" condim="1"',
                       'geom name="ground" type="plane" pos="0 0 0" size="0 0 1" material="matplane" condim="3"')
+    if course in SPARSE_COURSE_TERRAIN:
+        xml, replacements = _GROUND_GEOM_RE.subn("", xml, count=1)
+        if replacements != 1:
+            raise RuntimeError("failed to remove the infinite ground plane for the sparse pit")
     anchor = '<body name="Trunk"'
     index = xml.index(anchor)
     index = xml.index(">", index) + 1
@@ -1188,6 +1308,8 @@ def build_model_xml(hurdles: bool = False, rule_contract: bool = False, course: 
         extras += build_loco_course()
     elif course == "stairs":
         extras += build_stair_probe_course()
+    elif course in SPARSE_COURSE_TERRAIN:
+        extras += build_sparse_foothold_course(course, difficulty)
     else:
         extras += _goal_xml(8.0, 0.0)
     extras += (
@@ -1210,10 +1332,14 @@ class DepthStudentSim:
         hurdles: bool = False,
         rule_contract: bool = False,
         course: str | None = None,
+        difficulty: float = 0.0,
         depth_source_size: tuple[int, int] | None = None,
+        include_robot_in_depth: bool = True,
+        depth_noise: bool = False,
     ):
-        xml_path = build_model_xml(hurdles, rule_contract, course=course)
+        xml_path = build_model_xml(hurdles, rule_contract, course=course, difficulty=difficulty)
         self.model = mujoco.MjModel.from_xml_path(xml_path)
+        apply_terrain_only_depth_groups(self.model)
         self.model.opt.timestep = SIM_DT
         self.data = mujoco.MjData(self.model)
 
@@ -1242,12 +1368,14 @@ class DepthStudentSim:
             raise RuntimeError(f"checkpoint {checkpoint} does not contain model_state_dict")
         model_state = strip_deployable_state_dict(state["model_state_dict"])
         is_gru = any(key.startswith("memory_s") for key in model_state)
+        self.is_gru_student = is_gru
         self.policy = build_depth_student_policy(
             model_state,
             NUM_JOINTS,
             num_teacher_obs=TEACHER_SPARSE_ACTOR_OBS_DIM if is_gru else TEACHER_ACTOR_OBS_DIM,
-            depth_shape=(DEPTH_HISTORY_LENGTH, *DEPTH_POLICY_SIZE),
-            proprio_obs_dim=PROPRIO_FRAME_DIM * PROPRIO_HISTORY_LENGTH,
+            depth_shape=(STUDENT_DEPTH_HISTORY_LENGTH if is_gru else DEPTH_HISTORY_LENGTH, *DEPTH_POLICY_SIZE),
+            proprio_obs_dim=PROPRIO_FRAME_DIM
+            * (STUDENT_PROPRIO_HISTORY_LENGTH if is_gru else PROPRIO_HISTORY_LENGTH),
             recon_scan_offset=sparse_teacher_latest_scan_range()[0],
         )
         self.policy.eval()
@@ -1255,18 +1383,23 @@ class DepthStudentSim:
             self.policy.reset()
         print(f"[INFO] loaded checkpoint {checkpoint} (iter {state.get('iter')})")
 
-        # Depth renderer at the native sensor resolution. Training keeps the
-        # depth stream self-contained by disabling visual assets, so mirror the
-        # collision-only view here.
-        self.depth_source_size = depth_source_size or (DEPTH_HEIGHT, DEPTH_WIDTH)
+        # Depth renderer. Deploy-domain GRU students train on tiled RTX that
+        # sees the robot; keep that self-occlusion here. ``--terrain-only-depth``
+        # restores the old warp-style mask for ablations.
+        self.include_robot_in_depth = bool(include_robot_in_depth)
+        self.depth_noise = bool(depth_noise)
+        self._depth_noise_scale = 1.0
+        self.depth_source_size = depth_source_size or depth_source_size_for_student(is_gru=is_gru)
         source_height, source_width = self.depth_source_size
         self.renderer = mujoco.Renderer(self.model, height=source_height, width=source_width)
         self.renderer.enable_depth_rendering()
-        self.depth_option = mujoco.MjvOption()
-        self.depth_option.geomgroup = np.array([1, 0, 0, 0, 0, 0], dtype=np.uint8)
+        self.depth_option = (
+            robot_and_terrain_depth_option() if self.include_robot_in_depth else terrain_only_depth_option()
+        )
         self.depth_cam_id = mujoco.mj_name2id(self.model, mujoco.mjtObj.mjOBJ_CAMERA, "depth_cam")
+        self.model.cam_fovy[self.depth_cam_id] = depth_vertical_fov_deg(source_height, source_width)
         self.last_depth_sensor = np.full(self.depth_source_size, np.inf, dtype=np.float32)
-        self.last_depth_raw = np.full((DEPTH_HEIGHT, DEPTH_WIDTH), DEPTH_INVALID_VALUE, dtype=np.float32)
+        self.last_depth_raw = np.full(self.depth_source_size, DEPTH_INVALID_VALUE, dtype=np.float32)
 
         # Buffers. The env zero-fills history at reset (CircularBuffer.reset),
         # so start zeroed rather than repeating the first frame.
@@ -1287,6 +1420,10 @@ class DepthStudentSim:
         self.qpos[2] = SPAWN_Z
         self.qpos[self.qpos_adr] = STANDING_POS
         mujoco.mj_forward(self.model, self.data)
+        if self.depth_noise:
+            self._depth_noise_scale = (1.0 - LIGHTLP_DEPTH_SCALE_JITTER) + 2.0 * LIGHTLP_DEPTH_SCALE_JITTER * float(
+                np.random.random()
+            )
 
     def reset_episode(self) -> None:
         """Reset pose, histories and the gait clock for a new attempt."""
@@ -1327,17 +1464,18 @@ class DepthStudentSim:
         # left, so mirror horizontally.
         depth = np.ascontiguousarray(depth[:, ::-1])
         self.last_depth_sensor = depth
-        if depth.shape != (DEPTH_HEIGHT, DEPTH_WIDTH):
-            if cv2 is None:
-                raise RuntimeError("OpenCV is required to emulate the ZL low-resolution depth stream")
-            depth = cv2.resize(depth, (DEPTH_WIDTH, DEPTH_HEIGHT), interpolation=cv2.INTER_AREA)
         # No-hit pixels come back as a large sentinel (not -1) in MuJoCo 3;
         # beyond the D455 max range they must fill the raw invalid value like
         # the IsaacLab stream does (raw 1.0 -> normalized 0.286).
         raw = np.where((depth < 0) | (depth > DEPTH_MAX_RANGE), DEPTH_INVALID_VALUE, depth)
+        if self.depth_noise:
+            gaussian = np.random.randn(*raw.shape).astype(np.float32)
+            raw = apply_metric_depth_noise(raw, gaussian=gaussian, scale=np.float32(self._depth_noise_scale))
         self.last_depth_raw = raw
         raw = np.clip(raw, DEPTH_CLIP_RANGE[0], DEPTH_CLIP_RANGE[1])
         normalized = (raw - DEPTH_CLIP_RANGE[0]) / (DEPTH_CLIP_RANGE[1] - DEPTH_CLIP_RANGE[0])
+        if tuple(normalized.shape) == DEPTH_POLICY_SIZE:
+            return normalized.astype(np.float32)
         tensor = torch.from_numpy(normalized).unsqueeze(0).unsqueeze(0)
         resized = F.interpolate(tensor, size=DEPTH_POLICY_SIZE, mode="area").squeeze(0).squeeze(0)
         return resized.numpy()
@@ -1443,6 +1581,17 @@ class DepthStudentSim:
             self.depth_history[-1] = frame
         self.depth_counter += 1
 
+    def _policy_observation(self) -> np.ndarray:
+        """Stack history for Stage E CNN; GRU LightLP student takes the newest frame only."""
+        if getattr(self, "is_gru_student", False):
+            proprio = self.proprio_history[-PROPRIO_FRAME_DIM:]
+            depth = self.depth_history[-1].reshape(-1)
+            obs = np.concatenate([proprio, depth]).astype(np.float32)
+            if obs.shape[0] != STUDENT_ACTOR_OBS_DIM:
+                raise RuntimeError(f"GRU student obs width {obs.shape[0]} != {STUDENT_ACTOR_OBS_DIM}")
+            return obs
+        return np.concatenate([self.proprio_history, self.depth_history.reshape(-1)]).astype(np.float32)
+
     def _proprio_frame(self) -> np.ndarray:
         ang_vel_b = self.qvel[3:6]
         gravity_b = quat_rotate_inverse_wxyz(self.qpos[3:7], np.array([0.0, 0.0, -1.0]))
@@ -1477,7 +1626,7 @@ class DepthStudentSim:
         self.proprio_history[-PROPRIO_FRAME_DIM:] = frame
         self._update_depth_history()
 
-        obs = np.concatenate([self.proprio_history, self.depth_history.reshape(-1)]).astype(np.float32)
+        obs = self._policy_observation()
         obs = np.clip(obs, -CLIP_OBS, CLIP_OBS)
 
         info = {
@@ -1488,28 +1637,11 @@ class DepthStudentSim:
 
     def observe(self) -> np.ndarray:
         """Build the current policy observation without stepping physics."""
-        ang_vel_b = self.qvel[3:6]
-        gravity_b = quat_rotate_inverse_wxyz(self.qpos[3:7], np.array([0.0, 0.0, -1.0]))
-        joint_pos = self.qpos[self.qpos_adr] - STANDING_POS
-        joint_vel = self.qvel[self.dof_adr]
-        phase = np.zeros(2)
-        frame = np.concatenate(
-            [
-                ang_vel_b,
-                gravity_b,
-                self.command,
-                joint_pos,
-                joint_vel,
-                self.previous_action,
-                np.sin(2 * np.pi * phase),
-                np.cos(2 * np.pi * phase),
-                GAIT_AIR_RATIO,
-            ]
-        ).astype(np.float32)
+        frame = self._proprio_frame()
         self.proprio_history = np.roll(self.proprio_history, shift=-PROPRIO_FRAME_DIM)
         self.proprio_history[-PROPRIO_FRAME_DIM:] = frame
         self._update_depth_history()
-        obs = np.concatenate([self.proprio_history, self.depth_history.reshape(-1)]).astype(np.float32)
+        obs = self._policy_observation()
         return np.clip(obs, -CLIP_OBS, CLIP_OBS)
 
     def act(self, obs: np.ndarray) -> None:
@@ -1726,9 +1858,12 @@ def parse_args() -> argparse.Namespace:
     scene = parser.add_mutually_exclusive_group()
     scene.add_argument(
         "--course",
-        choices=["loco", "flat", "hurdles", "stairs", "rule"],
+        choices=["loco", "flat", "hurdles", "stairs", "rule", "stepping_stones", "raised_pillars", "sparse"],
         default=None,
-        help="Scene: training-scale loco (default), stair probe, flat, hurdles, or 100m rule course",
+        help=(
+            "Scene: training-scale loco (default), stair probe, flat, hurdles, 100m rule, "
+            "踏石 stepping_stones, 圆桩 raised_pillars, or both (sparse)"
+        ),
     )
     scene.add_argument("--hurdles", action="store_true", help="Alias for --course hurdles")
     scene.add_argument("--rule-contract", action="store_true", help="Alias for --course rule")
@@ -1743,6 +1878,12 @@ def parse_args() -> argparse.Namespace:
     )
     parser.set_defaults(control=None)
     parser.add_argument("--cruise", type=float, default=0.55, help="Navigator forward speed in m/s")
+    parser.add_argument(
+        "--difficulty",
+        type=float,
+        default=0.0,
+        help="Sparse foothold curriculum in [0, 1]; 0 is easy 踏石/圆桩, 1 is hard. Ignored for loco/flat.",
+    )
     parser.add_argument("--duration", type=float, default=180.0)
     parser.add_argument("--record", type=Path, default=None, help="Write an MP4 and exit instead of opening the GUI")
     parser.add_argument(
@@ -1763,6 +1904,16 @@ def parse_args() -> argparse.Namespace:
         type=Path,
         default=None,
         help="Write raw/policy depth previews and camera-axis JSON, then continue",
+    )
+    parser.add_argument(
+        "--depth-noise",
+        action="store_true",
+        help="Apply the same LightLP Python depth noise used in RTX distill",
+    )
+    parser.add_argument(
+        "--terrain-only-depth",
+        action="store_true",
+        help="Hide the robot from the depth camera (old warp-style ablation)",
     )
     return parser.parse_args()
 
@@ -1789,7 +1940,15 @@ def main() -> None:
     course = resolve_course(args)
     print(f"[INFO] using checkpoint {checkpoint}")
     print(f"[INFO] course={course}")
-    sim = DepthStudentSim(str(checkpoint), args.hurdles, args.rule_contract, course=course)
+    sim = DepthStudentSim(
+        str(checkpoint),
+        args.hurdles,
+        args.rule_contract,
+        course=course,
+        difficulty=args.difficulty,
+        include_robot_in_depth=not bool(args.terrain_only_depth),
+        depth_noise=bool(args.depth_noise),
+    )
     if args.dump_depth is not None:
         payload = sim.dump_depth_diagnostics(args.dump_depth)
         print(f"[INFO] wrote depth diagnostics to {args.dump_depth}: {payload['depth']}")

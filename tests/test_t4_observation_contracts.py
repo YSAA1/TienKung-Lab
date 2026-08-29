@@ -168,8 +168,15 @@ def test_actor_observation_widths_follow_from_the_field_tables():
         schemas.TEACHER_ACTOR_OBS_DIM
         == schemas.PROPRIO_FRAME_DIM * schemas.PROPRIO_HISTORY_LENGTH + schemas.TEACHER_SCAN_DIM
     )
-    depth_width = schemas.DEPTH_POLICY_SIZE[0] * schemas.DEPTH_POLICY_SIZE[1] * schemas.DEPTH_HISTORY_LENGTH
-    assert schemas.STUDENT_ACTOR_OBS_DIM == schemas.PROPRIO_FRAME_DIM * schemas.PROPRIO_HISTORY_LENGTH + depth_width
+    depth_width = schemas.DEPTH_POLICY_SIZE[0] * schemas.DEPTH_POLICY_SIZE[1] * schemas.STUDENT_DEPTH_HISTORY_LENGTH
+    assert schemas.STUDENT_ACTOR_OBS_DIM == schemas.PROPRIO_FRAME_DIM * schemas.STUDENT_PROPRIO_HISTORY_LENGTH + depth_width
+    assert schemas.PROPRIO_HISTORY_LENGTH == 10
+    assert schemas.DEPTH_HISTORY_LENGTH == 3
+    assert schemas.STUDENT_ACTOR_OBS_DIM == 3168
+    assert schemas.STAGE_E_STUDENT_ACTOR_OBS_DIM == (
+        schemas.PROPRIO_FRAME_DIM * schemas.PROPRIO_HISTORY_LENGTH
+        + schemas.DEPTH_POLICY_SIZE[0] * schemas.DEPTH_POLICY_SIZE[1] * schemas.DEPTH_HISTORY_LENGTH
+    )
 
 
 def test_proprio_field_slices_tile_the_frame():

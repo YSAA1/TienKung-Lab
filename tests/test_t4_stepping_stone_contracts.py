@@ -101,6 +101,31 @@ def test_pillar_difficulty_and_spacing():
     assert layout.pillar_gap(0.0) < layout.pillar_gap(1.0)
 
 
+def test_targeted_layout_seed_is_reproducible_and_not_difficulty_bucketed():
+    a = layout.targeted_layout_seed(0.4000001, base_seed=42, stream=7)
+    assert a == layout.targeted_layout_seed(0.4000001, base_seed=42, stream=7)
+    assert a != layout.targeted_layout_seed(0.4000002, base_seed=42, stream=7)
+    assert a != layout.targeted_layout_seed(0.4000001, base_seed=43, stream=7)
+
+
+def test_isaac_tile_layout_is_centered_square_with_rim():
+    geoms = layout.isaac_sparse_tile_geoms(0.0, "stepping_stones")
+    start = next(geom for geom in geoms if geom["name"] == "start_platform")
+    assert start["pos"][0] == pytest.approx(0.0)
+    assert start["pos"][1] == pytest.approx(0.0)
+    assert start["size"][0] == pytest.approx(0.5 * layout.T4_STONE_PLATFORM_WIDTH)
+    assert start["size"][1] == pytest.approx(0.5 * layout.T4_STONE_PLATFORM_WIDTH)
+    assert any(geom["name"] == "finish_platform" for geom in geoms)
+    assert any(geom["name"].startswith("rim_") for geom in geoms)
+    stones = [geom for geom in geoms if geom["name"].startswith("stone_")]
+    assert len(stones) == len(layout.foothold_centers(layout.foothold_pitch(0.0)))
+    on_centerline = [geom for geom in stones if abs(geom["pos"][1]) < 1e-6 and geom["pos"][0] > 0.0]
+    first = min(on_centerline, key=lambda geom: geom["pos"][0])
+    pad_edge = start["size"][0]
+    stone_inner = first["pos"][0] - first["size"][0]
+    assert stone_inner - pad_edge == pytest.approx(0.0, abs=1e-6)
+
+
 def test_foothold_centers_skip_platform_and_stay_in_border():
     pitch = layout.foothold_pitch(0.5)
     centers = layout.foothold_centers(pitch)
@@ -197,6 +222,18 @@ def test_sparse_mesh_cfg_declares_landing_rim():
     env_text = env_path.read_text(encoding="utf-8")
     assert "T4_SPARSE_RIM_WIDTH" in env_text
     assert "on_rim" in env_text
+
+
+def test_targeted_pillar_manufacturing_variation_is_opt_in():
+    cfg_path = Path(__file__).resolve().parents[1] / "legged_lab" / "terrains" / "terrain_generator_cfg.py"
+    text = cfg_path.read_text(encoding="utf-8")
+    pillar_cfg = text.split("class MeshRaisedPillarsTerrainCfg", 1)[1].split("\n\n", 1)[0]
+    assert "targeted_manufacturing_variation: bool = False" in pillar_cfg
+    assert "xy_jitter_m: float = 0.0" in pillar_cfg
+    assert "height_jitter_m: float = 0.0" in pillar_cfg
+    assert "top_tilt_rad: float = 0.0" in pillar_cfg
+    assert "diameter_scale_jitter: float = 0.0" in pillar_cfg
+    assert "pitch_scale_jitter: float = 0.0" in pillar_cfg
 
 
 def test_foothold_centers_reject_nonpositive_pitch():

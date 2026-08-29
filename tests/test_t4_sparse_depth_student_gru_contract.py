@@ -33,7 +33,9 @@ from rsl_rl.modules.depth_student_teacher import (  # noqa: E402
 
 from legged_lab.assets.t4.student_lineage import (  # noqa: E402
     StudentLineageError,
+    load_student_continuation_checkpoint,
     load_student_warmstart_checkpoint,
+    require_json_gate,
     require_sparse_teacher_checkpoint,
 )
 
@@ -41,6 +43,10 @@ _NOISE_PATH = ROOT / "legged_lab" / "envs" / "t4" / "mdp" / "depth_noise.py"
 _noise_spec = importlib.util.spec_from_file_location("t4_depth_noise", _NOISE_PATH)
 noise = importlib.util.module_from_spec(_noise_spec)
 _noise_spec.loader.exec_module(noise)
+_EXTRINSIC_PATH = ROOT / "legged_lab" / "envs" / "t4" / "mdp" / "camera_extrinsic.py"
+_extrinsic_spec = importlib.util.spec_from_file_location("t4_camera_extrinsic", _EXTRINSIC_PATH)
+extrinsic = importlib.util.module_from_spec(_extrinsic_spec)
+_extrinsic_spec.loader.exec_module(extrinsic)
 
 ENV_PY = ROOT / "legged_lab" / "envs" / "t4" / "depth_student_env.py"
 CFG_PY = ROOT / "legged_lab" / "envs" / "t4" / "depth_student_cfg.py"
@@ -49,6 +55,10 @@ TEACHER_PY = ROOT / "legged_lab" / "envs" / "t4" / "teacher_cfg.py"
 TRAIN_PY = ROOT / "legged_lab" / "scripts" / "train_t4_sparse_depth_student.py"
 FT_PY = ROOT / "legged_lab" / "scripts" / "train_t4_sparse_depth_student_ft.py"
 SIM2SIM_PY = ROOT / "legged_lab" / "scripts" / "sim2sim_t4_depth_student.py"
+T4_ENV_PY = ROOT / "legged_lab" / "envs" / "t4" / "t4_env.py"
+PLAY_PY = ROOT / "legged_lab" / "scripts" / "play.py"
+EVAL_PY = ROOT / "legged_lab" / "scripts" / "eval_t4_hurdle.py"
+PROBE_PY = ROOT / "legged_lab" / "scripts" / "probe_t4_student_depth_render.py"
 
 
 def _tiny_gru(**kwargs):
@@ -82,6 +92,9 @@ def _student_obs(n=3):
 def test_sparse_student_env_inherits_s12_teacher_mdp():
     env_src = ENV_PY.read_text(encoding="utf-8")
     cfg_src = CFG_PY.read_text(encoding="utf-8")
+    sparse_alg = cfg_src.split("class T4SparseDepthStudentDaggerAlgCfg", 1)[1].split(
+        "class T4SparseDepthStudentAgentCfg", 1
+    )[0]
     assert "class T4LocoSparseDepthStudentEnvCfg(T4LocoSparseTeacherEnvCfg)" in env_src
     assert "class T4LocoSparseDepthDistillEnv(T4LocoDepthDistillEnv)" in env_src
     assert "TEACHER_SPARSE_ACTOR_OBS_DIM" in env_src
@@ -90,10 +103,22 @@ def test_sparse_student_env_inherits_s12_teacher_mdp():
     assert 'class_name: str = "DepthStudentTeacherRecurrent"' in cfg_src
     assert 'rnn_type: str = "gru"' in cfg_src
     assert "teacher_recurrent: bool = False" in cfg_src
-    assert "pg_coef: float = 0.5" in cfg_src
+    assert "pg_coef: float = 0.0" in sparse_alg
+    assert "pg_delay_iters: int = 0" in sparse_alg
     assert "recon_coef: float = 1.0" in cfg_src
     assert 'experiment_name: str = "t4_loco_sparse_depth_student"' in cfg_src
-    assert 'run_name: str = "s12_gru_safe_recurrent"' in cfg_src
+    assert 'run_name: str = "s12_rtx_gated_dagger"' in cfg_src
+    assert "max_iterations: int = 8000" in cfg_src
+    assert "behavior_coef_decay_iters: int = 0" in sparse_alg
+    assert "teacher_mix_decay_iters: int = 1000" in sparse_alg
+    assert "teacher_mix: float = 1.0" in sparse_alg
+    assert 'schedule: str = "fixed"' in sparse_alg
+    assert "learning_rate: float = 1.0e-4" in sparse_alg
+    ft_agent = cfg_src.split("class T4SparseDepthStudentFtAgentCfg", 1)[1]
+    assert "class T4SparseDepthStudentJointAlgCfg" in cfg_src
+    assert "class T4SparseDepthStudentDeployFtAlgCfg" in cfg_src
+    assert 'run_name: str = "s12_rtx_gated_joint"' in ft_agent
+    assert 'run_name: str = "s12_rtx_deploy_ft_v2"' in cfg_src
 
 
 def test_stage_e_student_lineage_is_unchanged():
@@ -117,27 +142,56 @@ def test_train_scripts_require_sparse_teacher_checkpoint():
     assert "teacher_checkpoint" in train_src
     assert "student_warmstart_checkpoint" in train_src
     assert "student_lineage.json" in train_src
+    assert "agent_cfg.algorithm.teacher_mix" in train_src
+    assert "agent_cfg.algorithm.pg_coef" in train_src
+    assert "agent_cfg.algorithm.schedule" in train_src
+    assert "agent_cfg.algorithm.learning_rate" in train_src
     assert "teacher_eval_manifest" in train_src
     assert "allow_ungated_teacher" in train_src
     assert "require_sparse_teacher_checkpoint" in train_src
     assert "legged_lab.assets.t4.student_lineage" in train_src
     assert "OnPolicyRunner" in train_src
+    assert "args_cli.enable_cameras = True" in train_src
+    assert 'parser.add_argument("--task_num_envs", type=int, default=256)' in train_src
+    assert "pg_delay_iters" in train_src
+    assert "student_depth_noise" in train_src
+    assert "random_level_reset_min_level" in train_src
     assert "T4LocoSparseDepthStudentFtEnvCfg" in ft_src
     assert "student_checkpoint" in ft_src
+    assert 'choices=("joint", "deploy_ft", "targeted_ft")' in ft_src
+    assert "T4SparseDepthStudentTargetedFtAgentCfg" in ft_src
+    assert "set_reference_policy_from_current" in ft_src
+    assert 'phase = "targeted_ft"' in ft_src
+    assert "capability_gate_json" in ft_src
+    assert "load_student_continuation_checkpoint" in ft_src
+    assert "require_sparse_teacher_checkpoint" in ft_src
     assert "T4LocoDepthStudentEnvCfg" not in train_src
     assert "T4DepthStudentAgentCfg" not in train_src
 
 
 def test_student_obs_has_no_scan_or_contact_privilege():
     assert schemas.STUDENT_ACTOR_OBS_DIM == (
-        schemas.PROPRIO_FRAME_DIM * schemas.PROPRIO_HISTORY_LENGTH
-        + schemas.DEPTH_POLICY_SIZE[0] * schemas.DEPTH_POLICY_SIZE[1] * schemas.DEPTH_HISTORY_LENGTH
+        schemas.PROPRIO_FRAME_DIM * schemas.STUDENT_PROPRIO_HISTORY_LENGTH
+        + schemas.DEPTH_POLICY_SIZE[0] * schemas.DEPTH_POLICY_SIZE[1] * schemas.STUDENT_DEPTH_HISTORY_LENGTH
     )
     start, end = schemas.sparse_teacher_latest_scan_range()
     assert end - start == schemas.TEACHER_SCAN_DIM
     scan_start, scan_end = schemas.sparse_teacher_scan_range()
     assert scan_end - scan_start == schemas.TEACHER_SCAN_DIM * schemas.TEACHER_SPARSE_SCAN_HISTORY_LENGTH
     assert schemas.TEACHER_SPARSE_ACTOR_OBS_DIM - scan_end == schemas.TEACHER_SPARSE_CONTACT_DIM
+    assert schemas.PROPRIO_HISTORY_LENGTH == 10
+    assert schemas.DEPTH_HISTORY_LENGTH == 3
+    assert schemas.STUDENT_PROPRIO_HISTORY_LENGTH == 1
+    assert schemas.STUDENT_DEPTH_HISTORY_LENGTH == 1
+    assert schemas.STUDENT_ACTOR_OBS_DIM == (
+        schemas.PROPRIO_FRAME_DIM * schemas.STUDENT_PROPRIO_HISTORY_LENGTH
+        + schemas.DEPTH_POLICY_SIZE[0] * schemas.DEPTH_POLICY_SIZE[1] * schemas.STUDENT_DEPTH_HISTORY_LENGTH
+    )
+    assert schemas.STUDENT_ACTOR_OBS_DIM == 3168
+    assert schemas.STAGE_E_STUDENT_ACTOR_OBS_DIM == (
+        schemas.PROPRIO_FRAME_DIM * schemas.PROPRIO_HISTORY_LENGTH
+        + schemas.DEPTH_POLICY_SIZE[0] * schemas.DEPTH_POLICY_SIZE[1] * schemas.DEPTH_HISTORY_LENGTH
+    )
     assert schemas.STUDENT_ACTOR_OBS_DIM != schemas.TEACHER_SPARSE_ACTOR_OBS_DIM
 
 
@@ -249,7 +303,7 @@ def test_full_training_checkpoint_does_not_rebuild_decoder():
 
 
 def test_student_warmstart_loads_control_stack_but_not_teacher_or_critic():
-    source = _tiny_gru(critic_hidden_dims=[8])
+    source = _tiny_gru(critic_hidden_dims=[8], init_noise_std=0.1, min_action_std=0.05, max_action_std=0.2)
     with torch.no_grad():
         for name, parameter in source.named_parameters():
             if name.startswith(("depth_encoder.", "memory_s.", "student.", "scan_decoder.")) or name == "std":
@@ -259,7 +313,7 @@ def test_student_warmstart_loads_control_stack_but_not_teacher_or_critic():
             elif name.startswith("critic."):
                 parameter.fill_(0.9)
 
-    target = _tiny_gru(critic_hidden_dims=[8])
+    target = _tiny_gru(critic_hidden_dims=[8], init_noise_std=0.1, min_action_std=0.05, max_action_std=0.2)
     teacher_before = {name: value.clone() for name, value in target.teacher.state_dict().items()}
     critic_before = {name: value.clone() for name, value in target.critic.state_dict().items()}
 
@@ -271,29 +325,117 @@ def test_student_warmstart_loads_control_stack_but_not_teacher_or_critic():
     assert info["iter"] == 3000
     assert info["loaded_keys"] > 0
     assert len(info["sha256"]) == 64
+    assert info["reset_action_std"] is True
     for name, value in target.state_dict().items():
-        if name.startswith(("depth_encoder.", "memory_s.", "student.", "scan_decoder.")) or name == "std":
+        if name.startswith(("depth_encoder.", "memory_s.", "student.", "scan_decoder.")):
             assert torch.allclose(value, torch.full_like(value, 0.25))
+        elif name == "std":
+            assert torch.allclose(value, torch.full_like(value, 0.1))
     for name, value in target.teacher.state_dict().items():
         assert torch.equal(value, teacher_before[name])
     for name, value in target.critic.state_dict().items():
         assert torch.equal(value, critic_before[name])
 
 
-def test_student_warmstart_projects_legacy_std_to_target_envelope():
-    source = _tiny_gru(critic_hidden_dims=[8], min_action_std=0.05, max_action_std=0.8)
+def test_student_warmstart_resets_legacy_std_to_init_not_the_cap():
+    source = _tiny_gru(
+        critic_hidden_dims=[8],
+        init_noise_std=0.1,
+        min_action_std=0.05,
+        max_action_std=0.8,
+    )
     with torch.no_grad():
         source.std.fill_(0.4)
-    target = _tiny_gru(critic_hidden_dims=[8], min_action_std=0.05, max_action_std=0.2)
+    target = _tiny_gru(
+        critic_hidden_dims=[8],
+        init_noise_std=0.1,
+        min_action_std=0.05,
+        max_action_std=0.2,
+    )
 
     with _scratch_dir() as raw:
         checkpoint = Path(raw) / "model_3000.pt"
         torch.save({"model_state_dict": source.state_dict(), "iter": 3000}, checkpoint)
         info = load_student_warmstart_checkpoint(target, checkpoint)
 
-    assert torch.allclose(target.std, torch.full_like(target.std, 0.2))
+    assert torch.allclose(target.std, torch.full_like(target.std, 0.1))
     assert info["source_action_std"]["max"] == pytest.approx(0.4)
-    assert info["effective_action_std"]["max"] == pytest.approx(0.2)
+    assert info["init_action_std"] == pytest.approx(0.1)
+    assert info["reset_action_std"] is True
+    assert info["effective_action_std"]["max"] == pytest.approx(0.1)
+    assert info["effective_action_std"]["min"] == pytest.approx(0.1)
+
+
+def test_continuation_loads_full_student_and_critic_resets_std_and_pins_teacher():
+    source = _tiny_gru(critic_hidden_dims=[8], init_noise_std=0.1, min_action_std=0.05, max_action_std=0.2)
+    with torch.no_grad():
+        for name, parameter in source.named_parameters():
+            if name.startswith(("depth_encoder.", "memory_s.", "student.", "scan_decoder.", "critic.")):
+                parameter.fill_(0.25)
+            elif name.startswith("teacher."):
+                parameter.fill_(0.75)
+        source.std.fill_(0.19)
+    target = _tiny_gru(critic_hidden_dims=[8], init_noise_std=0.1, min_action_std=0.05, max_action_std=0.2)
+
+    with _scratch_dir() as raw:
+        scratch = Path(raw)
+        parent = scratch / "model_4000.pt"
+        teacher = scratch / "model_21500.pt"
+        teacher_state = {
+            name.replace("teacher.", "actor.", 1): value.clone()
+            for name, value in source.state_dict().items()
+            if name.startswith("teacher.")
+        }
+        torch.save({"model_state_dict": source.state_dict(), "iter": 4000}, parent)
+        torch.save({"model_state_dict": teacher_state, "iter": 21500}, teacher)
+        info = load_student_continuation_checkpoint(target, parent, teacher, reset_action_std=0.08)
+
+    assert info["iter"] == 4000
+    assert info["reset_action_std"] == pytest.approx(0.08)
+    assert len(info["sha256"]) == 64
+    assert len(info["teacher_sha256"]) == 64
+    assert torch.allclose(target.std, torch.full_like(target.std, 0.08))
+    for name, value in target.state_dict().items():
+        if name.startswith(("depth_encoder.", "memory_s.", "student.", "scan_decoder.", "critic.")):
+            assert torch.allclose(value, torch.full_like(value, 0.25))
+        elif name.startswith("teacher."):
+            assert torch.allclose(value, torch.full_like(value, 0.75))
+
+
+def test_continuation_rejects_mismatched_teacher_and_deployable_parent():
+    source = _tiny_gru(critic_hidden_dims=[8])
+    target = _tiny_gru(critic_hidden_dims=[8])
+    with _scratch_dir() as raw:
+        scratch = Path(raw)
+        parent = scratch / "parent.pt"
+        deployable = scratch / "deployable.pt"
+        teacher = scratch / "teacher.pt"
+        teacher_state = {
+            name.replace("teacher.", "actor.", 1): value.clone() + 1.0
+            for name, value in source.state_dict().items()
+            if name.startswith("teacher.")
+        }
+        torch.save({"model_state_dict": source.state_dict()}, parent)
+        torch.save({"model_state_dict": source.deployable_state_dict(), "deployable": True}, deployable)
+        torch.save({"model_state_dict": teacher_state}, teacher)
+        with pytest.raises(StudentLineageError, match="does not match"):
+            load_student_continuation_checkpoint(target, parent, teacher)
+        with pytest.raises(StudentLineageError, match="deployable-only"):
+            load_student_continuation_checkpoint(target, deployable, teacher)
+
+
+def test_capability_gate_requires_json_object_and_records_sha():
+    with _scratch_dir() as raw:
+        scratch = Path(raw)
+        gate = scratch / "gate.json"
+        gate.write_text(json.dumps({"strict": 24}), encoding="utf-8")
+        info = require_json_gate(gate)
+        assert info["path"] == str(gate.resolve())
+        assert len(info["sha256"]) == 64
+        bad = scratch / "bad.json"
+        bad.write_text("[]", encoding="utf-8")
+        with pytest.raises(StudentLineageError, match="JSON object"):
+            require_json_gate(bad)
 
 
 def test_distillation_records_recon_and_pg_without_double_gru_step():
@@ -408,6 +550,20 @@ def test_feedforward_stage_e_policy_class_is_not_recurrent():
     )
     assert policy.is_recurrent is False
     assert not hasattr(policy, "memory_s")
+    assert any(isinstance(module, torch.nn.Conv2d) for module in policy.depth_encoder.modules())
+
+
+def test_recurrent_depth_encoder_is_mlp_not_conv():
+    policy = _tiny_gru()
+    assert not any(isinstance(module, torch.nn.Conv2d) for module in policy.depth_encoder.modules())
+    assert any(isinstance(module, torch.nn.Linear) for module in policy.depth_encoder.modules())
+    shared_ids = {id(parameter) for parameter in policy.shared_encoder_parameters()}
+    encoder_ids = {id(parameter) for parameter in policy.depth_encoder.parameters()}
+    memory_ids = {id(parameter) for parameter in policy.memory_s.parameters()}
+    assert shared_ids == encoder_ids | memory_ids
+    obs = _student_obs(3)
+    out = policy.act_inference(obs)
+    assert out.shape == (3, 2)
 
 
 def test_sim2sim_loads_gru_builder():
@@ -577,12 +733,31 @@ def test_policy_dropout_fills_max_range_not_near_clip():
     assert filled[1, 0, 0].item() == pytest.approx(0.0)
 
 
+def test_targeted_depth_boundary_corruption_flips_both_sides_of_an_edge():
+    depth = torch.tensor([[[1.0, 1.0, 3.0, 3.0], [1.0, 1.0, 3.0, 3.0]]])
+    force = torch.zeros_like(depth)
+    corrupted = noise.apply_depth_boundary_corruption(
+        depth,
+        dropout_draw=force,
+        false_hit_draw=force,
+        probability=1.0,
+        edge_threshold_m=0.25,
+        invalid_depth_m=3.0,
+    )
+    assert torch.all(corrupted[:, :, 1] == 3.0)
+    assert torch.all(corrupted[:, :, 2] == 1.0)
+    assert torch.all(corrupted[:, :, 0] == 1.0)
+    assert torch.all(corrupted[:, :, 3] == 3.0)
+
+
 def test_depth_refresh_plan_keeps_reset_and_skips_idle_steps():
     assert noise.depth_refresh_plan(1, 3, False, False) == (False, False, False)
     assert noise.depth_refresh_plan(0, 3, False, False) == (True, True, True)
     assert noise.depth_refresh_plan(3, 3, False, False) == (True, True, True)
-    assert noise.depth_refresh_plan(1, 3, True, False) == (True, True, False)
+    # Clean distill: a subset reset must not force a full tiled capture.
+    assert noise.depth_refresh_plan(1, 3, True, False) == (False, False, False)
     assert noise.depth_refresh_plan(1, 3, False, True) == (True, False, False)
+    assert noise.depth_refresh_plan(1, 3, True, True) == (True, True, False)
 
 
 def test_student_cfg_exposes_nan_guard_camera_period_and_noise_overrides():
@@ -590,12 +765,148 @@ def test_student_cfg_exposes_nan_guard_camera_period_and_noise_overrides():
     env_src = ENV_PY.read_text(encoding="utf-8")
     assert "nan_guard: bool = True" in cfg_src
     assert "max_grad_norm: float = 1.0" in cfg_src
-    assert "student_depth_camera_update_period: float = 0.02" in env_src
+    sparse_env = env_src.split("class T4LocoSparseDepthStudentEnvCfg", 1)[1].split(
+        "class T4LocoSparseDepthStudentFtEnvCfg", 1
+    )[0]
+    assert "student_depth_camera_update_period: float = 0.02" in sparse_env
+    assert "student_depth_noise: bool = True" in sparse_env
+    assert "student_camera_pos_jitter_m" in sparse_env
+    assert "student_camera_ori_jitter_rad" in sparse_env
+    assert "sparse_curriculum_demote: bool = False" in sparse_env
+    assert "random_level_reset_fraction: float = 0.50" in sparse_env
+    assert "random_level_reset_min_level: int = 6" in sparse_env
+    assert "self.random_level_reset_fraction = 0.50" in sparse_env
+    assert "self.random_level_reset_min_level = 6" in sparse_env
+    assert "self.noise.add_noise = True" in sparse_env
+    ft_block = env_src.split("class T4LocoSparseDepthStudentFtEnvCfg", 1)[1].split("\nclass ", 1)[0]
+    assert "student_depth_camera_update_period: float = 0.02" in ft_block
     assert "student_depth_d455_sensor_noise: bool = False" in env_src
     assert "student_depth_dropout_after_resize: bool = True" in env_src
-    assert "SensorNoiseCfg(enable=sensor_noise_enable)" in env_src
+    camera_fn = env_src.split("def _t4_student_depth_camera", 1)[1].split("\n@configclass", 1)[0]
+    assert "TiledD455CameraCfg" in camera_fn
+    assert "RayCasterCameraCfg" not in camera_fn
+    assert "mesh_prim_paths" not in camera_fn
+    assert 'prim_body_name="Trunk/depth_camera"' in camera_fn
+    assert "_apply_camera_extrinsic_jitter" in env_src
+    assert "capture_nominal_camera_pose" in env_src
     assert "if self.student_depth_noise:" in env_src
     assert "stamp_rectangular_blocks" in env_src
     assert "assert_finite_grads" in (ROOT / "rsl_rl" / "rsl_rl" / "algorithms" / "distillation.py").read_text(
         encoding="utf-8"
     )
+
+
+def test_targeted_ft_env_isolated_domain_randomization_contract():
+    env_src = ENV_PY.read_text(encoding="utf-8")
+    events = env_src.split("class T4TargetedFtEventCfg", 1)[1].split(
+        "class T4LocoSparseDepthStudentTargetedFtEnvCfg", 1
+    )[0]
+    targeted = env_src.split("class T4LocoSparseDepthStudentTargetedFtEnvCfg", 1)[1].split("\nclass ", 1)[0]
+    assert "self.domain_rand.action_delay.enable = True" in targeted
+    assert 'self.domain_rand.action_delay.params = {"min_delay": 0, "max_delay": 2}' in targeted
+    assert "randomize_actuator_gains" in events
+    assert "randomize_joint_parameters" in events
+    assert "randomize_joint_effort_limits" in events
+    assert "base_events = self.domain_rand.events" in targeted
+    assert "setattr(targeted_events, name, getattr(base_events, name))" in targeted
+    assert "student_depth_boundary_corruption: bool = True" in targeted
+    assert "self.student_depth_boundary_corruption = bool" in env_src
+    assert "targeted_manufacturing_variation" in targeted
+    train_src = (ROOT / "legged_lab" / "scripts" / "train_t4_sparse_depth_student_ft.py").read_text(encoding="utf-8")
+    assert "T4LocoSparseDepthStudentTargetedFtEnvCfg" in train_src
+    assert "env_cfg = T4LocoSparseDepthStudentTargetedFtEnvCfg()" in train_src
+    assert '"actuator_domain_randomization"' in train_src
+    assert '"terrain_manufacturing_variation"' in train_src
+    assert '"pillar_top_tilt_rad"' in train_src
+
+
+def test_scene_cfg_preserves_positive_depth_camera_update_period():
+    scene_src = (ROOT / "legged_lab" / "utils" / "env_utils" / "scene.py").read_text(encoding="utf-8")
+    start = scene_src.index("def resolve_depth_camera_update_period")
+    end = scene_src.index("\n@configclass", start)
+    ns: dict[str, object] = {}
+    exec(scene_src[start:end], ns)
+    resolve = ns["resolve_depth_camera_update_period"]
+    assert resolve(0.0, 0.02) == 0.02
+    assert resolve(None, 0.02) == 0.02
+    assert resolve(0.02, 0.02) == 0.02
+    assert resolve(0.06, 0.02) == 0.06
+    rtx_interval = ns["rtx_render_interval_physics"]
+    rtx_due = ns["rtx_render_due"]
+    pending = ns["pending_post_reset_rtx"]
+    assert rtx_interval(0.06, 0.005) == 12
+    assert rtx_interval(0.02, 0.005) == 4
+    assert rtx_due(12, 0.005, 0.06) is True
+    assert rtx_due(24, 0.005, 0.06) is True
+    assert rtx_due(11, 0.005, 0.06) is False
+    assert rtx_due(1, 0.005, 0.06) is False
+    assert pending(100, 96) is True
+    assert pending(100, 100) is True
+    assert pending(100, 108) is False
+    is_warp = ns["sensor_is_warp_raycast"]
+    assert is_warp(None) is False
+
+    class _Warp:
+        pass
+
+    _Warp.__name__ = "RayCasterCamera"
+    assert is_warp(_Warp()) is True
+
+    class _Tiled:
+        pass
+
+    _Tiled.__name__ = "TiledCamera"
+    assert is_warp(_Tiled()) is False
+    depth_block = scene_src.split("if config.depth_camera.enable_depth_camera:", 1)[1]
+    assert "resolve_depth_camera_update_period(" in depth_block
+    assert "update_period=step_dt" not in depth_block.split("self.depth_camera =", 1)[1].split(")", 1)[0]
+
+
+def test_t4_headless_step_schedules_rtx_render_before_scene_update():
+    t4_src = T4_ENV_PY.read_text(encoding="utf-8")
+    env_src = ENV_PY.read_text(encoding="utf-8")
+    play_src = PLAY_PY.read_text(encoding="utf-8")
+    eval_src = EVAL_PY.read_text(encoding="utf-8")
+    probe_src = PROBE_PY.read_text(encoding="utf-8")
+    physics_loop = t4_src.split("for _ in range(self.cfg.sim.decimation):", 1)[1].split(
+        "self.avg_feet_force_per_step /= self.cfg.sim.decimation", 1
+    )[0]
+    assert "rtx_render_due(" in physics_loop
+    assert "self.sim.render()" in physics_loop
+    assert "self.last_rtx_sim_step" in physics_loop
+    assert "self.scene.update(dt=self.physics_dt)" in physics_loop
+    assert physics_loop.index("self.sim.render()") < physics_loop.index("self.scene.update(dt=self.physics_dt)")
+    assert "has_warp" in physics_loop or "has_warp_depth" in t4_src
+    assert "_has_warp_depth_camera" in t4_src
+    assert "sensor_is_warp_raycast" in t4_src
+    assert "schedule_rtx_render" in t4_src
+    assert "_rtx_reset_sim_step[env_ids]" in t4_src
+    assert "_pending_post_reset_rtx_mask" in t4_src
+    assert "writable = ~pending" in env_src
+    assert 'if "sensor" in task_name or "depth_student" in task_name:' in play_src
+    assert 'if "depth_student" in (args_cli.task or ""):' in eval_src
+    assert "args_cli.enable_cameras = True" in eval_src
+    assert "skip_rtx" in probe_src
+    assert "checksum" in probe_src
+    assert "collection_meets_fallback" in probe_src
+    assert "collection_s" in probe_src
+    assert '"backend": "tiled_rtx"' in probe_src
+    assert "has_rtx_sensors" in probe_src
+    assert "terrain_generator.num_rows = 1" not in probe_src
+    assert "mask_sparse_curriculum_demote" in t4_src
+    assert "sparse_curriculum_demote" in env_src
+
+
+def test_camera_extrinsic_jitter_stays_inside_lightlp_table_ii():
+    assert extrinsic.LIGHTLP_CAMERA_POS_JITTER_M == pytest.approx(0.01)
+    assert extrinsic.LIGHTLP_CAMERA_ORI_JITTER_RAD == pytest.approx(0.025)
+    identity = extrinsic.euler_xyz_to_quat_wxyz(0.0, 0.0, 0.0)
+    assert identity[0] == pytest.approx(1.0)
+    composed = extrinsic.quat_mul_wxyz(identity, extrinsic.euler_xyz_to_quat_wxyz(0.01, -0.02, 0.015))
+    pos, quat = extrinsic.compose_camera_offset(
+        (0.085, 0.0, 0.42), identity, (0.01, -0.01, 0.0), (0.025, 0.0, -0.025)
+    )
+    assert pos[0] == pytest.approx(0.095)
+    assert pos[1] == pytest.approx(-0.01)
+    assert abs(quat[0] - 1.0) < 0.01
+    assert abs(composed[0] - 1.0) < 0.01

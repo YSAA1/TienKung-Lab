@@ -68,6 +68,7 @@ def test_tensorboard_exposes_per_terrain_and_sparse_band_outcomes():
     assert "TerrainCol/" not in source
     assert "assign_curriculum_columns" in source
     assert "random_level_reset_fraction" in source
+    assert "random_level_reset_low" in source
     assert "lightlp_terrain_level_moves" in source
     assert 'logs[f"Reset/{name}"]' in source
     assert "promotion_rate" in source

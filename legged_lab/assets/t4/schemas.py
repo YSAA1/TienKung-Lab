@@ -292,8 +292,17 @@ TEACHER_SPARSE_CRITIC_OBS_DIM = (
     + FOOT_SCAN_BOTH_DIM
     + TEACHER_SPARSE_IMMUNITY_DIM
 )
-STUDENT_ACTOR_OBS_DIM = (
+# LightLP §IV-A student: one proprio frame + one depth frame. Do not change
+# PROPRIO_HISTORY_LENGTH (teacher 1937D / model_21500) or DEPTH_HISTORY_LENGTH
+# (sim2sim hold buffer). Slice the newest frame from those buffers instead.
+STUDENT_PROPRIO_HISTORY_LENGTH = 1
+STUDENT_DEPTH_HISTORY_LENGTH = 1
+STAGE_E_STUDENT_ACTOR_OBS_DIM = (
     PROPRIO_FRAME_DIM * PROPRIO_HISTORY_LENGTH + DEPTH_POLICY_SIZE[0] * DEPTH_POLICY_SIZE[1] * DEPTH_HISTORY_LENGTH
+)
+STUDENT_ACTOR_OBS_DIM = (
+    PROPRIO_FRAME_DIM * STUDENT_PROPRIO_HISTORY_LENGTH
+    + DEPTH_POLICY_SIZE[0] * DEPTH_POLICY_SIZE[1] * STUDENT_DEPTH_HISTORY_LENGTH
 )
 
 
@@ -357,6 +366,7 @@ def observation_manifest() -> dict:
             "fields": [{"name": name, "width": width} for name, width in PROPRIO_FIELDS],
             "frame_dim": PROPRIO_FRAME_DIM,
             "history_length": PROPRIO_HISTORY_LENGTH,
+            "student_history_length": STUDENT_PROPRIO_HISTORY_LENGTH,
         },
         "teacher_terrain": {
             "schema_version": TEACHER_TERRAIN_SCHEMA_VERSION,
@@ -383,6 +393,7 @@ def observation_manifest() -> dict:
             "invalid_value": DEPTH_INVALID_VALUE,
             "normalized_range": list(DEPTH_NORMALIZED_RANGE),
             "history_length": DEPTH_HISTORY_LENGTH,
+            "student_history_length": STUDENT_DEPTH_HISTORY_LENGTH,
             "update_decimation": DEPTH_UPDATE_DECIMATION,
             "resize_mode": DEPTH_RESIZE_MODE,
             "camera_body": DEPTH_CAMERA_BODY,
@@ -396,6 +407,7 @@ def observation_manifest() -> dict:
         "actor_obs_dim": {
             "teacher": TEACHER_ACTOR_OBS_DIM,
             "student": STUDENT_ACTOR_OBS_DIM,
+            "stage_e_student": STAGE_E_STUDENT_ACTOR_OBS_DIM,
         },
         "critic_frame_dim": CRITIC_FRAME_DIM,
     }

@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-import copy
+import inspect
 import sys
 import tempfile
 from pathlib import Path
@@ -13,6 +13,14 @@ RSL_RL_ROOT = ROOT / "rsl_rl"
 if str(RSL_RL_ROOT) not in sys.path:
     sys.path.insert(0, str(RSL_RL_ROOT))
 
+from rsl_rl.algorithms.distillation import mix_teacher_student_actions  # noqa: E402
+from rsl_rl.algorithms.ppo import (  # noqa: E402
+    PPO,
+    adapt_ppo_learning_rate,
+    gaussian_kl,
+    ppo_clipped_surrogate_loss,
+    ppo_clipped_value_loss,
+)
 from rsl_rl.algorithms.safe_recurrent_distillation import SafeRecurrentDistillation  # noqa: E402
 from rsl_rl.modules.depth_student_teacher import DepthStudentTeacherRecurrent  # noqa: E402
 from rsl_rl.runners.on_policy_runner import OnPolicyRunner  # noqa: E402
@@ -62,8 +70,6 @@ def _teacher_obs(num_envs: int, step: int = 0) -> torch.Tensor:
 
 def _algorithm(
     *,
-    max_kl: float = 10.0,
-    max_kl_emergency: float = 100.0,
     learning_rate: float = 3.0e-3,
     teacher_mix: float = 0.0,
     teacher_mix_end: float = 0.0,
@@ -71,6 +77,13 @@ def _algorithm(
     behavior_coef: float = 1.0,
     behavior_coef_end: float = 0.0,
     behavior_coef_decay_iters: int = 2000,
+    critic_warmup_iters: int = 0,
+    desired_kl: float | None = 0.01,
+    pg_coef: float = 0.5,
+    pg_coef_ramp_iters: int = 0,
+    pg_delay_iters: int = 0,
+    schedule: str = "fixed",
+    reference_action_coef: float = 0.0,
 ) -> SafeRecurrentDistillation:
     return SafeRecurrentDistillation(
         _tiny_policy(),
@@ -84,18 +97,19 @@ def _algorithm(
         behavior_coef=behavior_coef,
         behavior_coef_end=behavior_coef_end,
         behavior_coef_decay_iters=behavior_coef_decay_iters,
-        pg_coef=0.5,
+        pg_coef=pg_coef,
+        pg_coef_ramp_iters=pg_coef_ramp_iters,
+        pg_delay_iters=pg_delay_iters,
+        critic_warmup_iters=critic_warmup_iters,
         recon_coef=1.0,
         value_loss_coef=1.0,
         teacher_mix=teacher_mix,
         teacher_mix_end=teacher_mix_end,
         teacher_mix_decay_iters=teacher_mix_decay_iters,
-        desired_kl=0.01,
-        max_kl=max_kl,
-        max_kl_emergency=max_kl_emergency,
-        max_behavior_drift=10.0,
-        rollback_lr_factor=0.5,
+        desired_kl=desired_kl,
         max_learning_rate=0.1,
+        schedule=schedule,
+        reference_action_coef=reference_action_coef,
     )
 
 
@@ -115,7 +129,113 @@ def _clone_policy_state(policy: DepthStudentTeacherRecurrent) -> dict[str, torch
     return {name: value.detach().clone() for name, value in policy.state_dict().items()}
 
 
-def test_safe_rollout_saves_actor_hidden_and_computes_gae():
+def test_cpu_ingest_nan_still_rejected_and_cuda_cadence_is_explicit():
+    algorithm = _algorithm()
+    obs = _student_obs(4)
+    obs[0, 0] = float("nan")
+    with pytest.raises(RuntimeError, match="non-finite ingest: student_obs"):
+        algorithm.act(obs, _teacher_obs(4))
+    algorithm.init_storage("safe_distillation", 4, 4, [20], [12], [2])
+    assert algorithm._should_check_ingest(torch.zeros(2)) is True
+    algorithm.storage.step = 3
+    assert algorithm._should_check_ingest(torch.zeros(2)) is True
+    source = (RSL_RL_ROOT / "rsl_rl" / "algorithms" / "safe_recurrent_distillation.py").read_text(encoding="utf-8")
+    assert 'tensor.device.type != "cuda"' in source
+    assert "return step == 0" in source
+
+
+def test_safe_recurrent_distillation_is_teacher_ppo_subclass():
+    assert issubclass(SafeRecurrentDistillation, PPO)
+    source = (RSL_RL_ROOT / "rsl_rl" / "algorithms" / "safe_recurrent_distillation.py").read_text(encoding="utf-8")
+    assert "class SafeRecurrentDistillation(PPO)" in source
+    assert "super().process_env_step" in source
+    assert "ppo_clipped_surrogate_loss" in source
+    assert "ppo_clipped_value_loss" in source
+    assert "gaussian_kl" in source
+    assert "mix_teacher_student_actions" in source
+    assert "def _coordinated_shared_gradients" not in source
+    assert "autograd.grad" not in source
+    assert source.count("retain_graph=True") == 1
+    assert "control_loss.backward(retain_graph=True)" in source
+    assert "def _candidate_metrics" not in source
+    storage_source = (RSL_RL_ROOT / "rsl_rl" / "storage" / "rollout_storage.py").read_text(encoding="utf-8")
+    assert "def _padded_recurrent_minibatches" in storage_source
+    assert "for batch in self._padded_recurrent_minibatches" in storage_source
+
+
+def test_reference_actor_records_recurrent_actions_and_resets_with_rollout():
+    algorithm = _algorithm(reference_action_coef=0.25)
+    algorithm.set_reference_policy_from_current()
+    algorithm.init_storage("safe_distillation", 4, 2, [20], [12], [2])
+
+    algorithm.act(_student_obs(4), _teacher_obs(4))
+    assert algorithm.transition.reference_actions is not None
+    assert torch.allclose(algorithm.transition.reference_actions, algorithm.policy.action_mean)
+    rewards = torch.zeros(4)
+    dones = torch.tensor([1.0, 0.0, 0.0, 0.0])
+    algorithm.process_env_step(rewards, dones, {"time_outs": torch.zeros(4)})
+
+    assert torch.allclose(algorithm.storage.reference_actions[0], algorithm.storage.mu[0])
+    assert algorithm.reference_policy.memory_s.hidden_states[:, 0].abs().sum() == pytest.approx(0.0)
+    assert all(not parameter.requires_grad for parameter in algorithm.reference_policy.parameters())
+
+
+def test_reference_action_anchor_reports_cumulative_parent_drift():
+    algorithm = _algorithm(reference_action_coef=0.5, pg_coef=0.0)
+    algorithm.set_reference_policy_from_current()
+    with torch.no_grad():
+        algorithm.policy.student[-1].bias.add_(0.25)
+    _collect(algorithm)
+
+    report = algorithm.update()
+
+    assert report["reference_action"] > 0.0
+    assert report["reference_action_coef"] == pytest.approx(0.5)
+
+
+def test_shared_ppo_primitives_match_teacher_formulas():
+    old_mu = torch.zeros(4, 2)
+    old_sigma = torch.ones(4, 2)
+    new_mu = torch.ones(4, 2)
+    new_sigma = torch.full((4, 2), 2.0)
+    expected_kl = torch.sum(
+        torch.log(new_sigma / old_sigma + 1.0e-5)
+        + (old_sigma.square() + (old_mu - new_mu).square()) / (2.0 * new_sigma.square())
+        - 0.5,
+        dim=-1,
+    )
+    assert torch.allclose(gaussian_kl(old_mu, old_sigma, new_mu, new_sigma), expected_kl)
+
+    advantages = torch.tensor([1.0, -0.5])
+    new_log = torch.tensor([0.2, -0.1])
+    old_log = torch.tensor([0.0, 0.0])
+    loss, ratio = ppo_clipped_surrogate_loss(advantages, new_log, old_log, 0.2)
+    unclipped = torch.exp(new_log - old_log)
+    assert torch.allclose(ratio, unclipped)
+    squeezed = advantages
+    surrogate = torch.max(-squeezed * unclipped, -squeezed * unclipped.clamp(0.8, 1.2)).mean()
+    assert torch.allclose(loss, surrogate)
+
+    values = torch.tensor([[1.5], [0.5]])
+    targets = torch.tensor([[1.0], [0.0]])
+    returns = torch.tensor([[2.0], [1.0]])
+    clipped = ppo_clipped_value_loss(values, targets, returns, 0.2, True)
+    value_clipped = targets + (values - targets).clamp(-0.2, 0.2)
+    expected_value = torch.max((values - returns).pow(2), (value_clipped - returns).pow(2)).mean()
+    assert torch.allclose(clipped, expected_value)
+    assert adapt_ppo_learning_rate(3.0e-3, 0.03, 0.01) == pytest.approx(3.0e-3 / 1.5)
+    assert adapt_ppo_learning_rate(3.0e-3, 0.001, 0.01) == pytest.approx(3.0e-3 * 1.5)
+
+
+def test_dagger_mix_helper_is_shared_with_distillation():
+    student = torch.zeros(4, 2)
+    teacher = torch.ones(4, 2)
+    executed, mask = mix_teacher_student_actions(student, teacher, 0.0)
+    assert torch.equal(executed, student)
+    assert torch.all(mask)
+    executed, mask = mix_teacher_student_actions(student, teacher, 1.0)
+    assert torch.equal(executed, teacher)
+    assert torch.all(~mask)
     algorithm = _algorithm()
     _collect(algorithm)
 
@@ -147,7 +267,6 @@ def test_safe_update_uses_sequence_batches_without_mutating_live_hidden():
 
     assert calls and all(calls)
     assert torch.allclose(policy.get_hidden_states()[0], live_hidden)
-    assert report["update_accepted"] == pytest.approx(1.0)
     for key in (
         "behavior",
         "pg",
@@ -155,63 +274,177 @@ def test_safe_update_uses_sequence_batches_without_mutating_live_hidden():
         "value_function",
         "kl_mean",
         "kl_p95",
+        "kl_p99",
         "kl_max",
         "ratio_p95",
         "clip_fraction",
-        "grad_norm_behavior",
-        "grad_norm_pg",
-        "grad_norm_recon",
-        "grad_cos_behavior_pg",
-        "grad_cos_behavior_recon",
-        "grad_cos_pg_recon",
-        "grad_conflict_recon_control",
-        "recon_grad_scale",
+        "accepted_minibatches",
+        "planned_minibatches",
         "behavior_coef",
-        "rollback_kl_p95",
-        "rollback_kl_emergency",
+        "pg_coef",
+        "critic_warmup",
         "accepted_update_count",
         "action_std_min",
         "action_std_mean",
         "action_std_max",
+        "recon_control_cosine",
+        "recon_grad_norm",
+        "control_grad_norm",
     ):
         assert key in report
         assert torch.isfinite(torch.tensor(report[key]))
+    assert "grad_norm_behavior" not in report
     assert any(not torch.equal(before[name], value) for name, value in policy.state_dict().items())
 
 
 def test_configured_multi_batch_update_replays_detached_sequences():
     torch.manual_seed(7)
-    algorithm = _algorithm(max_kl=1.0e6, max_kl_emergency=1.0e7, learning_rate=3.0e-4)
+    algorithm = _algorithm(learning_rate=3.0e-4)
     algorithm.num_mini_batches = 4
     algorithm.num_learning_epochs = 2
     _collect(algorithm, num_envs=8, num_steps=6)
 
     report = algorithm.update()
 
-    assert report["update_accepted"] == pytest.approx(1.0)
     assert report["accepted_update_count"] == pytest.approx(1.0)
+    assert report["accepted_minibatches"] == pytest.approx(8.0)
 
 
-def test_safe_update_rolls_back_policy_and_adam_state_when_kl_budget_is_breached():
-    algorithm = _algorithm(max_kl=0.0, learning_rate=5.0e-2)
+def test_critic_warmup_holds_pg_until_the_value_head_has_data():
+    algorithm = _algorithm(critic_warmup_iters=2)
+    assert algorithm.current_pg_coef() == pytest.approx(0.0)
+
     _collect(algorithm)
-    policy_before = _clone_policy_state(algorithm.policy)
-    optimizer_before = copy.deepcopy(algorithm.optimizer.state_dict())
-    lr_before = algorithm.learning_rate
+    first = algorithm.update()
+    assert first["pg_coef"] == pytest.approx(0.0)
+    assert first["critic_warmup"] == pytest.approx(1.0)
 
-    report = algorithm.update()
+    _collect(algorithm)
+    second = algorithm.update()
+    assert second["pg_coef"] == pytest.approx(0.0)
 
-    assert report["update_accepted"] == pytest.approx(0.0)
-    assert report["rollback_kl"] == pytest.approx(1.0)
-    assert report["kl_max"] > 0.0
-    for name, value in algorithm.policy.state_dict().items():
-        assert torch.equal(value, policy_before[name])
-    assert algorithm.optimizer.state_dict()["state"] == optimizer_before["state"]
-    assert algorithm.learning_rate == pytest.approx(lr_before * 0.5)
+    _collect(algorithm)
+    third = algorithm.update()
+    assert third["pg_coef"] == pytest.approx(0.5)
+    assert third["critic_warmup"] == pytest.approx(0.0)
+
+
+def test_pg_coef_ramps_after_critic_warmup():
+    algorithm = _algorithm(critic_warmup_iters=1, pg_coef=0.2, pg_coef_ramp_iters=2)
+    _collect(algorithm)
+    first = algorithm.update()
+    assert first["pg_coef"] == pytest.approx(0.0)
+    _collect(algorithm)
+    second = algorithm.update()
+    assert second["pg_coef"] == pytest.approx(0.1)
+    _collect(algorithm)
+    third = algorithm.update()
+    assert third["pg_coef"] == pytest.approx(0.2)
+
+
+def test_critic_warmup_freezes_actor_and_still_updates_critic():
+    algorithm = _algorithm(critic_warmup_iters=1, pg_coef=0.5, behavior_coef=1.0, learning_rate=3.0e-3)
+    critic_ids = {id(parameter) for parameter in algorithm.policy.critic.parameters()}
+
+    def _actor_snapshot():
+        return {
+            name: parameter.detach().clone()
+            for name, parameter in algorithm.policy.named_parameters()
+            if id(parameter) not in critic_ids
+        }
+
+    _collect(algorithm)
+    actor_before = _actor_snapshot()
+    critic_before = [parameter.detach().clone() for parameter in algorithm.policy.critic.parameters()]
+    first = algorithm.update()
+    assert first["pg_coef"] == pytest.approx(0.0)
+    assert first["actor_frozen"] == pytest.approx(1.0)
+    actor_after_warmup = _actor_snapshot()
+    for name, before in actor_before.items():
+        assert torch.equal(before, actor_after_warmup[name]), name
+    assert any(
+        not torch.equal(before, after)
+        for before, after in zip(critic_before, list(algorithm.policy.critic.parameters()))
+    )
+
+    _collect(algorithm)
+    second = algorithm.update()
+    assert second["pg_coef"] == pytest.approx(0.5)
+    assert second["actor_frozen"] == pytest.approx(0.0)
+    actor_after_ppo = _actor_snapshot()
+    assert any(not torch.equal(actor_after_warmup[name], actor_after_ppo[name]) for name in actor_after_warmup)
+
+
+def test_mean_kl_adapts_learning_rate_like_teacher_ppo():
+    algorithm = _algorithm(learning_rate=3.0e-3, desired_kl=0.01, schedule="adaptive")
+    old_mu = torch.zeros(8, 2)
+    old_sigma = torch.ones(8, 2)
+    shifted_mu = torch.ones(8, 2)
+
+    algorithm._adapt_learning_rate(old_mu, old_sigma, shifted_mu, old_sigma)
+    assert algorithm.learning_rate == pytest.approx(3.0e-3 / 1.5)
+
+    algorithm._set_learning_rate(3.0e-3)
+    algorithm._adapt_learning_rate(old_mu, old_sigma, old_mu + 1.0e-2, old_sigma)
+    assert algorithm.learning_rate == pytest.approx(3.0e-3 * 1.5)
+
+
+def test_fixed_schedule_does_not_adapt_learning_rate_from_kl():
+    algorithm = _algorithm(learning_rate=1.0e-4, desired_kl=0.01, schedule="fixed")
+    algorithm._adapt_learning_rate_from_mean_kl(10.0)
+    assert algorithm.learning_rate == pytest.approx(1.0e-4)
+    algorithm._adapt_learning_rate(
+        torch.zeros(8, 2),
+        torch.ones(8, 2),
+        torch.ones(8, 2),
+        torch.ones(8, 2),
+    )
+    assert algorithm.learning_rate == pytest.approx(1.0e-4)
+
+
+def test_delayed_pg_allows_mix_start_when_decay_fits_delay():
+    algorithm = _algorithm(
+        teacher_mix=1.0,
+        teacher_mix_end=0.0,
+        teacher_mix_decay_iters=4,
+        pg_coef=0.2,
+        pg_delay_iters=4,
+        critic_warmup_iters=2,
+        behavior_coef=1.0,
+        behavior_coef_end=1.0,
+        behavior_coef_decay_iters=0,
+    )
+    algorithm.num_updates = 0
+    assert algorithm.current_teacher_mix() == pytest.approx(1.0)
+    assert algorithm.current_pg_coef() == pytest.approx(0.0)
+    assert algorithm._in_critic_warmup() is False
+    algorithm.num_updates = 3
+    assert algorithm.current_teacher_mix() > 0.0
+    assert algorithm.current_pg_coef() == pytest.approx(0.0)
+    algorithm.num_updates = 4
+    assert algorithm.current_teacher_mix() == pytest.approx(0.0)
+    assert algorithm.current_pg_coef() == pytest.approx(0.0)
+    algorithm.num_updates = 5
+    assert algorithm._in_critic_warmup() is True
+    assert algorithm.current_pg_coef() == pytest.approx(0.0)
+    algorithm.num_updates = 6
+    assert algorithm._in_critic_warmup() is True
+    algorithm.num_updates = 7
+    assert algorithm._in_critic_warmup() is False
+    assert algorithm.current_pg_coef() == pytest.approx(0.2)
+
+
+def test_nonzero_teacher_mix_raises_when_pg_coef_is_positive():
+    with pytest.raises(ValueError, match="teacher_mix=0"):
+        _algorithm(teacher_mix=0.5, pg_coef=0.5)
+    with pytest.raises(ValueError, match="teacher_mix=0"):
+        _algorithm(teacher_mix=0.0, teacher_mix_end=0.3, pg_coef=0.5)
+    algorithm = _algorithm(teacher_mix=0.5, teacher_mix_end=0.0, pg_coef=0.0)
+    assert algorithm.current_teacher_mix() == pytest.approx(0.5)
 
 
 def test_all_teacher_rollout_has_no_on_policy_ratio_samples():
-    algorithm = _algorithm(teacher_mix=1.0, teacher_mix_end=1.0)
+    algorithm = _algorithm(teacher_mix=1.0, teacher_mix_end=1.0, pg_coef=0.0)
     _collect(algorithm)
 
     report = algorithm.update()
@@ -222,46 +455,25 @@ def test_all_teacher_rollout_has_no_on_policy_ratio_samples():
     assert report["clip_fraction"] == pytest.approx(0.0)
 
 
-def test_kl_gate_uses_p95_with_a_separate_emergency_maximum():
-    algorithm = _algorithm(max_kl=0.03, max_kl_emergency=0.3)
-    baseline = {
-        "kl_mean": 0.01,
-        "kl_p95": 0.02,
-        "kl_max": 0.10,
-        "post_behavior": 0.1,
-    }
-
-    assert algorithm._rollback_reasons(baseline, pre_behavior=0.1) == (False, False, False, False)
-
-    p95_breach = {**baseline, "kl_p95": 0.031}
-    assert algorithm._rollback_reasons(p95_breach, pre_behavior=0.1) == (True, True, False, False)
-
-    emergency_breach = {**baseline, "kl_max": 0.301}
-    assert algorithm._rollback_reasons(emergency_breach, pre_behavior=0.1) == (True, False, True, False)
-
-
-def test_rejected_update_does_not_advance_teacher_mix_schedule():
+def test_teacher_mix_advances_on_every_applied_update():
     algorithm = _algorithm(
-        max_kl=0.0,
-        max_kl_emergency=0.0,
-        learning_rate=5.0e-2,
         teacher_mix=0.5,
         teacher_mix_end=0.0,
         teacher_mix_decay_iters=2,
         behavior_coef=1.0,
         behavior_coef_end=0.0,
         behavior_coef_decay_iters=2,
+        pg_coef=0.0,
     )
     _collect(algorithm)
     mix_before = algorithm.current_teacher_mix()
 
     report = algorithm.update()
 
-    assert report["update_accepted"] == pytest.approx(0.0)
     assert algorithm.num_updates == 1
-    assert algorithm.num_accepted_updates == 0
-    assert algorithm.current_teacher_mix() == pytest.approx(mix_before)
-    assert algorithm.current_behavior_coef() == pytest.approx(1.0)
+    assert algorithm.num_accepted_updates == 1
+    assert algorithm.current_teacher_mix() < mix_before
+    assert report["teacher_mix"] == pytest.approx(algorithm.current_teacher_mix())
 
 
 def test_safe_algorithm_checkpoint_state_restores_schedule_and_learning_rate():
@@ -270,10 +482,11 @@ def test_safe_algorithm_checkpoint_state_restores_schedule_and_learning_rate():
         teacher_mix_end=0.0,
         teacher_mix_decay_iters=10,
         behavior_coef_decay_iters=10,
+        pg_coef=0.0,
     )
-    algorithm.num_updates = 7
+    algorithm.num_updates = 4
     algorithm.num_accepted_updates = 4
-    algorithm.rollback_count = 3
+    algorithm.rollback_count = 0
     algorithm._set_learning_rate(7.5e-4)
 
     restored = _algorithm(
@@ -281,15 +494,34 @@ def test_safe_algorithm_checkpoint_state_restores_schedule_and_learning_rate():
         teacher_mix_end=0.0,
         teacher_mix_decay_iters=10,
         behavior_coef_decay_iters=10,
+        pg_coef=0.0,
     )
     restored.load_checkpoint_state_dict(algorithm.checkpoint_state_dict())
 
-    assert restored.num_updates == 7
+    assert restored.num_updates == 4
     assert restored.num_accepted_updates == 4
-    assert restored.rollback_count == 3
+    assert restored.rollback_count == 0
     assert restored.learning_rate == pytest.approx(7.5e-4)
     assert restored.current_teacher_mix() == pytest.approx(0.3)
     assert restored.current_behavior_coef() == pytest.approx(0.6)
+
+
+def test_safe_algorithm_checkpoint_restores_frozen_reference_actor():
+    algorithm = _algorithm(reference_action_coef=0.25)
+    algorithm.set_reference_policy_from_current()
+    with torch.no_grad():
+        algorithm.reference_policy.student[-1].bias.add_(0.125)
+
+    restored = _algorithm(reference_action_coef=0.25)
+    restored.load_checkpoint_state_dict(algorithm.checkpoint_state_dict())
+
+    assert restored.reference_policy is not None
+    assert all(not parameter.requires_grad for parameter in restored.reference_policy.parameters())
+    expected = algorithm.reference_policy.deployable_state_dict()
+    actual = restored.reference_policy.deployable_state_dict()
+    assert expected.keys() == actual.keys()
+    for name in expected:
+        assert torch.equal(expected[name], actual[name]), name
 
 
 def test_runner_checkpoint_round_trip_preserves_safe_algorithm_state():
@@ -298,10 +530,11 @@ def test_runner_checkpoint_round_trip_preserves_safe_algorithm_state():
         teacher_mix_end=0.0,
         teacher_mix_decay_iters=10,
         behavior_coef_decay_iters=10,
+        pg_coef=0.0,
     )
-    algorithm.num_updates = 7
+    algorithm.num_updates = 4
     algorithm.num_accepted_updates = 4
-    algorithm.rollback_count = 3
+    algorithm.rollback_count = 0
     algorithm._set_learning_rate(7.5e-4)
 
     with tempfile.TemporaryDirectory(prefix="safe-recurrent-checkpoint-") as raw:
@@ -319,6 +552,7 @@ def test_runner_checkpoint_round_trip_preserves_safe_algorithm_state():
             teacher_mix_end=0.0,
             teacher_mix_decay_iters=10,
             behavior_coef_decay_iters=10,
+            pg_coef=0.0,
         )
         restored_runner = object.__new__(OnPolicyRunner)
         restored_runner.alg = restored
@@ -327,16 +561,16 @@ def test_runner_checkpoint_round_trip_preserves_safe_algorithm_state():
         restored_runner.load(str(checkpoint))
 
         assert restored_runner.current_learning_iteration == 123
-        assert restored.num_updates == 7
+        assert restored.num_updates == 4
         assert restored.num_accepted_updates == 4
-        assert restored.rollback_count == 3
+        assert restored.rollback_count == 0
         assert restored.learning_rate == pytest.approx(7.5e-4)
         assert restored.current_teacher_mix() == pytest.approx(0.3)
         assert restored.current_behavior_coef() == pytest.approx(0.6)
 
 
 def test_runner_model_only_load_resets_safe_optimizer_schedule():
-    algorithm = _algorithm(teacher_mix=0.5, teacher_mix_end=0.0, teacher_mix_decay_iters=10)
+    algorithm = _algorithm(teacher_mix=0.5, teacher_mix_end=0.0, teacher_mix_decay_iters=10, pg_coef=0.0)
     algorithm.num_updates = 7
     algorithm.num_accepted_updates = 4
     algorithm.rollback_count = 3
@@ -352,7 +586,7 @@ def test_runner_model_only_load_resets_safe_optimizer_schedule():
         checkpoint = Path(raw) / "model_123.pt"
         runner.save(str(checkpoint))
 
-        restored = _algorithm(teacher_mix=0.5, teacher_mix_end=0.0, teacher_mix_decay_iters=10)
+        restored = _algorithm(teacher_mix=0.5, teacher_mix_end=0.0, teacher_mix_decay_iters=10, pg_coef=0.0)
         initial_lr = restored.learning_rate
         restored_runner = object.__new__(OnPolicyRunner)
         restored_runner.alg = restored
@@ -427,20 +661,231 @@ def test_training_critic_is_removed_from_deployable_state():
     assert not any(name.startswith("critic.") for name in deployed)
 
 
+def test_update_projects_conflicting_recon_gradient_on_shared_encoder():
+    seen = {"calls": 0}
+    original = SafeRecurrentDistillation._project_auxiliary_gradient.__func__
+
+    def _spy(cls, auxiliary, control):
+        seen["calls"] += 1
+        return original(cls, auxiliary, control)
+
+    SafeRecurrentDistillation._project_auxiliary_gradient = classmethod(_spy)
+    try:
+        algorithm = _algorithm()
+        _collect(algorithm)
+        report = algorithm.update()
+        assert seen["calls"] >= 1
+        assert "recon_control_cosine" in report
+        assert "recon_grad_norm" in report
+        assert "control_grad_norm" in report
+        assert torch.isfinite(torch.tensor(report["recon_control_cosine"]))
+        assert torch.isfinite(torch.tensor(report["recon_grad_norm"]))
+        assert torch.isfinite(torch.tensor(report["control_grad_norm"]))
+        source = inspect.getsource(SafeRecurrentDistillation.update)
+        assert "_optimizer_step_with_recon_projection" in source
+        helper = inspect.getsource(SafeRecurrentDistillation._optimizer_step_with_recon_projection)
+        assert "_project_auxiliary_gradient" in helper
+        assert "_limit_auxiliary_gradient_norm" in helper
+    finally:
+        SafeRecurrentDistillation._project_auxiliary_gradient = classmethod(original)
+
+
+def test_distributed_recon_projection_reduces_before_projecting():
+    order: list[str] = []
+    algorithm = _algorithm()
+    _collect(algorithm)
+    batch = next(algorithm.storage.safe_recurrent_mini_batch_generator(1, 1))
+    control_loss, recon_term, *_ = algorithm._batch_losses(batch)
+    original_project = SafeRecurrentDistillation._project_auxiliary_gradient.__func__
+
+    def _spy_project(cls, auxiliary, control):
+        order.append("project")
+        return original_project(cls, auxiliary, control)
+
+    def _spy_reduce(tensors):
+        order.append("reduce")
+
+    algorithm.is_multi_gpu = True
+    algorithm.gpu_world_size = 2
+    algorithm._all_reduce_tensors = _spy_reduce
+    SafeRecurrentDistillation._project_auxiliary_gradient = classmethod(_spy_project)
+    try:
+        algorithm._optimizer_step_with_recon_projection(control_loss, recon_term, check_finite=False)
+        assert "reduce" in order
+        assert "project" in order
+        assert order.index("reduce") < order.index("project")
+        source = inspect.getsource(SafeRecurrentDistillation._optimizer_step_with_recon_projection)
+        assert source.find("_all_reduce_tensors") < source.find("_project_auxiliary_gradient")
+        assert "_reduce_gradients()" not in source
+    finally:
+        SafeRecurrentDistillation._project_auxiliary_gradient = classmethod(original_project)
+
+
 def test_sparse_student_cfg_selects_safe_recurrent_improvement():
     source = CFG_PATH.read_text(encoding="utf-8")
-    assert 'class_name: str = "SafeRecurrentDistillation"' in source
+    distill = source.split("class T4SparseDepthStudentDaggerAlgCfg", 1)[1].split(
+        "class T4SparseDepthStudentAgentCfg", 1
+    )[0]
+    joint_alg = source.split("class T4SparseDepthStudentJointAlgCfg", 1)[1].split(
+        "class T4SparseDepthStudentDeployFtAlgCfg", 1
+    )[0]
+    ft_alg = source.split("class T4SparseDepthStudentDeployFtAlgCfg", 1)[1].split(
+        "class T4SparseDepthStudentTargetedFtAlgCfg", 1
+    )[0]
+    targeted_alg = source.split("class T4SparseDepthStudentTargetedFtAlgCfg", 1)[1].split(
+        "class T4SparseDepthStudentFtAgentCfg", 1
+    )[0]
+    agent = source.split("class T4SparseDepthStudentAgentCfg", 1)[1].split(
+        "class T4SparseDepthStudentJointAlgCfg", 1
+    )[0]
+    assert 'class_name: str = "SafeRecurrentDistillation"' in distill
     assert "critic_hidden_dims" in source
-    assert "num_mini_batches: int = 4" in source
-    assert "desired_kl: float = 0.01" in source
-    assert "max_kl: float = 0.03" in source
-    assert "max_kl_emergency: float = 0.3" in source
-    assert "max_behavior_drift: float = 0.02" in source
-    assert "behavior_coef_end: float = 0.0" in source
-    assert "behavior_coef_decay_iters: int = 2000" in source
-    assert "pg_coef: float = 0.5" in source
-    assert "max_recon_grad_ratio: float = 1.0" in source
+    assert "num_mini_batches: int = 4" in distill
+    assert 'schedule: str = "fixed"' in distill
+    assert "teacher_mix: float = 1.0" in distill
+    assert "teacher_mix_end: float = 0.0" in distill
+    assert "learning_rate: float = 1.0e-4" in distill
+    assert "use_clipped_value_loss: bool = True" in distill
+    assert "desired_kl: float = 0.01" in distill
+    assert "critic_warmup_iters: int = 0" in distill
+    assert "pg_delay_iters: int = 0" in distill
+    assert "behavior_coef_end: float = 1.0" in distill
+    assert "behavior_coef_decay_iters: int = 0" in distill
+    assert "teacher_mix_decay_iters: int = 1000" in distill
+    assert 'run_name: str = "s12_rtx_gated_dagger"' in agent
+    assert "max_iterations: int = 8000" in agent
+    assert "pg_coef: float = 0.0" in distill
+    assert "max_recon_grad_ratio: float = 1.0" in distill
     assert "max_action_std: float = 0.2" in source
+    assert "pg_coef: float = 0.2" in joint_alg
+    assert "pg_coef_ramp_iters: int = 800" in joint_alg
+    assert "critic_warmup_iters: int = 200" in joint_alg
+    assert "learning_rate: float = 3.0e-5" in joint_alg
+    assert 'schedule: str = "fixed"' in joint_alg
+    assert "pg_coef: float = 0.5" in ft_alg
+    assert "pg_coef_ramp_iters: int = 400" in ft_alg
+    assert "behavior_coef: float = 0.5" in ft_alg
+    assert "behavior_coef_end: float = 0.5" in ft_alg
+    assert "learning_rate: float = 1.0e-5" in targeted_alg
+    assert "pg_coef: float = 0.1" in targeted_alg
+    assert "reference_action_coef: float = 0.25" in targeted_alg
+    assert "behavior_coef: float = 1.0" in targeted_alg
+    assert "recon_coef: float = 1.0" in targeted_alg
+    assert 'run_name: str = "s12_rtx_gated_joint"' in source
+    assert 'run_name: str = "s12_rtx_deploy_ft_v2"' in source
+    assert 'run_name: str = "s12_rtx_targeted_robust_ft"' in source
+    assert "max_kl:" not in source
+    assert "rollback_lr_factor" not in source
+    params = inspect.signature(SafeRecurrentDistillation.__init__).parameters
+    for name in (
+        "pg_coef",
+        "pg_coef_ramp_iters",
+        "pg_delay_iters",
+        "teacher_mix",
+        "teacher_mix_end",
+        "teacher_mix_decay_iters",
+        "behavior_coef",
+        "behavior_coef_end",
+        "behavior_coef_decay_iters",
+        "critic_warmup_iters",
+        "schedule",
+        "learning_rate",
+        "reference_action_coef",
+    ):
+        assert name in params, name
+
+
+def test_sparse_distill_cfg_objects_match_gated_three_phase_recipe():
+    pytest.importorskip("isaaclab")
+    from legged_lab.envs.t4.depth_student_cfg import (
+        T4SparseDepthStudentDeployFtAgentCfg,
+        T4SparseDepthStudentAgentCfg,
+        T4SparseDepthStudentDaggerAlgCfg,
+        T4SparseDepthStudentFtAgentCfg,
+        T4SparseDepthStudentJointAlgCfg,
+        T4SparseDepthStudentTargetedFtAgentCfg,
+        T4SparseDepthStudentTargetedFtAlgCfg,
+    )
+
+    distill = T4SparseDepthStudentDaggerAlgCfg()
+    assert distill.pg_coef == pytest.approx(0.0)
+    assert distill.pg_delay_iters == 0
+    assert distill.teacher_mix == pytest.approx(1.0)
+    assert distill.teacher_mix_end == pytest.approx(0.0)
+    assert distill.teacher_mix_decay_iters == 1000
+    assert distill.schedule == "fixed"
+    assert distill.learning_rate == pytest.approx(1.0e-4)
+    assert distill.behavior_coef == pytest.approx(1.0)
+    assert distill.behavior_coef_end == pytest.approx(1.0)
+    assert distill.behavior_coef_decay_iters == 0
+    assert distill.critic_warmup_iters == 0
+    agent = T4SparseDepthStudentAgentCfg()
+    assert agent.run_name == "s12_rtx_gated_dagger"
+    assert agent.max_iterations == 8000
+    joint_agent = T4SparseDepthStudentFtAgentCfg()
+    joint = joint_agent.algorithm
+    assert isinstance(joint, T4SparseDepthStudentJointAlgCfg)
+    assert joint_agent.run_name == "s12_rtx_gated_joint"
+    assert joint.pg_coef == pytest.approx(0.2)
+    assert joint.pg_coef_ramp_iters == 800
+    assert joint.critic_warmup_iters == 200
+    ft_agent = T4SparseDepthStudentDeployFtAgentCfg()
+    ft = ft_agent.algorithm
+    assert ft_agent.run_name == "s12_rtx_deploy_ft_v2"
+    assert ft.pg_coef == pytest.approx(0.5)
+    assert ft.pg_coef_ramp_iters == 400
+    assert ft.critic_warmup_iters == 200
+    targeted_agent = T4SparseDepthStudentTargetedFtAgentCfg()
+    targeted = targeted_agent.algorithm
+    assert isinstance(targeted, T4SparseDepthStudentTargetedFtAlgCfg)
+    assert targeted_agent.run_name == "s12_rtx_targeted_robust_ft"
+    assert targeted_agent.max_iterations == 800
+    assert targeted.learning_rate == pytest.approx(1.0e-5)
+    assert targeted.pg_coef == pytest.approx(0.1)
+    assert targeted.reference_action_coef == pytest.approx(0.25)
+    dagger = _algorithm(
+        teacher_mix=distill.teacher_mix,
+        teacher_mix_end=distill.teacher_mix_end,
+        teacher_mix_decay_iters=distill.teacher_mix_decay_iters,
+        behavior_coef=distill.behavior_coef,
+        behavior_coef_end=distill.behavior_coef_end,
+        behavior_coef_decay_iters=distill.behavior_coef_decay_iters,
+        critic_warmup_iters=distill.critic_warmup_iters,
+        pg_coef=distill.pg_coef,
+        pg_delay_iters=distill.pg_delay_iters,
+    )
+    assert dagger.current_pg_coef() == pytest.approx(0.0)
+    assert dagger.current_teacher_mix() == pytest.approx(1.0)
+    joint_alg = _algorithm(
+        teacher_mix=joint.teacher_mix,
+        teacher_mix_end=joint.teacher_mix_end,
+        teacher_mix_decay_iters=joint.teacher_mix_decay_iters,
+        behavior_coef=joint.behavior_coef,
+        behavior_coef_end=joint.behavior_coef_end,
+        critic_warmup_iters=joint.critic_warmup_iters,
+        pg_coef=joint.pg_coef,
+        pg_coef_ramp_iters=joint.pg_coef_ramp_iters,
+    )
+    joint_alg.num_updates = 200
+    assert joint_alg.current_pg_coef() == pytest.approx(0.0)
+    joint_alg.num_updates = 600
+    assert joint_alg.current_pg_coef() == pytest.approx(0.1)
+    ft_alg = _algorithm(
+        teacher_mix=ft.teacher_mix,
+        teacher_mix_end=ft.teacher_mix_end,
+        teacher_mix_decay_iters=ft.teacher_mix_decay_iters,
+        behavior_coef=ft.behavior_coef,
+        behavior_coef_end=ft.behavior_coef_end,
+        critic_warmup_iters=ft.critic_warmup_iters,
+        pg_coef=ft.pg_coef,
+        pg_coef_ramp_iters=ft.pg_coef_ramp_iters,
+        pg_delay_iters=ft.pg_delay_iters,
+        schedule=ft.schedule,
+    )
+    ft_alg.num_updates = 400
+    assert ft_alg.current_pg_coef() == pytest.approx(0.25)
+    assert ft_alg.current_behavior_coef() == pytest.approx(0.5)
+    assert ft_alg.current_teacher_mix() == pytest.approx(0.0)
 
 
 def test_runner_maps_safe_algorithm_to_teacher_observation_contract():

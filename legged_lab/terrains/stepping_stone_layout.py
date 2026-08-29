@@ -18,6 +18,7 @@ before Chebyshev OOB, instead of stepping into the pit past the last foothold.
 from __future__ import annotations
 
 import math
+import hashlib
 
 T4_STONE_TILE_SIZE = 8.0
 T4_STONE_PLATFORM_WIDTH = 1.6
@@ -116,6 +117,12 @@ def pillar_gap(
 
 def pillar_height(difficulty: float, height_range: tuple[float, float] = T4_PILLAR_HEIGHT_RANGE) -> float:
     return _lerp(height_range[0], height_range[1], difficulty)
+
+
+def targeted_layout_seed(difficulty: float, *, base_seed: int = 0, stream: int = 0) -> int:
+    """Stable per-tile seed without the old 0.001 difficulty bucketing."""
+    payload = f"{int(base_seed)}:{float(difficulty):.12f}:{int(stream)}".encode("ascii")
+    return int.from_bytes(hashlib.blake2s(payload, digest_size=4).digest(), "little")
 
 
 def pinned_spawn_stays_on_platform(
@@ -306,6 +313,106 @@ def point_on_rim(
     if x < lo or y < lo or x > hi or y > hi:
         return False
     return x <= rim_width or y <= rim_width or x >= tile_size - rim_width or y >= tile_size - rim_width
+
+
+_ISAAC_TILE_PLATFORM_THICKNESS = 0.10
+_ISAAC_TILE_HALF = 0.5 * T4_STONE_TILE_SIZE
+_RIM_DIRECTION_NAMES = ("south", "north", "west", "east")
+
+
+def isaac_sparse_tile_geoms(
+    difficulty: float,
+    kind: str,
+    *,
+    origin_xy: tuple[float, float] = (0.0, 0.0),
+    platform_name: str = "start_platform",
+    finish_name: str | None = "finish_platform",
+    name_prefix: str = "",
+) -> list[dict]:
+    """MuJoCo geoms for one Isaac sparse tile, origin at the spawn-pad center.
+
+    Training tiles are an 8 m lattice around a 1.6 m pad plus a 0.75 m landing
+    rim. The student viewer must not replace that with a 7-lane corridor over a
+    pit — that is a different task than the policy was distilled on.
+    """
+    import random
+
+    ox, oy = float(origin_xy[0]), float(origin_xy[1])
+    thick = _ISAAC_TILE_PLATFORM_THICKNESS
+    half_thick = 0.5 * thick
+    geoms: list[dict] = [
+        {
+            "name": platform_name,
+            "kind": "platform",
+            "shape": "box",
+            "pos": (ox, oy, -half_thick),
+            "size": (0.5 * T4_STONE_PLATFORM_WIDTH, 0.5 * T4_STONE_PLATFORM_WIDTH, half_thick),
+            "rgba": (0.28, 0.31, 0.34, 1.0),
+        }
+    ]
+    for direction, ((cx, cy), (sx, sy)) in zip(
+        _RIM_DIRECTION_NAMES, rim_slab_centers_and_sizes(), strict=True
+    ):
+        if direction == "east" and finish_name is not None:
+            rim_name = finish_name
+        else:
+            rim_name = f"{name_prefix}rim_{direction}"
+        geoms.append(
+            {
+                "name": rim_name,
+                "kind": "rim",
+                "shape": "box",
+                "pos": (cx - _ISAAC_TILE_HALF + ox, cy - _ISAAC_TILE_HALF + oy, -half_thick),
+                "size": (0.5 * sx, 0.5 * sy, half_thick),
+                "rgba": (0.28, 0.31, 0.34, 1.0),
+            }
+        )
+    if kind == "stepping_stones":
+        pitch = foothold_pitch(difficulty)
+        support = stone_width(difficulty)
+        height = stone_height(difficulty)
+        jitter = stone_height_jitter(difficulty)
+        shape = "box"
+        stem = "stone"
+        rgba = (0.72, 0.63, 0.42, 1.0)
+        pitch_range = T4_FOOTHOLD_PITCH_RANGE
+    elif kind == "raised_pillars":
+        pitch = foothold_pitch(difficulty, T4_PILLAR_PITCH_RANGE)
+        support = pillar_diameter(difficulty)
+        height = pillar_height(difficulty)
+        jitter = 0.0
+        shape = "cylinder"
+        stem = "pillar"
+        rgba = (0.35, 0.58, 0.72, 1.0)
+        pitch_range = T4_PILLAR_PITCH_RANGE
+    else:
+        raise ValueError(f"unknown sparse kind {kind!r}")
+    del pitch_range
+    rng = random.Random(int(round(float(difficulty) * 1000.0)))
+    c = _ISAAC_TILE_HALF
+    max_ring = math.floor((c - T4_STONE_BORDER_WIDTH) / pitch)
+    lo = c - max_ring * pitch
+    for tile_x, tile_y in foothold_centers(pitch):
+        ix = int(round((tile_x - lo) / pitch))
+        iy = int(round((tile_y - lo) / pitch))
+        h = max(0.04, height + rng.uniform(-jitter, jitter))
+        world_x = tile_x - _ISAAC_TILE_HALF + ox
+        world_y = tile_y - _ISAAC_TILE_HALF + oy
+        if shape == "box":
+            size: tuple[float, ...] = (0.5 * support, 0.5 * support, 0.5 * h)
+        else:
+            size = (0.5 * support, 0.5 * h)
+        geoms.append(
+            {
+                "name": f"{stem}_{ix}_{iy}",
+                "kind": kind,
+                "shape": shape,
+                "pos": (world_x, world_y, 0.5 * h),
+                "size": size,
+                "rgba": rgba,
+            }
+        )
+    return geoms
 
 
 def last_cardinal_support_edge(
