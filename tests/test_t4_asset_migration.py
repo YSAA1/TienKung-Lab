@@ -401,7 +401,7 @@ def test_t4_vault_contract_matches_manifest_and_stage_e_plant() -> None:
     assert vault_contract.T4_VAULT_MOTION_FILE.is_file()
 
     # The mimic teacher must share the frozen Stage E 0.25 action scale.
-    teacher_source = (ROOT / "legged_lab/envs/t4/teacher_cfg.py").read_text()
+    teacher_source = (ROOT / "legged_lab/locomotion/teacher_cfg.py").read_text()
     match = re.search(r"action_scale=([0-9.]+)", teacher_source)
     assert match is not None
     assert vault_contract.T4_VAULT_ACTION_SCALE == float(match.group(1)) == 0.25

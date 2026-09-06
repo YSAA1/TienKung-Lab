@@ -50,6 +50,10 @@ class AmpOnPolicyRunner:
         self.device = device
         self.env = env
 
+        validate_contract = getattr(env, "validate_training_contract", None)
+        if validate_contract is not None:
+            validate_contract(train_cfg)
+
         # check if multi-gpu is enabled
         self._configure_multi_gpu()
 
@@ -250,6 +254,13 @@ class AmpOnPolicyRunner:
                 for _ in range(self.num_steps_per_env):
                     # Sample actions
                     actions = self.alg.act(obs, privileged_obs, amp_obs)
+                    # The transition belongs to the current terrain. step() may
+                    # reset an episode and assign its next terrain level in-place.
+                    if self.amp_reward_coef_scale_fn is not None:
+                        coef_scale = self.amp_reward_coef_scale_fn().to(self.device).clone()
+                        self.mean_amp_reward_coef_scale = coef_scale.mean().item()
+                    else:
+                        coef_scale = None
                     # Step the environment
                     obs, rewards, dones, infos = self.env.step(actions.to(self.env.device))
                     next_amp_obs = self.env.get_amp_obs_for_expert_trans()
@@ -279,11 +290,6 @@ class AmpOnPolicyRunner:
                             terminal_amp_states = self.env.get_amp_obs_for_expert_trans()[reset_env_ids]
                         next_amp_obs_with_term[reset_env_ids] = terminal_amp_states.to(self.device)
 
-                    if self.amp_reward_coef_scale_fn is not None:
-                        coef_scale = self.amp_reward_coef_scale_fn().to(self.device)
-                        self.mean_amp_reward_coef_scale = coef_scale.mean().item()
-                    else:
-                        coef_scale = None
                     rewards = self.alg.discriminator.predict_amp_reward(
                         amp_obs,
                         next_amp_obs_with_term,

@@ -2,9 +2,17 @@
 
 2026-08-22 以前的 TB 逐窗流水已从本文件删掉，仍在 git 历史。本文件只留能接住当前切片的证据。
 
+## 2026-09-07：教师算法从机器人配置中分离
+
+- 新工作面：`docs/plans/2026-09-07--robot-neutral-locomotion.md`。下面 portable_v1 属于已停止的对照，不能作为当前开训配置。
+- 恢复随机重置 0.10/None/None，原 AMP 曲线与稀疏清零。通用算法迁入 `legged_lab/locomotion`，T4/G1 独立 spec 和配方，无跨机器人继承。
+- 实际 T4/G1 probe 均采样到 0～9，240 个 finite step，镜像与 reset 前 AMP 快照通过。Actor/Critic/AMP 分别 1937/2016/66 和 1997/2076/70。
+- 新机器人接入检查和 21 关节、不同命名的替身通过；核心回归149项、相邻回归90项通过（两组有重叠）。独立审查旧新镜像逐元素一致。
+- 实际新训练待终审与源码提交后立即启动。后续学生/运动跟踪整理与行为验收仍未完成。
+
 ## 2026-09-07：G1 通用性修复，启动有预算的 portable_v1
 
-- 工作树/配方：`docs/plans/2026-09-07--g1-teacher-portability.md`。源码提交 `82599f1`；原始根工作区代码未覆盖。
+- 工作树/配方：`docs/archive/plans/2026-09-07--g1-teacher-portability.md`。源码提交 `82599f1`；原始根工作区代码未覆盖。
 - 旧 `model_39999` 固定 32-env 评估：flat 32/32；d=0 踏石/圆桩均 0/32、全部 collapsed。三份 JSON 在 `artifacts/portability/`。
 - 两个可复现代码错误：AMP 终止 transition 混入 reset 后状态；G1 evaluator scan 起点误用 960（实际 1020）、关节索引误用 T4。已修。
 - 本次配方试验：按 effort/Kp 标定动作；稀疏速度随 level 从 0.3–1.0 增至 0.6–2.0 m/s；level 0 开始，随机回访限制 0–2，正常晋级仍全覆盖。

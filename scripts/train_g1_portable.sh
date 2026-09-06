@@ -3,25 +3,25 @@
 # Invoke from tmux with scripts/nubot_run.sh available in this source snapshot.
 set -euo pipefail
 cd "$(dirname "$0")/.."
-mkdir -p artifacts/portability logs
-run_name=g1_sparse_teacher_portable_v1
+mkdir -p artifacts/portability/v2 logs
+run_name=g1_lightlp_amp_full_levels_v2
 shopt -s nullglob
 previous=(logs/g1_loco_teacher_sparse/*_${run_name}/model_*.pt)
 if (( ${#previous[@]} )); then
-  echo "Existing portable-v1 checkpoints found; inspect lineage before restarting." >&2
+  echo "Existing full-levels-v2 checkpoints found; inspect lineage before restarting." >&2
   exit 1
 fi
 export CUDA_DEVICE_ORDER=PCI_BUS_ID
 export CUDA_VISIBLE_DEVICES=1,3
 isaac_nv=/home/nubot/isaac-sim-standalone-5.1.0-linux-x86_64/kit/python/lib/python3.11/site-packages/nvidia
 export LD_LIBRARY_PATH="$isaac_nv/nvjitlink/lib:$isaac_nv/cusparse/lib:${LD_LIBRARY_PATH:-}"
-printf 'TRAIN_START %s\n' "$(date -Is)" >artifacts/portability/supervisor.log
+printf 'TRAIN_START %s\n' "$(date -Is)" >artifacts/portability/v2/supervisor.log
 if bash scripts/nubot_run.sh -m torch.distributed.run --nnodes=1 --nproc_per_node=2 --master_port=29586 \
   legged_lab/scripts/train.py --task=g1_loco_teacher --num_envs=2048 --distributed --headless \
-  --run_name "$run_name" --max_iterations 10000 >logs/g1_portable_v1.log 2>&1; then
-  printf 'TRAIN_DONE %s\n' "$(date -Is)" >>artifacts/portability/supervisor.log
+  --run_name "$run_name" --max_iterations 10000 >logs/g1_full_levels_v2.log 2>&1; then
+  printf 'TRAIN_DONE %s\n' "$(date -Is)" >>artifacts/portability/v2/supervisor.log
 else
-  printf 'TRAIN_FAILED %s\n' "$(date -Is)" >>artifacts/portability/supervisor.log
+  printf 'TRAIN_FAILED %s\n' "$(date -Is)" >>artifacts/portability/v2/supervisor.log
   exit 1
 fi
 checkpoints=(logs/g1_loco_teacher_sparse/*_${run_name}/model_9999.pt)
@@ -30,7 +30,7 @@ if (( ${#checkpoints[@]} != 1 )); then
   exit 1
 fi
 checkpoint="${checkpoints[0]}"
-sha256sum "$checkpoint" >artifacts/portability/final_checkpoint.sha256
+sha256sum "$checkpoint" >artifacts/portability/v2/final_checkpoint.sha256
 export CUDA_VISIBLE_DEVICES=0
 for terrain in flat stepping_stones raised_pillars; do
   difficulties=(0)
@@ -41,18 +41,18 @@ for terrain in flat stepping_stones raised_pillars; do
   fi
   for difficulty in "${difficulties[@]}"; do
     stem="final_${terrain}_d${difficulty}"
-    timeout -k 15s 480s bash scripts/nubot_run.sh legged_lab/scripts/eval_t4_hurdle.py \
+    timeout -k 15s 480s bash scripts/nubot_run.sh legged_lab/scripts/eval_locomotion.py \
       --task g1_loco_teacher --num_envs 32 --episodes 32 --load_run "$run_name" \
-      --checkpoint "$checkpoint" --output "artifacts/portability/${stem}.json" \
+      --checkpoint "$checkpoint" --output "artifacts/portability/v2/${stem}.json" \
       --difficulty "$difficulty" --terrain_type "$terrain" --command_vx 0.7 --headless "${extra[@]}" \
-      >"artifacts/portability/${stem}.log" 2>&1
+      >"artifacts/portability/v2/${stem}.log" 2>&1
   done
 done
 for terrain in stepping_stones raised_pillars; do
   timeout -k 15s 480s bash scripts/nubot_run.sh legged_lab/scripts/play.py \
     --task g1_loco_teacher --num_envs 1 --seed 42 --checkpoint_path "$checkpoint" \
     --command_vx 0.7 --terrain --terrain_types "$terrain" --difficulty 0 \
-    --record "artifacts/portability/final_${terrain}.mp4" --duration 16 --headless \
-    >"artifacts/portability/final_${terrain}_replay.log" 2>&1
+    --record "artifacts/portability/v2/final_${terrain}.mp4" --duration 16 --headless \
+    >"artifacts/portability/v2/final_${terrain}_replay.log" 2>&1
 done
-printf 'EVALUATION_DONE %s\n' "$(date -Is)" >>artifacts/portability/supervisor.log
+printf 'EVALUATION_DONE %s\n' "$(date -Is)" >>artifacts/portability/v2/supervisor.log

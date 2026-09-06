@@ -1,6 +1,6 @@
 # G1 教师通用性修复与重训
 
-Status: active。用户已授权排查、修改和重新训练。
+Status: superseded。portable_v1 已停止，其随机上限3被用户否决。现行执行计划为 `2026-09-07--robot-neutral-locomotion.md`；以下保留原试验取证。
 
 ## 工作面与验收
 

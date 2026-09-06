@@ -5,8 +5,8 @@ import torch
 
 from legged_lab.scripts.recurrent_policy_eval import evaluate_counterfactual_actions, reset_recurrent_policy
 
-SCRIPT = Path(__file__).resolve().parents[1] / "legged_lab" / "scripts" / "eval_t4_hurdle.py"
-ENV = Path(__file__).resolve().parents[1] / "legged_lab" / "envs" / "t4" / "t4_env.py"
+SCRIPT = Path(__file__).resolve().parents[1] / "legged_lab" / "scripts" / "eval_locomotion.py"
+ENV = Path(__file__).resolve().parents[1] / "legged_lab" / "locomotion" / "env.py"
 PLAY = Path(__file__).resolve().parents[1] / "legged_lab" / "scripts" / "play.py"
 
 
@@ -258,7 +258,9 @@ def test_play_recording_reads_the_terminal_snapshot_contract():
 def test_terminal_snapshot_includes_impact_diagnostics():
     source = ENV.read_text()
 
-    assert 'getattr(self.cfg, "diagnostic_contact_body_names", ("Trunk", "Shank_Left", "Shank_Right"))' in source
+    assert "self.diagnostic_contact_body_names = self.cfg.robot_spec.diagnostic_bodies" in source
+    from legged_lab.assets.t4.locomotion import T4_LOCOMOTION
+    assert T4_LOCOMOTION.diagnostic_bodies == ("Trunk", "Shank_Left", "Shank_Right")
     assert "self.terminal_root_lin_vel_w[env_ids]" in source
     assert "self.terminal_root_accel_mps2[env_ids]" in source
     assert "self.terminal_tilt_rad[env_ids]" in source

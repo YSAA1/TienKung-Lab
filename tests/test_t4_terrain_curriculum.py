@@ -5,7 +5,7 @@
 """Layer-0 contracts for the Stage E terrain-curriculum algebra.
 
 These tests run without Isaac Sim or a GPU. They assert the MDP algebra of
-``legged_lab.envs.t4.curriculum.terrain_level_moves`` - not whether any policy
+``legged_lab.locomotion.curriculum.terrain_level_moves`` - not whether any policy
 can climb stairs - so a curriculum that is mathematically unreachable or has a
 negative expected drift under mediocre tracking goes red before any training
 starts. The `stage_e_prov1` lineage died exactly this way: terrain levels were
@@ -22,7 +22,7 @@ import numpy as np
 
 # Load the curriculum module straight from its file: importing it through the
 # package would execute `legged_lab.envs.__init__`, which needs IsaacLab.
-_CURRICULUM_PATH = Path(__file__).resolve().parents[1] / "legged_lab" / "envs" / "t4" / "curriculum.py"
+_CURRICULUM_PATH = Path(__file__).resolve().parents[1] / "legged_lab" / "locomotion" / "curriculum.py"
 _spec = importlib.util.spec_from_file_location("t4_curriculum", _CURRICULUM_PATH)
 _curriculum = importlib.util.module_from_spec(_spec)
 _spec.loader.exec_module(_curriculum)
@@ -33,7 +33,7 @@ lightlp_terrain_level_moves = _curriculum.lightlp_terrain_level_moves
 gait_tracking_scale = _curriculum.gait_tracking_scale
 LIGHTLP_TRACKING_WELL_THRESHOLD = _curriculum.LIGHTLP_TRACKING_WELL_THRESHOLD
 
-# Stage E values (teacher_cfg.py / T4_STAGE_E_TERRAINS_CFG).
+# Stage E values (teacher_cfg.py / AMP_LOCOMOTION_TERRAINS_CFG).
 EPISODE_LENGTH_S = 20.0
 TILE_SIZE = 8.0
 PROMOTE_DIST = TILE_SIZE / 2

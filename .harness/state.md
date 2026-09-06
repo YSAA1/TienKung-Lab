@@ -1,7 +1,7 @@
 # Current State
 
 - Living index: `docs/README.md`
-- Current work surfaces：翻箱 `docs/plans/2026-08-15--t4-vault-g1-g2-recovery-plan.md`；G1 越障老师 **active**：本工作树 `g1-portability-20260906` 的 `portable_v1` 冷启动 10k，nubot tmux `g1-portable-train`；见 `docs/plans/2026-09-07--g1-teacher-portability.md`。旧 `model_39999` 是 flat 32/32、easy 踏石/圆桩 0/32 的基线；新能力待评估。T4 `model_21500` 血统不变，T4 plant 重训暂停。
+- 当前 G1 唯一执行计划：`docs/plans/2026-09-07--robot-neutral-locomotion.md`。portable_v1 已停，0～2 上限和全地形从 0 衰减 AMP 已撤回；0.10/None/None、AMP 原规则。T4/G1 真实 probe 已通过，教师重构终审后立即开 v2。
 - S12 学生 `s12_repr_first` `model_13999` Isaac hard 过门，MuJoCo 残留交给老师 plant 重训。老师本机 `artifacts/checkpoints/nubot/s12_teacher/model_21500.pt`。
 - Approved specs: `docs/specs/2026-08-12--t4-unified-depth-locomotion.md`（走跑/学生合同）、`docs/specs/2026-08-13--t4-vault-loco-merge.md`（G1→G2→G3 目标）、`docs/specs/2026-08-15--t4-stepping-stones-and-hurdle-stable.md`（梅花桩目标；执行已改单阶段）、`docs/specs/2026-09-01--t4-s12-repr-first-distill.md`（表示先行蒸馏）
 

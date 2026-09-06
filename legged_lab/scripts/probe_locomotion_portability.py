@@ -32,9 +32,24 @@ from legged_lab.utils import task_registry  # noqa: E402
 
 def main():
     patch_missing_physx_material_attributes()
-    cfg, _ = task_registry.get_cfgs(args.task)
+    cfg, agent_cfg = task_registry.get_cfgs(args.task)
     t4_cfg, _ = task_registry.get_cfgs("t4_loco_teacher_sparse")
     assert t4_cfg.robot.action_scale_effort_fraction is None, "G1 config leaked into T4"
+    recipe = {
+        "random_fraction": cfg.random_level_reset_fraction,
+        "random_min": cfg.random_level_reset_min_level,
+        "random_max": cfg.random_level_reset_max_level,
+        "terrain_rows": cfg.scene.terrain_generator.num_rows,
+        "amp_decay_start": cfg.amp_terrain_schedule.decay_start_difficulty,
+        "amp_min_scale": cfg.amp_terrain_schedule.min_scale,
+        "amp_reward_coef": agent_cfg.amp_reward_coef,
+        "amp_task_reward_lerp": agent_cfg.amp_task_reward_lerp,
+        "robot_spec": cfg.robot_spec.name,
+        "teacher_base": type(cfg).__bases__[0].__module__ + "." + type(cfg).__bases__[0].__name__,
+    }
+    assert recipe["random_fraction"] == 0.10 and recipe["terrain_rows"] == 10
+    assert recipe["random_min"] is None and recipe["random_max"] is None
+    assert recipe["amp_decay_start"] == 0.3 and recipe["amp_min_scale"] == 0.3
     cfg.device = args.device
     cfg.sim.device = args.device
     cfg.scene.num_envs = 32
@@ -42,9 +57,9 @@ def main():
     cfg.scene.max_init_terrain_level = 0
     cfg.scene.terrain_generator.sub_terrains = {"flat": cfg.scene.terrain_generator.sub_terrains["flat"]}
     cfg.scene.terrain_generator.sub_terrains["flat"].proportion = 1.0
-    cfg.scene.terrain_generator.num_rows = 1
+    cfg.scene.terrain_generator.num_rows = 10
     cfg.scene.terrain_generator.num_cols = 1
-    cfg.scene.terrain_generator.curriculum = False
+    cfg.scene.terrain_generator.curriculum = True
     cfg.random_level_reset_fraction = 0.0
     cfg.terrain_aware_commands = False
     cfg.noise.add_noise = False
@@ -57,17 +72,49 @@ def main():
     reset_base["velocity_range"] = {}
     cfg.domain_rand.events.reset_robot_joints.params["position_range"] = (1.0, 1.0)
     env = task_registry.get_task_class(args.task)(cfg, headless=True)
+    env.validate_training_contract(agent_cfg.to_dict())
+    from legged_lab.locomotion.symmetry import get_symmetric_states
+
+    # Exercise actual random-reset code with 10 real terrain rows. The sentinel
+    # distinguishes selected resets (including a draw of level zero) from others.
+    cfg.random_level_reset_fraction = recipe["random_fraction"]
+    terrain = env.scene.terrain
+    seen, selected = set(), 0
+    ids = torch.arange(env.num_envs, device=env.device)
+    for _ in range(200):
+        terrain.terrain_levels.fill_(-1)
+        env._apply_random_level_resets(ids)
+        levels = terrain.terrain_levels[terrain.terrain_levels >= 0].cpu().tolist()
+        seen.update(levels)
+        selected += len(levels)
+    assert seen == set(range(10)), seen
+    terrain.terrain_levels[:] = ids % 10
+    scales = env.amp_reward_coef_scale()[:10].cpu().tolist()
+    expected = torch.tensor([1.0 - max(0.0, (i / 9 - 0.3) / 0.7) * 0.7 for i in range(10)])
+    assert torch.allclose(torch.tensor(scales), expected)
+    terrain.terrain_levels.zero_()
+    terrain.env_origins[:] = terrain.terrain_origins[terrain.terrain_levels, terrain.terrain_types]
+    cfg.random_level_reset_fraction = 0.0
+    env.reset(ids)
     obs, extras = env.get_observations()
+    mirrored, _ = get_symmetric_states(obs=obs, env=env)
+    restored, _ = get_symmetric_states(obs=mirrored, env=env)
+    assert torch.allclose(obs, restored)
     kp = env.robot.data.default_joint_stiffness[0]
     effort = env.robot.data.joint_effort_limits[0]
     scale = torch.ones_like(kp) * env.action_scale if isinstance(env.action_scale, float) else env.action_scale[0]
     result = {
+        "recipe": recipe,
+        "sampled_random_levels": sorted(seen),
+        "realized_random_fraction": selected / (200 * env.num_envs),
+        "amp_scales_by_level": scales,
+        "runtime_mirror_involution": True,
         "task": args.task,
         "actor_width": obs.shape[-1],
         "critic_width": extras["observations"]["critic"].shape[-1],
         "amp_width": env.get_amp_obs_for_expert_trans().shape[-1],
         "policy_joint_names": list(env.policy_joint_names),
-        "policy_to_sim_joint_ids": list(env.t4_joint_ids),
+        "policy_to_sim_joint_ids": list(env.policy_joint_ids),
         "t4_action_contract_unchanged": True,
         "joints": {
             name: {

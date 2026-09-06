@@ -1,0 +1,298 @@
+{
+  "recipe": {
+    "random_fraction": 0.1,
+    "random_min": null,
+    "random_max": null,
+    "terrain_rows": 10,
+    "amp_decay_start": 0.3,
+    "amp_min_scale": 0.3,
+    "amp_reward_coef": 0.3,
+    "amp_task_reward_lerp": 0.7,
+    "robot_spec": "t4",
+    "teacher_base": "legged_lab.locomotion.teacher_cfg.LightLPLocomotionEnvCfg"
+  },
+  "sampled_random_levels": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9
+  ],
+  "realized_random_fraction": 0.09796875,
+  "amp_scales_by_level": [
+    1.0,
+    1.0,
+    1.0,
+    0.9666666984558105,
+    0.855555534362793,
+    0.7444444298744202,
+    0.6333333253860474,
+    0.5222222208976746,
+    0.41111111640930176,
+    0.30000001192092896
+  ],
+  "runtime_mirror_involution": true,
+  "task": "t4_loco_teacher_sparse",
+  "actor_width": 1937,
+  "critic_width": 2016,
+  "amp_width": 66,
+  "policy_joint_names": [
+    "J_arm_l_01",
+    "J_arm_l_02",
+    "J_arm_l_03",
+    "J_arm_l_04",
+    "J_arm_l_05",
+    "J_arm_l_06",
+    "J_arm_l_07",
+    "J_arm_r_01",
+    "J_arm_r_02",
+    "J_arm_r_03",
+    "J_arm_r_04",
+    "J_arm_r_05",
+    "J_arm_r_06",
+    "J_arm_r_07",
+    "J_waist_yaw",
+    "J_hip_l_pitch",
+    "J_hip_l_roll",
+    "J_hip_l_yaw",
+    "J_knee_l_pitch",
+    "J_ankle_l_pitch",
+    "J_ankle_l_roll",
+    "J_hip_r_pitch",
+    "J_hip_r_roll",
+    "J_hip_r_yaw",
+    "J_knee_r_pitch",
+    "J_ankle_r_pitch",
+    "J_ankle_r_roll"
+  ],
+  "policy_to_sim_joint_ids": [
+    0,
+    2,
+    4,
+    7,
+    11,
+    15,
+    19,
+    1,
+    3,
+    5,
+    8,
+    12,
+    16,
+    20,
+    6,
+    9,
+    13,
+    17,
+    21,
+    23,
+    25,
+    10,
+    14,
+    18,
+    22,
+    24,
+    26
+  ],
+  "t4_action_contract_unchanged": true,
+  "joints": {
+    "J_arm_l_01": {
+      "kp": 20.0,
+      "effort_limit": 36.0,
+      "action_scale_rad": 0.25,
+      "old_unit_action_torque_fraction": 0.1388888955116272,
+      "new_unit_action_torque_fraction": 0.1388888955116272
+    },
+    "J_arm_r_01": {
+      "kp": 20.0,
+      "effort_limit": 36.0,
+      "action_scale_rad": 0.25,
+      "old_unit_action_torque_fraction": 0.1388888955116272,
+      "new_unit_action_torque_fraction": 0.1388888955116272
+    },
+    "J_arm_l_02": {
+      "kp": 20.0,
+      "effort_limit": 36.0,
+      "action_scale_rad": 0.25,
+      "old_unit_action_torque_fraction": 0.1388888955116272,
+      "new_unit_action_torque_fraction": 0.1388888955116272
+    },
+    "J_arm_r_02": {
+      "kp": 20.0,
+      "effort_limit": 36.0,
+      "action_scale_rad": 0.25,
+      "old_unit_action_torque_fraction": 0.1388888955116272,
+      "new_unit_action_torque_fraction": 0.1388888955116272
+    },
+    "J_arm_l_03": {
+      "kp": 20.0,
+      "effort_limit": 36.0,
+      "action_scale_rad": 0.25,
+      "old_unit_action_torque_fraction": 0.1388888955116272,
+      "new_unit_action_torque_fraction": 0.1388888955116272
+    },
+    "J_arm_r_03": {
+      "kp": 20.0,
+      "effort_limit": 36.0,
+      "action_scale_rad": 0.25,
+      "old_unit_action_torque_fraction": 0.1388888955116272,
+      "new_unit_action_torque_fraction": 0.1388888955116272
+    },
+    "J_waist_yaw": {
+      "kp": 50.0,
+      "effort_limit": 120.0,
+      "action_scale_rad": 0.25,
+      "old_unit_action_torque_fraction": 0.1041666641831398,
+      "new_unit_action_torque_fraction": 0.1041666641831398
+    },
+    "J_arm_l_04": {
+      "kp": 20.0,
+      "effort_limit": 36.0,
+      "action_scale_rad": 0.25,
+      "old_unit_action_torque_fraction": 0.1388888955116272,
+      "new_unit_action_torque_fraction": 0.1388888955116272
+    },
+    "J_arm_r_04": {
+      "kp": 20.0,
+      "effort_limit": 36.0,
+      "action_scale_rad": 0.25,
+      "old_unit_action_torque_fraction": 0.1388888955116272,
+      "new_unit_action_torque_fraction": 0.1388888955116272
+    },
+    "J_hip_l_pitch": {
+      "kp": 100.0,
+      "effort_limit": 130.0,
+      "action_scale_rad": 0.25,
+      "old_unit_action_torque_fraction": 0.19230769574642181,
+      "new_unit_action_torque_fraction": 0.19230769574642181
+    },
+    "J_hip_r_pitch": {
+      "kp": 100.0,
+      "effort_limit": 130.0,
+      "action_scale_rad": 0.25,
+      "old_unit_action_torque_fraction": 0.19230769574642181,
+      "new_unit_action_torque_fraction": 0.19230769574642181
+    },
+    "J_arm_l_05": {
+      "kp": 20.0,
+      "effort_limit": 12.0,
+      "action_scale_rad": 0.25,
+      "old_unit_action_torque_fraction": 0.4166666567325592,
+      "new_unit_action_torque_fraction": 0.4166666567325592
+    },
+    "J_arm_r_05": {
+      "kp": 20.0,
+      "effort_limit": 12.0,
+      "action_scale_rad": 0.25,
+      "old_unit_action_torque_fraction": 0.4166666567325592,
+      "new_unit_action_torque_fraction": 0.4166666567325592
+    },
+    "J_hip_l_roll": {
+      "kp": 50.0,
+      "effort_limit": 120.0,
+      "action_scale_rad": 0.25,
+      "old_unit_action_torque_fraction": 0.1041666641831398,
+      "new_unit_action_torque_fraction": 0.1041666641831398
+    },
+    "J_hip_r_roll": {
+      "kp": 50.0,
+      "effort_limit": 120.0,
+      "action_scale_rad": 0.25,
+      "old_unit_action_torque_fraction": 0.1041666641831398,
+      "new_unit_action_torque_fraction": 0.1041666641831398
+    },
+    "J_arm_l_06": {
+      "kp": 10.0,
+      "effort_limit": 12.0,
+      "action_scale_rad": 0.25,
+      "old_unit_action_torque_fraction": 0.2083333283662796,
+      "new_unit_action_torque_fraction": 0.2083333283662796
+    },
+    "J_arm_r_06": {
+      "kp": 10.0,
+      "effort_limit": 12.0,
+      "action_scale_rad": 0.25,
+      "old_unit_action_torque_fraction": 0.2083333283662796,
+      "new_unit_action_torque_fraction": 0.2083333283662796
+    },
+    "J_hip_l_yaw": {
+      "kp": 50.0,
+      "effort_limit": 120.0,
+      "action_scale_rad": 0.25,
+      "old_unit_action_torque_fraction": 0.1041666641831398,
+      "new_unit_action_torque_fraction": 0.1041666641831398
+    },
+    "J_hip_r_yaw": {
+      "kp": 50.0,
+      "effort_limit": 120.0,
+      "action_scale_rad": 0.25,
+      "old_unit_action_torque_fraction": 0.1041666641831398,
+      "new_unit_action_torque_fraction": 0.1041666641831398
+    },
+    "J_arm_l_07": {
+      "kp": 10.0,
+      "effort_limit": 12.0,
+      "action_scale_rad": 0.25,
+      "old_unit_action_torque_fraction": 0.2083333283662796,
+      "new_unit_action_torque_fraction": 0.2083333283662796
+    },
+    "J_arm_r_07": {
+      "kp": 10.0,
+      "effort_limit": 12.0,
+      "action_scale_rad": 0.25,
+      "old_unit_action_torque_fraction": 0.2083333283662796,
+      "new_unit_action_torque_fraction": 0.2083333283662796
+    },
+    "J_knee_l_pitch": {
+      "kp": 100.0,
+      "effort_limit": 130.0,
+      "action_scale_rad": 0.25,
+      "old_unit_action_torque_fraction": 0.19230769574642181,
+      "new_unit_action_torque_fraction": 0.19230769574642181
+    },
+    "J_knee_r_pitch": {
+      "kp": 100.0,
+      "effort_limit": 130.0,
+      "action_scale_rad": 0.25,
+      "old_unit_action_torque_fraction": 0.19230769574642181,
+      "new_unit_action_torque_fraction": 0.19230769574642181
+    },
+    "J_ankle_l_pitch": {
+      "kp": 80.0,
+      "effort_limit": 72.0,
+      "action_scale_rad": 0.25,
+      "old_unit_action_torque_fraction": 0.2777777910232544,
+      "new_unit_action_torque_fraction": 0.2777777910232544
+    },
+    "J_ankle_r_pitch": {
+      "kp": 80.0,
+      "effort_limit": 72.0,
+      "action_scale_rad": 0.25,
+      "old_unit_action_torque_fraction": 0.2777777910232544,
+      "new_unit_action_torque_fraction": 0.2777777910232544
+    },
+    "J_ankle_l_roll": {
+      "kp": 20.0,
+      "effort_limit": 72.0,
+      "action_scale_rad": 0.25,
+      "old_unit_action_torque_fraction": 0.0694444477558136,
+      "new_unit_action_torque_fraction": 0.0694444477558136
+    },
+    "J_ankle_r_roll": {
+      "kp": 20.0,
+      "effort_limit": 72.0,
+      "action_scale_rad": 0.25,
+      "old_unit_action_torque_fraction": 0.0694444477558136,
+      "new_unit_action_torque_fraction": 0.0694444477558136
+    }
+  },
+  "terminal_snapshots_checked": 66,
+  "terminal_distinct_from_reset": 66,
+  "zero_action_min_clearance_m": -0.013455551117658615,
+  "finite_steps": 240
+}

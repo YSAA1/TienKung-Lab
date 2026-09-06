@@ -33,14 +33,14 @@ from legged_lab.assets.t4.schemas import (
     depth_camera_ros_quat_wxyz,
 )
 from legged_lab.envs.base.base_config import EventCfg, FootScannerCfg
-from legged_lab.envs.t4.mdp.camera_extrinsic import (
+from legged_lab.locomotion.mdp.camera_extrinsic import (
     LIGHTLP_CAMERA_ORI_JITTER_RAD,
     LIGHTLP_CAMERA_POS_JITTER_M,
     apply_camera_local_offset,
     capture_nominal_camera_pose,
     compose_camera_offset,
 )
-from legged_lab.envs.t4.mdp.depth_noise import (
+from legged_lab.locomotion.mdp.depth_noise import (
     LIGHTLP_DEPTH_BLOCK_COUNT,
     LIGHTLP_DEPTH_BLOCK_REFRESH,
     LIGHTLP_DEPTH_DELAY_STEPS,
@@ -54,11 +54,11 @@ from legged_lab.envs.t4.mdp.depth_noise import (
     scaled_block_hw,
     stamp_rectangular_blocks,
 )
-from legged_lab.envs.t4.t4_env import T4LocoEnv
+from legged_lab.locomotion.env import LocomotionEnv
 from legged_lab.envs.t4.teacher_cfg import T4LocoSparseTeacherEnvCfg, T4LocoTeacherEnvCfg, T4SparseTeacherRewardCfg
 from legged_lab.sensors.camera.camera_cfg import CameraCfg
 from legged_lab.sensors.camera.camera_cfgs import D455CameraCfg, TiledD455CameraCfg
-from legged_lab.terrains import T4_STAGE_E_SPARSE_TERRAINS_CFG
+from legged_lab.terrains import LIGHTLP_TERRAINS_CFG
 
 # Native policy resolution. Tiled RTX renders 48x64; no 72x128 capture.
 SPARSE_STUDENT_RENDER_SIZE = DEPTH_POLICY_SIZE
@@ -100,7 +100,7 @@ class T4LocoDepthStudentFtEnvCfg(T4LocoDepthStudentEnvCfg):
 
     def __post_init__(self):
         super().__post_init__()
-        self.scene.terrain_generator = T4_STAGE_E_SPARSE_TERRAINS_CFG
+        self.scene.terrain_generator = LIGHTLP_TERRAINS_CFG
         self.scene.max_init_terrain_level = 5
         self.scene.foot_scanner = FootScannerCfg(enable=True)
         self.reward = T4SparseTeacherRewardCfg()
@@ -215,7 +215,7 @@ class T4LocoSparseDepthStudentResidualFtEnvCfg(T4LocoSparseDepthStudentFtEnvCfg)
         self.random_level_reset_min_level = 6
         self.random_level_reset_max_level = None
         self.domain_rand.action_delay.enable = False
-        generator = copy.deepcopy(T4_STAGE_E_SPARSE_TERRAINS_CFG)
+        generator = copy.deepcopy(LIGHTLP_TERRAINS_CFG)
         for name, sub in generator.sub_terrains.items():
             if name in ("stepping_stones", "raised_pillars"):
                 sub.proportion = 0.30
@@ -280,7 +280,7 @@ class T4LocoSparseDepthStudentTargetedFtEnvCfg(T4LocoSparseDepthStudentFtEnvCfg)
         self.domain_rand.action_delay.enable = True
         self.domain_rand.action_delay.params = {"min_delay": 0, "max_delay": 2}
         self.student_depth_boundary_corruption = True
-        generator = copy.deepcopy(T4_STAGE_E_SPARSE_TERRAINS_CFG)
+        generator = copy.deepcopy(LIGHTLP_TERRAINS_CFG)
         stones = generator.sub_terrains["stepping_stones"]
         stones.targeted_layout_seed = True
         pillars = generator.sub_terrains["raised_pillars"]
@@ -313,11 +313,11 @@ class T4LocoSparseDepthStudentPlantFtEnvCfg(T4LocoSparseDepthStudentFtEnvCfg):
         self.domain_rand.action_delay.params = {"min_delay": 0, "max_delay": 2}
 
 
-class T4LocoDepthDistillEnv(T4LocoEnv):
+class T4LocoDepthDistillEnv(LocomotionEnv):
     """T4 teacher rollout with a depth-only deployable observation stream."""
 
     def __init__(self, cfg: T4LocoDepthStudentEnvCfg, headless):
-        # T4LocoEnv's teacher initialization builds the shared physics/reward
+        # LocomotionEnv's teacher initialization builds the shared physics/reward
         # path and buffers. Switch the role after construction so the existing
         # teacher contract remains untouched.
         cfg.policy_role = "teacher"
@@ -598,7 +598,7 @@ class T4LocoSparseDepthDistillEnv(T4LocoDepthDistillEnv):
         self.depth_update_counter += 1
 
     def compute_observations(self):
-        teacher_obs, _critic_obs = T4LocoEnv.compute_observations(self)
+        teacher_obs, _critic_obs = LocomotionEnv.compute_observations(self)
         if teacher_obs.shape[-1] != TEACHER_SPARSE_ACTOR_OBS_DIM:
             raise RuntimeError(
                 f"sparse teacher observation width {teacher_obs.shape[-1]} != {TEACHER_SPARSE_ACTOR_OBS_DIM}"

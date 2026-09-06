@@ -44,7 +44,7 @@ def test_amp_runner_uses_pre_reset_terminal_state(width):
         _nodes(
             "rsl_rl/rsl_rl/runners/amp_on_policy_runner.py",
             "next_amp_obs_with_term =",
-            "if self.amp_reward_coef_scale_fn is not None:",
+            "rewards = self.alg.discriminator.predict_amp_reward(",
         ),
         scope,
     )
@@ -62,7 +62,7 @@ def test_evaluator_scan_starts_after_actual_proprio_history(joints, expected):
         cfg=SimpleNamespace(robot=SimpleNamespace(actor_obs_history_length=10)),
     )
     scope = dict(env=env, PROPRIO_FRAME_DIM=96, PROPRIO_HISTORY_LENGTH=10)
-    exec(_nodes("legged_lab/scripts/eval_t4_hurdle.py", "scan_start ="), scope)
+    exec(_nodes("legged_lab/scripts/eval_locomotion.py", "scan_start ="), scope)
     assert scope["scan_start"] == expected
 
 
@@ -77,7 +77,7 @@ def test_evaluator_diagnostic_joints_follow_policy_and_simulator_orders():
     from legged_lab.assets.t4.constants import T4_JOINT_NAMES
 
     scope = dict(env=env, T4_JOINT_NAMES=T4_JOINT_NAMES)
-    exec(_nodes("legged_lab/scripts/eval_t4_hurdle.py", "diagnostic_joint_names =", "joint_action_abs_sum ="), scope)
+    exec(_nodes("legged_lab/scripts/eval_locomotion.py", "diagnostic_joint_names =", "joint_action_abs_sum ="), scope)
     assert list(scope["diagnostic_joint_names"]) == [names[1], names[3], names[2], names[0]]
     assert scope["diagnostic_joint_indices"] == [2, 0, 1, 3]
 
@@ -110,5 +110,5 @@ def test_sparse_speed_ramp_keeps_full_target_and_t4_default(min_scale):
         cfg=SimpleNamespace(sparse_command_min_speed_scale=min_scale), terrain_difficulty=lambda: difficulty
     )
     scope = dict(self=env, vx=torch.tensor([2.0, 2.0, 2.0]), chosen=torch.arange(3))
-    exec(_nodes("legged_lab/envs/t4/t4_env.py", "min_speed_scale =", "self._sparse_command[chosen, 0] ="), scope)
+    exec(_nodes("legged_lab/locomotion/env.py", "min_speed_scale =", "self._sparse_command[chosen, 0] ="), scope)
     assert scope["vx"].tolist() == pytest.approx([2 * min_scale, 1 + min_scale, 2])

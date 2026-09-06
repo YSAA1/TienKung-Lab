@@ -26,40 +26,43 @@ def test_g1_joint_contract_is_29dof() -> None:
 
 def test_g1_teacher_is_sparse_obstacle_task() -> None:
     text = (ROOT / "legged_lab/envs/g1/teacher_cfg.py").read_text(encoding="utf-8")
-    assert "T4LocoSparseTeacherEnvCfg" in text
+    assert "G1LocoTeacherEnvCfg(LightLPLocomotionEnvCfg)" in text
+    assert "envs.t4" not in text
     assert "TienKungWalkFlatEnvCfg" not in text
-    assert 'foot_scanner.body_names = ("left_ankle_roll_link", "right_ankle_roll_link")' in text
-    assert 'terminate_contacts_body_names = ["torso_link"]' in text
+    from legged_lab.assets.unitree_g1.locomotion import G1_LOCOMOTION
+    assert G1_LOCOMOTION.feet == ("left_ankle_roll_link", "right_ankle_roll_link")
+    assert G1_LOCOMOTION.torso == "torso_link"
     assert "self.collapse_reset_pelvis_above_feet_m = 0.20" in text
     assert "self.collapse_reset_pelvis_above_feet_m = 0.40" not in text
     assert "bad_orientation_limit_rad" not in text
-    assert 'body_names=["(?!.*ankle.*).*"]' in text
+    assert G1_LOCOMOTION.reward_bodies["sparse_undesired"] == ("(?!.*ankle.*).*",)
     assert "cold_start_max_terrain_level" not in text
     assert "self.scene.max_init_terrain_level = 0" in text
     assert "self.random_level_reset_fraction = 0.0" not in text
     assert "self.domain_rand.action_delay.enable = False" in text
     assert "randomize_actuator_gains" not in text
     assert "G1PlantEventCfg" not in text
-    t4_sparse = (ROOT / "legged_lab/envs/t4/teacher_cfg.py").read_text(encoding="utf-8")
+    t4_sparse = (ROOT / "legged_lab/locomotion/teacher_cfg.py").read_text(encoding="utf-8")
     assert "action_delay=ActionDelayCfg(enable=False" in t4_sparse
     assert "collapse_reset_pelvis_above_feet_m" not in t4_sparse
-    signals = (ROOT / "legged_lab/envs/t4/mdp/sparse_signals.py").read_text(encoding="utf-8")
+    signals = (ROOT / "legged_lab/locomotion/mdp/sparse_signals.py").read_text(encoding="utf-8")
     assert "LIGHTLP_TILT_LIMIT_RAD = 63.0 * math.pi / 180.0" in signals
     assert "LIGHTLP_ACCEL_LIMIT = 40.0" in signals
     init_text = (ROOT / "legged_lab/envs/__init__.py").read_text(encoding="utf-8")
-    assert 'task_registry.register("g1_loco_teacher", T4LocoEnv' in init_text
+    assert 'task_registry.register("g1_loco_teacher", LocomotionEnv' in init_text
 
 
-def test_g1_teacher_inherits_t4_sparse_curriculum() -> None:
+def test_g1_teacher_uses_shared_full_level_sparse_curriculum() -> None:
     """G1 keeps the mixed task but starts at an attainable command/terrain level."""
     text = (ROOT / "legged_lab/envs/g1/teacher_cfg.py").read_text(encoding="utf-8")
     assert "self.scene.max_init_terrain_level = 0" in text
-    assert "self.random_level_reset_max_level = 3" in text
+    assert "self.random_level_reset_max_level = None" in text
     assert "self.sparse_command_min_speed_scale = 0.5" in text
     assert "self.robot.action_scale_effort_fraction = 0.25" in text
-    assert "self.random_level_reset_fraction" not in text
+    assert "self.random_level_reset_fraction = 0.10" in text
+    assert "self.random_level_reset_min_level = None" in text
     assert "self.commands.ranges.lin_vel_x" not in text
-    t4 = (ROOT / "legged_lab/envs/t4/teacher_cfg.py").read_text(encoding="utf-8")
+    t4 = (ROOT / "legged_lab/locomotion/teacher_cfg.py").read_text(encoding="utf-8")
     assert "self.scene.max_init_terrain_level = 2" in t4
     assert "self.random_level_reset_fraction = 0.10" in t4
     assert "self.commands.ranges.lin_vel_x = (-0.6, 2.0)" in t4
@@ -74,20 +77,18 @@ def test_g1_actuators_use_urdf_effort_limits() -> None:
 
 
 def test_g1_teacher_uses_lafan_amp() -> None:
-    text = (ROOT / "legged_lab/envs/g1/teacher_cfg.py").read_text(encoding="utf-8")
-    assert "runner_class_name = \"AmpOnPolicyRunner\"" in text
-    assert 'class_name="AMPPPO"' in text
-    assert "self.enable_amp = True" in text
-    assert "self.amp_terrain_schedule.enable = True" in text
-    assert "amp_reward_coef = 0.3" in text
-    assert "run_name = \"g1_sparse_teacher_portable_v1\"" in text
-    assert "self.collapse_reset_pelvis_above_feet_m = 0.20" in text
-    assert "cold_start_max_terrain_level" not in text
-    assert "g1_amp_expert_files" in text
-    env_text = (ROOT / "legged_lab/envs/t4/t4_env.py").read_text(encoding="utf-8")
-    assert "G1AmpFeatureBuilder" in env_text
-    t4_sparse = (ROOT / "legged_lab/envs/t4/teacher_cfg.py").read_text(encoding="utf-8")
-    assert "action_delay=ActionDelayCfg(enable=False" in t4_sparse
+    recipe = (ROOT / "legged_lab/envs/g1/teacher_cfg.py").read_text(encoding="utf-8")
+    shared = (ROOT / "legged_lab/locomotion/teacher_cfg.py").read_text(encoding="utf-8")
+    assert 'runner_class_name = "AmpOnPolicyRunner"' in shared
+    assert 'class_name="AMPPPO"' in shared
+    assert "enable_amp: bool = True" in shared
+    assert "amp_reward_coef = 0.3" in shared
+    assert "amp_task_reward_lerp = 0.7" in shared
+    assert "amp_motion_files = amp_expert_files()" in recipe
+    assert "assets.unitree_g1.schemas" in recipe
+    env_text = (ROOT / "legged_lab/locomotion/env.py").read_text(encoding="utf-8")
+    assert "AmpFeatureBuilder(self.robot, self.device, self.cfg.robot_spec)" in env_text
+    assert "G1AmpFeatureBuilder" not in env_text
 
 
 def test_g1_amp_schema_is_70d_and_does_not_change_t4() -> None:
@@ -313,10 +314,10 @@ def test_g1_does_not_use_isaaclab_bundled_g1_cfg() -> None:
 
 
 def test_g1_teacher_uses_mirror_symmetry() -> None:
-    text = (ROOT / "legged_lab/envs/g1/teacher_cfg.py").read_text(encoding="utf-8")
+    text = (ROOT / "legged_lab/locomotion/teacher_cfg.py").read_text(encoding="utf-8")
     assert "use_mirror_loss=True" in text
     assert "mirror_loss_coeff=5.0" in text
-    assert "legged_lab.envs.g1.symmetry:get_symmetric_states" in text
+    assert "legged_lab.locomotion.symmetry:get_symmetric_states" in text
 
 
 def test_g1_mirror_is_involution_on_sparse_obs_and_actions() -> None:

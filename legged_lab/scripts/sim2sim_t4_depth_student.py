@@ -1235,7 +1235,7 @@ def build_sparse_foothold_course(course: str, difficulty: float = 0.0) -> str:
     """Isaac 8 m sparse tile (center pad + lattice + rim) over a real pit."""
     from legged_lab.scripts.play_t4_sparse_teacher_mujoco import _LAYOUT, _geom_xml
 
-    T4_STONE_TILE_SIZE = _LAYOUT.T4_STONE_TILE_SIZE
+    LIGHTLP_STONE_TILE_SIZE = _LAYOUT.LIGHTLP_STONE_TILE_SIZE
     isaac_sparse_tile_geoms = _LAYOUT.isaac_sparse_tile_geoms
 
     if course not in SPARSE_COURSE_TERRAIN:
@@ -1250,7 +1250,7 @@ def build_sparse_foothold_course(course: str, difficulty: float = 0.0) -> str:
             isaac_sparse_tile_geoms(
                 difficulty,
                 "raised_pillars",
-                origin_xy=(T4_STONE_TILE_SIZE, 0.0),
+                origin_xy=(LIGHTLP_STONE_TILE_SIZE, 0.0),
                 platform_name="transition_platform",
                 finish_name="finish_platform",
                 name_prefix="b_",

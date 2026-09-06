@@ -25,7 +25,7 @@ def test_sparse_course_uses_training_layout_and_supports_both_teacher_contracts(
     start_platform = next(
         geom for geom in layout["geoms"] if geom["name"] == "start_platform"
     )
-    assert 2.0 * start_platform["size"][1] == module._LAYOUT.T4_STONE_PLATFORM_WIDTH
+    assert 2.0 * start_platform["size"][1] == module._LAYOUT.LIGHTLP_STONE_PLATFORM_WIDTH
 
     for kind in ("stone", "pillar"):
         footholds = [geom for geom in layout["geoms"] if geom["kind"] == kind]

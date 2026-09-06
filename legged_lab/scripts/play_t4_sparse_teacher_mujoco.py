@@ -132,11 +132,11 @@ def sparse_course_layout(
         stone_jitter = _LAYOUT.stone_height_jitter(difficulty)
         pillar_diameter = _LAYOUT.pillar_diameter(difficulty)
         pillar_gap = _LAYOUT.pillar_gap(difficulty)
-        pillar_pitch = _LAYOUT.foothold_pitch(difficulty, _LAYOUT.T4_PILLAR_PITCH_RANGE)
+        pillar_pitch = _LAYOUT.foothold_pitch(difficulty, _LAYOUT.LIGHTLP_PILLAR_PITCH_RANGE)
         pillar_height = _LAYOUT.pillar_height(difficulty)
         stone_leading_gap = _LAYOUT.platform_to_first_gap(difficulty, stone_width)
         pillar_leading_gap = _LAYOUT.platform_to_first_gap(
-            difficulty, pillar_diameter, pitch_range=_LAYOUT.T4_PILLAR_PITCH_RANGE
+            difficulty, pillar_diameter, pitch_range=_LAYOUT.LIGHTLP_PILLAR_PITCH_RANGE
         )
     elif geometry == "checkpoint_24999":
         d = min(max(float(difficulty), 0.0), 1.0)
@@ -155,7 +155,7 @@ def sparse_course_layout(
         raise ValueError(f"unsupported sparse geometry {geometry!r}")
 
     geoms = [
-        _platform("start_platform", 0.0, 2.0, width=_LAYOUT.T4_STONE_PLATFORM_WIDTH)
+        _platform("start_platform", 0.0, 2.0, width=_LAYOUT.LIGHTLP_STONE_PLATFORM_WIDTH)
     ]
     cursor = 1.0
     rng = np.random.default_rng(int(round(float(difficulty) * 1000.0)))

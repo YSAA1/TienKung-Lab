@@ -51,13 +51,13 @@ _extrinsic_spec.loader.exec_module(extrinsic)
 ENV_PY = ROOT / "legged_lab" / "envs" / "t4" / "depth_student_env.py"
 CFG_PY = ROOT / "legged_lab" / "envs" / "t4" / "depth_student_cfg.py"
 INIT_PY = ROOT / "legged_lab" / "envs" / "__init__.py"
-TEACHER_PY = ROOT / "legged_lab" / "envs" / "t4" / "teacher_cfg.py"
+TEACHER_PY = ROOT / "legged_lab" / "locomotion" / "teacher_cfg.py"
 TRAIN_PY = ROOT / "legged_lab" / "scripts" / "train_t4_sparse_depth_student.py"
 FT_PY = ROOT / "legged_lab" / "scripts" / "train_t4_sparse_depth_student_ft.py"
 SIM2SIM_PY = ROOT / "legged_lab" / "scripts" / "sim2sim_t4_depth_student.py"
-T4_ENV_PY = ROOT / "legged_lab" / "envs" / "t4" / "t4_env.py"
+T4_ENV_PY = ROOT / "legged_lab" / "locomotion" / "env.py"
 PLAY_PY = ROOT / "legged_lab" / "scripts" / "play.py"
-EVAL_PY = ROOT / "legged_lab" / "scripts" / "eval_t4_hurdle.py"
+EVAL_PY = ROOT / "legged_lab" / "scripts" / "eval_locomotion.py"
 PROBE_PY = ROOT / "legged_lab" / "scripts" / "probe_t4_student_depth_render.py"
 
 

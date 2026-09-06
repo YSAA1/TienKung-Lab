@@ -25,7 +25,7 @@ _spec.loader.exec_module(layout)
 
 
 def test_bar_height_interpolates_and_clamps():
-    lo, hi = layout.T4_HURDLE_BAR_HEIGHT_RANGE
+    lo, hi = layout.LIGHTLP_HURDLE_BAR_HEIGHT_RANGE
     assert layout.hurdle_bar_height(0.0) == lo
     assert layout.hurdle_bar_height(1.0) == hi
     assert abs(layout.hurdle_bar_height(0.5) - (lo + hi) / 2.0) < 1e-9
@@ -36,18 +36,18 @@ def test_bar_height_interpolates_and_clamps():
 
 
 def test_ring_half_widths_geometry():
-    for spacing in (layout.T4_HURDLE_SPACING_RANGE[0], 1.1, layout.T4_HURDLE_SPACING_RANGE[1]):
+    for spacing in (layout.LIGHTLP_HURDLE_SPACING_RANGE[0], 1.1, layout.LIGHTLP_HURDLE_SPACING_RANGE[1]):
         rings = layout.hurdle_ring_half_widths(spacing)
         # canonical tile must always offer at least two consecutive bars so a
         # straight crossing rehearses continuous hurdling, not a single step
         assert len(rings) >= 2, f"spacing={spacing} yields {len(rings)} rings"
         # first ring clears the spawn platform by a full spacing
-        assert rings[0] == layout.T4_HURDLE_PLATFORM_WIDTH / 2.0 + spacing
+        assert rings[0] == layout.LIGHTLP_HURDLE_PLATFORM_WIDTH / 2.0 + spacing
         # constant spacing, strictly increasing
         for a, b in zip(rings, rings[1:]):
             assert abs((b - a) - spacing) < 1e-9
         # all rings stay inside the tile border
-        assert rings[-1] <= layout.T4_HURDLE_TILE_SIZE / 2.0 - layout.T4_HURDLE_BORDER_WIDTH
+        assert rings[-1] <= layout.LIGHTLP_HURDLE_TILE_SIZE / 2.0 - layout.LIGHTLP_HURDLE_BORDER_WIDTH
 
 
 def test_ring_half_widths_rejects_bad_spacing():
@@ -65,7 +65,7 @@ def test_bar_aabbs_cover_rings_and_only_rings():
     rings = layout.hurdle_ring_half_widths(spacing)
     aabbs = layout.hurdle_bar_aabbs(rings, height)
     assert len(aabbs) == 4 * len(rings)
-    c = layout.T4_HURDLE_TILE_SIZE / 2.0
+    c = layout.LIGHTLP_HURDLE_TILE_SIZE / 2.0
     r0 = rings[0]
     # a point on the first bar (any side, mid-height) is a hit
     for px, py in ((c + r0, c), (c - r0, c), (c, c + r0), (c, c - r0), (c + r0, c + r0)):
@@ -75,14 +75,14 @@ def test_bar_aabbs_cover_rings_and_only_rings():
     assert not layout.point_hits_bar((c + r0 + spacing / 2.0, c, height / 2.0), aabbs)
     assert not layout.point_hits_bar((c + r0, c, height + 0.05), aabbs)
     # margin turns a near miss into a hit (clearance accounting for foot size)
-    near = (c + r0 + layout.T4_HURDLE_BAR_THICKNESS / 2.0 + 0.01, c, height / 2.0)
+    near = (c + r0 + layout.LIGHTLP_HURDLE_BAR_THICKNESS / 2.0 + 0.01, c, height / 2.0)
     assert not layout.point_hits_bar(near, aabbs)
     assert layout.point_hits_bar(near, aabbs, margin=0.02)
 
 
 def test_canonical_constants_are_selfconsistent():
     # bars must be thinner than the tightest spacing, else rings merge
-    assert 0.0 < layout.T4_HURDLE_BAR_THICKNESS < layout.T4_HURDLE_SPACING_RANGE[0]
+    assert 0.0 < layout.LIGHTLP_HURDLE_BAR_THICKNESS < layout.LIGHTLP_HURDLE_SPACING_RANGE[0]
     # platform plus one ring at max spacing still fits inside the border
-    r_first_max = layout.T4_HURDLE_PLATFORM_WIDTH / 2.0 + layout.T4_HURDLE_SPACING_RANGE[1]
-    assert r_first_max <= layout.T4_HURDLE_TILE_SIZE / 2.0 - layout.T4_HURDLE_BORDER_WIDTH
+    r_first_max = layout.LIGHTLP_HURDLE_PLATFORM_WIDTH / 2.0 + layout.LIGHTLP_HURDLE_SPACING_RANGE[1]
+    assert r_first_max <= layout.LIGHTLP_HURDLE_TILE_SIZE / 2.0 - layout.LIGHTLP_HURDLE_BORDER_WIDTH
