@@ -85,6 +85,53 @@ class RobotCfg:
 
 
 @configclass
+class KinematicNamesCfg:
+    """Joint/body names used by TienKungEnv gait AMP helpers and ankle/hip regularizers.
+
+    Leg lists are ``[roll, pitch, yaw, knee, ankle_pitch, ankle_roll]`` so
+    ``hip_roll_action`` / ``hip_yaw_action`` keep the same index contract.
+    Defaults match TienKung-Lite.
+    """
+
+    feet_link_names: list = ["ankle_roll_l_link", "ankle_roll_r_link"]
+    elbow_link_names: list = ["elbow_pitch_l_link", "elbow_pitch_r_link"]
+    left_leg_joint_names: list = [
+        "hip_roll_l_joint",
+        "hip_pitch_l_joint",
+        "hip_yaw_l_joint",
+        "knee_pitch_l_joint",
+        "ankle_pitch_l_joint",
+        "ankle_roll_l_joint",
+    ]
+    right_leg_joint_names: list = [
+        "hip_roll_r_joint",
+        "hip_pitch_r_joint",
+        "hip_yaw_r_joint",
+        "knee_pitch_r_joint",
+        "ankle_pitch_r_joint",
+        "ankle_roll_r_joint",
+    ]
+    left_arm_joint_names: list = [
+        "shoulder_pitch_l_joint",
+        "shoulder_roll_l_joint",
+        "shoulder_yaw_l_joint",
+        "elbow_pitch_l_joint",
+    ]
+    right_arm_joint_names: list = [
+        "shoulder_pitch_r_joint",
+        "shoulder_roll_r_joint",
+        "shoulder_yaw_r_joint",
+        "elbow_pitch_r_joint",
+    ]
+    ankle_joint_names: list = [
+        "ankle_pitch_l_joint",
+        "ankle_pitch_r_joint",
+        "ankle_roll_l_joint",
+        "ankle_roll_r_joint",
+    ]
+
+
+@configclass
 class ObsScalesCfg:
     lin_vel: float = 1.0
     ang_vel: float = 1.0

@@ -141,6 +141,9 @@ def test_lightlp_termination_helpers_match_section_iv_c2():
     assert sig.joint_velocity_timeout(49.0) is False
     assert sig.excessive_base_accel(50.0, 0.5) is False
     assert sig.excessive_base_accel(50.0, 1.1) is True
+    assert sig.collapsed_pelvis_above_feet_mask(0.76, 0.05, 0.40) is False
+    assert sig.collapsed_pelvis_above_feet_mask(0.16, 0.05, 0.40) is True
+    assert sig.collapsed_pelvis_above_feet_mask(0.20, -0.50, 0.40) is False
     assert sig.wrap_heading_error(0.0, 0.2) == pytest.approx(0.2)
     upright = sig.upright_orientation_reward(0.0, 0.0)
     tilted = sig.upright_orientation_reward(0.5, 0.0)

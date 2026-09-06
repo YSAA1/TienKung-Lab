@@ -288,6 +288,21 @@ def test_deploy_depth_option_shows_robot_and_terrain():
     assert int(option.geomgroup[3]) == 1
 
 
+def test_interactive_viewer_enables_sparse_geom_group():
+    import mujoco
+
+    from legged_lab.scripts.sim2sim_t4_depth_student import (
+        DEPTH_TERRAIN_GEOM_GROUP,
+        enable_sparse_terrain_in_mjv_option,
+    )
+
+    option = mujoco.MjvOption()
+    assert int(option.geomgroup[DEPTH_TERRAIN_GEOM_GROUP]) == 0
+    enable_sparse_terrain_in_mjv_option(option)
+    assert int(option.geomgroup[0]) == 1
+    assert int(option.geomgroup[DEPTH_TERRAIN_GEOM_GROUP]) == 1
+
+
 def test_sim2sim_cli_exposes_depth_noise_and_keeps_robot_in_view_by_default():
     from legged_lab.scripts import sim2sim_t4_depth_student as sim2sim
 

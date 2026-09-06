@@ -7,7 +7,7 @@
 # TienKung-Lab: Direct IsaacLab Workflow for TienKung
 
 > **本 checkout 的 T4 工作**（走跑已交付；现在做梅花桩老师 + 翻箱 G1/G2）以
-> [docs/README.md](docs/README.md) 为入口，背景见 [PROJECT_CONTEXT.md](PROJECT_CONTEXT.md)。
+> [docs/README.md](docs/README.md) 为入口。
 > 部署合同见 [部署手册](docs/runbooks/t4-teacher-and-depth-deployment.md)。
 > 下面 Overview / Installation / Usage 仍是上游 TienKung `walk`/`run` 框架说明。
 
@@ -165,11 +165,14 @@ Run the depth student checkpoint in the migrated T4 MuJoCo model from the
 ```bash
 D:\anaconda\envs\pytorch\python.exe -m legged_lab.scripts.sim2sim_t4_depth_student
 D:\anaconda\envs\pytorch\python.exe -m legged_lab.scripts.sim2sim_t4_depth_student --course loco --duration 180
+D:\anaconda\envs\pytorch\python.exe -m legged_lab.scripts.sim2sim_t4_depth_student --course stepping_stones --difficulty 0
+D:\anaconda\envs\pytorch\python.exe -m legged_lab.scripts.sim2sim_t4_depth_student --course raised_pillars --difficulty 0
+D:\anaconda\envs\pytorch\python.exe -m legged_lab.scripts.sim2sim_t4_depth_student --course sparse --difficulty 0
 D:\anaconda\envs\pytorch\python.exe -m legged_lab.scripts.sim2sim_t4_depth_student --course flat
 D:\anaconda\envs\pytorch\python.exe -m legged_lab.scripts.sim2sim_t4_depth_student --course rule
 ```
 
-Default scene is a Stage E style lane: random-rough, 0–15 cm boxes, waves, 25/28/30 cm hurdles, a ground-backed 15° up/down slope, then 18 cm and 20 cm stairs. Side walls at ±1.2 m, green goal at 38 m. Nav follows a 1.4 m centerline carrot. Mouse orbits; `R` resets. Do not use I/J/K/L.
+Default scene is a Stage E style lane: random-rough, 0–15 cm boxes, waves, 25/28/30 cm hurdles, a ground-backed 15° up/down slope, then 18 cm and 20 cm stairs. Side walls at ±1.2 m, green goal at 38 m. Nav follows a 1.4 m centerline carrot. Mouse orbits; `R` resets. Do not use I/J/K/L. `--course stepping_stones` / `raised_pillars` / `sparse` reuse the Isaac LightLP foothold sizes (square 踏石, cylindrical 圆桩) over a real pit; `--difficulty 0` is easy, `1` is hard. GRU students get warp-style depth: native 48×64 and terrain only (no robot capsules in the camera).
 
 The Stage S camera is the schema head-height mount: Trunk ``forward_camera`` site ``(0.085, 0, 0.42)`` with 35 deg downward pitch. Old pelvis-rolled D455 students are off-contract and must not be mixed with this pose.
 

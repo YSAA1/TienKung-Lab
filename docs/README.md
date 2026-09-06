@@ -5,11 +5,12 @@
 
 ## 当前工作面
 
-当前唯一执行轨道是翻箱 G1/G2。S12 梅花桩 teacher 与 GRU 深度学生训练已完成仿真验收；后续真机或更严格落脚验收需要另开计划。
+当前执行轨道：宇树 G1 越障老师（复用 T4 LightLP 稀疏地形），以及翻箱 G1/G2。T4 S12 老师 plant 重训暂停。表示先行学生 `model_13999` 是 Isaac 对照候选，不是部署包。
 
 | 轨道 | 现在做什么 | 执行计划 | 规格 |
 | --- | --- | --- | --- |
-| 梅花桩 | active：保留已验收的 Phase B `model_5999.pt`；从该完整 checkpoint 开 targeted robustness FT 新 lineage，补动作/执行器/深度边界与圆桩制造误差域。旧 Phase C 仍跳过 | [targeted FT 决策](../artifacts/diagnostics/s12_targeted_ft_decision.md)；[门控学生归档计划](archive/plans/2026-08-26--t4-sparse-s12-gated-dagger-joint-ft-plan.md) | [稀疏规格](specs/2026-08-15--t4-stepping-stones-and-hurdle-stable.md) |
+| 梅花桩 | paused：G1 越障老师优先。T4 plant DR 计划仍在 | [老师 plant 重训](plans/2026-09-02--t4-s12-teacher-plant-retrain-plan.md) | [表示先行蒸馏](specs/2026-09-01--t4-s12-repr-first-distill.md)（学生对照） |
+| 宇树 G1 越障 | active：`g1_loco_teacher` = G1 29DoF + `T4LocoEnv` + sparse 梅花桩/圆桩 + LAFAN1 走跑 AMP。不是 walk | `legged_lab/envs/g1/teacher_cfg.py` | 同 T4 稀疏老师 MDP；AMP 70D 独立于 T4 66D |
 | 翻箱 | G1 跟踪专家 → G2 heightscan 技能（zhuoqun）。**G2 学生与 G3 合并（走跑+翻箱成一条策略）等 G2 过箱后再开。** | [翻箱 recovery](plans/2026-08-15--t4-vault-g1-g2-recovery-plan.md) | [合并规格](specs/2026-08-13--t4-vault-loco-merge.md) |
 
 运行时切片与机器占用：`.harness/work_index.md`、`.harness/state.md`。
@@ -61,7 +62,7 @@
 | --- | --- |
 | 本文、`AGENTS.md` | 入口。不写 session 流水。 |
 | `.harness/` | 工作面索引与短状态。 |
-| `docs/specs/` | 已批准行为 / 架构。half-living 的文头会标明。 |
+| `docs/specs/` | 已批准行为 / 架构。文头 `Status: draft` 的不是执行权威。现行学生配方是 [表示先行蒸馏](specs/2026-09-01--t4-s12-repr-first-distill.md)（已批准）。 |
 | `docs/plans/` | **只放现行执行计划**（梅花桩 S12 + 部署向 RTX 蒸馏、翻箱 G1/G2）。 |
 | `docs/runbooks/` | 现在还能照着跑的操作。 |
 | `docs/research/` | 调研与论文摘录，非权威。 |

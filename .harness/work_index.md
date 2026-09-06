@@ -4,8 +4,9 @@
 
 | Work surface | Status | Active slice | Source |
 | --- | --- | --- | --- |
-| T4 梅花桩 LightLP teacher | frozen | S12 从 S11b `model_19000` 热启后冻在 `model_21500.pt`（用户授权提前蒸学生，不再等 23999） | `docs/archive/plans/2026-08-22--t4-sparse-s12-rim-yaw-student-plan.md` |
-| T4 梅花桩 GRU 深度学生 | active | 保留已验收 Phase B `model_5999.pt`；从完整 Phase B 开 targeted robustness FT，新域只在该 lineage 启用，验收仍要求 evaluator JSON、lineage 与连续回放 | `artifacts/diagnostics/s12_targeted_ft_decision.md` |
+| T4 梅花桩 LightLP teacher | paused | G1 老师开训优先。T4 plant DR 计划仍在 `docs/plans/2026-09-02--t4-s12-teacher-plant-retrain-plan.md`，不开 | `docs/plans/2026-09-02--t4-s12-teacher-plant-retrain-plan.md` |
+| Unitree G1 越障 teacher | blocked | 同配方冷启动已停。对照仍是 `model_39999`：连续地形会走，梅花桩不会。无漏杀，下一刀必须改配方，不能再烧相同 40k | `legged_lab/envs/g1/teacher_cfg.py` |
+| T4 梅花桩 GRU 深度学生 | done | `s12_repr_first` `model_13999` Isaac hard 过门；MuJoCo 稀疏仍摔。下一刀跟新老师，不续 14k 蒸馏 | `docs/plans/2026-09-01--t4-s12-repr-first-distill-plan.md` |
 | T4 梅花桩学生 LightLP 成本 | done | warp + 3168/MLP + 单次 backward；collection p50 ~2.2 s。质量未过，已转配方修复 | `docs/archive/plans/2026-08-23--t4-sparse-s12-student-lightlp-distill-cost-plan.md` |
 | T4 学生 headless RTX 出图正确性 | done | `sim.render()` 调度 + checksum probe 绿；`s12_gru_ppo_rtx167` 已按 16.7 Hz 真出图 | `docs/archive/plans/2026-08-23--t4-sparse-s12-student-rtx-correctness-plan.md` |
 | T4 翻箱 G1/G2 | active | G1 专家已可用；G2 蒸馏 / 学生跟车在 zhuoqun。G3 合并未开 | `docs/plans/2026-08-15--t4-vault-g1-g2-recovery-plan.md` |

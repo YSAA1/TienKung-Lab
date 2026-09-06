@@ -383,6 +383,16 @@ def upright_orientation_reward(gx: float, gy: float) -> float:
     return math.exp(-2.0 * n2) + 0.1 * math.exp(-n1)
 
 
+def collapsed_pelvis_above_feet_mask(root_z, foot_z, clearance_m: float):
+    """True when the pelvis has dropped onto the feet (folded sit / lie-down).
+
+    ``foot_z`` should be the **support** foot height (lowest foot), not the mean.
+    Mean foot height false-triggers when one foot is swung high during single
+    support. Min foot height keeps downstairs walking safe without that bias.
+    """
+    return (root_z - foot_z) < clearance_m
+
+
 def sparse_pit_fall_mask(root_z, origin_z, is_sparse, drop_threshold: float = 0.5, soft_terrain: bool = False):
     """Terminate only sparse-terrain envs whose root fell below the tile origin.
 

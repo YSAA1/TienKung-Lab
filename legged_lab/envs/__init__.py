@@ -41,6 +41,7 @@ from legged_lab.envs.tienkung.walk_with_sensor_cfg import (
     TienKungWalkWithSensorAgentCfg,
     TienKungWalkWithSensorFlatEnvCfg,
 )
+from legged_lab.envs.g1.teacher_cfg import G1LocoTeacherAgentCfg, G1LocoTeacherEnvCfg
 from legged_lab.utils.task_registry import task_registry
 
 task_registry.register("walk", TienKungEnv, TienKungWalkFlatEnvCfg(), TienKungWalkAgentCfg())
@@ -51,6 +52,7 @@ task_registry.register(
 task_registry.register(
     "run_with_sensor", TienKungEnv, TienKungRunWithSensorFlatEnvCfg(), TienKungRunWithSensorAgentCfg()
 )
+task_registry.register("g1_loco_teacher", T4LocoEnv, G1LocoTeacherEnvCfg(), G1LocoTeacherAgentCfg())
 task_registry.register("t4_loco_teacher", T4LocoEnv, T4LocoTeacherEnvCfg(), T4LocoTeacherAgentCfg())
 task_registry.register(
     "t4_loco_teacher_sparse", T4LocoEnv, T4LocoSparseTeacherEnvCfg(), T4LocoSparseTeacherAgentCfg()

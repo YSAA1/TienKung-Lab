@@ -1,4 +1,4 @@
-"""Start gated Phase B joint training or an explicitly selected deployment FT lineage."""
+"""Start a gated S12 GRU student continuation: joint, deploy, targeted, or residual FT."""
 
 from __future__ import annotations
 
@@ -19,7 +19,7 @@ from legged_lab.utils.cli_args import add_rsl_rl_args, update_rsl_rl_cfg
 from rsl_rl.runners import OnPolicyRunner
 
 parser = argparse.ArgumentParser(description="Continue the S12 GRU student in a new gated lineage.")
-parser.add_argument("--mode", choices=("joint", "deploy_ft", "targeted_ft"), required=True)
+parser.add_argument("--mode", choices=("joint", "deploy_ft", "targeted_ft", "residual_ft", "plant_ft"), required=True)
 parser.add_argument("--student_checkpoint", type=str, required=True, help="Best checkpoint selected by the prior gate.")
 parser.add_argument("--teacher_checkpoint", type=str, required=True, help="Frozen S12 model_21500.pt teacher.")
 parser.add_argument(
@@ -61,11 +61,15 @@ from isaaclab.utils.io import dump_yaml  # noqa: E402
 from legged_lab.envs.t4.depth_student_cfg import (  # noqa: E402
     T4SparseDepthStudentDeployFtAgentCfg,
     T4SparseDepthStudentFtAgentCfg,
+    T4SparseDepthStudentPlantFtAgentCfg,
+    T4SparseDepthStudentResidualFtAgentCfg,
     T4SparseDepthStudentTargetedFtAgentCfg,
 )
 from legged_lab.envs.t4.depth_student_env import (  # noqa: E402
     T4LocoSparseDepthDistillEnv,
     T4LocoSparseDepthStudentFtEnvCfg,
+    T4LocoSparseDepthStudentPlantFtEnvCfg,
+    T4LocoSparseDepthStudentResidualFtEnvCfg,
     T4LocoSparseDepthStudentTargetedFtEnvCfg,
 )
 
@@ -83,10 +87,20 @@ def train():
         phase = "deploy_ft"
         env_cfg = T4LocoSparseDepthStudentFtEnvCfg()
         agent_cfg = T4SparseDepthStudentDeployFtAgentCfg()
-    else:
+    elif args_cli.mode == "residual_ft":
+        phase = "residual_ft"
+        env_cfg = T4LocoSparseDepthStudentResidualFtEnvCfg()
+        agent_cfg = T4SparseDepthStudentResidualFtAgentCfg()
+    elif args_cli.mode == "targeted_ft":
         phase = "targeted_ft"
         env_cfg = T4LocoSparseDepthStudentTargetedFtEnvCfg()
         agent_cfg = T4SparseDepthStudentTargetedFtAgentCfg()
+    elif args_cli.mode == "plant_ft":
+        phase = "plant_ft"
+        env_cfg = T4LocoSparseDepthStudentPlantFtEnvCfg()
+        agent_cfg = T4SparseDepthStudentPlantFtAgentCfg()
+    else:
+        raise ValueError(f"unsupported FT mode: {args_cli.mode}")
     if args_cli.task_num_envs is not None:
         env_cfg.scene.num_envs = args_cli.task_num_envs
     agent_cfg = update_rsl_rl_cfg(agent_cfg, args_cli)

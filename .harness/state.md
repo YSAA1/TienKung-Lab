@@ -1,9 +1,9 @@
 # Current State
 
 - Living index: `docs/README.md`
-- Current work surface: 翻箱 `docs/plans/2026-08-15--t4-vault-g1-g2-recovery-plan.md`。
-- S12 梅花桩训练已收口；归档计划：`docs/archive/plans/2026-08-22--t4-sparse-s12-rim-yaw-student-plan.md`、`docs/archive/plans/2026-08-26--t4-sparse-s12-gated-dagger-joint-ft-plan.md`。
-- Approved specs: `docs/specs/2026-08-12--t4-unified-depth-locomotion.md`（走跑/学生合同）、`docs/specs/2026-08-13--t4-vault-loco-merge.md`（G1→G2→G3 目标）、`docs/specs/2026-08-15--t4-stepping-stones-and-hurdle-stable.md`（梅花桩目标；执行已改单阶段）
+- Current work surfaces（两条轨道，不是 dual truth）：翻箱 `docs/plans/2026-08-15--t4-vault-g1-g2-recovery-plan.md`；G1 越障老师 **blocked**：同配方冷启动已停。对照 ckpt 仍是 `2026-09-04_16-28-27_g1_sparse_teacher_g1term/model_39999.pt`。终止 0.20 m 无漏杀；梅花桩失败不是再开一趟能修的。plantfix 不续。T4 `model_21500` 血统不变。T4 梅花桩 plant 重训暂停。
+- S12 学生 `s12_repr_first` `model_13999` Isaac hard 过门，MuJoCo 残留交给老师 plant 重训。老师本机 `artifacts/checkpoints/nubot/s12_teacher/model_21500.pt`。
+- Approved specs: `docs/specs/2026-08-12--t4-unified-depth-locomotion.md`（走跑/学生合同）、`docs/specs/2026-08-13--t4-vault-loco-merge.md`（G1→G2→G3 目标）、`docs/specs/2026-08-15--t4-stepping-stones-and-hurdle-stable.md`（梅花桩目标；执行已改单阶段）、`docs/specs/2026-09-01--t4-s12-repr-first-distill.md`（表示先行蒸馏）
 
 ## 梅花桩（nubot）
 
@@ -37,7 +37,9 @@
 
 - `docs/research/*` 与 `docs/archive/plans/` 历史正文不重写。
 - `artifacts/eval/*`、视频、checkpoints：对照证据，未逐项核对 lineage，不删。
-- `artifacts/diagnostics/eval_t4_impact_probe.py`、`open_s11b_sparse_stairs_viewer.py`：一次性诊断/viewer；正式评估走 `eval_t4_hurdle.py`。
+- `artifacts/diagnostics/*`：一次性 probe/viewer/JSON；正式评估走 `eval_t4_hurdle.py`。
 - `scripts/setup_local_isaac_docker.sh`：会话前已有本地改动，不混入提交。
-- 训练代码/测试的大范围 dead-code 清扫：本 cleanup 只删 `artifacts/tmp_*.py`，不改行为。
+- `legged_lab/envs/t4/depth_student_cfg.py` 多代 AlgCfg（Dagger/Joint/DeployFt/TargetedFt/ResidualFt/PlantFt）+ `train_t4_sparse_depth_student_ft.py` 多 `--mode`：失败 lineage 对照与合同测试仍引用。删会改行为。
+  reason: 不是未引用死代码，是叠代配方。
+  reevaluate_when: 表示先行 Spec 批准并落地新 AlgCfg 之后，再单独 implement 切片收口旧 mode。
 - pytest cache / 未跟踪 ckpt：不动。

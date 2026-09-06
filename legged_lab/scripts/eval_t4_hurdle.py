@@ -67,6 +67,11 @@ parser.add_argument(
     default=None,
     help="Pin reset yaw error in degrees. Unset keeps the seeded random reset.",
 )
+parser.add_argument(
+    "--disable_student_depth_noise",
+    action="store_true",
+    help="Eval-only: turn off student depth hold/delay/scale/dropout. Camera jitter unchanged.",
+)
 
 patch_physx_backward_compatibility_setting(AppLauncher)
 AppLauncher.add_app_launcher_args(parser)
@@ -133,6 +138,8 @@ def evaluate() -> dict:
     if hasattr(env_cfg, "terrain_aware_commands"):
         env_cfg.terrain_aware_commands = False
     env_cfg.noise.add_noise = False
+    if args_cli.disable_student_depth_noise and hasattr(env_cfg, "student_depth_noise"):
+        env_cfg.student_depth_noise = False
     if not args_cli.keep_randomization:
         # Keep the seeded reset pose/joint perturbations. Removing both leaves a
         # perfectly symmetric nominal start where deterministic locomotion
@@ -584,6 +591,8 @@ def evaluate() -> dict:
         "stochastic_actions": args_cli.stochastic,
         "commanded_forward_mean_mps": commanded_forward_sum / max(1, velocity_sample_count),
         "actual_forward_mean_mps": actual_forward_sum / max(1, velocity_sample_count),
+        "student_depth_noise": bool(getattr(env_cfg, "student_depth_noise", False)),
+        "disable_student_depth_noise": bool(args_cli.disable_student_depth_noise),
         "scan_mode": args_cli.scan_mode,
         "scan_permutation_seed": args_cli.scan_permutation_seed,
         "scan_history_length": scan_history_length,

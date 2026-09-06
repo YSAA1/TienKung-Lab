@@ -84,6 +84,10 @@ def _algorithm(
     pg_delay_iters: int = 0,
     schedule: str = "fixed",
     reference_action_coef: float = 0.0,
+    repr_first: bool = False,
+    repr_cap_iters: int = 4000,
+    repr_probe_interval: int = 100,
+    action_mix_decay_iters: int = 2000,
 ) -> SafeRecurrentDistillation:
     return SafeRecurrentDistillation(
         _tiny_policy(),
@@ -110,6 +114,10 @@ def _algorithm(
         max_learning_rate=0.1,
         schedule=schedule,
         reference_action_coef=reference_action_coef,
+        repr_first=repr_first,
+        repr_cap_iters=repr_cap_iters,
+        repr_probe_interval=repr_probe_interval,
+        action_mix_decay_iters=action_mix_decay_iters,
     )
 
 
@@ -724,6 +732,9 @@ def test_distributed_recon_projection_reduces_before_projecting():
 def test_sparse_student_cfg_selects_safe_recurrent_improvement():
     source = CFG_PATH.read_text(encoding="utf-8")
     distill = source.split("class T4SparseDepthStudentDaggerAlgCfg", 1)[1].split(
+        "class T4SparseDepthStudentFinalMainAlgCfg", 1
+    )[0]
+    final_main = source.split("class T4SparseDepthStudentFinalMainAlgCfg", 1)[1].split(
         "class T4SparseDepthStudentAgentCfg", 1
     )[0]
     joint_alg = source.split("class T4SparseDepthStudentJointAlgCfg", 1)[1].split(
@@ -735,8 +746,12 @@ def test_sparse_student_cfg_selects_safe_recurrent_improvement():
     targeted_alg = source.split("class T4SparseDepthStudentTargetedFtAlgCfg", 1)[1].split(
         "class T4SparseDepthStudentFtAgentCfg", 1
     )[0]
+    residual_alg = source.split("class T4SparseDepthStudentResidualFtAlgCfg", 1)[1].split(
+        "class T4SparseDepthStudentResidualFtAgentCfg", 1
+    )[0]
+    residual_agent = source.split("class T4SparseDepthStudentResidualFtAgentCfg", 1)[1]
     agent = source.split("class T4SparseDepthStudentAgentCfg", 1)[1].split(
-        "class T4SparseDepthStudentJointAlgCfg", 1
+        "class T4SparseDepthStudentReprFirstAlgCfg", 1
     )[0]
     assert 'class_name: str = "SafeRecurrentDistillation"' in distill
     assert "critic_hidden_dims" in source
@@ -752,9 +767,15 @@ def test_sparse_student_cfg_selects_safe_recurrent_improvement():
     assert "behavior_coef_end: float = 1.0" in distill
     assert "behavior_coef_decay_iters: int = 0" in distill
     assert "teacher_mix_decay_iters: int = 1000" in distill
-    assert 'run_name: str = "s12_rtx_gated_dagger"' in agent
-    assert "max_iterations: int = 8000" in agent
+    assert 'run_name: str = "s12_final_main"' in agent
+    assert "max_iterations: int = 15000" in agent
+    assert "T4SparseDepthStudentFinalMainAlgCfg" in agent
     assert "pg_coef: float = 0.0" in distill
+    assert "pg_coef: float = 0.2" in final_main
+    assert "pg_delay_iters: int = 2000" in final_main
+    assert "critic_warmup_iters: int = 200" in final_main
+    assert "teacher_mix_decay_iters: int = 2000" in final_main
+    assert "learning_rate: float = 1.0e-4" in final_main
     assert "max_recon_grad_ratio: float = 1.0" in distill
     assert "max_action_std: float = 0.2" in source
     assert "pg_coef: float = 0.2" in joint_alg
@@ -774,6 +795,21 @@ def test_sparse_student_cfg_selects_safe_recurrent_improvement():
     assert 'run_name: str = "s12_rtx_gated_joint"' in source
     assert 'run_name: str = "s12_rtx_deploy_ft_v2"' in source
     assert 'run_name: str = "s12_rtx_targeted_robust_ft"' in source
+    assert 'run_name: str = "s12_residual_ft"' in residual_agent
+    assert "max_iterations: int = 1000" in residual_agent
+    assert "teacher_mix: float = 0.0" in residual_alg
+    assert "critic_warmup_iters: int = 200" in residual_alg
+    assert "pg_coef: float = 0.5" in residual_alg
+    assert "pg_coef_ramp_iters: int = 400" in residual_alg
+    assert "behavior_coef: float = 0.5" in residual_alg
+    assert "recon_coef: float = 0.5" in residual_alg
+    assert "learning_rate: float = 3.0e-5" in residual_alg
+    assert "reference_action_coef: float = 0.0" in residual_alg
+    assert "pg_coef: float = 0.1" not in residual_alg
+    assert "behavior_coef: float = 1.0" not in residual_alg
+    assert "reference_action_coef: float = 0.25" not in residual_alg
+    assert "pg_coef: float = 1.0" not in residual_alg
+    assert "behavior_coef: float = 0.0" not in residual_alg
     assert "max_kl:" not in source
     assert "rollback_lr_factor" not in source
     params = inspect.signature(SafeRecurrentDistillation.__init__).parameters
@@ -795,16 +831,97 @@ def test_sparse_student_cfg_selects_safe_recurrent_improvement():
         assert name in params, name
 
 
+def test_residual_ft_pg_waits_for_critic_warmup_and_keeps_bc_floor():
+    algorithm = _algorithm(
+        teacher_mix=0.0,
+        teacher_mix_end=0.0,
+        teacher_mix_decay_iters=0,
+        pg_coef=0.5,
+        pg_coef_ramp_iters=400,
+        pg_delay_iters=0,
+        critic_warmup_iters=200,
+        behavior_coef=0.5,
+        behavior_coef_end=0.5,
+        behavior_coef_decay_iters=0,
+        schedule="fixed",
+        reference_action_coef=0.0,
+    )
+    algorithm.num_updates = 0
+    assert algorithm.current_teacher_mix() == pytest.approx(0.0)
+    assert algorithm.current_pg_coef() == pytest.approx(0.0)
+    algorithm.num_updates = 200
+    assert algorithm.current_pg_coef() == pytest.approx(0.0)
+    algorithm.num_updates = 400
+    assert algorithm.current_pg_coef() == pytest.approx(0.25)
+    algorithm.num_updates = 600
+    assert algorithm.current_pg_coef() == pytest.approx(0.5)
+    assert algorithm.current_behavior_coef() == pytest.approx(0.5)
+    source = CFG_PATH.read_text(encoding="utf-8")
+    residual_alg = source.split("class T4SparseDepthStudentResidualFtAlgCfg", 1)[1].split(
+        "class T4SparseDepthStudentResidualFtAgentCfg", 1
+    )[0]
+    assert "pg_coef: float = 0.5" in residual_alg
+    assert "behavior_coef: float = 0.5" in residual_alg
+    assert "reference_action_coef: float = 0.0" in residual_alg
+    assert "pg_coef: float = 1.0" not in residual_alg
+    assert "behavior_coef: float = 0.0" not in residual_alg
+
+
+def test_final_main_pg_waits_for_mix_zero_and_critic_warmup():
+    algorithm = _algorithm(
+        teacher_mix=1.0,
+        teacher_mix_end=0.0,
+        teacher_mix_decay_iters=2000,
+        pg_coef=0.2,
+        pg_coef_ramp_iters=800,
+        pg_delay_iters=2000,
+        critic_warmup_iters=200,
+        behavior_coef=1.0,
+        behavior_coef_end=1.0,
+        behavior_coef_decay_iters=0,
+        schedule="fixed",
+    )
+    algorithm.num_updates = 0
+    assert algorithm.current_teacher_mix() == pytest.approx(1.0)
+    assert algorithm.current_pg_coef() == pytest.approx(0.0)
+    algorithm.num_updates = 1000
+    assert algorithm.current_teacher_mix() == pytest.approx(0.5)
+    assert algorithm.current_pg_coef() == pytest.approx(0.0)
+    algorithm.num_updates = 2000
+    assert algorithm.current_teacher_mix() == pytest.approx(0.0)
+    assert algorithm.current_pg_coef() == pytest.approx(0.0)
+    algorithm.num_updates = 2200
+    assert algorithm.current_pg_coef() == pytest.approx(0.0)
+    algorithm.num_updates = 2600
+    assert algorithm.current_pg_coef() == pytest.approx(0.1)
+    algorithm.num_updates = 3000
+    assert algorithm.current_pg_coef() == pytest.approx(0.2)
+    assert algorithm.current_behavior_coef() == pytest.approx(1.0)
+
+
 def test_sparse_distill_cfg_objects_match_gated_three_phase_recipe():
     pytest.importorskip("isaaclab")
     from legged_lab.envs.t4.depth_student_cfg import (
         T4SparseDepthStudentDeployFtAgentCfg,
         T4SparseDepthStudentAgentCfg,
         T4SparseDepthStudentDaggerAlgCfg,
+        T4SparseDepthStudentFinalMainAlgCfg,
         T4SparseDepthStudentFtAgentCfg,
         T4SparseDepthStudentJointAlgCfg,
+        T4SparseDepthStudentReprFirstAgentCfg,
+        T4SparseDepthStudentResidualFtAgentCfg,
+        T4SparseDepthStudentResidualFtAlgCfg,
+        T4SparseDepthStudentPlantFtAgentCfg,
+        T4SparseDepthStudentPlantFtAlgCfg,
         T4SparseDepthStudentTargetedFtAgentCfg,
         T4SparseDepthStudentTargetedFtAlgCfg,
+    )
+    from legged_lab.envs.t4.depth_student_env import (
+        T4LocoSparseDepthStudentEnvCfg,
+        T4LocoSparseDepthStudentPlantFtEnvCfg,
+        T4LocoSparseDepthStudentReprFirstEnvCfg,
+        T4LocoSparseDepthStudentResidualFtEnvCfg,
+        T4LocoSparseDepthStudentTargetedFtEnvCfg,
     )
 
     distill = T4SparseDepthStudentDaggerAlgCfg()
@@ -820,8 +937,36 @@ def test_sparse_distill_cfg_objects_match_gated_three_phase_recipe():
     assert distill.behavior_coef_decay_iters == 0
     assert distill.critic_warmup_iters == 0
     agent = T4SparseDepthStudentAgentCfg()
-    assert agent.run_name == "s12_rtx_gated_dagger"
-    assert agent.max_iterations == 8000
+    assert isinstance(agent.algorithm, T4SparseDepthStudentFinalMainAlgCfg)
+    assert agent.run_name == "s12_final_main"
+    assert agent.max_iterations == 15000
+    assert agent.save_interval == 500
+    assert agent.algorithm.pg_coef == pytest.approx(0.2)
+    assert agent.algorithm.pg_coef_ramp_iters == 800
+    assert agent.algorithm.pg_delay_iters == 2000
+    assert agent.algorithm.critic_warmup_iters == 200
+    assert agent.algorithm.teacher_mix == pytest.approx(1.0)
+    assert agent.algorithm.teacher_mix_end == pytest.approx(0.0)
+    assert agent.algorithm.teacher_mix_decay_iters == 2000
+    assert agent.algorithm.learning_rate == pytest.approx(1.0e-4)
+    assert agent.algorithm.behavior_coef == pytest.approx(1.0)
+    assert agent.algorithm.behavior_coef_end == pytest.approx(1.0)
+    assert agent.algorithm.behavior_coef_decay_iters == 0
+    assert agent.algorithm.recon_coef == pytest.approx(1.0)
+    assert agent.algorithm.entropy_coef == pytest.approx(0.0)
+    assert agent.algorithm.schedule == "fixed"
+    repr_agent = T4SparseDepthStudentReprFirstAgentCfg()
+    repr_env = T4LocoSparseDepthStudentReprFirstEnvCfg()
+    assert repr_agent.run_name == "s12_repr_first"
+    assert repr_agent.max_iterations == 14000
+    assert repr_agent.algorithm.repr_first is True
+    assert repr_agent.algorithm.pg_coef == pytest.approx(0.0)
+    assert repr_agent.algorithm.teacher_mix == pytest.approx(1.0)
+    assert repr_agent.algorithm.teacher_mix_decay_iters == 0
+    assert repr_agent.algorithm.action_mix_decay_iters == 2000
+    assert repr_agent.algorithm.repr_cap_iters == 4000
+    assert repr_env.random_level_reset_fraction == pytest.approx(0.50)
+    assert repr_env.random_level_reset_min_level == 6
     joint_agent = T4SparseDepthStudentFtAgentCfg()
     joint = joint_agent.algorithm
     assert isinstance(joint, T4SparseDepthStudentJointAlgCfg)
@@ -886,6 +1031,98 @@ def test_sparse_distill_cfg_objects_match_gated_three_phase_recipe():
     assert ft_alg.current_pg_coef() == pytest.approx(0.25)
     assert ft_alg.current_behavior_coef() == pytest.approx(0.5)
     assert ft_alg.current_teacher_mix() == pytest.approx(0.0)
+    residual_agent = T4SparseDepthStudentResidualFtAgentCfg()
+    residual = residual_agent.algorithm
+    assert isinstance(residual, T4SparseDepthStudentResidualFtAlgCfg)
+    assert residual_agent.run_name == "s12_residual_ft"
+    assert residual_agent.max_iterations == 1000
+    assert residual.teacher_mix == pytest.approx(0.0)
+    assert residual.teacher_mix_end == pytest.approx(0.0)
+    assert residual.critic_warmup_iters == 200
+    assert residual.pg_coef == pytest.approx(0.5)
+    assert residual.pg_coef_ramp_iters == 400
+    assert residual.pg_delay_iters == 0
+    assert residual.behavior_coef == pytest.approx(0.5)
+    assert residual.behavior_coef_end == pytest.approx(0.5)
+    assert residual.recon_coef == pytest.approx(0.5)
+    assert residual.learning_rate == pytest.approx(3.0e-5)
+    assert residual.schedule == "fixed"
+    assert residual.reference_action_coef == pytest.approx(0.0)
+    assert residual.pg_coef != pytest.approx(0.1)
+    assert residual.behavior_coef != pytest.approx(1.0)
+    assert residual.behavior_coef != pytest.approx(0.0)
+    assert residual.pg_coef != pytest.approx(1.0)
+    residual_alg = _algorithm(
+        teacher_mix=residual.teacher_mix,
+        teacher_mix_end=residual.teacher_mix_end,
+        teacher_mix_decay_iters=residual.teacher_mix_decay_iters,
+        behavior_coef=residual.behavior_coef,
+        behavior_coef_end=residual.behavior_coef_end,
+        critic_warmup_iters=residual.critic_warmup_iters,
+        pg_coef=residual.pg_coef,
+        pg_coef_ramp_iters=residual.pg_coef_ramp_iters,
+        pg_delay_iters=residual.pg_delay_iters,
+        schedule=residual.schedule,
+        reference_action_coef=residual.reference_action_coef,
+    )
+    residual_alg.num_updates = 0
+    assert residual_alg.current_pg_coef() == pytest.approx(0.0)
+    assert residual_alg.current_teacher_mix() == pytest.approx(0.0)
+    residual_alg.num_updates = 200
+    assert residual_alg.current_pg_coef() == pytest.approx(0.0)
+    residual_alg.num_updates = 400
+    assert residual_alg.current_pg_coef() == pytest.approx(0.25)
+    residual_alg.num_updates = 600
+    assert residual_alg.current_pg_coef() == pytest.approx(0.5)
+    assert residual_alg.current_behavior_coef() == pytest.approx(0.5)
+    plant_agent = T4SparseDepthStudentPlantFtAgentCfg()
+    plant = plant_agent.algorithm
+    assert isinstance(plant, T4SparseDepthStudentPlantFtAlgCfg)
+    assert plant_agent.run_name == "s12_plant_ft"
+    assert plant_agent.max_iterations == 1000
+    assert plant.learning_rate == pytest.approx(1.0e-5)
+    assert plant.pg_coef == pytest.approx(0.1)
+    assert plant.behavior_coef == pytest.approx(1.0)
+    assert plant.recon_coef == pytest.approx(1.0)
+    assert plant.reference_action_coef == pytest.approx(0.25)
+    assert plant.critic_warmup_iters == 200
+    main_env = T4LocoSparseDepthStudentEnvCfg()
+    residual_env = T4LocoSparseDepthStudentResidualFtEnvCfg()
+    targeted_env = T4LocoSparseDepthStudentTargetedFtEnvCfg()
+    plant_env = T4LocoSparseDepthStudentPlantFtEnvCfg()
+    assert main_env.random_level_reset_fraction == pytest.approx(0.10)
+    assert main_env.random_level_reset_min_level is None
+    assert residual_env.random_level_reset_fraction == pytest.approx(0.50)
+    assert residual_env.random_level_reset_min_level == 6
+    assert residual_env.student_depth_noise is True
+    assert residual_env.student_depth_boundary_corruption is False
+    assert residual_env.domain_rand.action_delay.enable is False
+    residual_stones = residual_env.scene.terrain_generator.sub_terrains["stepping_stones"]
+    residual_pillars = residual_env.scene.terrain_generator.sub_terrains["raised_pillars"]
+    main_stones = main_env.scene.terrain_generator.sub_terrains["stepping_stones"]
+    main_pillars = main_env.scene.terrain_generator.sub_terrains["raised_pillars"]
+    assert residual_stones.proportion == pytest.approx(0.30)
+    assert residual_pillars.proportion == pytest.approx(0.30)
+    assert residual_stones.proportion > main_stones.proportion
+    assert residual_pillars.proportion > main_pillars.proportion
+    assert not getattr(residual_stones, "targeted_layout_seed", False)
+    assert not getattr(residual_pillars, "targeted_manufacturing_variation", False)
+    assert targeted_env.student_depth_boundary_corruption is True
+    assert getattr(
+        targeted_env.scene.terrain_generator.sub_terrains["raised_pillars"],
+        "targeted_manufacturing_variation",
+        False,
+    )
+    assert plant_env.random_level_reset_fraction == pytest.approx(0.10)
+    assert plant_env.random_level_reset_min_level is None
+    assert plant_env.student_depth_noise is True
+    assert plant_env.student_depth_boundary_corruption is False
+    assert plant_env.domain_rand.action_delay.enable is True
+    assert plant_env.domain_rand.action_delay.params["max_delay"] == 2
+    plant_pillars = plant_env.scene.terrain_generator.sub_terrains["raised_pillars"]
+    assert plant_pillars.proportion == pytest.approx(main_pillars.proportion)
+    assert not getattr(plant_pillars, "targeted_manufacturing_variation", False)
+    assert hasattr(plant_env.domain_rand.events, "actuator_gains")
 
 
 def test_runner_maps_safe_algorithm_to_teacher_observation_contract():
@@ -897,3 +1134,212 @@ def test_runner_maps_safe_algorithm_to_teacher_observation_contract():
     assert 'self.training_type in {"distillation", "safe_distillation"}' in source
     assert 'saved_dict["algorithm_state_dict"]' in source
     assert 'loaded_dict["algorithm_state_dict"]' in source
+    assert 'tag = key if "/" in key else f"Loss/{key}"' in source
+
+
+def test_repr_first_locks_mix_and_freezes_actor_while_updating_scan():
+    algorithm = _algorithm(
+        teacher_mix=1.0,
+        teacher_mix_end=0.0,
+        teacher_mix_decay_iters=0,
+        pg_coef=0.0,
+        behavior_coef=1.0,
+        behavior_coef_end=1.0,
+        behavior_coef_decay_iters=0,
+        repr_first=True,
+        repr_cap_iters=10000,
+        repr_probe_interval=10000,
+        learning_rate=3.0e-3,
+    )
+    assert algorithm.current_teacher_mix() == pytest.approx(1.0)
+    assert algorithm.current_behavior_coef() == pytest.approx(0.0)
+    assert algorithm.current_pg_coef() == pytest.approx(0.0)
+
+    frozen_prefixes = ("student.", "std", "critic.")
+    trained_prefixes = ("depth_encoder.", "scan_decoder.", "memory_s.")
+    before = _clone_policy_state(algorithm.policy)
+    _collect(algorithm)
+    report = algorithm.update()
+    after = algorithm.policy.state_dict()
+    assert report["actor_frozen"] == pytest.approx(1.0)
+    assert report["teacher_mix"] == pytest.approx(1.0)
+    assert report["Distill/phase"] == pytest.approx(0.0)
+    for name, tensor in before.items():
+        if name == "std" or name.startswith(frozen_prefixes):
+            assert torch.equal(tensor, after[name]), name
+    assert any(
+        not torch.equal(before[name], after[name])
+        for name in before
+        if any(name.startswith(prefix) for prefix in trained_prefixes)
+    )
+
+
+def test_repr_first_skips_recon_projection_until_action_phase():
+    original = SafeRecurrentDistillation._project_auxiliary_gradient.__func__
+    seen = {"calls": 0}
+
+    def _spy(cls, auxiliary, control):
+        seen["calls"] += 1
+        return original(cls, auxiliary, control)
+
+    SafeRecurrentDistillation._project_auxiliary_gradient = classmethod(_spy)
+    try:
+        representation = _algorithm(
+            pg_coef=0.0,
+            repr_first=True,
+            repr_cap_iters=10000,
+            repr_probe_interval=10000,
+        )
+        _collect(representation)
+        representation.update()
+        assert seen["calls"] == 0
+
+        action = _algorithm(pg_coef=0.0, repr_first=True, repr_cap_iters=10000, repr_probe_interval=10000)
+        action._repr_state.phase = "action"
+        action._repr_state.switch_iter = 0
+        _collect(action)
+        action.update()
+        assert seen["calls"] >= 1
+        helper = inspect.getsource(SafeRecurrentDistillation._optimizer_step_with_recon_projection)
+        assert "protect_recon" in helper
+        assert "_project_auxiliary_gradient(shared_control, shared_recon)" in helper
+        assert "_limit_auxiliary_gradient_norm" in helper
+    finally:
+        SafeRecurrentDistillation._project_auxiliary_gradient = classmethod(original)
+
+
+def test_repr_first_mix_decays_from_switch_iter_and_curriculum_snaps():
+    algorithm = _algorithm(
+        repr_first=True,
+        action_mix_decay_iters=2000,
+        pg_coef=0.0,
+        behavior_coef=1.0,
+        behavior_coef_end=1.0,
+        behavior_coef_decay_iters=0,
+    )
+    algorithm.num_updates = 80
+    assert algorithm.current_teacher_mix() == pytest.approx(1.0)
+
+    class _Cfg:
+        random_level_reset_fraction = 0.50
+        random_level_reset_min_level = 6
+
+    class _Env:
+        cfg = _Cfg()
+
+    env = _Env()
+    algorithm.attach_repr_runtime(env)
+    algorithm._repr_state.phase = "action"
+    algorithm._repr_state.switch_iter = 5
+    algorithm._repr_state.switch_reason = "metric"
+    algorithm._apply_action_curriculum()
+    algorithm.num_updates = 5
+    assert algorithm.current_teacher_mix() == pytest.approx(1.0)
+    algorithm.num_updates = 1005
+    assert algorithm.current_teacher_mix() == pytest.approx(0.5)
+    algorithm.num_updates = 2005
+    assert algorithm.current_teacher_mix() == pytest.approx(0.0)
+    assert algorithm.current_behavior_coef() == pytest.approx(1.0)
+    assert env.cfg.random_level_reset_fraction == pytest.approx(0.10)
+    assert env.cfg.random_level_reset_min_level is None
+
+
+def test_repr_first_cap_switches_once_and_checkpoint_restores_phase():
+    algorithm = _algorithm(repr_first=True, repr_cap_iters=2, repr_probe_interval=1, pg_coef=0.0)
+    switched = []
+    algorithm.attach_repr_runtime(None, on_switch=lambda alg: switched.append(alg._repr_state.switch_reason))
+    _collect(algorithm)
+    first = algorithm.update()
+    assert first["Distill/phase"] == pytest.approx(0.0)
+    assert algorithm._repr_state.phase == "representation"
+    _collect(algorithm)
+    second = algorithm.update()
+    assert algorithm._repr_state.phase == "action"
+    assert algorithm._repr_state.switch_reason == "baseline_invalid"
+    assert second["Distill/phase"] == pytest.approx(1.0)
+    assert switched == ["baseline_invalid"]
+    frozen_reason = algorithm._repr_state.switch_reason
+    frozen_iter = algorithm._repr_state.switch_iter
+    _collect(algorithm)
+    algorithm.update()
+    assert algorithm._repr_state.phase == "action"
+    assert algorithm._repr_state.switch_reason == frozen_reason
+    assert algorithm._repr_state.switch_iter == frozen_iter
+
+    restored = _algorithm(repr_first=True, pg_coef=0.0)
+    restored.load_checkpoint_state_dict(algorithm.checkpoint_state_dict())
+    assert restored._repr_state.phase == "action"
+    assert restored._repr_state.switch_reason == "baseline_invalid"
+    assert restored._repr_state.switch_iter == frozen_iter
+    assert restored.current_teacher_mix() < 1.0
+
+
+def test_repr_first_attach_after_action_checkpoint_snaps_curriculum():
+    saved = _algorithm(repr_first=True, pg_coef=0.0)
+    saved._repr_state.phase = "action"
+    saved._repr_state.switch_iter = 12
+    saved._repr_state.switch_reason = "metric"
+    payload = saved.checkpoint_state_dict()
+
+    class _Cfg:
+        random_level_reset_fraction = 0.50
+        random_level_reset_min_level = 6
+
+    class _Env:
+        cfg = _Cfg()
+
+    restored = _algorithm(repr_first=True, pg_coef=0.0)
+    restored.load_checkpoint_state_dict(payload)
+    assert restored._repr_state.phase == "action"
+    env = _Env()
+    assert env.cfg.random_level_reset_fraction == pytest.approx(0.50)
+    restored.attach_repr_runtime(env)
+    assert env.cfg.random_level_reset_fraction == pytest.approx(0.10)
+    assert env.cfg.random_level_reset_min_level is None
+
+
+def test_repr_first_probe_sync_sums_counts_across_ranks():
+    algorithm = _algorithm(repr_first=True, pg_coef=0.0)
+    algorithm.is_multi_gpu = True
+    algorithm._probe_acc.sse_global = 4.0
+    algorithm._probe_acc.count_global = 4
+    algorithm._probe_acc.sse_stones = 2.0
+    algorithm._probe_acc.count_stones = 2
+    algorithm._probe_acc.agree_stones = 1.0
+    algorithm._probe_acc.sse_pillars = 2.0
+    algorithm._probe_acc.count_pillars = 2
+    algorithm._probe_acc.agree_pillars = 1.0
+    ops = []
+
+    def _sum_reduce(tensor, op=None):
+        ops.append(op)
+        tensor.mul_(2)
+
+    import torch.distributed as dist
+
+    original = dist.all_reduce
+    dist.all_reduce = _sum_reduce
+    try:
+        algorithm._sync_probe_accumulator()
+    finally:
+        dist.all_reduce = original
+
+    assert ops == [dist.ReduceOp.SUM]
+    assert algorithm._probe_acc.count_global == 8
+    assert algorithm._probe_acc.count_stones == 4
+    assert algorithm._probe_acc.count_pillars == 4
+    assert algorithm._probe_acc.sse_global == pytest.approx(8.0)
+    source = inspect.getsource(SafeRecurrentDistillation._advance_repr_phase)
+    assert source.find("_sync_probe_accumulator") < source.find("finalize()")
+
+
+def test_repr_first_probe_accumulates_before_transition_clear():
+    algorithm = _algorithm(repr_first=True, pg_coef=0.0)
+    algorithm.init_storage("safe_distillation", 4, 4, [20], [12], [2])
+    algorithm.act(_student_obs(4), _teacher_obs(4))
+    assert algorithm._probe_acc.count_global == 0
+    algorithm.process_env_step(torch.zeros(4), torch.zeros(4), {"time_outs": torch.zeros(4)})
+    assert algorithm._probe_acc.count_global == 4
+    assert algorithm.transition.privileged_observations is None
+    source = inspect.getsource(SafeRecurrentDistillation.process_env_step)
+    assert source.find("_accumulate_scan_probe") < source.find("super().process_env_step")

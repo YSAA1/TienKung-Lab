@@ -24,7 +24,7 @@ MuJoCo Sim2Sim 链路，但原始实现的 `walk` 与 `run` 是两个独立任�
 深度学生 `pi_loco`。最终导出策略仍然只能使用深度相机、本体历史、局部速度命令和
 上一动作，不携带 HeightScan、高程图、接触真值或路线进度真值。
 
-本文取代此前“从第一阶段开始直接训练 depth Actor 的累积式 PPO 路线”。`PROJECT_CONTEXT.md`
+本文取代此前“从第一阶段开始直接训练 depth Actor 的累积式 PPO 路线”。`docs/README.md`
 中关于第一阶段/第二阶段的旧表述应在执行阶段同步更新。
 
 ## 目标
@@ -356,7 +356,7 @@ buckets、但局部组合 route 系统性失败时，才允许短 fine-tune，�
 
 ### 文档 / 状态检查（Documentation / State Checks）
 
-- Spec 批准后同步 `PROJECT_CONTEXT.md`，删除旧的 direct-depth-first 训练路线表述。
+- Spec 批准后同步 `docs/README.md`，删除旧的 direct-depth-first 训练路线表述。
 - `README.md` 只在真实 T4 训练/评估入口可运行后增加命令，不提前宣称能力。
 - `AGENTS.md` 保持为稳定规则与入口，不写训练进度和临时阈值。
 - git status 中仅处理本任务显式路径，不覆盖用户现有 dirty 文件。

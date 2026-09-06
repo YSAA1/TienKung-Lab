@@ -8,7 +8,66 @@ import torch.optim as optim
 
 from rsl_rl.algorithms.distillation import assert_finite_grads, assert_finite_tensor, mix_teacher_student_actions
 from rsl_rl.algorithms.ppo import PPO, adapt_ppo_learning_rate, gaussian_kl, ppo_clipped_surrogate_loss, ppo_clipped_value_loss
+from rsl_rl.algorithms.repr_first_switch import (
+    DEFAULT_CAP_ITERS,
+    DEFAULT_MIN_COUNT,
+    DEFAULT_PATIENCE,
+    DEFAULT_PROBE_INTERVAL,
+    ReprSwitchState,
+    ScanProbe,
+    observe_probe,
+    occupancy_agreement,
+)
 from rsl_rl.utils import unpad_trajectories
+
+
+class _ScanProbeAccumulator:
+    def __init__(self):
+        self.reset()
+
+    def reset(self):
+        self.sse_global = 0.0
+        self.count_global = 0
+        self.sse_stones = 0.0
+        self.count_stones = 0
+        self.agree_stones = 0.0
+        self.sse_pillars = 0.0
+        self.count_pillars = 0
+        self.agree_pillars = 0.0
+
+    def add(self, recon, teacher_scan, is_stone, is_pillar):
+        per_env_mse = (recon - teacher_scan).square().mean(dim=-1)
+        per_env_agree = occupancy_agreement(recon, teacher_scan).mean(dim=-1)
+        self.sse_global += float(per_env_mse.sum().item())
+        self.count_global += int(per_env_mse.numel())
+        if is_stone.any():
+            self.sse_stones += float(per_env_mse[is_stone].sum().item())
+            self.agree_stones += float(per_env_agree[is_stone].sum().item())
+            self.count_stones += int(is_stone.sum().item())
+        if is_pillar.any():
+            self.sse_pillars += float(per_env_mse[is_pillar].sum().item())
+            self.agree_pillars += float(per_env_agree[is_pillar].sum().item())
+            self.count_pillars += int(is_pillar.sum().item())
+
+    def finalize(self) -> ScanProbe | None:
+        if self.count_global <= 0:
+            return None
+
+        def _mean(total, count):
+            if count <= 0:
+                return float("nan")
+            return total / float(count)
+
+        return ScanProbe(
+            mse_global=_mean(self.sse_global, self.count_global),
+            mse_stepping_stones=_mean(self.sse_stones, self.count_stones),
+            mse_raised_pillars=_mean(self.sse_pillars, self.count_pillars),
+            occ_agree_stepping_stones=_mean(self.agree_stones, self.count_stones),
+            occ_agree_raised_pillars=_mean(self.agree_pillars, self.count_pillars),
+            count_global=self.count_global,
+            count_stepping_stones=self.count_stones,
+            count_raised_pillars=self.count_pillars,
+        )
 
 
 class SafeRecurrentDistillation(PPO):
@@ -47,6 +106,16 @@ class SafeRecurrentDistillation(PPO):
         nan_guard=True,
         device="cpu",
         multi_gpu_cfg: dict | None = None,
+        repr_first=False,
+        repr_cap_iters=DEFAULT_CAP_ITERS,
+        repr_probe_interval=DEFAULT_PROBE_INTERVAL,
+        repr_probe_patience=DEFAULT_PATIENCE,
+        repr_min_probe_count=DEFAULT_MIN_COUNT,
+        repr_baseline_start_iter=200,
+        repr_baseline_end_iter=400,
+        action_mix_decay_iters=2000,
+        action_level_reset_fraction=0.10,
+        action_level_reset_min_level=None,
     ):
         if not getattr(policy, "is_recurrent", False):
             raise ValueError("SafeRecurrentDistillation requires a recurrent student policy")
@@ -119,6 +188,20 @@ class SafeRecurrentDistillation(PPO):
         self.num_updates = 0
         self.num_accepted_updates = 0
         self.rollback_count = 0
+        self.repr_first = bool(repr_first)
+        self.repr_cap_iters = int(repr_cap_iters)
+        self.repr_probe_interval = max(1, int(repr_probe_interval))
+        self.repr_probe_patience = int(repr_probe_patience)
+        self.repr_min_probe_count = int(repr_min_probe_count)
+        self.repr_baseline_start_iter = int(repr_baseline_start_iter)
+        self.repr_baseline_end_iter = int(repr_baseline_end_iter)
+        self.action_mix_decay_iters = int(action_mix_decay_iters)
+        self.action_level_reset_fraction = float(action_level_reset_fraction)
+        self.action_level_reset_min_level = action_level_reset_min_level
+        self._repr_state = ReprSwitchState()
+        self._probe_acc = _ScanProbeAccumulator()
+        self._repr_env = None
+        self._on_repr_switch = None
 
     def init_storage(
         self, training_type, num_envs, num_transitions_per_env, student_obs_shape, teacher_obs_shape, actions_shape
@@ -143,9 +226,19 @@ class SafeRecurrentDistillation(PPO):
         return start + (end - start) * progress
 
     def current_teacher_mix(self):
+        if self.repr_first:
+            if self._repr_state.phase != "action" or self._repr_state.switch_iter is None:
+                return 1.0
+            elapsed = max(0, int(self.num_updates) - int(self._repr_state.switch_iter))
+            if self.action_mix_decay_iters <= 0:
+                return 0.0
+            progress = min(float(elapsed) / float(self.action_mix_decay_iters), 1.0)
+            return 1.0 + (0.0 - 1.0) * progress
         return self._update_schedule(self.teacher_mix, self.teacher_mix_end, self.teacher_mix_decay_iters)
 
     def current_behavior_coef(self):
+        if self._in_representation_phase():
+            return 0.0
         return self._update_schedule(
             self.behavior_coef,
             self.behavior_coef_end,
@@ -172,6 +265,38 @@ class SafeRecurrentDistillation(PPO):
             return False
         elapsed = self.num_updates - self.pg_delay_iters
         return elapsed <= self.critic_warmup_iters
+
+    def _in_representation_phase(self) -> bool:
+        return bool(self.repr_first) and self._repr_state.phase == "representation"
+
+    def attach_repr_runtime(self, env, *, on_switch=None):
+        self._repr_env = env
+        self._on_repr_switch = on_switch
+        if self._repr_state.phase == "action":
+            self._apply_action_curriculum()
+
+    def _apply_action_curriculum(self):
+        env = self._repr_env
+        if env is None:
+            return
+        cfg = getattr(env, "cfg", None)
+        if cfg is None:
+            return
+        cfg.random_level_reset_fraction = float(self.action_level_reset_fraction)
+        cfg.random_level_reset_min_level = self.action_level_reset_min_level
+
+    def _actor_parameter_ids(self) -> set[int]:
+        ids = {id(parameter) for parameter in self.policy.student.parameters()}
+        ids.add(id(self.policy.std))
+        ids |= self._critic_parameter_ids()
+        return ids
+
+    def _zero_actor_and_critic_grads(self) -> None:
+        frozen_ids = self._actor_parameter_ids()
+        for group in self.optimizer.param_groups:
+            for parameter in group["params"]:
+                if id(parameter) in frozen_ids and parameter.grad is not None:
+                    parameter.grad = None
 
     def _critic_parameter_ids(self) -> set[int]:
         critic = getattr(self.policy, "critic", None)
@@ -284,9 +409,66 @@ class SafeRecurrentDistillation(PPO):
         return executed
 
     def process_env_step(self, rewards, dones, infos):
+        # Probe before PPO clears the transition and may reset hidden states.
+        self._accumulate_scan_probe()
         super().process_env_step(rewards, dones, infos)
         if self.reference_policy is not None:
             self.reference_policy.reset(dones)
+
+    def _accumulate_scan_probe(self):
+        if not self.repr_first or getattr(self.policy, "_last_hidden", None) is None:
+            return
+        try:
+            recon = self.policy.reconstruct()
+            teacher_obs = self.transition.privileged_observations
+            if teacher_obs is None:
+                return
+            scan = self.policy.teacher_scan(teacher_obs)
+        except RuntimeError:
+            return
+        env = self._repr_env
+        n_env = recon.shape[0]
+        is_stone = torch.zeros(n_env, dtype=torch.bool, device=recon.device)
+        is_pillar = torch.zeros(n_env, dtype=torch.bool, device=recon.device)
+        if env is not None:
+            terrain = getattr(getattr(env, "scene", None), "terrain", None)
+            terrain_types = getattr(terrain, "terrain_types", None)
+            if terrain_types is not None:
+                types = terrain_types.to(device=recon.device)
+                columns_mask = getattr(env, "_columns_mask", None)
+                if callable(columns_mask):
+                    is_stone = columns_mask(types, getattr(env, "stone_column_ids", []) or [])
+                    is_pillar = columns_mask(types, getattr(env, "pillar_column_ids", []) or [])
+        self._probe_acc.add(recon.detach(), scan.detach(), is_stone, is_pillar)
+
+    def _sync_probe_accumulator(self):
+        """Sum scan-probe SSE/counts across ranks so switch decisions stay aligned."""
+        if not self.is_multi_gpu:
+            return
+        payload = torch.tensor(
+            [
+                self._probe_acc.sse_global,
+                float(self._probe_acc.count_global),
+                self._probe_acc.sse_stones,
+                float(self._probe_acc.count_stones),
+                self._probe_acc.agree_stones,
+                self._probe_acc.sse_pillars,
+                float(self._probe_acc.count_pillars),
+                self._probe_acc.agree_pillars,
+            ],
+            device=self.device,
+            dtype=torch.float64,
+        )
+        torch.distributed.all_reduce(payload, op=torch.distributed.ReduceOp.SUM)
+        acc = self._probe_acc
+        acc.sse_global = float(payload[0].item())
+        acc.count_global = int(payload[1].item())
+        acc.sse_stones = float(payload[2].item())
+        acc.count_stones = int(payload[3].item())
+        acc.agree_stones = float(payload[4].item())
+        acc.sse_pillars = float(payload[5].item())
+        acc.count_pillars = int(payload[6].item())
+        acc.agree_pillars = float(payload[7].item())
 
     def compute_returns(self, last_teacher_obs):
         last_values = self.policy.evaluate_value(last_teacher_obs).detach()
@@ -429,6 +611,26 @@ class SafeRecurrentDistillation(PPO):
         )
 
         self.optimizer.zero_grad()
+        if self._in_representation_phase() and recon_needs_backward:
+            recon_loss.backward()
+            self._zero_actor_and_critic_grads()
+            if self.nan_guard and check_finite:
+                optimized_ids = {id(parameter) for parameter in optimized}
+                named = [
+                    (name, parameter)
+                    for name, parameter in self.policy.named_parameters()
+                    if id(parameter) in optimized_ids
+                ]
+                assert_finite_grads(named, step=self._guard_step(), rank=self.gpu_global_rank)
+            nn.utils.clip_grad_norm_(optimized, self.max_grad_norm)
+            self.optimizer.step()
+            return {
+                "recon_control_cosine": 0.0,
+                "recon_grad_norm": 0.0,
+                "control_grad_norm": 0.0,
+                "recon_grad_scale": 1.0,
+                "recon_conflict": 0.0,
+            }
         if not recon_needs_backward or not shared:
             total = control_loss if not recon_needs_backward else control_loss + recon_loss
             self._optimizer_step(total, check_finite=check_finite)
@@ -467,13 +669,27 @@ class SafeRecurrentDistillation(PPO):
                 for parameter in shared
             ]
         cosine = self._gradient_cosine(shared_recon, shared_control)
-        projected, conflict = self._project_auxiliary_gradient(shared_recon, shared_control)
-        limited, scale = self._limit_auxiliary_gradient_norm(
-            projected,
-            shared_control,
-            coefficient=1.0,
-            max_ratio=self.max_recon_grad_ratio,
-        )
+        protect_recon = bool(self.repr_first) and self._repr_state.phase == "action"
+        if protect_recon:
+            projected, conflict = self._project_auxiliary_gradient(shared_control, shared_recon)
+            limited, scale = self._limit_auxiliary_gradient_norm(
+                projected,
+                shared_recon,
+                coefficient=1.0,
+                max_ratio=self.max_recon_grad_ratio,
+            )
+            shared_control_applied = limited
+            shared_recon_applied = shared_recon
+        else:
+            projected, conflict = self._project_auxiliary_gradient(shared_recon, shared_control)
+            limited, scale = self._limit_auxiliary_gradient_norm(
+                projected,
+                shared_control,
+                coefficient=1.0,
+                max_ratio=self.max_recon_grad_ratio,
+            )
+            shared_control_applied = shared_control
+            shared_recon_applied = limited
         for parameter in optimized:
             if id(parameter) in shared_ids:
                 continue
@@ -484,12 +700,13 @@ class SafeRecurrentDistillation(PPO):
                 parameter.grad = control_grad
             else:
                 parameter.grad = control_grad + parameter.grad
-        for parameter, recon_grad in zip(shared, limited):
-            control_grad = control_by_id.get(id(parameter))
-            if control_grad is None:
+        for parameter, recon_grad, control_grad in zip(shared, shared_recon_applied, shared_control_applied):
+            if protect_recon:
+                parameter.grad = recon_grad + control_grad
+            elif control_by_id.get(id(parameter)) is None:
                 parameter.grad = recon_grad
             else:
-                parameter.grad = control_grad + recon_grad
+                parameter.grad = control_by_id[id(parameter)] + recon_grad
 
         if self._in_critic_warmup():
             self._zero_non_critic_grads()
@@ -677,6 +894,7 @@ class SafeRecurrentDistillation(PPO):
             "num_accepted_updates": self.num_accepted_updates,
             "rollback_count": self.rollback_count,
             "learning_rate": self.learning_rate,
+            "repr_switch": self._repr_state.to_dict() if self.repr_first else None,
         }
         if self.reference_policy is not None:
             state["reference_model_state_dict"] = {
@@ -694,10 +912,56 @@ class SafeRecurrentDistillation(PPO):
         self.num_accepted_updates = num_accepted_updates
         self.rollback_count = rollback_count
         self._set_learning_rate(float(state_dict.get("learning_rate", self.learning_rate)))
+        if self.repr_first:
+            self._repr_state = ReprSwitchState.from_dict(state_dict.get("repr_switch"))
+            if self._repr_state.phase == "action":
+                self._apply_action_curriculum()
         reference_state = state_dict.get("reference_model_state_dict")
         if reference_state is not None:
             reference = self.set_reference_policy_from_current()
             reference.load_state_dict(reference_state, strict=False)
+
+    def _advance_repr_phase(self) -> dict:
+        extras = {"Distill/phase": 0.0 if self._repr_state.phase == "representation" else 1.0}
+        if not self.repr_first:
+            return extras
+        probe_due = self.num_updates % self.repr_probe_interval == 0
+        cap_due = self._repr_state.phase == "representation" and self.num_updates >= self.repr_cap_iters
+        if self._repr_state.phase == "representation" and (probe_due or cap_due):
+            self._sync_probe_accumulator()
+            probe = self._probe_acc.finalize()
+            previous = self._repr_state.phase
+            self._repr_state = observe_probe(
+                self._repr_state,
+                iteration=self.num_updates,
+                probe=probe,
+                min_count=self.repr_min_probe_count,
+                cap_iters=self.repr_cap_iters,
+                patience=self.repr_probe_patience,
+                baseline_start=self.repr_baseline_start_iter,
+                baseline_end=self.repr_baseline_end_iter,
+            )
+            self._probe_acc.reset()
+            if probe is not None:
+                extras.update(
+                    {
+                        "Recon/mse_global": probe.mse_global,
+                        "Recon/mse_stepping_stones": probe.mse_stepping_stones,
+                        "Recon/mse_raised_pillars": probe.mse_raised_pillars,
+                        "Recon/occ_agree_stepping_stones": probe.occ_agree_stepping_stones,
+                        "Recon/occ_agree_raised_pillars": probe.occ_agree_raised_pillars,
+                    }
+                )
+            extras["Distill/phase"] = 0.0 if self._repr_state.phase == "representation" else 1.0
+            if previous != "action" and self._repr_state.phase == "action":
+                extras["Distill/switch_iter"] = float(self._repr_state.switch_iter or self.num_updates)
+                self._apply_action_curriculum()
+                if callable(self._on_repr_switch):
+                    self._on_repr_switch(self)
+        if self._repr_state.switch_iter is not None:
+            extras["Distill/switch_iter"] = float(self._repr_state.switch_iter)
+        extras["Distill/phase"] = 0.0 if self._repr_state.phase == "representation" else 1.0
+        return extras
 
     def update(self):
         self._assert_student_only_when_ppo()
@@ -761,7 +1025,7 @@ class SafeRecurrentDistillation(PPO):
                 "reference_action_coef": self.reference_action_coef,
                 "pg_coef": self.current_pg_coef(),
                 "critic_warmup": float(self._in_critic_warmup()),
-                "actor_frozen": float(self._in_critic_warmup()),
+                "actor_frozen": float(self._in_critic_warmup() or self._in_representation_phase()),
                 "learning_rate": self.learning_rate,
                 "accepted_minibatches": float(num_batches),
                 "planned_minibatches": float(planned_minibatches),
@@ -771,4 +1035,5 @@ class SafeRecurrentDistillation(PPO):
                 "action_std_max": self.policy.std.detach().max().item(),
             }
         )
+        report.update(self._advance_repr_phase())
         return report

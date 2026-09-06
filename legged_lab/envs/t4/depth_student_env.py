@@ -151,8 +151,9 @@ class T4LocoSparseDepthStudentEnvCfg(T4LocoSparseTeacherEnvCfg):
     student_depth_boundary_probability: float = 0.08
     student_depth_boundary_threshold_m: float = 0.08
     sparse_curriculum_demote: bool = False
-    random_level_reset_fraction: float = 0.50
-    random_level_reset_min_level: int = 6
+    random_level_reset_fraction: float = 0.10
+    random_level_reset_min_level: int | None = None
+    random_level_reset_max_level: int | None = None
 
     def __post_init__(self):
         super().__post_init__()
@@ -167,8 +168,24 @@ class T4LocoSparseDepthStudentEnvCfg(T4LocoSparseTeacherEnvCfg):
         self.noise.noise_scales.height_scan = 0.0
         self.student_depth_noise = True
         self.sparse_curriculum_demote = False
+        self.random_level_reset_fraction = 0.10
+        self.random_level_reset_min_level = None
+        self.random_level_reset_max_level = None
+
+
+@configclass
+class T4LocoSparseDepthStudentReprFirstEnvCfg(T4LocoSparseDepthStudentEnvCfg):
+    """Representation stage starts on hard sparse rows; action stage snaps back to teacher 0.10/None."""
+
+    random_level_reset_fraction: float = 0.50
+    random_level_reset_min_level: int | None = 6
+    random_level_reset_max_level: int | None = None
+
+    def __post_init__(self):
+        super().__post_init__()
         self.random_level_reset_fraction = 0.50
         self.random_level_reset_min_level = 6
+        self.random_level_reset_max_level = None
 
 
 @configclass
@@ -183,7 +200,37 @@ class T4LocoSparseDepthStudentFtEnvCfg(T4LocoSparseDepthStudentEnvCfg):
 
 
 @configclass
+class T4LocoSparseDepthStudentResidualFtEnvCfg(T4LocoSparseDepthStudentFtEnvCfg):
+    """Residual FT: same depth noise, more hard sparse exposure, no plant/manufacturing DR."""
+
+    random_level_reset_fraction: float = 0.50
+    random_level_reset_min_level: int | None = 6
+    random_level_reset_max_level: int | None = None
+
+    def __post_init__(self):
+        super().__post_init__()
+        self.student_depth_noise = True
+        self.student_depth_boundary_corruption = False
+        self.random_level_reset_fraction = 0.50
+        self.random_level_reset_min_level = 6
+        self.random_level_reset_max_level = None
+        self.domain_rand.action_delay.enable = False
+        generator = copy.deepcopy(T4_STAGE_E_SPARSE_TERRAINS_CFG)
+        for name, sub in generator.sub_terrains.items():
+            if name in ("stepping_stones", "raised_pillars"):
+                sub.proportion = 0.30
+            else:
+                sub.proportion = float(sub.proportion) * (2.0 / 3.0)
+            if hasattr(sub, "targeted_layout_seed"):
+                sub.targeted_layout_seed = False
+            if hasattr(sub, "targeted_manufacturing_variation"):
+                sub.targeted_manufacturing_variation = False
+        self.scene.terrain_generator = generator
+
+
+@configclass
 class T4TargetedFtEventCfg(EventCfg):
+
     actuator_gains = EventTerm(
         func=mdp.randomize_actuator_gains,
         mode="startup",
@@ -244,6 +291,26 @@ class T4LocoSparseDepthStudentTargetedFtEnvCfg(T4LocoSparseDepthStudentFtEnvCfg)
         pillars.diameter_scale_jitter = 0.04
         pillars.pitch_scale_jitter = 0.03
         self.scene.terrain_generator = generator
+
+
+@configclass
+class T4LocoSparseDepthStudentPlantFtEnvCfg(T4LocoSparseDepthStudentFtEnvCfg):
+    """Plant FT: same depth noise, teacher curriculum, delay+actuator, no manufacturing."""
+
+    def __post_init__(self):
+        super().__post_init__()
+        self.student_depth_noise = True
+        self.student_depth_boundary_corruption = False
+        self.random_level_reset_fraction = 0.10
+        self.random_level_reset_min_level = None
+        self.random_level_reset_max_level = None
+        base_events = self.domain_rand.events
+        plant_events = T4TargetedFtEventCfg()
+        for name in ("physics_material", "add_base_mass", "reset_base", "reset_robot_joints", "push_robot"):
+            setattr(plant_events, name, getattr(base_events, name))
+        self.domain_rand.events = plant_events
+        self.domain_rand.action_delay.enable = True
+        self.domain_rand.action_delay.params = {"min_delay": 0, "max_delay": 2}
 
 
 class T4LocoDepthDistillEnv(T4LocoEnv):

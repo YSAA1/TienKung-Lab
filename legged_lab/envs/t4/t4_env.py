@@ -62,6 +62,7 @@ from legged_lab.envs.t4.mdp.sparse_signals import (
     SPARSE_FOOTHOLD_GENTLE_YAW_RANGE,
     SPARSE_FOOTHOLD_STRAIGHT_YAW_PROB,
     SPARSE_FOOTHOLD_VX_RANGE,
+    collapsed_pelvis_above_feet_mask,
     impact_immunity_from_draws,
     lightlp_sparse_promotion_guard,
     lightlp_timeout_and_reset,
@@ -223,11 +224,13 @@ class T4LocoEnv(VecEnv):
 
         self.max_episode_length_s = self.cfg.scene.max_episode_length_s
         self.max_episode_length = np.ceil(self.max_episode_length_s / self.step_dt)
-        self.num_actions = NUM_T4_JOINTS
+        self.policy_joint_names = tuple(getattr(self.cfg, "policy_joint_names", T4_JOINT_NAMES))
+        self.num_actions = len(self.policy_joint_names)
         self.clip_actions = self.cfg.normalization.clip_actions
         self.clip_obs = self.cfg.normalization.clip_observations
+        self.enable_amp = bool(getattr(self.cfg, "enable_amp", True))
 
-        if self.robot.num_joints != NUM_T4_JOINTS:
+        if self.policy_joint_names == T4_JOINT_NAMES and self.robot.num_joints != NUM_T4_JOINTS:
             raise RuntimeError(f"expected {NUM_T4_JOINTS} T4 joints, articulation reports {self.robot.num_joints}")
 
         self.action_scale = self.cfg.robot.action_scale
@@ -255,7 +258,9 @@ class T4LocoEnv(VecEnv):
         self.termination_contact_cfg.resolve(self.scene)
         self.feet_cfg = SceneEntityCfg(name="contact_sensor", body_names=self.cfg.robot.feet_body_names)
         self.feet_cfg.resolve(self.scene)
-        self.diagnostic_contact_body_names = ("Trunk", "Shank_Left", "Shank_Right")
+        self.diagnostic_contact_body_names = tuple(
+            getattr(self.cfg, "diagnostic_contact_body_names", ("Trunk", "Shank_Left", "Shank_Right"))
+        )
         self.diagnostic_contact_cfg = SceneEntityCfg(
             name="contact_sensor",
             body_names=list(self.diagnostic_contact_body_names),
@@ -263,41 +268,60 @@ class T4LocoEnv(VecEnv):
         )
         self.diagnostic_contact_cfg.resolve(self.scene)
 
-        # Policy-facing joint vectors always use the frozen T4 order; the simulator
-        # order is an implementation detail of the USD conversion.
+        # Policy-facing joint vectors use cfg order; simulator order is USD-specific.
         self.t4_joint_ids, resolved_joint_names = self.robot.find_joints(
-            name_keys=list(T4_JOINT_NAMES), preserve_order=True
+            name_keys=list(self.policy_joint_names), preserve_order=True
         )
-        if tuple(resolved_joint_names) != T4_JOINT_NAMES:
-            raise RuntimeError(f"resolved joint order {tuple(resolved_joint_names)} does not match T4_JOINT_NAMES")
+        if tuple(resolved_joint_names) != self.policy_joint_names:
+            raise RuntimeError(
+                f"resolved joint order {tuple(resolved_joint_names)} does not match {self.policy_joint_names}"
+            )
 
-        self.feet_body_ids, _ = self.robot.find_bodies(
-            name_keys=["left_foot_link", "right_foot_link"], preserve_order=True
-        )
+        feet_link_names = list(getattr(self.cfg, "feet_link_names", ["left_foot_link", "right_foot_link"]))
+        self.feet_body_ids, _ = self.robot.find_bodies(name_keys=feet_link_names, preserve_order=True)
         self.left_leg_ids, _ = self.robot.find_joints(
-            name_keys=[
-                "J_hip_l_roll",
-                "J_hip_l_pitch",
-                "J_hip_l_yaw",
-                "J_knee_l_pitch",
-                "J_ankle_l_pitch",
-                "J_ankle_l_roll",
-            ],
+            name_keys=list(
+                getattr(
+                    self.cfg,
+                    "left_leg_joint_names",
+                    [
+                        "J_hip_l_roll",
+                        "J_hip_l_pitch",
+                        "J_hip_l_yaw",
+                        "J_knee_l_pitch",
+                        "J_ankle_l_pitch",
+                        "J_ankle_l_roll",
+                    ],
+                )
+            ),
             preserve_order=True,
         )
         self.right_leg_ids, _ = self.robot.find_joints(
-            name_keys=[
-                "J_hip_r_roll",
-                "J_hip_r_pitch",
-                "J_hip_r_yaw",
-                "J_knee_r_pitch",
-                "J_ankle_r_pitch",
-                "J_ankle_r_roll",
-            ],
+            name_keys=list(
+                getattr(
+                    self.cfg,
+                    "right_leg_joint_names",
+                    [
+                        "J_hip_r_roll",
+                        "J_hip_r_pitch",
+                        "J_hip_r_yaw",
+                        "J_knee_r_pitch",
+                        "J_ankle_r_pitch",
+                        "J_ankle_r_roll",
+                    ],
+                )
+            ),
             preserve_order=True,
         )
         self.ankle_joint_ids, _ = self.robot.find_joints(
-            name_keys=["J_ankle_l_pitch", "J_ankle_r_pitch", "J_ankle_l_roll", "J_ankle_r_roll"], preserve_order=True
+            name_keys=list(
+                getattr(
+                    self.cfg,
+                    "ankle_joint_names",
+                    ["J_ankle_l_pitch", "J_ankle_r_pitch", "J_ankle_l_roll", "J_ankle_r_roll"],
+                )
+            ),
+            preserve_order=True,
         )
 
         self.obs_scales = self.cfg.normalization.obs_scales
@@ -442,8 +466,36 @@ class T4LocoEnv(VecEnv):
         self._sparse_command_active = torch.zeros(self.num_envs, dtype=torch.bool, device=self.device)
         self.reset_reason_masks: dict[str, torch.Tensor] = {}
 
-        self.amp_builder = T4AmpFeatureBuilder(self.robot, self.device)
+        if self.enable_amp:
+            names = tuple(self.policy_joint_names)
+            if names == T4_JOINT_NAMES:
+                self.amp_builder = T4AmpFeatureBuilder(self.robot, self.device)
+            else:
+                from legged_lab.assets.unitree_g1.constants import G1_29DOF_JOINT_NAMES
+                from legged_lab.envs.g1.amp_features import G1AmpFeatureBuilder
+
+                if names != G1_29DOF_JOINT_NAMES:
+                    raise RuntimeError(
+                        f"AMP is enabled for joint order {names} but no AMP feature builder is registered"
+                    )
+                self.amp_builder = G1AmpFeatureBuilder(self.robot, self.device)
+        else:
+            self.amp_builder = None
         self.init_obs_buffer()
+
+    def _proprio_field_slice(self, field: str) -> tuple[int, int]:
+        if self.num_actions == NUM_T4_JOINTS:
+            return proprio_field_slice(field)
+        n = self.num_actions
+        layout = {
+            "base_ang_vel": (0, 3),
+            "projected_gravity": (3, 6),
+            "velocity_command": (6, 9),
+            "joint_pos": (9, 9 + n),
+            "joint_vel": (9 + n, 9 + 2 * n),
+            "previous_action": (9 + 2 * n, 9 + 3 * n),
+        }
+        return layout[field]
 
     def init_obs_buffer(self):
         if self.add_noise:
@@ -456,7 +508,7 @@ class T4LocoEnv(VecEnv):
                 ("joint_pos", noise_scales.joint_pos * self.obs_scales.joint_pos),
                 ("joint_vel", noise_scales.joint_vel * self.obs_scales.joint_vel),
             ):
-                start, end = proprio_field_slice(field)
+                start, end = self._proprio_field_slice(field)
                 noise_vec[start:end] = scale
             self.noise_scale_vec = noise_vec
 
@@ -505,9 +557,14 @@ class T4LocoEnv(VecEnv):
             ],
             dim=-1,
         )
-        if current_actor_obs.shape[-1] != PROPRIO_FRAME_DIM:
+        expected_proprio = 9 + 3 * self.num_actions + 6
+        if current_actor_obs.shape[-1] != expected_proprio:
             raise RuntimeError(
-                f"proprio width {current_actor_obs.shape[-1]} does not match schema width {PROPRIO_FRAME_DIM}"
+                f"proprio width {current_actor_obs.shape[-1]} does not match expected {expected_proprio}"
+            )
+        if self.num_actions == NUM_T4_JOINTS and expected_proprio != PROPRIO_FRAME_DIM:
+            raise RuntimeError(
+                f"T4 proprio width {expected_proprio} does not match schema width {PROPRIO_FRAME_DIM}"
             )
         current_critic_obs = torch.cat(
             [current_actor_obs, root_lin_vel * self.obs_scales.lin_vel, feet_contact], dim=-1
@@ -757,7 +814,9 @@ class T4LocoEnv(VecEnv):
         return actor_obs, self.extras
 
     def get_amp_obs_for_expert_trans(self):
-        """66D AMP state built by the shared feature builder."""
+        """AMP state built by the robot-specific feature builder (T4 66D / G1 70D)."""
+        if self.amp_builder is None:
+            raise RuntimeError("AMP is disabled for this env")
         return self.amp_builder.compute()
 
     def _depth_camera_sensor(self):
@@ -1004,6 +1063,15 @@ class T4LocoEnv(VecEnv):
                     soft_terrain=False,
                 )
             )
+        clearance = getattr(self.cfg, "collapse_reset_pelvis_above_feet_m", None)
+        if clearance is not None and self.feet_body_ids:
+            foot_z_all = self.robot.data.body_pos_w[:, self.feet_body_ids, 2]
+            foot_z = foot_z_all.min(dim=1).values
+            collapsed = collapsed_pelvis_above_feet_mask(
+                self.robot.data.root_pos_w[:, 2], foot_z, float(clearance)
+            )
+            reset_buf = reset_buf | collapsed
+            reasons["collapsed"] = collapsed
         self.reset_reason_masks = reasons
         return reset_buf, time_out_buf
 

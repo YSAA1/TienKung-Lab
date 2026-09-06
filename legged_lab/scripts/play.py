@@ -67,6 +67,11 @@ parser.add_argument(
 parser.add_argument("--record", type=str, default=None, help="Write an MP4 and exit instead of looping the GUI.")
 parser.add_argument("--duration", type=float, default=12.0, help="Recorded seconds when --record is set.")
 parser.add_argument(
+    "--random_actions",
+    action="store_true",
+    help="MDP probe: ignore the loaded policy and send U(-1,1) actions (still needs a checkpoint to build the env).",
+)
+parser.add_argument(
     "--cam_eye",
     type=str,
     default="-3.4,-2.6,2.4",
@@ -447,6 +452,14 @@ def _record_diagnostic_snapshot(env, step_idx: int) -> dict:
             dim=1,
         )[0][0]
     reasons = getattr(env, "reset_reason_masks", None) or {}
+    if reset:
+        feet_z = env.terminal_feet_pos_w[0, :, 2]
+    else:
+        feet_z = env.robot.data.body_pos_w[0, env.feet_body_ids, 2]
+    min_foot_z = float(feet_z.min().item())
+    pelvis_z = float(root_pos[2].item())
+    clearance = pelvis_z - min_foot_z
+    threshold = getattr(env.cfg, "collapse_reset_pelvis_above_feet_m", None)
     return {
         "step": step_idx,
         "reset": reset,
@@ -455,6 +468,9 @@ def _record_diagnostic_snapshot(env, step_idx: int) -> dict:
         "root_lin_vel_w_mps": [float(value) for value in root_vel.detach().cpu().tolist()],
         "root_accel_mps2": float(accel.item()),
         "tilt_rad": float(tilt.item()),
+        "min_foot_z_m": min_foot_z,
+        "pelvis_clearance_m": clearance,
+        "collapsed_gate": None if threshold is None else bool(clearance < float(threshold)),
         "contact_force_n": {
             name: float(value)
             for name, value in zip(
@@ -516,9 +532,12 @@ def _record_play_video(
 
     for step_idx in range(n_steps):
         with torch.inference_mode():
-            actions = policy(obs)
+            if args_cli.random_actions:
+                actions = torch.empty(env.num_envs, env.num_actions, device=env.device).uniform_(-1.0, 1.0)
+            else:
+                actions = policy(obs)
             obs, _, dones, _ = env.step(actions)
-            if policy_module is not None:
+            if policy_module is not None and not args_cli.random_actions:
                 policy_module.reset(dones)
         root = robot.data.root_pos_w[0]
         diagnostic_snapshot = _record_diagnostic_snapshot(env, step_idx)

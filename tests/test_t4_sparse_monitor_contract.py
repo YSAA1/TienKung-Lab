@@ -81,9 +81,13 @@ def test_tensorboard_exposes_per_terrain_and_sparse_band_outcomes():
     assert "accel_for_gate" in source
     assert "lightlp_sparse_promotion_guard(" in source
     lightlp_reset = source.split("def _check_reset_lightlp", 1)[1].split("def reset(", 1)[0]
+    assert "foot_z_all.min(dim=1).values" in lightlp_reset
+    assert "foot_z_all.mean(dim=1)" not in lightlp_reset
+    assert "cold_start_max_terrain_level" not in source
     assert "self.last_root_accel_mps2.copy_(accel)" in lightlp_reset
     assert "accel_mps2=accel_for_gate" in lightlp_reset
     assert "accel_mps2=accel," not in lightlp_reset
+    assert "collapsed_pelvis_above_feet_mask(" in lightlp_reset
     terrain_fn = source.split("def update_terrain_levels", 1)[1]
     before_stage_e_sparse = terrain_fn.split("if not self.use_lightlp_terminations:", 1)[0]
     assert "lightlp_sparse_promotion_guard(" in before_stage_e_sparse
