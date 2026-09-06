@@ -100,6 +100,7 @@ from legged_lab.terrains.stepping_stone_layout import (
     T4_STONE_WIDTH_RANGE,
     foot_scan_local_offsets,
 )
+from legged_lab.utils.action_scale import effort_scaled_action_scale
 from legged_lab.utils.env_utils.scene import SceneCfg, rtx_render_due, sensor_is_warp_raycast
 from rsl_rl.env import VecEnv
 
@@ -234,6 +235,11 @@ class T4LocoEnv(VecEnv):
             raise RuntimeError(f"expected {NUM_T4_JOINTS} T4 joints, articulation reports {self.robot.num_joints}")
 
         self.action_scale = self.cfg.robot.action_scale
+        effort_fraction = getattr(self.cfg.robot, "action_scale_effort_fraction", None)
+        if effort_fraction is not None:
+            self.action_scale = effort_scaled_action_scale(
+                self.robot.data.default_joint_stiffness, self.robot.data.joint_effort_limits, float(effort_fraction)
+            )
         self.action_buffer = DelayBuffer(
             self.cfg.domain_rand.action_delay.params["max_delay"], self.num_envs, device=self.device
         )
@@ -935,8 +941,13 @@ class T4LocoEnv(VecEnv):
         reward_buf = self.reward_manager.compute(self.step_dt)
         self.reset_env_ids = self.reset_buf.nonzero(as_tuple=False).flatten()
         self.prev_step_root_pos_w.copy_(self.robot.data.root_pos_w)
+        # step() auto-resets. AMP transitions must end at the physical terminal
+        # state, while the next policy action must see the new episode state.
+        self.extras.pop("terminal_amp_obs", None)
         if len(self.reset_env_ids) > 0:
             env_ids = self.reset_env_ids
+            if self.enable_amp:
+                self.extras["terminal_amp_obs"] = self.get_amp_obs_for_expert_trans()[env_ids].clone()
             self.terminal_root_pos_w[env_ids] = self.robot.data.root_pos_w[env_ids]
             self.terminal_root_quat_w[env_ids] = self.robot.data.root_quat_w[env_ids]
             self.terminal_root_lin_vel_w[env_ids] = self.robot.data.root_lin_vel_w[env_ids]
@@ -1481,6 +1492,10 @@ class T4LocoEnv(VecEnv):
             ),
             gentle_yaw_range=getattr(self.cfg, "sparse_command_gentle_ang_vel_z", SPARSE_FOOTHOLD_GENTLE_YAW_RANGE),
         )
+        min_speed_scale = float(getattr(self.cfg, "sparse_command_min_speed_scale", 1.0))
+        if not 0.0 < min_speed_scale <= 1.0:
+            raise ValueError("sparse command minimum speed scale must be in (0, 1]")
+        vx = vx * (min_speed_scale + (1.0 - min_speed_scale) * self.terrain_difficulty()[chosen])
         self._sparse_command[chosen, 0] = vx
         self._sparse_command[chosen, 1] = vy
         self._sparse_command[chosen, 2] = wz

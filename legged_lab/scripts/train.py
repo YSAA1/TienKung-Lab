@@ -121,5 +121,19 @@ def train():
 
 
 if __name__ == "__main__":
-    train()
-    simulation_app.close()
+    exit_code = 0
+    try:
+        train()
+    except BaseException:
+        import traceback
+
+        traceback.print_exc()
+        exit_code = 1
+    finally:
+        import threading
+
+        # Isaac shutdown can hang after the final checkpoint. Bound teardown so
+        # the tmux supervisor can release GPUs and run the behavior evaluations.
+        threading.Timer(30.0, os._exit, args=(exit_code,)).start()
+        simulation_app.close()
+        os._exit(exit_code)

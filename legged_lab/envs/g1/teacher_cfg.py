@@ -158,6 +158,15 @@ class G1LocoTeacherEnvCfg(T4LocoSparseTeacherEnvCfg):
     def __post_init__(self):
         super().__post_init__()
         self.scene.robot = G1_29DOF_CFG
+        # A unit action has the same nominal PD torque fraction on each motor.
+        # Keep gains/limits from the plant; do not copy one radian scale across it.
+        self.robot.action_scale_effort_fraction = 0.25
+        # Start from attainable terrain and revisit easy rows. Normal performance
+        # promotion still reaches every row; only random forced jumps are capped.
+        self.scene.max_init_terrain_level = 0
+        self.random_level_reset_max_level = 3
+        # Level 0: vx 0.3-1.0; hardest row: the original vx 0.6-2.0 contract.
+        self.sparse_command_min_speed_scale = 0.5
         self.scene.height_scanner.prim_body_name = "torso_link"
         self.scene.foot_scanner.body_names = ("left_ankle_roll_link", "right_ankle_roll_link")
         # Keep LightLP task resets (timeout/oob/pit/accel/63°/torso contact).
@@ -179,7 +188,7 @@ class G1LocoTeacherEnvCfg(T4LocoSparseTeacherEnvCfg):
 @configclass
 class G1LocoTeacherAgentCfg(T4LocoSparseTeacherAgentCfg):
     experiment_name = "g1_loco_teacher_sparse"
-    run_name = "g1_sparse_teacher_g1term"
+    run_name = "g1_sparse_teacher_portable_v1"
     neptune_project = "g1_loco_teacher_sparse"
     wandb_project = "g1_loco_teacher_sparse"
     runner_class_name = "AmpOnPolicyRunner"

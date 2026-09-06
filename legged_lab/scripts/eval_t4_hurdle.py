@@ -86,10 +86,7 @@ import torch  # noqa: E402
 from isaaclab_tasks.utils import get_checkpoint_path  # noqa: E402
 from rsl_rl.runners import AmpOnPolicyRunner, OnPolicyRunner  # noqa: E402
 
-from legged_lab.assets.t4.constants import T4_JOINT_NAMES  # noqa: E402
 from legged_lab.assets.t4.schemas import (  # noqa: E402
-    PROPRIO_FRAME_DIM,
-    PROPRIO_HISTORY_LENGTH,
     TEACHER_SCAN_DIM,
     TEACHER_SCAN_INVALID_VALUE,
 )
@@ -186,7 +183,7 @@ def evaluate() -> dict:
 
     obs, _ = env.get_observations()
     scan_history_length = int(getattr(env, "teacher_scan_history_length", 1))
-    scan_start = PROPRIO_FRAME_DIM * PROPRIO_HISTORY_LENGTH
+    scan_start = env.actor_obs_buffer.buffer.shape[-1] * env.cfg.robot.actor_obs_history_length
     scan_end = scan_start + TEACHER_SCAN_DIM * scan_history_length
     if obs.shape[-1] < scan_end:
         raise RuntimeError(f"actor observation width {obs.shape[-1]} is smaller than scan end {scan_end}")
@@ -264,13 +261,11 @@ def evaluate() -> dict:
     counterfactual_action_samples = 0
     action_delta_sum = 0.0
     action_delta_samples = 0
-    diagnostic_joint_names = (
-        "J_hip_l_pitch",
-        "J_knee_l_pitch",
-        "J_hip_r_pitch",
-        "J_knee_r_pitch",
-    )
-    diagnostic_joint_indices = [T4_JOINT_NAMES.index(name) for name in diagnostic_joint_names]
+    diagnostic_joint_names = [
+        env.robot.joint_names[index]
+        for index in (env.left_leg_ids[1], env.left_leg_ids[3], env.right_leg_ids[1], env.right_leg_ids[3])
+    ]
+    diagnostic_joint_indices = [env.policy_joint_names.index(name) for name in diagnostic_joint_names]
     joint_action_abs_sum = dict.fromkeys(diagnostic_joint_names, 0.0)
     joint_action_abs_max = dict.fromkeys(diagnostic_joint_names, 0.0)
     joint_action_samples = 0

@@ -80,6 +80,8 @@ class RobotCfg:
     actor_obs_history_length: int = 10
     critic_obs_history_length: int = 10
     action_scale: float = 0.25
+    # Optional nominal PD torque fraction per unit action; None keeps angle scaling.
+    action_scale_effort_fraction: float | None = None
     terminate_contacts_body_names: list = []
     feet_body_names: list = []
 

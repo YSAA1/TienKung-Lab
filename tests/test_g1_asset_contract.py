@@ -35,7 +35,7 @@ def test_g1_teacher_is_sparse_obstacle_task() -> None:
     assert "bad_orientation_limit_rad" not in text
     assert 'body_names=["(?!.*ankle.*).*"]' in text
     assert "cold_start_max_terrain_level" not in text
-    assert "self.scene.max_init_terrain_level = 0" not in text
+    assert "self.scene.max_init_terrain_level = 0" in text
     assert "self.random_level_reset_fraction = 0.0" not in text
     assert "self.domain_rand.action_delay.enable = False" in text
     assert "randomize_actuator_gains" not in text
@@ -51,9 +51,12 @@ def test_g1_teacher_is_sparse_obstacle_task() -> None:
 
 
 def test_g1_teacher_inherits_t4_sparse_curriculum() -> None:
-    """G1 must not override the T4 sparse cold-start recipe (S6/S11 style)."""
+    """G1 keeps the mixed task but starts at an attainable command/terrain level."""
     text = (ROOT / "legged_lab/envs/g1/teacher_cfg.py").read_text(encoding="utf-8")
-    assert "self.scene.max_init_terrain_level" not in text
+    assert "self.scene.max_init_terrain_level = 0" in text
+    assert "self.random_level_reset_max_level = 3" in text
+    assert "self.sparse_command_min_speed_scale = 0.5" in text
+    assert "self.robot.action_scale_effort_fraction = 0.25" in text
     assert "self.random_level_reset_fraction" not in text
     assert "self.commands.ranges.lin_vel_x" not in text
     t4 = (ROOT / "legged_lab/envs/t4/teacher_cfg.py").read_text(encoding="utf-8")
@@ -77,7 +80,7 @@ def test_g1_teacher_uses_lafan_amp() -> None:
     assert "self.enable_amp = True" in text
     assert "self.amp_terrain_schedule.enable = True" in text
     assert "amp_reward_coef = 0.3" in text
-    assert "run_name = \"g1_sparse_teacher_g1term\"" in text
+    assert "run_name = \"g1_sparse_teacher_portable_v1\"" in text
     assert "self.collapse_reset_pelvis_above_feet_m = 0.20" in text
     assert "cold_start_max_terrain_level" not in text
     assert "g1_amp_expert_files" in text

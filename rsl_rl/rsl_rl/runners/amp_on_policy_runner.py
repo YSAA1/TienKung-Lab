@@ -272,8 +272,12 @@ class AmpOnPolicyRunner:
                     # Account for terminal state transitions
                     next_amp_obs_with_term = torch.clone(next_amp_obs)
                     reset_env_ids = self.env.reset_env_ids
-                    terminal_amp_states = self.env.get_amp_obs_for_expert_trans()[reset_env_ids]
-                    next_amp_obs_with_term[reset_env_ids] = terminal_amp_states
+                    if len(reset_env_ids) > 0:
+                        terminal_amp_states = infos.get("terminal_amp_obs")
+                        if terminal_amp_states is None:
+                            # Legacy envs do not yet export pre-reset AMP snapshots.
+                            terminal_amp_states = self.env.get_amp_obs_for_expert_trans()[reset_env_ids]
+                        next_amp_obs_with_term[reset_env_ids] = terminal_amp_states.to(self.device)
 
                     if self.amp_reward_coef_scale_fn is not None:
                         coef_scale = self.amp_reward_coef_scale_fn().to(self.device)

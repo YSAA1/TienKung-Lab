@@ -258,7 +258,7 @@ def test_play_recording_reads_the_terminal_snapshot_contract():
 def test_terminal_snapshot_includes_impact_diagnostics():
     source = ENV.read_text()
 
-    assert 'self.diagnostic_contact_body_names = ("Trunk", "Shank_Left", "Shank_Right")' in source
+    assert 'getattr(self.cfg, "diagnostic_contact_body_names", ("Trunk", "Shank_Left", "Shank_Right"))' in source
     assert "self.terminal_root_lin_vel_w[env_ids]" in source
     assert "self.terminal_root_accel_mps2[env_ids]" in source
     assert "self.terminal_tilt_rad[env_ids]" in source
