@@ -49,6 +49,7 @@ extrinsic = importlib.util.module_from_spec(_extrinsic_spec)
 _extrinsic_spec.loader.exec_module(extrinsic)
 
 ENV_PY = ROOT / "legged_lab" / "envs" / "t4" / "depth_student_env.py"
+RUNTIME_PY = ROOT / "legged_lab/locomotion/depth_env.py"
 CFG_PY = ROOT / "legged_lab" / "envs" / "t4" / "depth_student_cfg.py"
 INIT_PY = ROOT / "legged_lab" / "envs" / "__init__.py"
 TEACHER_PY = ROOT / "legged_lab" / "locomotion" / "teacher_cfg.py"
@@ -90,7 +91,7 @@ def _student_obs(n=3):
 
 
 def test_sparse_student_env_inherits_s12_teacher_mdp():
-    env_src = ENV_PY.read_text(encoding="utf-8")
+    env_src = ENV_PY.read_text(encoding="utf-8") + RUNTIME_PY.read_text(encoding="utf-8")
     cfg_src = CFG_PY.read_text(encoding="utf-8")
     sparse_alg = cfg_src.split("class T4SparseDepthStudentDaggerAlgCfg", 1)[1].split(
         "class T4SparseDepthStudentFinalMainAlgCfg", 1
@@ -102,9 +103,9 @@ def test_sparse_student_env_inherits_s12_teacher_mdp():
         "class T4SparseDepthStudentReprFirstAlgCfg", 1
     )[0]
     assert "class T4LocoSparseDepthStudentEnvCfg(T4LocoSparseTeacherEnvCfg)" in env_src
-    assert "class T4LocoSparseDepthDistillEnv(T4LocoDepthDistillEnv)" in env_src
-    assert "TEACHER_SPARSE_ACTOR_OBS_DIM" in env_src
-    assert "STUDENT_ACTOR_OBS_DIM" in env_src
+    assert "class LightLPDepthDistillationEnv(DepthDistillationEnv)" in env_src
+    assert "self.observation_layout.actor_dim" in env_src
+    assert "self.student_observation_dim" in env_src
     assert "student_depth_noise" in env_src
     assert 'class_name: str = "DepthStudentTeacherRecurrent"' in cfg_src
     assert 'rnn_type: str = "gru"' in cfg_src
@@ -797,7 +798,7 @@ def test_depth_refresh_plan_keeps_reset_and_skips_idle_steps():
 
 def test_student_cfg_exposes_nan_guard_camera_period_and_noise_overrides():
     cfg_src = CFG_PY.read_text(encoding="utf-8")
-    env_src = ENV_PY.read_text(encoding="utf-8")
+    env_src = ENV_PY.read_text(encoding="utf-8") + RUNTIME_PY.read_text(encoding="utf-8")
     assert "nan_guard: bool = True" in cfg_src
     assert "max_grad_norm: float = 1.0" in cfg_src
     sparse_env = env_src.split("class T4LocoSparseDepthStudentEnvCfg", 1)[1].split(
@@ -842,7 +843,7 @@ def test_student_cfg_exposes_nan_guard_camera_period_and_noise_overrides():
 
 def test_residual_ft_recipe_is_not_plant_or_d3():
     cfg_src = CFG_PY.read_text(encoding="utf-8")
-    env_src = ENV_PY.read_text(encoding="utf-8")
+    env_src = ENV_PY.read_text(encoding="utf-8") + RUNTIME_PY.read_text(encoding="utf-8")
     ft_src = FT_PY.read_text(encoding="utf-8")
     residual_alg = cfg_src.split("class T4SparseDepthStudentResidualFtAlgCfg", 1)[1].split(
         "class T4SparseDepthStudentResidualFtAgentCfg", 1
@@ -911,7 +912,7 @@ def test_residual_ft_recipe_is_not_plant_or_d3():
 
 def test_plant_ft_recipe_is_delay_actuator_not_manufacturing():
     cfg_src = CFG_PY.read_text(encoding="utf-8")
-    env_src = ENV_PY.read_text(encoding="utf-8")
+    env_src = ENV_PY.read_text(encoding="utf-8") + RUNTIME_PY.read_text(encoding="utf-8")
     ft_src = FT_PY.read_text(encoding="utf-8")
     plant_alg = cfg_src.split("class T4SparseDepthStudentPlantFtAlgCfg", 1)[1].split(
         "class T4SparseDepthStudentPlantFtAgentCfg", 1
@@ -951,7 +952,7 @@ def test_plant_ft_recipe_is_delay_actuator_not_manufacturing():
 
 
 def test_targeted_ft_env_isolated_domain_randomization_contract():
-    env_src = ENV_PY.read_text(encoding="utf-8")
+    env_src = ENV_PY.read_text(encoding="utf-8") + RUNTIME_PY.read_text(encoding="utf-8")
     events = env_src.split("class T4TargetedFtEventCfg", 1)[1].split(
         "class T4LocoSparseDepthStudentTargetedFtEnvCfg", 1
     )[0]
@@ -1018,7 +1019,7 @@ def test_scene_cfg_preserves_positive_depth_camera_update_period():
 
 def test_t4_headless_step_schedules_rtx_render_before_scene_update():
     t4_src = T4_ENV_PY.read_text(encoding="utf-8")
-    env_src = ENV_PY.read_text(encoding="utf-8")
+    env_src = ENV_PY.read_text(encoding="utf-8") + RUNTIME_PY.read_text(encoding="utf-8")
     play_src = PLAY_PY.read_text(encoding="utf-8")
     eval_src = EVAL_PY.read_text(encoding="utf-8")
     probe_src = PROBE_PY.read_text(encoding="utf-8")
@@ -1068,7 +1069,7 @@ def test_camera_extrinsic_jitter_stays_inside_lightlp_table_ii():
 
 def test_repr_first_is_default_train_recipe_and_keeps_final_main():
     cfg_src = CFG_PY.read_text(encoding="utf-8")
-    env_src = ENV_PY.read_text(encoding="utf-8")
+    env_src = ENV_PY.read_text(encoding="utf-8") + RUNTIME_PY.read_text(encoding="utf-8")
     train_src = TRAIN_PY.read_text(encoding="utf-8")
     repr_alg = cfg_src.split("class T4SparseDepthStudentReprFirstAlgCfg", 1)[1].split(
         "class T4SparseDepthStudentReprFirstAgentCfg", 1

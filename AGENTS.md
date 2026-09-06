@@ -1,6 +1,6 @@
 # AGENTS.md
 
-本仓库是 TienKung-Lab 上的 T4 27DoF 工作区。先读 `docs/README.md`，再读
+本仓库在 TienKung-Lab 上维护 T4 27DoF 与 Unitree G1 29DoF 运动训练。先读 `docs/README.md`，再读
 `.harness/work_index.md`。不要把 `docs/archive/`、`docs/research/` 或
 `.harness/state.md` 的旧段落当执行计划。
 
@@ -19,8 +19,10 @@
 ## Architecture
 
 - `legged_lab/` - IsaacLab locomotion 环境、资产、脚本和 MDP 代码。
+- `legged_lab/locomotion/` - 共享 AMP/LightLP 教师、深度学生运行时、观测、镜像与课程算法。机器人通过显式 `LocomotionRobotSpec` 接入，不继承另一机器人的任务实现；接入方法见 `docs/runbooks/robot-locomotion-adapter.md`。
+- `legged_lab/config.py` - 共享场景/命令/事件配置字段，导入不触发机器人任务注册。
 - `legged_lab/assets/t4/` - T4 27DoF 资产；`constants.py::T4_JOINT_NAMES` 是唯一关节顺序真值。
-- `legged_lab/envs/t4/` - T4 任务包。已注册 `t4_loco_teacher`、`t4_loco_teacher_sparse`、`t4_loco_sparse_depth_student`、`t4_vault_mimic`、`t4_vault_skill`。G1 越障老师任务 `g1_loco_teacher` 复用 `T4LocoEnv` + LightLP 稀疏地形 + LAFAN1 走跑 AMP，不是 walk。Stage E 深度学生仍走独立 train 脚本，不改任务名。
+- `legged_lab/envs/t4/` - T4 任务配方、相机标定及兼容入口。已注册 `t4_loco_teacher`、`t4_loco_teacher_sparse`、`t4_loco_sparse_depth_student`、`t4_vault_mimic`、`t4_vault_skill`。`envs/g1/teacher_cfg.py` 独立组合共享 `LocomotionEnv`、LightLP 与 LAFAN1 AMP，任务名 `g1_loco_teacher`。Stage E 深度学生仍走独立 train 脚本，不改任务名。
 - `legged_lab/envs/t4/datasets/motion_source/` - 原始 T4 CSV，schema 为 `root_xyz(3) + root_quat_xyzw(4) + q27`。
 - `legged_lab/envs/g1/datasets/motion_source/` - LAFAN1 G1 走跑 CSV（`lvhaidong/LAFAN1_Retargeting_Dataset` 镜像），`root_xyz + quat_xyzw + q29`。专家由 `generate_g1_amp_expert.py` 写成 70D txt。
 - `legged_lab/envs/t4/datasets/motion_visualization/` - 转换后的 playback 中间数据，不是最终 AMP expert。
@@ -33,6 +35,7 @@
 
 - 代码改动后先跑最窄测试；T4 资产/motion 合同优先跑 `python -m pytest tests/test_t4_asset_migration.py`。
 - G1 资产 / LAFAN AMP 合同跑 `python -m pytest tests/test_g1_asset_contract.py`。
+- 共享算法边界与不同关节数接入跑 `python -m pytest tests/test_robot_neutral_locomotion.py tests/test_robot_neutral_depth_env.py`（需要 torch）。
 - T4 观测合同改动跑 `python -m pytest tests/test_t4_observation_contracts.py`。
 - 稀疏奖励 / 终止 / 地形列映射 / S12 命令与边框合同改动跑 `python -m pytest tests/test_t4_sparse_reward_contracts.py tests/test_t4_sparse_monitor_contract.py tests/test_t4_sparse_command_contract.py tests/test_t4_terrain_column_map.py tests/test_t4_stepping_stone_contracts.py tests/test_distributed_log_reduce.py`。
 - 梅花桩 GRU 学生合同改动跑 `python -m pytest tests/test_t4_sparse_depth_student_gru_contract.py`（需要 torch）。

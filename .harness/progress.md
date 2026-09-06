@@ -8,7 +8,14 @@
 - 恢复随机重置 0.10/None/None，原 AMP 曲线与稀疏清零。通用算法迁入 `legged_lab/locomotion`，T4/G1 独立 spec 和配方，无跨机器人继承。
 - 实际 T4/G1 probe 均采样到 0～9，240 个 finite step，镜像与 reset 前 AMP 快照通过。Actor/Critic/AMP 分别 1937/2016/66 和 1997/2076/70。
 - 新机器人接入检查和 21 关节、不同命名的替身通过；核心回归149项、相邻回归90项通过（两组有重叠）。独立审查旧新镜像逐元素一致。
-- 实际新训练待终审与源码提交后立即启动。后续学生/运动跟踪整理与行为验收仍未完成。
+- `g1_lightlp_amp_full_levels_v2` 已在代码 `4fd6ec2` 上启动，GPU 1、3；训练证据在 `artifacts/portability/v2/`。后续本地整理不覆盖正在运行的远端源码。
+
+## 2026-09-07：学生共享运行时与导入边界
+
+- 深度处理与观测组装移入 `locomotion/depth_env.py`；T4 相机/配方留在机器人目录。27/29/21 关节的 FF 与 GRU 拼接及特权隔离测试通过。
+- 独立 reviewer 逐方法检查与 cold verifier 的 48 次新旧逐元素对照一致。真实 4-env/24-step RTX probe 保持 3168/1937/96/27，处理后深度去预热后 11 次变化；不代表新机器人的学生能力。
+- 真实冷导入复现了共享配置反向触发任务注册的循环。共同配置原样移至 `legged_lab/config.py`，保留旧导出；公共环境与教师配置首次独立导入均通过，且不加载任务注册包。
+- 最终 RTX/退出验证通过，tmux `neutral-depth-final` 已结束，GPU 0 回到 47 MiB。Kit 关闭在本机镜像会卡住，探针沿用现有 portability probe 的 30 秒退出兜底；主验证失败码保留。证据在 `artifacts/portability/depth/`。独立结构和冷验证均通过。
 
 ## 2026-09-07：G1 通用性修复，启动有预算的 portable_v1
 

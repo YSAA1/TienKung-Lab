@@ -31,10 +31,8 @@ simulation_app = app_launcher.app
 
 from isaaclab.utils.io import dump_yaml  # noqa: E402
 from legged_lab.envs.t4.depth_student_cfg import T4DepthStudentFtAgentCfg  # noqa: E402
-from legged_lab.envs.t4.depth_student_env import (  # noqa: E402
-    T4LocoDepthDistillEnv,
-    T4LocoDepthStudentFtEnvCfg,
-)
+from legged_lab.envs.t4.depth_student_env import T4LocoDepthStudentFtEnvCfg  # noqa: E402
+from legged_lab.locomotion.depth_env import DepthDistillationEnv  # noqa: E402
 
 patch_missing_physx_material_attributes()
 torch.backends.cuda.matmul.allow_tf32 = True
@@ -50,7 +48,7 @@ def train():
     env_cfg.device = agent_cfg.device
     env_cfg.sim.device = agent_cfg.device
 
-    env = T4LocoDepthDistillEnv(env_cfg, args_cli.headless)
+    env = DepthDistillationEnv(env_cfg, args_cli.headless)
     log_root = Path("logs") / agent_cfg.experiment_name
     log_dir = log_root / datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
     if agent_cfg.run_name:

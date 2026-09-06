@@ -58,10 +58,8 @@ if not getattr(args_cli, "device", None):
 app_launcher = AppLauncher(args_cli)
 simulation_app = app_launcher.app
 
-from legged_lab.envs.t4.depth_student_env import (  # noqa: E402
-    T4LocoSparseDepthDistillEnv,
-    T4LocoSparseDepthStudentEnvCfg,
-)
+from legged_lab.envs.t4.depth_student_env import T4LocoSparseDepthStudentEnvCfg  # noqa: E402
+from legged_lab.locomotion.depth_env import LightLPDepthDistillationEnv  # noqa: E402
 from legged_lab.utils.env_utils.scene import rtx_render_interval_physics  # noqa: E402
 
 patch_missing_physx_material_attributes()
@@ -91,11 +89,19 @@ def main() -> dict:
     # 1 x num_envs: curriculum proportions break, and collection would not
     # match the 1024-env training terrain.
 
-    env = T4LocoSparseDepthDistillEnv(env_cfg, headless=True)
+    env = LightLPDepthDistillationEnv(env_cfg, headless=True)
     env.schedule_rtx_render = not bool(args_cli.skip_rtx)
     period = env._depth_camera_update_period()
     interval = rtx_render_interval_physics(period, env.physics_dt)
-    env.get_observations()
+    student_obs, initial_extras = env.get_observations()
+    teacher_obs = initial_extras["observations"]["teacher"]
+    observation_dims = {
+        "student": int(student_obs.shape[-1]),
+        "teacher": int(teacher_obs.shape[-1]),
+        "proprio": int(env.observation_layout.proprio_dim),
+        "actions": int(env.num_actions),
+    }
+    assert observation_dims == {"student": 3168, "teacher": 1937, "proprio": 96, "actions": 27}
 
     records = []
     step_times = []
@@ -109,6 +115,7 @@ def main() -> dict:
         step_times.append(time.perf_counter() - t0)
         raw = env.depth_camera.data.output["distance_to_image_plane"]
         stats = _frame_stats(raw)
+        policy_depth_stats = _frame_stats(env.depth_history[:, -1])
         last_rtx = int(env.last_rtx_sim_step)
         records.append(
             {
@@ -117,6 +124,7 @@ def main() -> dict:
                 "last_rtx_sim_step": last_rtx,
                 "rendered": last_rtx != prev_last_rtx,
                 "depth_update_counter": int(env.depth_update_counter),
+                "policy_depth": policy_depth_stats,
                 **stats,
             }
         )
@@ -135,6 +143,10 @@ def main() -> dict:
         for i, row in enumerate(records)
         if i > 0 and i >= warmup and row["rendered"]
     )
+    policy_depth_changes = sum(
+        records[i]["policy_depth"]["checksum"] != records[i - 1]["policy_depth"]["checksum"]
+        for i in range(max(1, warmup), len(records))
+    )
     finite_ok = all(row["finite_frac"] > 0.25 for row in records[warmup:]) if records[warmup:] else False
     expected_render_steps = [step for step in range(int(args_cli.steps)) if (step + 1) * env.cfg.sim.decimation % interval == 0]
     actual_render_steps = [row["control_step"] for row in records if row["rendered"]]
@@ -152,6 +164,7 @@ def main() -> dict:
             and schedule_ok
             and idle_ok
             and render_change_ok
+            and policy_depth_changes > 0
             and bool(env._has_rtx_sensors())
             and not bool(env._has_warp_depth_camera())
         )
@@ -169,11 +182,15 @@ def main() -> dict:
 
     result = {
         "ok": bool(ok),
+        "time": time.time(),
+        "runtime_class": f"{type(env).__module__}.{type(env).__name__}",
         "reason": reason,
         "backend": "tiled_rtx",
         "skip_rtx": bool(args_cli.skip_rtx),
         "num_envs": int(args_cli.num_envs),
         "steps": int(args_cli.steps),
+        "observation_dims": observation_dims,
+        "policy_depth_changes": policy_depth_changes,
         "update_period": period,
         "physics_dt": float(env.physics_dt),
         "render_interval_physics": interval,
@@ -202,11 +219,21 @@ def main() -> dict:
 
 
 if __name__ == "__main__":
+    import os
+    import threading
+
+    code = 0
     try:
         payload = main()
-        raise SystemExit(0 if payload["ok"] else 1)
+        code = 0 if payload["ok"] else 1
     except BaseException:
         import traceback
 
         traceback.print_exc()
-        raise SystemExit(1)
+        code = 1
+    finally:
+        # Match the existing Isaac portability probe: Kit shutdown can hang
+        # after RTX capture; retain the result/exit code and bound its cleanup.
+        threading.Timer(30.0, os._exit, args=(code,)).start()
+        simulation_app.close()
+        os._exit(code)

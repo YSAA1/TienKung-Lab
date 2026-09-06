@@ -167,7 +167,7 @@ class TienKungEnv(VecEnv):
 
         kinematics = getattr(self.cfg, "kinematics", None)
         if kinematics is None:
-            from legged_lab.envs.base.base_config import KinematicNamesCfg
+            from legged_lab.config import KinematicNamesCfg
 
             kinematics = KinematicNamesCfg()
         self.feet_body_ids, _ = self.robot.find_bodies(

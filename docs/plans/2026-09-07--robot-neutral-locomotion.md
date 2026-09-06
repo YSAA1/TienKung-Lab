@@ -43,3 +43,11 @@ Status: active。用户要求恢复 10% 全等级随机重置、按难度衰减 
 - 训练目录：`/home/nubot/phn_ws/t4_train/TienKung-Lab-g1-portability-20260906/logs/g1_loco_teacher_sparse/2026-09-07_01-35-42_g1_lightlp_amp_full_levels_v2`。tmux `g1-full-levels-v2`；TensorBoard `http://100.100.188.39:8031/#scalars`。
 - 启动证据保存于 iteration 43：最近 20 轮随机重置比例 10.12%，loss 为有限值，`model_0.pt` 已保存。随后在线确认推进至 iteration 138；保存配置是 0.10/None/None、10 行、AMP start/min 均为 0.3。这只证明训练在更新，不证明越障能力。
 - 训练所用远端源码保持冻结。后续学生/运动跟踪代码整理在本地工作树继续；10k 后按训练脚本执行固定评估与连续回放。
+
+## 学生共享运行时已验证
+
+- `locomotion/depth_env.py` 接管 FF 与 LightLP 深度学生观测、历史、延迟、噪声和相机扰动；T4 相机与训练配方保留。27/29/21 关节测试覆盖动态维度和特权隔离。
+- 独立新旧对照：14 个方法 AST 不变，48 次含 clean/noise、裁剪、延迟、重置和等待渲染状态的逐元素对照一致。对应 T4 旧 checkpoint 的观测排列保持不变。
+- 实际独立 RTX 验证：4 env/24 步，3168/1937/96/27；处理深度全有限，去预热后 11 次变化。当前源码清单 214 文件，见 `artifacts/portability/depth/final_source_manifest.json`。探针已退出，GPU 0 释放。
+- 发现并修复首次独立导入的循环注册：共同配置原样迁至 `legged_lab/config.py`，公共环境与教师配置冷导入不加载 `legged_lab.envs`。RED/GREEN JSON、源码清单与 review 记录在 `artifacts/portability/depth/`。
+- 本切片独立审查通过；剩余运动跟踪及全库边界整理继续，正式 G1 训练保持运行。

@@ -34,7 +34,7 @@ from legged_lab.locomotion.schemas import (
     TEACHER_SCAN_HEIGHT_OFFSET, TEACHER_SCAN_OFFSET, TEACHER_SCAN_RESOLUTION,
     TEACHER_SCAN_SIZE, TEACHER_SPARSE_SCAN_HISTORY_LENGTH,
 )
-from legged_lab.envs.base.base_config import (
+from legged_lab.config import (
     ActionDelayCfg,
     BaseSceneCfg,
     CommandRangesCfg,

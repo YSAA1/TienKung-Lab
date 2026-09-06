@@ -32,7 +32,7 @@ from isaaclab_rl.rsl_rl import (  # noqa:F401
 
 import legged_lab.mdp as mdp
 from legged_lab.assets.tienkung2_lite import TIENKUNG2LITE_CFG
-from legged_lab.envs.base.base_config import (
+from legged_lab.config import (
     ActionDelayCfg,
     BaseSceneCfg,
     CommandRangesCfg,
