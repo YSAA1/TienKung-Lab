@@ -34,12 +34,12 @@ Status: active。用户要求恢复 10% 全等级随机重置、按难度衰减 
 - 教师开训审查：独立结构 review 与 cold verification 已通过；记录 `artifacts/portability/teacher_ready_review.json`。
 - 两个实际 Isaac JSON：T4 1937/2016/66、G1 1997/2076/70，240 步接口验证，实际随机采样全 0～9；AMP 原规则。此 probe 为 flat，不是越障能力证明。
 - 149 项核心检查、90 项相邻检查通过；评估入口调整后相关89项通过。旧新镜像逐元素相同。
-- 当前教师配置已具备开训条件；最终提交/远端SHA核验后立即启动 `g1_lightlp_amp_full_levels_v2`，GPU1+3，各2048env，首轮10k。
+- `g1_lightlp_amp_full_levels_v2` 已在最终提交和远端 SHA 核验后启动，GPU 1、3，各 2048 env，首轮 10k。
 - 原始 probe 源码哈希在 `neutral_probe_source.json`；最终训练另立 manifest。全库剩余学生/运动跟踪整理与行为验收继续推进，目标尚未完成。
 
-## v2 ????
+## v2 已启动
 
-- ?????`4fd6ec262dde7e0e3dd83dce73a71e8bb6916d93`???211???????6?????? `artifacts/portability/v2/lineage.json`?
-- ?????`/home/nubot/phn_ws/t4_train/TienKung-Lab-g1-portability-20260906/logs/g1_loco_teacher_sparse/2026-09-07_01-35-42_g1_lightlp_amp_full_levels_v2`?tmux `g1-full-levels-v2`?TensorBoard `http://100.100.188.39:8031/#scalars`?
-- ????? iteration43?????????20?????10.12%????env.yaml?0.10/None/None?10??AMP start/min?0.3?`model_0.pt`??????????????????
-- ?????????????????????????????????????10k??????
+- 训练源码：`4fd6ec262dde7e0e3dd83dce73a71e8bb6916d93`。已逐项核对 211 个代码文件和 6 个 AMP 专家，见 `artifacts/portability/v2/lineage.json`。
+- 训练目录：`/home/nubot/phn_ws/t4_train/TienKung-Lab-g1-portability-20260906/logs/g1_loco_teacher_sparse/2026-09-07_01-35-42_g1_lightlp_amp_full_levels_v2`。tmux `g1-full-levels-v2`；TensorBoard `http://100.100.188.39:8031/#scalars`。
+- 启动证据保存于 iteration 43：最近 20 轮随机重置比例 10.12%，loss 为有限值，`model_0.pt` 已保存。随后在线确认推进至 iteration 138；保存配置是 0.10/None/None、10 行、AMP start/min 均为 0.3。这只证明训练在更新，不证明越障能力。
+- 训练所用远端源码保持冻结。后续学生/运动跟踪代码整理在本地工作树继续；10k 后按训练脚本执行固定评估与连续回放。
