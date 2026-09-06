@@ -1,0 +1,20 @@
+{
+  "source_commit": "4fd6ec262dde7e0e3dd83dce73a71e8bb6916d93",
+  "source_files_verified": 211,
+  "expert_sha256": {
+    "legged_lab/envs/g1/datasets/motion_amp_expert/run2_subject1.txt": "21a8752b1d0145b556cb890385a80e4a6d053e837e091e6edea0b3b74625c2e7",
+    "legged_lab/envs/g1/datasets/motion_amp_expert/walk1_subject1.txt": "936c60f087ec190185eb34fe18124af91ab95d540790fbac55affb8c133998f5",
+    "legged_lab/envs/g1/datasets/motion_amp_expert/walk3_subject1.txt": "eb355152ee5a125a1a018a2166c15f5cf67c8277274776c9bf4c1015a97be3fc",
+    "legged_lab/envs/g1/datasets/motion_amp_expert/walk2_subject1.txt": "444dd2b9c91fc3cc2421833122a880d5b2f6747ae0e286abb0c2a3620c05c6a8",
+    "legged_lab/envs/g1/datasets/motion_amp_expert/run1_subject2.txt": "5c7c9d28fbc14cb88a0aa7f123f3dc1c9200f3a56b3091532226fc1abcb2a064",
+    "legged_lab/envs/g1/datasets/motion_amp_expert/walk4_subject1.txt": "d0ff4bffc340c6fc8c3f41ccb1bdffe1e50a5d801cf9223607f8cb9bc7937104"
+  },
+  "verified_at": 1788716110.8940659,
+  "task": "g1_loco_teacher",
+  "run_name": "g1_lightlp_amp_full_levels_v2",
+  "resume": false,
+  "gpus": [
+    1,
+    3
+  ]
+}
