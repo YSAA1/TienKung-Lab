@@ -10,7 +10,7 @@
 | 轨道 | 现在做什么 | 执行计划 | 规格 |
 | --- | --- | --- | --- |
 | 梅花桩 | paused：G1 越障老师优先。T4 plant DR 计划仍在 | [老师 plant 重训](plans/2026-09-02--t4-s12-teacher-plant-retrain-plan.md) | [表示先行蒸馏](specs/2026-09-01--t4-s12-repr-first-distill.md)（学生对照） |
-| 宇树 G1 越障 | active：`g1_loco_teacher` = G1 29DoF + `T4LocoEnv` + sparse 梅花桩/圆桩 + LAFAN1 走跑 AMP。不是 walk | `legged_lab/envs/g1/teacher_cfg.py` | 同 T4 稀疏老师 MDP；AMP 70D 独立于 T4 66D |
+| 宇树 G1 越障 | active：`portable_v1` 冷启动 10k，独立工作树 `TienKung-Lab-g1-portability-20260906`。G1 29DoF + 真实稀疏地形 + LAFAN1 AMP | [通用性修复与重训](plans/2026-09-07--g1-teacher-portability.md) | AMP 70D；新动作尺度与渐进速度，能力待 evaluator/回放 |
 | 翻箱 | G1 跟踪专家 → G2 heightscan 技能（zhuoqun）。**G2 学生与 G3 合并（走跑+翻箱成一条策略）等 G2 过箱后再开。** | [翻箱 recovery](plans/2026-08-15--t4-vault-g1-g2-recovery-plan.md) | [合并规格](specs/2026-08-13--t4-vault-loco-merge.md) |
 
 运行时切片与机器占用：`.harness/work_index.md`、`.harness/state.md`。

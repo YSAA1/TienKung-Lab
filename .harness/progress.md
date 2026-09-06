@@ -2,6 +2,16 @@
 
 2026-08-22 以前的 TB 逐窗流水已从本文件删掉，仍在 git 历史。本文件只留能接住当前切片的证据。
 
+## 2026-09-07：G1 通用性修复，启动有预算的 portable_v1
+
+- 工作树/配方：`docs/plans/2026-09-07--g1-teacher-portability.md`。源码提交 `82599f1`；原始根工作区代码未覆盖。
+- 旧 `model_39999` 固定 32-env 评估：flat 32/32；d=0 踏石/圆桩均 0/32、全部 collapsed。三份 JSON 在 `artifacts/portability/`。
+- 两个可复现代码错误：AMP 终止 transition 混入 reset 后状态；G1 evaluator scan 起点误用 960（实际 1020）、关节索引误用 T4。已修。
+- 本次配方试验：按 effort/Kp 标定动作；稀疏速度随 level 从 0.3–1.0 增至 0.6–2.0 m/s；level 0 开始，随机回访限制 0–2，正常晋级仍全覆盖。
+- 168 个本机合同通过。Isaac probe：1997-D actor / 2076-D critic / 70-D AMP；116 次终止快照逐项与 reset 前状态一致，且均不同于 reset 后状态。单纯零动作站立未作为通过门。
+- 远端 2026-09-07 00:17:43 开 tmux `g1-portable-train`，GPU1+3，各 2048 env，首轮 10000 iterations。之后自动固定评估 5 条件并产出两类 easy 连续回放。当前不宣称过桩。
+- `artifacts/portability/lineage.json` 核对 202 个实际部署源码文件及 6 个 AMP 专家的 SHA256，绑定旧基线 checkpoint。新旧动作语义不同，不交叉加载。
+
 ## 2026-09-06：同配方重开已停
 
 - 用户指出：探针已证无漏杀、配方没改，再冷启动不会过桩。已杀 tmux `g1-teacher`，GPU1+3 已空。`2026-09-06_10-08-08_g1_sparse_teacher_g1term` 作废，不续。对照仍用 40k `model_39999`。

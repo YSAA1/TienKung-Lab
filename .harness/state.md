@@ -1,7 +1,7 @@
 # Current State
 
 - Living index: `docs/README.md`
-- Current work surfaces（两条轨道，不是 dual truth）：翻箱 `docs/plans/2026-08-15--t4-vault-g1-g2-recovery-plan.md`；G1 越障老师 **blocked**：同配方冷启动已停。对照 ckpt 仍是 `2026-09-04_16-28-27_g1_sparse_teacher_g1term/model_39999.pt`。终止 0.20 m 无漏杀；梅花桩失败不是再开一趟能修的。plantfix 不续。T4 `model_21500` 血统不变。T4 梅花桩 plant 重训暂停。
+- Current work surfaces：翻箱 `docs/plans/2026-08-15--t4-vault-g1-g2-recovery-plan.md`；G1 越障老师 **active**：本工作树 `g1-portability-20260906` 的 `portable_v1` 冷启动 10k，nubot tmux `g1-portable-train`；见 `docs/plans/2026-09-07--g1-teacher-portability.md`。旧 `model_39999` 是 flat 32/32、easy 踏石/圆桩 0/32 的基线；新能力待评估。T4 `model_21500` 血统不变，T4 plant 重训暂停。
 - S12 学生 `s12_repr_first` `model_13999` Isaac hard 过门，MuJoCo 残留交给老师 plant 重训。老师本机 `artifacts/checkpoints/nubot/s12_teacher/model_21500.pt`。
 - Approved specs: `docs/specs/2026-08-12--t4-unified-depth-locomotion.md`（走跑/学生合同）、`docs/specs/2026-08-13--t4-vault-loco-merge.md`（G1→G2→G3 目标）、`docs/specs/2026-08-15--t4-stepping-stones-and-hurdle-stable.md`（梅花桩目标；执行已改单阶段）、`docs/specs/2026-09-01--t4-s12-repr-first-distill.md`（表示先行蒸馏）
 

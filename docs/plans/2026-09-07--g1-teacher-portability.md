@@ -45,5 +45,9 @@ Status: active。用户已授权排查、修改和重新训练。
 
 ## 验证记录
 
-- 本机 `D:\anaconda\envs\pytorch\python.exe`：当前 167 passed，1 skipped（G1 可选 MuJoCo 检查）；Windows 全局 pytest 临时目录权限错误通过专用 `--basetemp` 重跑该项解决，没有改环境。
-- 运行时 probe、正式启动和首个 checkpoint 信息在同目录的执行记录与 `artifacts/portability/lineage.json` 中补齐。
+- 本机 `D:\anaconda\envs\pytorch\python.exe`：168 passed。最初跳过的是旧 plantfix 回放 fixture 缺失；复制原工作区已有 JSON 后该项通过。Windows 全局 pytest 临时目录权限错误通过专用 `--basetemp` 重跑该项解决，没有改环境。
+- Isaac runtime probe：1997-D actor / 2076-D critic / 70-D AMP；240 个 step 数值有限，116 次 snapshot 等于真实 reset 前状态，且不同于新 episode。单纯零动作最低 clearance 约 0.202 m，不将该 probe 当稳定站立或走路能力证明。
+- 源码提交 `82599f1`。远端 202 个源码文件、6 个 AMP expert SHA256 已核对，记录在 `artifacts/portability/lineage.json`。该 manifest 同时保留基线源码 archive 与旧 checkpoint hash。
+- 2026-09-07 00:17:43，nubot tmux `g1-portable-train` 启动 `bash scripts/train_g1_portable.sh`；训练后自动运行 flat/easy+hard 踏石/easy+hard 圆桩共 5 条件 evaluator，及两类 easy 连续回放。
+- 主训练日志 `logs/g1_portable_v1.log`；运行状态 `artifacts/portability/supervisor.log`；训练结束的 Isaac teardown 限时 30 s，避免已结束进程继续占 GPU。
+- 首个正式 run：`logs/g1_loco_teacher_sparse/2026-09-07_00-18-15_g1_sparse_teacher_portable_v1`。00:22 检查到 iteration 69，`model_0.pt` 的策略权重有限，损失有限，无运行错误。早期 collapsed 约 0.976、reach_2m 为 0，不能宣称训练能力已改善。
