@@ -12,7 +12,7 @@ from isaaclab.managers import ObservationGroupCfg as ObsGroup
 from isaaclab.managers import ObservationTermCfg as ObsTerm
 from isaaclab.utils import configclass
 
-import legged_lab.envs.t4.vault_mimic.mdp as g1_mdp
+import legged_lab.motion_tracking.mdp as g1_mdp
 import legged_lab.envs.t4.vault_skill.mdp as mdp
 from legged_lab.assets.t4.vault_skill_contract import G2_ACTION_SCALE
 from legged_lab.envs.t4.vault_mimic.vault_env_cfg import (

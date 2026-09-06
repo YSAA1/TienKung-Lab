@@ -51,3 +51,10 @@ Status: active。用户要求恢复 10% 全等级随机重置、按难度衰减 
 - 实际独立 RTX 验证：4 env/24 步，3168/1937/96/27；处理深度全有限，去预热后 11 次变化。当前源码清单 214 文件，见 `artifacts/portability/depth/final_source_manifest.json`。探针已退出，GPU 0 释放。
 - 发现并修复首次独立导入的循环注册：共同配置原样迁至 `legged_lab/config.py`，公共环境与教师配置冷导入不加载 `legged_lab.envs`。RED/GREEN JSON、源码清单与 review 记录在 `artifacts/portability/depth/`。
 - 本切片独立审查通过；剩余运动跟踪及全库边界整理继续，正式 G1 训练保持运行。
+
+## 跟踪共享实现已验证
+
+- 命令/采样/奖励/终止/观测/事件迁入 `motion_tracking/mdp`，命名轴与离线加载迁入 `motion_tracking/schema.py`、`loader.py`；RSL 接口迁入 `utils/rsl_rl_compat.py`。旧 T4 路径为兼容导出，T4 文件与任务配方保留。
+- 64 项相关检查通过；独立对照真实 T4 NPZ 的 12 个字段完全一致。生产 `MotionLoader` 的 21/27/29 关节重排和错误名称拒绝均通过。
+- 真实 Isaac 2 env/原任务 50 步 + wrapper 1 步，150/276/27 保持有限值，实际使用公共类；公共 MDP 冷导入不加载任务注册。225 个源码文件 SHA 已核对，tmux `neutral-tracking-probe` 已退出。证据在 `artifacts/portability/tracking/`。
+- 结构 review 与 cold verification 均通过；现在进行全库边界清单与最终范围核对。

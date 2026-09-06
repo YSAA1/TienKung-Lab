@@ -43,3 +43,4 @@
   reason: 不是未引用死代码，是叠代配方。
   reevaluate_when: 表示先行 Spec 批准并落地新 AlgCfg 之后，再单独 implement 切片收口旧 mode。
 - pytest cache / 未跟踪 ckpt：不动。
+- 本次独立 reviewer 的临时目录 `C:/Users/shash/AppData/Local/Temp/codex-tracking-review-20260907-a`：自动批准审查拒绝其删除，理由 `blocked by policy`。暂留；不影响工作树与训练，无替代工具删除尝试。

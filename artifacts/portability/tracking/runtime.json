@@ -1,0 +1,23 @@
+{
+  "motion_command_class": "legged_lab.motion_tracking.mdp.commands.MotionCommand",
+  "rl_wrapper_class": "legged_lab.utils.rsl_rl_compat.RslRlVecEnvWrapper",
+  "policy_obs_dim": 150,
+  "critic_obs_dim": 276,
+  "action_dim": 27,
+  "num_bodies": 32,
+  "num_joints": 27,
+  "motion_frames": 346,
+  "motion_fps": 50.0,
+  "left_hand_collision_prims": [
+    "/World/envs/env_0/Robot/left_sphere_hand_link/collisions/left_sphere_hand_link/World",
+    "/World/envs/env_0/Robot/left_sphere_hand_link/collisions/left_sphere_hand_tip/sphere",
+    "/World/envs/env_0/Robot/right_sphere_hand_link/collisions/right_sphere_hand_link/World"
+  ],
+  "right_hand_collision_prims": [
+    "/World/envs/env_0/Robot/left_sphere_hand_link/collisions/left_sphere_hand_link/World",
+    "/World/envs/env_0/Robot/left_sphere_hand_link/collisions/left_sphere_hand_tip/sphere",
+    "/World/envs/env_0/Robot/right_sphere_hand_link/collisions/right_sphere_hand_link/World"
+  ],
+  "error_anchor_pos_mean": 0.026278352364897728,
+  "ok": true
+}

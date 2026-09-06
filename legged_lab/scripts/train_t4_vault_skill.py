@@ -81,7 +81,7 @@ import torch  # noqa: E402
 from isaaclab.utils.io import dump_yaml  # noqa: E402
 
 import legged_lab.envs.t4.vault_skill  # noqa: F401, E402
-from legged_lab.envs.t4.vault_mimic.rsl_rl_compat import RslRlVecEnvWrapper  # noqa: E402
+from legged_lab.utils.rsl_rl_compat import RslRlVecEnvWrapper  # noqa: E402
 from legged_lab.utils.cli_args import update_rsl_rl_cfg  # noqa: E402
 from rsl_rl.runners import OnPolicyRunner  # noqa: E402
 

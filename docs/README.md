@@ -1,11 +1,11 @@
-# T4 文档入口
+# 运动训练文档入口
 
-本 checkout 在上游 TienKung-Lab 上做 **T4 27DoF** 感知走跑与技能。
+本 checkout 在上游 TienKung-Lab 上维护共享 AMP/LightLP 运动算法，以及 **T4 27DoF、Unitree G1 29DoF** 的独立机器人配置。共享教师、深度学生运行时与参考动作跟踪按算法组织；[新机器人接入方法](runbooks/robot-locomotion-adapter.md) 是代码边界入口。
 先读本文，再进代码。`docs/archive/` 与 `docs/research/` **不是**开训或接票权威。
 
 ## 当前工作面
 
-当前执行轨道：宇树 G1 越障老师（复用 T4 LightLP 稀疏地形），以及翻箱 G1/G2。T4 S12 老师 plant 重训暂停。表示先行学生 `model_13999` 是 Isaac 对照候选，不是部署包。
+当前执行轨道：宇树 G1 越障老师（共享 LightLP 稀疏地形），以及 T4 翻箱 G1/G2 阶段。T4 S12 老师 plant 重训暂停。表示先行学生 `model_13999` 是 Isaac 对照候选，不是部署包。
 
 | 轨道 | 现在做什么 | 执行计划 | 规格 |
 | --- | --- | --- | --- |
@@ -32,7 +32,8 @@
 
 | 项 | 真值 |
 | --- | --- |
-| 关节序 | `legged_lab/assets/t4/constants.py::T4_JOINT_NAMES` |
+| T4 关节序 | `legged_lab/assets/t4/constants.py::T4_JOINT_NAMES` |
+| Unitree G1 关节序 | `legged_lab/assets/unitree_g1/constants.py::G1_29DOF_JOINT_NAMES` |
 | 默认 Stage E Actor | 1155D（本体史 10×96 + 前向 scan 195）。翻箱 G2 / 旧学生仍吃这个。 |
 | Sparse teacher Actor | 1937D（scan×5 + 接触 2）。独立任务 `t4_loco_teacher_sparse`。 |
 | 足底 scan | 只进 Critic / 奖励，不上 Actor、不上实机 |

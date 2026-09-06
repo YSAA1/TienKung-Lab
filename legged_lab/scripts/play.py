@@ -111,7 +111,7 @@ from legged_lab.utils.cli_args import update_rsl_rl_cfg
 import gymnasium as gym  # noqa: E402
 import legged_lab.envs.t4.vault_mimic  # noqa: F401, E402
 import legged_lab.envs.t4.vault_skill  # noqa: F401, E402
-from legged_lab.envs.t4.vault_mimic.rsl_rl_compat import RslRlVecEnvWrapper  # noqa: E402
+from legged_lab.utils.rsl_rl_compat import RslRlVecEnvWrapper  # noqa: E402
 
 patch_missing_physx_material_attributes()
 

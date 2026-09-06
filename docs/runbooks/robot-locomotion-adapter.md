@@ -32,4 +32,12 @@
 
 T4 的 10176 维旧学生、3168 维 GRU 学生、1937 维稀疏教师及既有训练配方保留。`rsl_rl` 的学生网络和蒸馏算法已经按传入维度工作；另一个机器人接入时须设置其 `proprio_obs_dim`、教师 scan 偏移等策略参数，再通过自己的相机实测与行为评估。当前只有 T4 有真实学生 RTX 验证；G1/21 关节的学生证据只覆盖观测组装。
 
-公共配置字段在 `legged_lab/config.py`，可以首次独立导入公共环境/教师配置，无需先加载 T4 任务。旧 `envs/base/base_config.py` 只是兼容导出。运动跟踪实现的边界整理仍在进行。
+公共配置字段在 `legged_lab/config.py`，可以首次独立导入公共环境/教师配置，无需先加载 T4 任务。旧 `envs/base/base_config.py` 只是兼容导出。
+
+## 参考动作跟踪边界
+
+`motion_tracking/mdp` 包含跟踪命令、参考状态初始化、采样、观测、奖励、终止和启动随机化；共同实现不导入机器人包。新机器人自己的任务配置填写资产、`anchor_body_name`、`body_names` 和动作文件，不继承 T4 翻箱配置。这里的翻箱阶段 G1/G2 是原项目阶段名，不是 Unitree 机器人型号。
+
+离线先调用 `motion_tracking.loader.load_tracking_motion(path, joint_names=自己的关节序)`，核验 NPZ 的关节/身体名称、帧形状、fps 和有限值。运行时 `MotionLoader` 按真实 articulation 的关节名和跟踪身体名重排命名轴。新机器人参考文件必须包含 `joint_names`/`body_names`；遗留匿名文件只做尺寸兼容，不能作为新机器人顺序正确的证明。
+
+T4 的 `load_t4_tracking_motion` 只是绑定关节序与旧 schema 标记的入口；共同 RSL-RL 适配在 `legged_lab/utils/rsl_rl_compat.py`。原动作 NPZ、T4 翻箱配方、部署模型和验收阈值没有改写。真实 T4 任务与新模块的接口验证不代表其他机器人的翻箱能力。

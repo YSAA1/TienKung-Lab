@@ -100,7 +100,13 @@ def test_amp_sites_rotate_in_body_then_root_frame():
 
 def test_algorithm_modules_do_not_import_robot_implementations():
     root = Path(__file__).resolve().parents[1]
-    for path in (root / "legged_lab/locomotion").rglob("*.py"):
+    shared_files = [
+        *(root / "legged_lab/locomotion").rglob("*.py"),
+        *(root / "legged_lab/motion_tracking").rglob("*.py"),
+        root / "legged_lab/config.py",
+        root / "legged_lab/utils/rsl_rl_compat.py",
+    ]
+    for path in shared_files:
         for node in ast.walk(ast.parse(path.read_text(encoding="utf-8"))):
             if isinstance(node, (ast.Import, ast.ImportFrom)):
                 statement = ast.unparse(node)

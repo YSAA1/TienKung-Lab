@@ -445,6 +445,6 @@ def test_t4_vault_mimic_env_cfg_consumes_the_contract() -> None:
     assert "T4_VAULT_PLAY_POSE_RANGE" in source
     assert "T4_VAULT_PLAY_JOINT_POSITION_RANGE" in source
     # Vendored MotionLoader must keep the fail-fast named reorder.
-    commands_source = (ROOT / "legged_lab/envs/t4/vault_mimic/mdp/commands.py").read_text()
+    commands_source = (ROOT / "legged_lab/motion_tracking/mdp/commands.py").read_text()
     assert "reorder_named_axis" in commands_source
     assert "Named motion joints require robot_joint_names" in commands_source

@@ -17,7 +17,7 @@ if "isaaclab_rl" not in sys.modules:
     sys.modules["isaaclab_rl"] = isaaclab_rl
     sys.modules["isaaclab_rl.rsl_rl"] = rsl_rl_mod
 
-_COMPAT = Path(__file__).resolve().parents[1] / "legged_lab/envs/t4/vault_mimic/rsl_rl_compat.py"
+_COMPAT = Path(__file__).resolve().parents[1] / "legged_lab/utils/rsl_rl_compat.py"
 _SPEC = importlib.util.spec_from_file_location("t4_vault_rsl_rl_compat", _COMPAT)
 _MOD = importlib.util.module_from_spec(_SPEC)
 assert _SPEC.loader is not None

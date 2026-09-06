@@ -19,6 +19,8 @@
 
 ## 2026-09-07：G1 通用性修复，启动有预算的 portable_v1
 
+此前还完成了共享 motion_tracking 切片：MDP 与 RSL 接口抽离，T4 原始动作逐字段一致，21/27/29 关节重排通过；真实 2-env/51-step 接口验证与退出通过。当前证据在 `artifacts/portability/tracking/`。下面 portable_v1 是已停止的历史记录。
+
 - 工作树/配方：`docs/archive/plans/2026-09-07--g1-teacher-portability.md`。源码提交 `82599f1`；原始根工作区代码未覆盖。
 - 旧 `model_39999` 固定 32-env 评估：flat 32/32；d=0 踏石/圆桩均 0/32、全部 collapsed。三份 JSON 在 `artifacts/portability/`。
 - 两个可复现代码错误：AMP 终止 transition 混入 reset 后状态；G1 evaluator scan 起点误用 960（实际 1020）、关节索引误用 T4。已修。
