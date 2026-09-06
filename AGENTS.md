@@ -37,6 +37,7 @@
 - 代码改动后先跑最窄测试；T4 资产/motion 合同优先跑 `python -m pytest tests/test_t4_asset_migration.py`。
 - G1 资产 / LAFAN AMP 合同跑 `python -m pytest tests/test_g1_asset_contract.py`。
 - 共享算法边界与不同关节数接入跑 `python -m pytest tests/test_robot_neutral_locomotion.py tests/test_robot_neutral_depth_env.py`（需要 torch）。
+- 全库机器人依赖扫描跑 `python scripts/audit_robot_boundaries.py`；检查扫描器跑 `python -m pytest tests/test_robot_boundary_audit.py`。
 - 共享跟踪/适配改动跑 `python -m pytest tests/test_robot_neutral_tracking.py tests/test_t4_asset_migration.py tests/test_t4_vault_rsl_rl_compat.py`。
 - T4 观测合同改动跑 `python -m pytest tests/test_t4_observation_contracts.py`。
 - 稀疏奖励 / 终止 / 地形列映射 / S12 命令与边框合同改动跑 `python -m pytest tests/test_t4_sparse_reward_contracts.py tests/test_t4_sparse_monitor_contract.py tests/test_t4_sparse_command_contract.py tests/test_t4_terrain_column_map.py tests/test_t4_stepping_stone_contracts.py tests/test_distributed_log_reduce.py`。

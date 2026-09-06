@@ -1,0 +1,51 @@
+{
+  "scope": "original curriculum and AMP, shared locomotion/depth/tracking, robot integration checks, new G1 training",
+  "base_commit": "fea3632",
+  "review": "pass",
+  "verification": "pass_with_external_deployment_environment_limitations",
+  "isolation": "subagent",
+  "reviewer": "review_curriculum",
+  "cold_verifier": "verify_teacher_gate",
+  "code_requirements_complete": true,
+  "training_started": true,
+  "training_source_commit": "4fd6ec262dde7e0e3dd83dce73a71e8bb6916d93",
+  "training_source_frozen": true,
+  "evidence": {
+    "teacher": "teacher_ready_review.json",
+    "depth": "depth/review.json",
+    "tracking": "tracking/review.json",
+    "current_inventory": "robot_coupling_after.json",
+    "current_python_files": 243,
+    "current_boundary_violations": 0,
+    "original_inventory": "original_checkout_inventory.json",
+    "original_python_files": 313,
+    "original_cross_robot_dependencies": 3,
+    "final_pinned_spawn_and_adjacent_tests": "60 passed; independently reproduced",
+    "full_suite_before_final_pinned_spawn_fix": {
+      "passed": 375,
+      "failed": 22,
+      "skipped": 1,
+      "external_failures_independently_reproduced": true,
+      "affected_test_files_unchanged_from_original": true,
+      "missing_environment": [
+        "zl_deploy",
+        "/home/ssy/\u684c\u9762/t4_sim/t4_ame_overlay_20260811.tar",
+        "/usr/bin/python3 on Windows"
+      ]
+    },
+    "training_health": "v2/closure_health.json",
+    "last_verified_iteration": 1042,
+    "checkpoint_seen": "model_1000.pt",
+    "training_session": "g1-full-levels-v2",
+    "tensorboard": "http://100.100.188.39:8031/#scalars"
+  },
+  "closed_review_finding": "Pinned evaluator now requires explicit robot stance and foot size instead of a T4 default.",
+  "limitations": [
+    "The static inventory does not prove physical or learning equivalence between robots.",
+    "T4/G1 teacher, T4 depth and T4 tracking probes establish runtime contracts, not locomotion capability.",
+    "Other joint counts establish interface generality; G2 physical assets and learning were not tested.",
+    "Formal G1 training and its scheduled post-training evaluator/replays are ongoing.",
+    "The original dirty source checkout was preserved; only its current-work pointers were updated.",
+    "Review scratch deletion was rejected by automatic approval review as blocked by policy; scratch retained without retry."
+  ]
+}

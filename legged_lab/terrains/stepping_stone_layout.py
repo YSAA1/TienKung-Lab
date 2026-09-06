@@ -2,7 +2,7 @@
 # All rights reserved.
 # Modifications are licensed under the BSD-3-Clause license.
 
-"""Pure-Python layout truth for T4 sparse footholds (LightLP pillars + stones).
+"""Pure-Python layout truth for LightLP sparse footholds (pillars + stones).
 
 No IsaacLab imports: contract tests run on any machine. Tile frame matches
 ``hurdle_layout`` — x/y in ``[0, tile_size]``, ground z=0, spawn at center.
@@ -46,9 +46,6 @@ LIGHTLP_PILLAR_HEIGHT_RANGE = (0.08, 0.28)
 # Foot sole scan used by illegal-footstep contracts (matches FootScannerCfg).
 LIGHTLP_FOOT_SCAN_SIZE = (0.16, 0.08)
 LIGHTLP_FOOT_SCAN_RESOLUTION = 0.04
-# Neutral stance width used only to keep a pinned eval spawn on the 1.6 m pad.
-# Must match ``T4_NOMINAL_FEET_Y_DISTANCE``; the evaluator never spawns in a gap.
-PINNED_SPARSE_SPAWN_FEET_Y_DISTANCE = 0.233
 PINNED_SPARSE_SPAWN_MAX_ABS_Y_M = 0.10
 PINNED_SPARSE_SPAWN_MAX_ABS_YAW_DEG = 10.0
 PINNED_SPARSE_SPAWN_TERRAINS = frozenset({"stepping_stones", "raised_pillars"})
@@ -129,9 +126,9 @@ def pinned_spawn_stays_on_platform(
     y_offset_m: float,
     yaw_rad: float,
     *,
+    feet_y_distance: float,
+    foot_size: tuple[float, float],
     platform_width: float = LIGHTLP_STONE_PLATFORM_WIDTH,
-    feet_y_distance: float = PINNED_SPARSE_SPAWN_FEET_Y_DISTANCE,
-    foot_size: tuple[float, float] = LIGHTLP_FOOT_SCAN_SIZE,
 ) -> bool:
     """True when both feet stay inside the square spawn pad after the pinned pose."""
     half_pad = 0.5 * float(platform_width)
@@ -154,6 +151,8 @@ def resolve_pinned_sparse_spawn(
     y_offset_m: float | None,
     yaw_deg: float | None,
     *,
+    feet_y_distance: float,
+    foot_size: tuple[float, float],
     terrain_type: str | None = None,
 ) -> dict | None:
     """Return reset ranges for a pad-safe pinned spawn, or None to keep random reset.
@@ -178,7 +177,7 @@ def resolve_pinned_sparse_spawn(
             f"pinned yaw {yaw_d} deg exceeds {PINNED_SPARSE_SPAWN_MAX_ABS_YAW_DEG} deg first-step diagnostic cap"
         )
     yaw = math.radians(yaw_d)
-    if not pinned_spawn_stays_on_platform(y, yaw):
+    if not pinned_spawn_stays_on_platform(y, yaw, feet_y_distance=feet_y_distance, foot_size=foot_size):
         raise ValueError(f"pinned spawn y={y} m yaw={yaw_d} deg would leave the 1.6 m spawn pad")
     zero6 = {axis: (0.0, 0.0) for axis in ("x", "y", "z", "roll", "pitch", "yaw")}
     return {

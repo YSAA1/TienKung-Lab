@@ -1,6 +1,6 @@
 # 机器人无关的运动训练算法整理
 
-Status: active。用户要求恢复 10% 全等级随机重置、按难度衰减 AMP，并扫描整个代码库，消除新机器人继承旧机器人实现的结构。
+Status: 代码整理与重新开训已完成；G1 训练与训后行为验收进行中。用户要求恢复 10% 全等级随机重置、原 AMP 规则，并扫描整个代码库，消除新机器人继承旧机器人实现的结构。
 
 ## 工作面和不可缩减的验收
 
@@ -14,14 +14,13 @@ Status: active。用户要求恢复 10% 全等级随机重置、按难度衰减 
 6. 更新训练、评估、回放、学生和运动跟踪中受影响的共享调用，以及当前文档。确属机器人资产、标定、已命名任务和历史产物的名称保留，并记录理由。
 7. 窄测试、相邻回归、T4/G1 真实 Isaac probe、独立审查通过后中文里程碑提交；同步并核对远端源码，开启修正后的 G1 新训练和 TensorBoard。训练健康与行为能力分开验收。
 
-## 顺序
+## 完成范围与后续
 
-- 当前切片：纠正课程合同与 AMP transition 时序；停止已否决的 portable_v1，保留证据。
-- 接着：算法/机器人边界迁移，配置组合、观测/AMP/镜像共用实现，配套接入检查。
-- 接着：全库调用收敛、文档、行为对照与独立审查。
-- 最后：新 lineage 的实际训练、保存配置检查、固定评估和连续回放。
+- 已完成：课程与 AMP transition 修复，教师/深度学生/动作跟踪共享实现，独立机器人配置和接入检查，全库调用清单及独立审查。
+- 已完成：中文里程碑提交、远端 SHA 核验、新 lineage 开训与保存配置检查。代码收尾不暂停已运行的训练。
+- 后续实验：首轮 10k 后由已启动的训练脚本执行固定评估和连续回放，再判断学习效果。此计划留在现行目录跟踪这轮实验，不再作为待实施的代码改造计划。
 
-## 已核实的问题
+## 本轮已修复的问题（修复前）
 
 - `G1LocoTeacherEnvCfg`、奖励和 agent 均继承 T4 类；核心环境按 T4/G1 关节名字分支选择 AMP builder。
 - 同一 AMP 代数在两个 builder 复制；G1 镜像从 T4 schema 导入公共感知尺寸；环境内存在 `t4_joint_ids`、`action_t4` 和默认 T4 身体名。
@@ -35,14 +34,14 @@ Status: active。用户要求恢复 10% 全等级随机重置、按难度衰减 
 - 两个实际 Isaac JSON：T4 1937/2016/66、G1 1997/2076/70，240 步接口验证，实际随机采样全 0～9；AMP 原规则。此 probe 为 flat，不是越障能力证明。
 - 149 项核心检查、90 项相邻检查通过；评估入口调整后相关89项通过。旧新镜像逐元素相同。
 - `g1_lightlp_amp_full_levels_v2` 已在最终提交和远端 SHA 核验后启动，GPU 1、3，各 2048 env，首轮 10k。
-- 原始 probe 源码哈希在 `neutral_probe_source.json`；最终训练另立 manifest。全库剩余学生/运动跟踪整理与行为验收继续推进，目标尚未完成。
+- 原始 probe 源码哈希在 `neutral_probe_source.json`；最终训练另立 manifest。学生、运动跟踪与全库边界整理已完成，详见下方记录；行为验收待训练产出。
 
 ## v2 已启动
 
 - 训练源码：`4fd6ec262dde7e0e3dd83dce73a71e8bb6916d93`。已逐项核对 211 个代码文件和 6 个 AMP 专家，见 `artifacts/portability/v2/lineage.json`。
 - 训练目录：`/home/nubot/phn_ws/t4_train/TienKung-Lab-g1-portability-20260906/logs/g1_loco_teacher_sparse/2026-09-07_01-35-42_g1_lightlp_amp_full_levels_v2`。tmux `g1-full-levels-v2`；TensorBoard `http://100.100.188.39:8031/#scalars`。
 - 启动证据保存于 iteration 43：最近 20 轮随机重置比例 10.12%，loss 为有限值，`model_0.pt` 已保存。随后在线确认推进至 iteration 138；保存配置是 0.10/None/None、10 行、AMP start/min 均为 0.3。这只证明训练在更新，不证明越障能力。
-- 训练所用远端源码保持冻结。后续学生/运动跟踪代码整理在本地工作树继续；10k 后按训练脚本执行固定评估与连续回放。
+- 训练所用远端源码保持冻结。后续学生/运动跟踪代码整理已在本地工作树完成；10k 后按训练脚本执行固定评估与连续回放。
 
 ## 学生共享运行时已验证
 
@@ -50,11 +49,20 @@ Status: active。用户要求恢复 10% 全等级随机重置、按难度衰减 
 - 独立新旧对照：14 个方法 AST 不变，48 次含 clean/noise、裁剪、延迟、重置和等待渲染状态的逐元素对照一致。对应 T4 旧 checkpoint 的观测排列保持不变。
 - 实际独立 RTX 验证：4 env/24 步，3168/1937/96/27；处理深度全有限，去预热后 11 次变化。当前源码清单 214 文件，见 `artifacts/portability/depth/final_source_manifest.json`。探针已退出，GPU 0 释放。
 - 发现并修复首次独立导入的循环注册：共同配置原样迁至 `legged_lab/config.py`，公共环境与教师配置冷导入不加载 `legged_lab.envs`。RED/GREEN JSON、源码清单与 review 记录在 `artifacts/portability/depth/`。
-- 本切片独立审查通过；剩余运动跟踪及全库边界整理继续，正式 G1 训练保持运行。
+- 本切片独立审查通过；随后完成运动跟踪和全库边界整理，正式 G1 训练持续运行。
 
 ## 跟踪共享实现已验证
 
 - 命令/采样/奖励/终止/观测/事件迁入 `motion_tracking/mdp`，命名轴与离线加载迁入 `motion_tracking/schema.py`、`loader.py`；RSL 接口迁入 `utils/rsl_rl_compat.py`。旧 T4 路径为兼容导出，T4 文件与任务配方保留。
 - 64 项相关检查通过；独立对照真实 T4 NPZ 的 12 个字段完全一致。生产 `MotionLoader` 的 21/27/29 关节重排和错误名称拒绝均通过。
 - 真实 Isaac 2 env/原任务 50 步 + wrapper 1 步，150/276/27 保持有限值，实际使用公共类；公共 MDP 冷导入不加载任务注册。225 个源码文件 SHA 已核对，tmux `neutral-tracking-probe` 已退出。证据在 `artifacts/portability/tracking/`。
-- 结构 review 与 cold verification 均通过；现在进行全库边界清单与最终范围核对。
+- 结构 review 与 cold verification 均通过。
+
+## 全库核对与收尾
+
+- `scripts/audit_robot_boundaries.py` 扫描当前工作树 243 个 Python 文件，记录角色、导入和逐文件 SHA，0 项边界违规；清单在 `artifacts/portability/robot_coupling_after.json`。扫描覆盖整个树，排除依赖缓存和 pytest 临时目录；静态检查不替代机器人参数与行为验证。
+- 原根目录只读清单为 313 个 Python 文件，包含 109 个诊断产物；确认原有 3 处跨机器人依赖均已在新工作树消除。原根目录用户代码不覆盖，证据为 `original_checkout_inventory.json`。
+- 最终冷审查发现评估出生点仍默认 T4 站距；现已改为必须显式提供站距与足底尺寸，通用评估从机器人 spec/足底扫描配置读取。T4 原数值保持，宽站距与大足底越界均被拒绝；相关 60 项检查通过。
+- 全量本机测试记录为 375 passed、22 failed、1 skipped（最后站距修复前）；22 项均为现有 Linux/ZL 部署环境不齐，包括缺失 `zl_deploy`、固定 Linux 场景包及 `/usr/bin/python3`。相关测试与迁移前一致，独立审查复现；没有跳过这些失败或宣称全库测试全绿。Isaac 合同在实际服务器探针验证。
+- 收尾实时证据：iteration 1042，最近 20 轮随机重置均值 10.29%，所查 loss 有限；另核实 `model_1000.pt` 已保存。`artifacts/portability/v2/closure_health.json` 只证明训练健康，不证明越障能力。
+- 正式训练冻结于 `4fd6ec2`；后续学生/跟踪和评估边界收尾不热覆盖该源码。新增机器人仍需自己的物理资产、动作数据、相机标定和行为评估，当前没有 G2 实机模型或学习成功证据。

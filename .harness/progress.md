@@ -17,9 +17,14 @@
 - 真实冷导入复现了共享配置反向触发任务注册的循环。共同配置原样移至 `legged_lab/config.py`，保留旧导出；公共环境与教师配置首次独立导入均通过，且不加载任务注册包。
 - 最终 RTX/退出验证通过，tmux `neutral-depth-final` 已结束，GPU 0 回到 47 MiB。Kit 关闭在本机镜像会卡住，探针沿用现有 portability probe 的 30 秒退出兜底；主验证失败码保留。证据在 `artifacts/portability/depth/`。独立结构和冷验证均通过。
 
-## 2026-09-07：G1 通用性修复，启动有预算的 portable_v1
+## 2026-09-07：动作跟踪与全库收尾
 
-此前还完成了共享 motion_tracking 切片：MDP 与 RSL 接口抽离，T4 原始动作逐字段一致，21/27/29 关节重排通过；真实 2-env/51-step 接口验证与退出通过。当前证据在 `artifacts/portability/tracking/`。下面 portable_v1 是已停止的历史记录。
+- 共享 motion_tracking：MDP 与 RSL 接口抽离，T4 原始动作逐字段一致，21/27/29 关节重排通过；真实 2-env/51-step 接口验证与退出通过。证据在 `artifacts/portability/tracking/`。
+- 当前树 243 个 Python 文件，边界检查 0 违规；原根 313 文件只读清单保留，不覆盖用户源码。评估出生点改用各机器人显式站距/足尺寸，相关 60 项测试通过。
+- 全量本机 375 passed、22 failed、1 skipped：失败均依赖缺失的 Linux/ZL 部署环境，冷审查已复现。当前代码整理与新训练启动完成，能力待训后评估。
+- 收尾训练 iteration 1042，最近 20 轮随机重置 10.29%，loss 有限，已保存 model_1000；GPU 1、3 持续训练，远端保持 4fd6ec2。
+
+## 2026-09-07：G1 通用性修复，启动有预算的 portable_v1（已停止）
 
 - 工作树/配方：`docs/archive/plans/2026-09-07--g1-teacher-portability.md`。源码提交 `82599f1`；原始根工作区代码未覆盖。
 - 旧 `model_39999` 固定 32-env 评估：flat 32/32；d=0 踏石/圆桩均 0/32、全部 collapsed。三份 JSON 在 `artifacts/portability/`。

@@ -147,6 +147,8 @@ def evaluate() -> dict:
     pinned_spawn = resolve_pinned_sparse_spawn(
         args_cli.spawn_y_offset_m,
         args_cli.spawn_yaw_deg,
+        feet_y_distance=env_cfg.robot_spec.nominal_feet_distance,
+        foot_size=env_cfg.scene.foot_scanner.size,
         terrain_type=args_cli.terrain_type,
     )
     if pinned_spawn is not None:

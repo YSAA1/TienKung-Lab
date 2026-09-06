@@ -19,6 +19,18 @@
 3. 用真实 Isaac 启动 probe：`bash scripts/nubot_run.sh legged_lab/scripts/probe_locomotion_portability.py --task <task> --output <json> --headless`，必须放在 tmux。它验证随机等级覆盖、AMP 曲线、镜像和自动重置快照，不验证走路能力。
 4. 动作单位要明确。原 T4 为 0.25 rad；当前 G1 采用 `0.25 * effort_limit / Kp`。它表示静态误差下的名义 PD 请求比例，不是实际力矩保证。不同语义的 checkpoint 不直接续训。
 5. 固定命令 evaluator JSON、绑定源码/模型/专家的 lineage、连续回放共同证明行为。换机器人会改变动力学与可达落脚区域；公共代码和合同只能减少迁移错误，不能保证不同形态得到同样学习曲线。
+6. 在仓库根运行 `python scripts/audit_robot_boundaries.py --output artifacts/portability/robot_coupling_after.json`。共享算法禁止导入资产或任务注册包，机器人任务禁止导入另一个机器人；扫描器返回非零即需处理。相关检查为 `python -m pytest tests/test_robot_boundary_audit.py tests/test_robot_neutral_locomotion.py`。
+
+固定出生点评估必须传该机器人的 `nominal_feet_distance` 和 `scene.foot_scanner.size`，不能默认借用 T4 站距。脚底扫描尺寸本身也需与该资产核对。
+
+## 保留机器人名称的范围
+
+| 范围 | 保留原因 |
+| --- | --- |
+| `assets/<robot>`、任务配方、相机标定 | 定义机器人的物理差异，不能搬成无条件通用常量 |
+| T4 旧 helper/runtime/loader 路径 | 兼容已有调用，实际实现转发至共享算法 |
+| 任务 ID、专家文件、checkpoint、部署与验收配方 | 绑定特定机器人和已有实验，改名会打断引用 |
+| 合同测试与历史诊断 | 验证既有机器人合同或记录证据；未视作新机器人的实现模板 |
 
 ## 本轮共同课程要求
 

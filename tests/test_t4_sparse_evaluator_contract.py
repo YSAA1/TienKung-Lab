@@ -119,10 +119,14 @@ def _layout():
 
 
 def test_pinned_sparse_spawn_keeps_eight_cm_on_the_pad_and_rejects_holes():
+    from functools import partial
+
     layout = _layout()
     from legged_lab.assets.t4.constants import T4_NOMINAL_FEET_Y_DISTANCE
 
-    assert layout.PINNED_SPARSE_SPAWN_FEET_Y_DISTANCE == pytest.approx(T4_NOMINAL_FEET_Y_DISTANCE)
+    geometry = dict(feet_y_distance=T4_NOMINAL_FEET_Y_DISTANCE, foot_size=layout.LIGHTLP_FOOT_SCAN_SIZE)
+    layout.resolve_pinned_sparse_spawn = partial(layout.resolve_pinned_sparse_spawn, **geometry)
+    layout.pinned_spawn_stays_on_platform = partial(layout.pinned_spawn_stays_on_platform, **geometry)
     centered = layout.resolve_pinned_sparse_spawn(0.0, 0.0, terrain_type="stepping_stones")
     assert centered["y_offset_m"] == 0.0
     assert centered["yaw_rad"] == 0.0
@@ -156,12 +160,29 @@ def test_pinned_sparse_spawn_keeps_eight_cm_on_the_pad_and_rejects_holes():
     assert unset_y["y_offset_m"] == 0.0
 
 
+def test_pinned_sparse_spawn_uses_declared_robot_geometry():
+    layout = _layout()
+    for stance in (0.20, 0.233, 0.50):
+        assert layout.resolve_pinned_sparse_spawn(
+            0.08, 8.0, terrain_type="stepping_stones", feet_y_distance=stance, foot_size=(0.16, 0.08)
+        ) is not None
+    for stance, sole in ((1.8, (0.16, 0.08)), (0.20, (1.8, 0.08))):
+        with pytest.raises(ValueError, match="would leave"):
+            layout.resolve_pinned_sparse_spawn(
+                0.0, 0.0, terrain_type="stepping_stones", feet_y_distance=stance, foot_size=sole
+            )
+    with pytest.raises(TypeError, match="feet_y_distance"):
+        layout.resolve_pinned_sparse_spawn(0.0, 0.0, terrain_type="stepping_stones")
+
+
 def test_sparse_evaluator_pins_spawn_only_when_offset_or_yaw_is_set():
     source = SCRIPT.read_text()
 
     assert "--spawn_y_offset_m" in source
     assert "--spawn_yaw_deg" in source
     assert "resolve_pinned_sparse_spawn(" in source
+    assert "feet_y_distance=env_cfg.robot_spec.nominal_feet_distance" in source
+    assert "foot_size=env_cfg.scene.foot_scanner.size" in source
     assert 'params["pose_range"] = pinned_spawn["pose_range"]' in source
     assert 'params["velocity_range"] = pinned_spawn["velocity_range"]' in source
     assert '["position_range"] = pinned_spawn["joint_position_range"]' in source

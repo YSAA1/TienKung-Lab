@@ -110,4 +110,4 @@ def test_algorithm_modules_do_not_import_robot_implementations():
         for node in ast.walk(ast.parse(path.read_text(encoding="utf-8"))):
             if isinstance(node, (ast.Import, ast.ImportFrom)):
                 statement = ast.unparse(node)
-                assert not any(name in statement for name in ("assets.t4", "assets.unitree_g1", "legged_lab.envs")), path
+                assert not any(name in statement for name in ("legged_lab.assets", "legged_lab.envs")), path

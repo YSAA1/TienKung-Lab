@@ -1,0 +1,98 @@
+{
+  "time": 1788719594.807621,
+  "tensorboard_run": "g1_full_levels_v2/.",
+  "metrics": {
+    "Curriculum/random_level_reset_frac": {
+      "step": 1042,
+      "last": 0.10378273576498032,
+      "last20_mean": 0.10287184454500675,
+      "finite": true
+    },
+    "Loss/value_function": {
+      "step": 1042,
+      "last": 0.1011756882071495,
+      "last20_mean": 0.1097133331000805,
+      "finite": true
+    },
+    "Loss/surrogate": {
+      "step": 1042,
+      "last": 0.0059114377945661545,
+      "last20_mean": 0.005890609510242939,
+      "finite": true
+    },
+    "Loss/entropy": {
+      "step": 1042,
+      "last": 15.815909385681152,
+      "last20_mean": 15.790909004211425,
+      "finite": true
+    },
+    "Loss/amp": {
+      "step": 1042,
+      "last": 0.32529276609420776,
+      "last20_mean": 0.3257384181022644,
+      "finite": true
+    },
+    "Loss/amp_grad_pen": {
+      "step": 1042,
+      "last": 0.20191824436187744,
+      "last20_mean": 0.20373187735676765,
+      "finite": true
+    },
+    "Loss/amp_policy_pred": {
+      "step": 1042,
+      "last": -0.4675024151802063,
+      "last20_mean": -0.46707893460989,
+      "finite": true
+    },
+    "Loss/amp_expert_pred": {
+      "step": 1042,
+      "last": 0.4644109904766083,
+      "last20_mean": 0.4628662034869194,
+      "finite": true
+    },
+    "Loss/symmetry": {
+      "step": 1042,
+      "last": 0.0005089830956421793,
+      "last20_mean": 0.0005132304620929062,
+      "finite": true
+    },
+    "Loss/learning_rate": {
+      "step": 1042,
+      "last": 1.500000053056283e-05,
+      "last20_mean": 1.8937501408800017e-05,
+      "finite": true
+    },
+    "Amp/mean_reward_coef_scale": {
+      "step": 1042,
+      "last": 0.5597547888755798,
+      "last20_mean": 0.5604223579168319,
+      "finite": true
+    },
+    "Train/mean_reward": {
+      "step": 1042,
+      "last": 2.5343616008758545,
+      "last20_mean": 3.856561851501465,
+      "finite": true
+    },
+    "Train/mean_episode_length": {
+      "step": 1042,
+      "last": 81.93000030517578,
+      "last20_mean": 100.50699958801269,
+      "finite": true
+    }
+  },
+  "saved_config": [
+    "random_level_reset_fraction: 0.1",
+    "random_level_reset_max_level: null",
+    "random_level_reset_min_level: null",
+    "    num_rows: 10",
+    "  min_scale: 0.3",
+    "  decay_start_difficulty: 0.3"
+  ],
+  "checkpoint": {
+    "path": "/home/nubot/phn_ws/t4_train/TienKung-Lab-g1-portability-20260906/logs/g1_loco_teacher_sparse/2026-09-07_01-35-42_g1_lightlp_amp_full_levels_v2/model_1000.pt",
+    "bytes": 38666274
+  },
+  "training_session_live": true,
+  "checkpoint_observed_at": 1788719812.483247
+}

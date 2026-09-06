@@ -2,6 +2,7 @@
 
 - Living index: `docs/README.md`
 - 当前 G1 唯一执行计划：`docs/plans/2026-09-07--robot-neutral-locomotion.md`。portable_v1 已停，0～2 上限和全地形从 0 衰减 AMP 已撤回。`g1_lightlp_amp_full_levels_v2` 已在 GPU 1、3 开训，tmux `g1-full-levels-v2`，TB 8031；代码冻结于 `4fd6ec2`，后续本地整理不覆盖这轮远端源码。启动证据见 `artifacts/portability/v2/`。
+- 共享教师、深度学生、动作跟踪与全库接入检查已完成。收尾确认 iteration 1042、model_1000；下一实验结果是首轮 10k 后固定评估和连续回放，不能用当前训练健康宣称过桩。
 - S12 学生 `s12_repr_first` `model_13999` Isaac hard 过门，MuJoCo 残留交给老师 plant 重训。老师本机 `artifacts/checkpoints/nubot/s12_teacher/model_21500.pt`。
 - Approved specs: `docs/specs/2026-08-12--t4-unified-depth-locomotion.md`（走跑/学生合同）、`docs/specs/2026-08-13--t4-vault-loco-merge.md`（G1→G2→G3 目标）、`docs/specs/2026-08-15--t4-stepping-stones-and-hurdle-stable.md`（梅花桩目标；执行已改单阶段）、`docs/specs/2026-09-01--t4-s12-repr-first-distill.md`（表示先行蒸馏）
 
@@ -37,7 +38,7 @@
 
 - `docs/research/*` 与 `docs/archive/plans/` 历史正文不重写。
 - `artifacts/eval/*`、视频、checkpoints：对照证据，未逐项核对 lineage，不删。
-- `artifacts/diagnostics/*`：一次性 probe/viewer/JSON；正式评估走 `eval_t4_hurdle.py`。
+- `artifacts/diagnostics/*`：一次性 probe/viewer/JSON；正式评估走 `eval_locomotion.py`，旧 `eval_t4_hurdle.py` 为兼容入口。
 - `scripts/setup_local_isaac_docker.sh`：会话前已有本地改动，不混入提交。
 - `legged_lab/envs/t4/depth_student_cfg.py` 多代 AlgCfg（Dagger/Joint/DeployFt/TargetedFt/ResidualFt/PlantFt）+ `train_t4_sparse_depth_student_ft.py` 多 `--mode`：失败 lineage 对照与合同测试仍引用。删会改行为。
   reason: 不是未引用死代码，是叠代配方。
