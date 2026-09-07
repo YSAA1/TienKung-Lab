@@ -1,0 +1,19 @@
+{
+  "checkpoint": "/home/nubot/phn_ws/t4_train/TienKung-Lab-s11b-upright-tbslim/logs/t4_loco_teacher_sparse/2026-08-22_01-12-08_t_sparse_lightlp_s11b_upright_tbslim/model_1000.pt",
+  "sha256": "e692480bdc04eddcefb09a5d1265aac0ddbb52584987d08212731c9438e2a6d0",
+  "sample_match": "T4 1000 updates * 2 ranks * 1024 env * 24 steps approximately G1 500 * 2 * 2048 * 24",
+  "asset_lf_hashes_equal_to_training_snapshot": {
+    "legged_lab/assets/t4/t4.py": "3a11e7dfffadcdd9b3b111b49625a850d219d5015af62402cc64574e4727b44c",
+    "legged_lab/assets/t4/urdf/t4_std.urdf": "693723248099bf15ddd5ca9f5182487360f087e6aa964acd31d5fa7945ccb741"
+  },
+  "evaluation_source": "c125f74d50b9d1aef70ae6ce8bd8b3fcb7b26d52",
+  "seed": 42,
+  "command_vx": 0.7,
+  "num_envs": 32,
+  "episodes": 32,
+  "conditions": [
+    "flat difficulty0",
+    "stepping_stones difficulty0"
+  ],
+  "time": "2026-09-07T13:55:40.253418"
+}

@@ -1,0 +1,683 @@
+{
+  "evaluator": "locomotion_terrain_perception_v4",
+  "checkpoint": "/home/nubot/phn_ws/t4_train/TienKung-Lab-s11b-upright-tbslim/logs/t4_loco_teacher_sparse/2026-08-22_01-12-08_t_sparse_lightlp_s11b_upright_tbslim/model_1000.pt",
+  "task": "t4_loco_teacher_sparse",
+  "seed": 42,
+  "difficulty": 0.0,
+  "requested_command_vx_mps": 0.7,
+  "zero_actions": false,
+  "spawn_pose_pinned": false,
+  "spawn_y_offset_m": null,
+  "spawn_yaw_deg": null,
+  "terrain_type": "flat",
+  "soft_sparse_terrain": false,
+  "requested_episodes": 32,
+  "completed_episodes": 32,
+  "episode_sampling": "balanced_per_env_quota",
+  "targeted_envs": 32,
+  "recorded_unique_envs": 32,
+  "episode_quota_min": 1,
+  "episode_quota_max": 1,
+  "recorded_episode_count_min": 1,
+  "recorded_episode_count_max": 1,
+  "strict_progress_successes": 0,
+  "strict_progress_failures": 32,
+  "strict_progress_success_rate": 0.0,
+  "progress_m": 3.0,
+  "progress_source": "episode_max_command_direction_displacement",
+  "progress_mean_m": 0.07525643717963248,
+  "progress_min_m": 0.0,
+  "progress_max_m": 1.0127830505371094,
+  "monitor_radial_progress_source": "terminal_episode_max_radial_dist_from_terrain_origin",
+  "monitor_radial_progress_mean_m": 0.4669744910206646,
+  "monitor_radial_progress_min_m": 0.0980619266629219,
+  "monitor_radial_progress_max_m": 1.2048882246017456,
+  "final_forward_progress_mean_m": 0.013626499887323007,
+  "final_forward_progress_min_m": -0.3367379903793335,
+  "final_forward_progress_max_m": 1.0074026584625244,
+  "reach_1m_episodes": 1,
+  "reach_1m_rate": 0.03125,
+  "reach_2m_episodes": 0,
+  "reach_2m_rate": 0.0,
+  "reach_4m_episodes": 0,
+  "reach_4m_rate": 0.0,
+  "timeout_episodes": 31,
+  "strict_completion_episodes": 31,
+  "fall_or_early_termination_episodes": 1,
+  "pit_fall_episodes": 0,
+  "reset_reason_counts": {
+    "horizon": 31,
+    "oob": 0,
+    "joint_vel": 0,
+    "torso": 0,
+    "accel": 0,
+    "fall_over": 1,
+    "immune_skip": 1
+  },
+  "failure_step_mean": 974.9375,
+  "stochastic_actions": false,
+  "commanded_forward_mean_mps": 0.7000000171916929,
+  "actual_forward_mean_mps": 0.00081094291706384,
+  "student_depth_noise": false,
+  "disable_student_depth_noise": false,
+  "scan_mode": "normal",
+  "scan_permutation_seed": 0,
+  "scan_history_length": 5,
+  "scan_slice": [
+    960,
+    1935
+  ],
+  "raw_scan_min": -0.4500463902950287,
+  "raw_scan_max": 0.36113232374191284,
+  "raw_scan_mean": 0.34392716281173924,
+  "raw_scan_std": 0.04889799225334089,
+  "raw_scan_at_invalid_sentinel_fraction": 0.0,
+  "raw_scan_nonfinite_fraction": 0.0,
+  "counterfactual_normal_zero_action_l1_mean": 0.10727894341336572,
+  "counterfactual_normal_permuted_action_l1_mean": 8.144626990634869e-08,
+  "action_delta_l1_mean": 0.008402875663265218,
+  "diagnostic_joint_action_abs_mean": {
+    "J_hip_l_pitch": 0.31191124411085963,
+    "J_knee_l_pitch": 0.4229011541146851,
+    "J_hip_r_pitch": 0.2778167642074576,
+    "J_knee_r_pitch": 0.4024525642150472
+  },
+  "diagnostic_joint_action_abs_max": {
+    "J_hip_l_pitch": 3.2584986686706543,
+    "J_knee_l_pitch": 3.4731240272521973,
+    "J_hip_r_pitch": 3.6351377964019775,
+    "J_knee_r_pitch": 3.5098514556884766
+  },
+  "first_swing_detected_episodes": 15,
+  "first_swing_foot_max_lift_mean_m": 0.023776397632900625,
+  "first_swing_foot_max_lift_min_m": 0.0,
+  "first_swing_foot_max_lift_max_m": 0.2656632363796234,
+  "first_off_platform_contact_episodes": 0,
+  "first_off_platform_contact_legal_episodes": 0,
+  "first_off_platform_contact_legal_rate": 0.0,
+  "first_off_platform_contact_illegal_fraction_mean": 0.0,
+  "first_off_platform_swing_peak_lift_mean_m": 0.0,
+  "first_off_platform_touchdown_lift_mean_m": 0.0,
+  "episode_records": [
+    {
+      "env_id": 27,
+      "env_episode_index": 0,
+      "steps": 198,
+      "progress_m": 1.0127830505371094,
+      "monitor_radial_progress_m": 1.2048882246017456,
+      "final_forward_progress_m": 1.0074026584625244,
+      "clean_completion": false,
+      "pit_fall": false,
+      "reset_reasons": [
+        "fall_over",
+        "immune_skip"
+      ],
+      "first_swing_max_lift_m": 0.2656632363796234,
+      "first_off_platform_contact_seen": false,
+      "first_off_platform_contact_illegal_fraction": null,
+      "first_off_platform_swing_peak_lift_m": null,
+      "first_off_platform_touchdown_lift_m": null
+    },
+    {
+      "env_id": 0,
+      "env_episode_index": 0,
+      "steps": 1000,
+      "progress_m": 0.02356947399675846,
+      "monitor_radial_progress_m": 0.24190716445446014,
+      "final_forward_progress_m": -0.025029093027114868,
+      "clean_completion": true,
+      "pit_fall": false,
+      "reset_reasons": [
+        "horizon"
+      ],
+      "first_swing_max_lift_m": 0.0,
+      "first_off_platform_contact_seen": false,
+      "first_off_platform_contact_illegal_fraction": null,
+      "first_off_platform_swing_peak_lift_m": null,
+      "first_off_platform_touchdown_lift_m": null
+    },
+    {
+      "env_id": 1,
+      "env_episode_index": 0,
+      "steps": 1000,
+      "progress_m": 0.056134313344955444,
+      "monitor_radial_progress_m": 0.5505276918411255,
+      "final_forward_progress_m": 0.04713788628578186,
+      "clean_completion": true,
+      "pit_fall": false,
+      "reset_reasons": [
+        "horizon"
+      ],
+      "first_swing_max_lift_m": 0.0,
+      "first_off_platform_contact_seen": false,
+      "first_off_platform_contact_illegal_fraction": null,
+      "first_off_platform_swing_peak_lift_m": null,
+      "first_off_platform_touchdown_lift_m": null
+    },
+    {
+      "env_id": 2,
+      "env_episode_index": 0,
+      "steps": 1000,
+      "progress_m": 0.10189450532197952,
+      "monitor_radial_progress_m": 0.3796703517436981,
+      "final_forward_progress_m": 0.04830312356352806,
+      "clean_completion": true,
+      "pit_fall": false,
+      "reset_reasons": [
+        "horizon"
+      ],
+      "first_swing_max_lift_m": 0.0,
+      "first_off_platform_contact_seen": false,
+      "first_off_platform_contact_illegal_fraction": null,
+      "first_off_platform_swing_peak_lift_m": null,
+      "first_off_platform_touchdown_lift_m": null
+    },
+    {
+      "env_id": 3,
+      "env_episode_index": 0,
+      "steps": 1000,
+      "progress_m": 0.1323501169681549,
+      "monitor_radial_progress_m": 0.36230432987213135,
+      "final_forward_progress_m": 0.09295198321342468,
+      "clean_completion": true,
+      "pit_fall": false,
+      "reset_reasons": [
+        "horizon"
+      ],
+      "first_swing_max_lift_m": 0.0,
+      "first_off_platform_contact_seen": false,
+      "first_off_platform_contact_illegal_fraction": null,
+      "first_off_platform_swing_peak_lift_m": null,
+      "first_off_platform_touchdown_lift_m": null
+    },
+    {
+      "env_id": 4,
+      "env_episode_index": 0,
+      "steps": 1000,
+      "progress_m": 0.0,
+      "monitor_radial_progress_m": 0.5081923007965088,
+      "final_forward_progress_m": -0.3367379903793335,
+      "clean_completion": true,
+      "pit_fall": false,
+      "reset_reasons": [
+        "horizon"
+      ],
+      "first_swing_max_lift_m": 0.048504773527383804,
+      "first_off_platform_contact_seen": false,
+      "first_off_platform_contact_illegal_fraction": null,
+      "first_off_platform_swing_peak_lift_m": null,
+      "first_off_platform_touchdown_lift_m": null
+    },
+    {
+      "env_id": 5,
+      "env_episode_index": 0,
+      "steps": 1000,
+      "progress_m": 0.08149419724941254,
+      "monitor_radial_progress_m": 0.42442312836647034,
+      "final_forward_progress_m": 0.06458980590105057,
+      "clean_completion": true,
+      "pit_fall": false,
+      "reset_reasons": [
+        "horizon"
+      ],
+      "first_swing_max_lift_m": 0.018079524859786034,
+      "first_off_platform_contact_seen": false,
+      "first_off_platform_contact_illegal_fraction": null,
+      "first_off_platform_swing_peak_lift_m": null,
+      "first_off_platform_touchdown_lift_m": null
+    },
+    {
+      "env_id": 6,
+      "env_episode_index": 0,
+      "steps": 1000,
+      "progress_m": 0.058984629809856415,
+      "monitor_radial_progress_m": 0.6322965621948242,
+      "final_forward_progress_m": 0.019722474738955498,
+      "clean_completion": true,
+      "pit_fall": false,
+      "reset_reasons": [
+        "horizon"
+      ],
+      "first_swing_max_lift_m": 0.0,
+      "first_off_platform_contact_seen": false,
+      "first_off_platform_contact_illegal_fraction": null,
+      "first_off_platform_swing_peak_lift_m": null,
+      "first_off_platform_touchdown_lift_m": null
+    },
+    {
+      "env_id": 7,
+      "env_episode_index": 0,
+      "steps": 1000,
+      "progress_m": 0.04213032126426697,
+      "monitor_radial_progress_m": 0.4776305556297302,
+      "final_forward_progress_m": 0.033496394753456116,
+      "clean_completion": true,
+      "pit_fall": false,
+      "reset_reasons": [
+        "horizon"
+      ],
+      "first_swing_max_lift_m": 0.0,
+      "first_off_platform_contact_seen": false,
+      "first_off_platform_contact_illegal_fraction": null,
+      "first_off_platform_swing_peak_lift_m": null,
+      "first_off_platform_touchdown_lift_m": null
+    },
+    {
+      "env_id": 8,
+      "env_episode_index": 0,
+      "steps": 1000,
+      "progress_m": 0.0,
+      "monitor_radial_progress_m": 0.4570017158985138,
+      "final_forward_progress_m": -0.18326778709888458,
+      "clean_completion": true,
+      "pit_fall": false,
+      "reset_reasons": [
+        "horizon"
+      ],
+      "first_swing_max_lift_m": 0.015737760812044144,
+      "first_off_platform_contact_seen": false,
+      "first_off_platform_contact_illegal_fraction": null,
+      "first_off_platform_swing_peak_lift_m": null,
+      "first_off_platform_touchdown_lift_m": null
+    },
+    {
+      "env_id": 9,
+      "env_episode_index": 0,
+      "steps": 1000,
+      "progress_m": 0.03494693711400032,
+      "monitor_radial_progress_m": 0.4168718457221985,
+      "final_forward_progress_m": 0.022340774536132812,
+      "clean_completion": true,
+      "pit_fall": false,
+      "reset_reasons": [
+        "horizon"
+      ],
+      "first_swing_max_lift_m": 0.0,
+      "first_off_platform_contact_seen": false,
+      "first_off_platform_contact_illegal_fraction": null,
+      "first_off_platform_swing_peak_lift_m": null,
+      "first_off_platform_touchdown_lift_m": null
+    },
+    {
+      "env_id": 10,
+      "env_episode_index": 0,
+      "steps": 1000,
+      "progress_m": 0.0,
+      "monitor_radial_progress_m": 0.6600332856178284,
+      "final_forward_progress_m": -0.12117871642112732,
+      "clean_completion": true,
+      "pit_fall": false,
+      "reset_reasons": [
+        "horizon"
+      ],
+      "first_swing_max_lift_m": 0.032234176993370056,
+      "first_off_platform_contact_seen": false,
+      "first_off_platform_contact_illegal_fraction": null,
+      "first_off_platform_swing_peak_lift_m": null,
+      "first_off_platform_touchdown_lift_m": null
+    },
+    {
+      "env_id": 11,
+      "env_episode_index": 0,
+      "steps": 1000,
+      "progress_m": 0.0,
+      "monitor_radial_progress_m": 0.5528125762939453,
+      "final_forward_progress_m": -0.2218833565711975,
+      "clean_completion": true,
+      "pit_fall": false,
+      "reset_reasons": [
+        "horizon"
+      ],
+      "first_swing_max_lift_m": 0.07877125591039658,
+      "first_off_platform_contact_seen": false,
+      "first_off_platform_contact_illegal_fraction": null,
+      "first_off_platform_swing_peak_lift_m": null,
+      "first_off_platform_touchdown_lift_m": null
+    },
+    {
+      "env_id": 12,
+      "env_episode_index": 0,
+      "steps": 1000,
+      "progress_m": 0.0,
+      "monitor_radial_progress_m": 0.3772611618041992,
+      "final_forward_progress_m": -0.03168446570634842,
+      "clean_completion": true,
+      "pit_fall": false,
+      "reset_reasons": [
+        "horizon"
+      ],
+      "first_swing_max_lift_m": 0.020117077976465225,
+      "first_off_platform_contact_seen": false,
+      "first_off_platform_contact_illegal_fraction": null,
+      "first_off_platform_swing_peak_lift_m": null,
+      "first_off_platform_touchdown_lift_m": null
+    },
+    {
+      "env_id": 13,
+      "env_episode_index": 0,
+      "steps": 1000,
+      "progress_m": 0.007131602615118027,
+      "monitor_radial_progress_m": 0.43446287512779236,
+      "final_forward_progress_m": -0.006195101886987686,
+      "clean_completion": true,
+      "pit_fall": false,
+      "reset_reasons": [
+        "horizon"
+      ],
+      "first_swing_max_lift_m": 0.02644829824566841,
+      "first_off_platform_contact_seen": false,
+      "first_off_platform_contact_illegal_fraction": null,
+      "first_off_platform_swing_peak_lift_m": null,
+      "first_off_platform_touchdown_lift_m": null
+    },
+    {
+      "env_id": 14,
+      "env_episode_index": 0,
+      "steps": 1000,
+      "progress_m": 0.051558949053287506,
+      "monitor_radial_progress_m": 0.49822869896888733,
+      "final_forward_progress_m": 0.018162431195378304,
+      "clean_completion": true,
+      "pit_fall": false,
+      "reset_reasons": [
+        "horizon"
+      ],
+      "first_swing_max_lift_m": 0.03759269043803215,
+      "first_off_platform_contact_seen": false,
+      "first_off_platform_contact_illegal_fraction": null,
+      "first_off_platform_swing_peak_lift_m": null,
+      "first_off_platform_touchdown_lift_m": null
+    },
+    {
+      "env_id": 15,
+      "env_episode_index": 0,
+      "steps": 1000,
+      "progress_m": 0.05405581369996071,
+      "monitor_radial_progress_m": 0.4055996835231781,
+      "final_forward_progress_m": 0.04689839482307434,
+      "clean_completion": true,
+      "pit_fall": false,
+      "reset_reasons": [
+        "horizon"
+      ],
+      "first_swing_max_lift_m": 0.0,
+      "first_off_platform_contact_seen": false,
+      "first_off_platform_contact_illegal_fraction": null,
+      "first_off_platform_swing_peak_lift_m": null,
+      "first_off_platform_touchdown_lift_m": null
+    },
+    {
+      "env_id": 16,
+      "env_episode_index": 0,
+      "steps": 1000,
+      "progress_m": 0.0,
+      "monitor_radial_progress_m": 0.47136592864990234,
+      "final_forward_progress_m": -0.10333835333585739,
+      "clean_completion": true,
+      "pit_fall": false,
+      "reset_reasons": [
+        "horizon"
+      ],
+      "first_swing_max_lift_m": 0.03842926025390625,
+      "first_off_platform_contact_seen": false,
+      "first_off_platform_contact_illegal_fraction": null,
+      "first_off_platform_swing_peak_lift_m": null,
+      "first_off_platform_touchdown_lift_m": null
+    },
+    {
+      "env_id": 17,
+      "env_episode_index": 0,
+      "steps": 1000,
+      "progress_m": 0.09874400496482849,
+      "monitor_radial_progress_m": 0.41224008798599243,
+      "final_forward_progress_m": 0.07666155695915222,
+      "clean_completion": true,
+      "pit_fall": false,
+      "reset_reasons": [
+        "horizon"
+      ],
+      "first_swing_max_lift_m": 0.0,
+      "first_off_platform_contact_seen": false,
+      "first_off_platform_contact_illegal_fraction": null,
+      "first_off_platform_swing_peak_lift_m": null,
+      "first_off_platform_touchdown_lift_m": null
+    },
+    {
+      "env_id": 18,
+      "env_episode_index": 0,
+      "steps": 1000,
+      "progress_m": 0.0612262561917305,
+      "monitor_radial_progress_m": 0.2563687264919281,
+      "final_forward_progress_m": 0.034452375024557114,
+      "clean_completion": true,
+      "pit_fall": false,
+      "reset_reasons": [
+        "horizon"
+      ],
+      "first_swing_max_lift_m": 0.0,
+      "first_off_platform_contact_seen": false,
+      "first_off_platform_contact_illegal_fraction": null,
+      "first_off_platform_swing_peak_lift_m": null,
+      "first_off_platform_touchdown_lift_m": null
+    },
+    {
+      "env_id": 19,
+      "env_episode_index": 0,
+      "steps": 1000,
+      "progress_m": 0.02125810831785202,
+      "monitor_radial_progress_m": 0.6131361126899719,
+      "final_forward_progress_m": 0.014954572543501854,
+      "clean_completion": true,
+      "pit_fall": false,
+      "reset_reasons": [
+        "horizon"
+      ],
+      "first_swing_max_lift_m": 0.021679958328604698,
+      "first_off_platform_contact_seen": false,
+      "first_off_platform_contact_illegal_fraction": null,
+      "first_off_platform_swing_peak_lift_m": null,
+      "first_off_platform_touchdown_lift_m": null
+    },
+    {
+      "env_id": 20,
+      "env_episode_index": 0,
+      "steps": 1000,
+      "progress_m": 0.10058484971523285,
+      "monitor_radial_progress_m": 0.2776290774345398,
+      "final_forward_progress_m": 0.08528255671262741,
+      "clean_completion": true,
+      "pit_fall": false,
+      "reset_reasons": [
+        "horizon"
+      ],
+      "first_swing_max_lift_m": 0.0,
+      "first_off_platform_contact_seen": false,
+      "first_off_platform_contact_illegal_fraction": null,
+      "first_off_platform_swing_peak_lift_m": null,
+      "first_off_platform_touchdown_lift_m": null
+    },
+    {
+      "env_id": 21,
+      "env_episode_index": 0,
+      "steps": 1000,
+      "progress_m": 0.11146601289510727,
+      "monitor_radial_progress_m": 0.7451193332672119,
+      "final_forward_progress_m": 0.10264986008405685,
+      "clean_completion": true,
+      "pit_fall": false,
+      "reset_reasons": [
+        "horizon"
+      ],
+      "first_swing_max_lift_m": 0.0,
+      "first_off_platform_contact_seen": false,
+      "first_off_platform_contact_illegal_fraction": null,
+      "first_off_platform_swing_peak_lift_m": null,
+      "first_off_platform_touchdown_lift_m": null
+    },
+    {
+      "env_id": 22,
+      "env_episode_index": 0,
+      "steps": 1000,
+      "progress_m": 0.0016322340816259384,
+      "monitor_radial_progress_m": 0.0980619266629219,
+      "final_forward_progress_m": -0.008264056406915188,
+      "clean_completion": true,
+      "pit_fall": false,
+      "reset_reasons": [
+        "horizon"
+      ],
+      "first_swing_max_lift_m": 0.0,
+      "first_off_platform_contact_seen": false,
+      "first_off_platform_contact_illegal_fraction": null,
+      "first_off_platform_swing_peak_lift_m": null,
+      "first_off_platform_touchdown_lift_m": null
+    },
+    {
+      "env_id": 23,
+      "env_episode_index": 0,
+      "steps": 1000,
+      "progress_m": 0.07251422107219696,
+      "monitor_radial_progress_m": 0.2763207256793976,
+      "final_forward_progress_m": 0.05934271961450577,
+      "clean_completion": true,
+      "pit_fall": false,
+      "reset_reasons": [
+        "horizon"
+      ],
+      "first_swing_max_lift_m": 0.0,
+      "first_off_platform_contact_seen": false,
+      "first_off_platform_contact_illegal_fraction": null,
+      "first_off_platform_swing_peak_lift_m": null,
+      "first_off_platform_touchdown_lift_m": null
+    },
+    {
+      "env_id": 24,
+      "env_episode_index": 0,
+      "steps": 1000,
+      "progress_m": 0.03926706314086914,
+      "monitor_radial_progress_m": 0.3818017542362213,
+      "final_forward_progress_m": 0.027769077569246292,
+      "clean_completion": true,
+      "pit_fall": false,
+      "reset_reasons": [
+        "horizon"
+      ],
+      "first_swing_max_lift_m": 0.030088501051068306,
+      "first_off_platform_contact_seen": false,
+      "first_off_platform_contact_illegal_fraction": null,
+      "first_off_platform_swing_peak_lift_m": null,
+      "first_off_platform_touchdown_lift_m": null
+    },
+    {
+      "env_id": 25,
+      "env_episode_index": 0,
+      "steps": 1000,
+      "progress_m": 0.059110596776008606,
+      "monitor_radial_progress_m": 0.6674511432647705,
+      "final_forward_progress_m": 0.0370970219373703,
+      "clean_completion": true,
+      "pit_fall": false,
+      "reset_reasons": [
+        "horizon"
+      ],
+      "first_swing_max_lift_m": 0.0,
+      "first_off_platform_contact_seen": false,
+      "first_off_platform_contact_illegal_fraction": null,
+      "first_off_platform_swing_peak_lift_m": null,
+      "first_off_platform_touchdown_lift_m": null
+    },
+    {
+      "env_id": 26,
+      "env_episode_index": 0,
+      "steps": 1000,
+      "progress_m": 0.0,
+      "monitor_radial_progress_m": 0.3685360252857208,
+      "final_forward_progress_m": -0.20469316840171814,
+      "clean_completion": true,
+      "pit_fall": false,
+      "reset_reasons": [
+        "horizon"
+      ],
+      "first_swing_max_lift_m": 0.038383305072784424,
+      "first_off_platform_contact_seen": false,
+      "first_off_platform_contact_illegal_fraction": null,
+      "first_off_platform_swing_peak_lift_m": null,
+      "first_off_platform_touchdown_lift_m": null
+    },
+    {
+      "env_id": 28,
+      "env_episode_index": 0,
+      "steps": 1000,
+      "progress_m": 0.0,
+      "monitor_radial_progress_m": 0.34377774596214294,
+      "final_forward_progress_m": -0.05221402272582054,
+      "clean_completion": true,
+      "pit_fall": false,
+      "reset_reasons": [
+        "horizon"
+      ],
+      "first_swing_max_lift_m": 0.017623305320739746,
+      "first_off_platform_contact_seen": false,
+      "first_off_platform_contact_illegal_fraction": null,
+      "first_off_platform_swing_peak_lift_m": null,
+      "first_off_platform_touchdown_lift_m": null
+    },
+    {
+      "env_id": 29,
+      "env_episode_index": 0,
+      "steps": 1000,
+      "progress_m": 0.10693209618330002,
+      "monitor_radial_progress_m": 0.488265722990036,
+      "final_forward_progress_m": 0.04215807467699051,
+      "clean_completion": true,
+      "pit_fall": false,
+      "reset_reasons": [
+        "horizon"
+      ],
+      "first_swing_max_lift_m": 0.0,
+      "first_off_platform_contact_seen": false,
+      "first_off_platform_contact_illegal_fraction": null,
+      "first_off_platform_swing_peak_lift_m": null,
+      "first_off_platform_touchdown_lift_m": null
+    },
+    {
+      "env_id": 30,
+      "env_episode_index": 0,
+      "steps": 1000,
+      "progress_m": 0.0,
+      "monitor_radial_progress_m": 0.35420316457748413,
+      "final_forward_progress_m": -0.21680568158626556,
+      "clean_completion": true,
+      "pit_fall": false,
+      "reset_reasons": [
+        "horizon"
+      ],
+      "first_swing_max_lift_m": 0.07149159908294678,
+      "first_off_platform_contact_seen": false,
+      "first_off_platform_contact_illegal_fraction": null,
+      "first_off_platform_swing_peak_lift_m": null,
+      "first_off_platform_touchdown_lift_m": null
+    },
+    {
+      "env_id": 31,
+      "env_episode_index": 0,
+      "steps": 1000,
+      "progress_m": 0.07843663543462753,
+      "monitor_radial_progress_m": 0.6047940850257874,
+      "final_forward_progress_m": 0.06596604734659195,
+      "clean_completion": true,
+      "pit_fall": false,
+      "reset_reasons": [
+        "horizon"
+      ],
+      "first_swing_max_lift_m": 0.0,
+      "first_off_platform_contact_seen": false,
+      "first_off_platform_contact_illegal_fraction": null,
+      "first_off_platform_swing_peak_lift_m": null,
+      "first_off_platform_touchdown_lift_m": null
+    }
+  ],
+  "exact_foothold_gate": false,
+  "final_zero_contact_gate": false,
+  "caveat": "This diagnostic separates command-direction progress, training-monitor radial distance, terminal causes, scan interventions, and first-foot behavior. It does not prove exact full-sole placement, zero bar contact, or ordered corridor passage. Sparse tiles use real holes."
+}
