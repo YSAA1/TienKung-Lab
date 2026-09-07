@@ -71,13 +71,21 @@ def joint_acc_l2(env: BaseEnv | TienKungEnv, asset_cfg: SceneEntityCfg = SceneEn
     return torch.sum(torch.square(asset.data.joint_acc[:, asset_cfg.joint_ids]), dim=1)
 
 
-def action_rate_l2(env: BaseEnv | TienKungEnv) -> torch.Tensor:
-    return torch.sum(
-        torch.square(
-            env.action_buffer._circular_buffer.buffer[:, -1, :] - env.action_buffer._circular_buffer.buffer[:, -2, :]
-        ),
-        dim=1,
+def action_rate_l2(env: BaseEnv | TienKungEnv, reference_scale: float | None = None) -> torch.Tensor:
+    """Action change, optionally expressed in units of reference_scale radians.
+
+    Position-action scaling must not silently change the physical smoothing cost.
+    The buffer is policy-ordered while the actuator scale is simulator-ordered.
+    """
+    delta = (
+        env.action_buffer._circular_buffer.buffer[:, -1, :] - env.action_buffer._circular_buffer.buffer[:, -2, :]
     )
+    if reference_scale is not None:
+        scale = env.action_scale
+        if torch.is_tensor(scale) and scale.ndim > 0:
+            scale = scale[..., env.policy_joint_ids]
+        delta = delta * (scale / reference_scale)
+    return torch.sum(torch.square(delta), dim=1)
 
 
 def undesired_contacts(env: BaseEnv | TienKungEnv, threshold: float, sensor_cfg: SceneEntityCfg) -> torch.Tensor:
@@ -223,9 +231,12 @@ def ankle_torque(env: TienKungEnv) -> torch.Tensor:
     return torch.sum(torch.square(env.robot.data.applied_torque[:, env.ankle_joint_ids]), dim=1)
 
 
-def ankle_action(env: TienKungEnv) -> torch.Tensor:
-    """Penalize ankle joint actions."""
-    return torch.sum(torch.abs(env.action[:, env.ankle_joint_ids]), dim=1)
+def ankle_action(env: TienKungEnv, reference_scale: float | None = None) -> torch.Tensor:
+    """Ankle target offset, optionally in units of reference_scale radians."""
+    action = env.action
+    if reference_scale is not None:
+        action = action * (env.action_scale / reference_scale)
+    return torch.sum(torch.abs(action[:, env.ankle_joint_ids]), dim=1)
 
 
 def hip_roll_action(env: TienKungEnv) -> torch.Tensor:

@@ -42,7 +42,8 @@ class G1LocoTeacherEnvCfg(LightLPLocomotionEnvCfg):
 @configclass
 class G1LocoTeacherAgentCfg(LightLPLocomotionAgentCfg):
     experiment_name = "g1_loco_teacher_sparse"
-    run_name = "g1_lightlp_amp_full_levels_v2"
+    run_name = "g1_lightlp_amp_action_units_v3"
+    max_iterations = 30000
     neptune_project = "g1_loco_teacher_sparse"
     wandb_project = "g1_loco_teacher_sparse"
     min_normalized_std = [0.05] * NUM_G1_29DOF_JOINTS
