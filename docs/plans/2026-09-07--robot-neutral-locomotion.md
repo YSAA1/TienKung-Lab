@@ -18,7 +18,9 @@ Status: v6已于13:54冷启动，GPU1/3、每卡2048env、预算30000、TB8035�
 - v6远端：`/home/nubot/phn_ws/t4_train/TienKung-Lab-g1-unitree-v6-20260907`；沿用v5生成的同一纯29DoF AMP专家。下一步：验证并启动单一v6，按实际采样量对照T4冷启动S11b（T4每rank1024env，G1每rank2048env，均24steps/iter）；G1第500轮与T4第1000轮才近似匹配采样量。T4资产Python一致，URDF仅换行不同，归一化后相同。
 - v6已启动：tmux `g1-teacher-v6`，run `2026-09-07_13-55-07_g1_unitree_29dof_teacher_v6`，TB `http://100.100.188.39:8035/#scalars`；204个源码/专家文件LF哈希一致，model_0已保存，保存配置29关节/0.25/2048env/resume=false/30000核对通过。13:56第14轮回合49.57步、回报-4.53；仍是冷启动早期，不能作为成功证据。
 - T4 S11b model_1000的32回合平地/简单踏石评估已完成，tmux `g1-t4-reference-eval`已退出，结果在v6/t4_reference。平地31/32到时限但平均前进仅0.075m；踏石平均0.964m，两者reach2m均0，因此不能仅追平此早期弱基线就宣称G1正常走路。G1到model_500后用相同条件评估并采集连续回放，并继续检查后续训练是否持续改善。
-- 14:04实时：v6第168轮回合59.99步、回报1.44，尚未再现3～5步退化，但collapsed仍高。model_500尚未生成，正常训练/T4行为对照仍未完成。下一次刷新实时tmux/TB8035及checkpoint，勿重启当前活进程；此前准备的多变量训练脚本已删除，未执行。
+- 14:13实时：v6第349轮回合76.69步、回报3.52，collapsed约95.38%；尚未再现3～5步退化，但仍未证明正常学习。当前训练保持运行，不改参数、不重启。此前准备的多变量训练脚本已删除，未执行。
+- 初始model_0的平地/简单踏石各32回合固定评估已产出JSON：全部在第69步collapsed，reach2m均0；约0.83m前进和0.54m/s平均速度来自倒下前运动，不能当成正常行走。证据位于`artifacts/portability/v6/early_evaluation/model_0/`。
+- tmux `g1-v6-early-eval`在GPU0执行独立只读评估，脚本及lineage保存在`artifacts/portability/v6/early_evaluation/`；等待同一run的model_500后，自动运行相同32回合平地/踏石评估及各16秒连续回放。尚未取得model_500结果。下一步核实该会话退出状态、评估JSON、回放内容和checkpoint SHA，并与T4 model_1000匹配采样量对照；不要重复启动评估或重启训练。
 
 ## 官方 G1 v4 替换（2026-09-07）
 
