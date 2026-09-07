@@ -10,7 +10,7 @@
 | 轨道 | 现在做什么 | 执行计划 | 规格 |
 | --- | --- | --- | --- |
 | 梅花桩 | paused：G1 越障老师优先。T4 plant DR 计划仍在 | [老师 plant 重训](plans/2026-09-02--t4-s12-teacher-plant-retrain-plan.md) | [表示先行蒸馏](specs/2026-09-01--t4-s12-repr-first-distill.md)（学生对照） |
-| Unitree G1 越障 teacher | active：初速度单变量对照已启动，GPU0/2、TB8036；v6在GPU1/3继续参照 | [机器人无关算法与现行训练](plans/2026-09-07--robot-neutral-locomotion.md) | 宇树官方纯29DoF、scale=0.25；两组各2048env/4000轮，结束后零初速度评估；训练有效性未验收 |
+| Unitree G1 越障 teacher | active：AMP数据对照已启动，GPU0旧数据/GPU2新rob2rob数据、TB8037；v6在GPU1/3参照 | [机器人无关算法与现行训练](plans/2026-09-07--robot-neutral-locomotion.md) | T4前进走跑重定向为G1 29DoF，287帧Isaac核验通过；两组零初速/2048env/4000轮，行为未验收 |
 | 翻箱 | G1 跟踪专家 → G2 heightscan 技能（zhuoqun）。**G2 学生与 G3 合并（走跑+翻箱成一条策略）等 G2 过箱后再开。** | [翻箱 recovery](plans/2026-08-15--t4-vault-g1-g2-recovery-plan.md) | [合并规格](specs/2026-08-13--t4-vault-loco-merge.md) |
 
 运行时切片与机器占用：`.harness/work_index.md`、`.harness/state.md`。

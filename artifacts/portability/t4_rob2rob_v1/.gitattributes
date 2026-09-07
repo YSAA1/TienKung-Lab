@@ -1,0 +1,2 @@
+# Preserve exact source bytes used for the generation and launch SHA256.
+*_snapshot.py.txt -text whitespace=cr-at-eol

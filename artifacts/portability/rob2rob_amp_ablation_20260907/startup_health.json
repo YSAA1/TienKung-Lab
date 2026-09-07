@@ -1,0 +1,125 @@
+{
+  "time": "2026-09-07T18:20:14.884778+08:00",
+  "groups": {
+    "control": {
+      "session_alive": true,
+      "checkpoints": [
+        "model_0.pt",
+        "model_1000.pt",
+        "model_1500.pt",
+        "model_500.pt"
+      ],
+      "complete": false,
+      "metrics": {
+        "Train/mean_reward": {
+          "step": 1796,
+          "last": 5.8447957038879395,
+          "mean_last20": 6.176957535743713,
+          "finite": true
+        },
+        "Train/mean_episode_length": {
+          "step": 1796,
+          "last": 145.0,
+          "mean_last20": 139.53000183105468,
+          "finite": true
+        },
+        "Loss/learning_rate": {
+          "step": 1796,
+          "last": 1.4999999621068127e-05,
+          "mean_last20": 2.9624999115185346e-05,
+          "finite": true
+        },
+        "Loss/value_function": {
+          "step": 1796,
+          "last": 0.10752154141664505,
+          "mean_last20": 0.1050872828811407,
+          "finite": true
+        },
+        "Loss/surrogate": {
+          "step": 1796,
+          "last": 0.001441463828086853,
+          "mean_last20": 0.0004485277386265807,
+          "finite": true
+        },
+        "Loss/amp": {
+          "step": 1796,
+          "last": 0.22553758323192596,
+          "mean_last20": 0.2315085880458355,
+          "finite": true
+        },
+        "Policy/mean_noise_std": {
+          "step": 1796,
+          "last": 0.37445151805877686,
+          "mean_last20": 0.37411578744649887,
+          "finite": true
+        },
+        "Reset/collapsed": {
+          "step": 1796,
+          "last": 0.9481267929077148,
+          "mean_last20": 0.9536309331655503,
+          "finite": true
+        }
+      },
+      "log_tail": "ated in a future release. Please use `ray_alignment='yaw'` instead.\n2026-09-07T10:20:21Z [5,784,815ms] [Warning] [isaaclab.utils.math] The function 'quat_rotate_inverse' will be deprecated in favor of the faster method 'quat_apply_inverse'. Please use 'quat_apply_inverse' instead....\n2026-09-07T10:20:21Z [5,784,828ms] [Warning] [isaaclab.utils.math] The function 'quat_rotate_inverse' will be deprecated in favor of the faster method 'quat_apply_inverse'. Please use 'quat_apply_inverse' instead....\n2026-09-07T10:20:21Z [5,784,833ms] [Warning] [isaaclab.sensors.ray_caster.ray_caster] The `attach_yaw_only` property will be deprecated in a future release. Please use `ray_alignment='yaw'` instead.\n2026-09-07T10:20:21Z [5,784,835ms] [Warning] [isaaclab.sensors.ray_caster.ray_caster] The `attach_yaw_only` property will be deprecated in a future release. Please use `ray_alignment='yaw'` instead.\n"
+    },
+    "rob2rob": {
+      "session_alive": true,
+      "checkpoints": [
+        "model_0.pt"
+      ],
+      "complete": false,
+      "metrics": {
+        "Train/mean_reward": {
+          "step": 38,
+          "last": -2.8760263919830322,
+          "mean_last20": -3.697629487514496,
+          "finite": true
+        },
+        "Train/mean_episode_length": {
+          "step": 38,
+          "last": 39.77000045776367,
+          "mean_last20": 43.33949966430664,
+          "finite": true
+        },
+        "Loss/learning_rate": {
+          "step": 38,
+          "last": 0.00017085937724914402,
+          "mean_last20": 9.491015771345701e-05,
+          "finite": true
+        },
+        "Loss/value_function": {
+          "step": 38,
+          "last": 0.04180660471320152,
+          "mean_last20": 0.05336320213973522,
+          "finite": true
+        },
+        "Loss/surrogate": {
+          "step": 38,
+          "last": -0.010493575595319271,
+          "mean_last20": -0.011234825244173408,
+          "finite": true
+        },
+        "Loss/amp": {
+          "step": 38,
+          "last": 0.0011386044789105654,
+          "mean_last20": 0.0024029382737353446,
+          "finite": true
+        },
+        "Policy/mean_noise_std": {
+          "step": 38,
+          "last": 0.8726012110710144,
+          "mean_last20": 0.9050564527511596,
+          "finite": true
+        },
+        "Reset/collapsed": {
+          "step": 38,
+          "last": 0.9942052960395813,
+          "mean_last20": 0.9785240739583969,
+          "finite": true
+        }
+      },
+      "log_tail": "e deprecated in a future release. Please use `ray_alignment='yaw'` instead.\n2026-09-07T10:20:20Z [196,261ms] [Warning] [isaaclab.utils.math] The function 'quat_rotate_inverse' will be deprecated in favor of the faster method 'quat_apply_inverse'. Please use 'quat_apply_inverse' instead....\n2026-09-07T10:20:20Z [196,279ms] [Warning] [isaaclab.utils.math] The function 'quat_rotate_inverse' will be deprecated in favor of the faster method 'quat_apply_inverse'. Please use 'quat_apply_inverse' instead....\n2026-09-07T10:20:20Z [196,284ms] [Warning] [isaaclab.sensors.ray_caster.ray_caster] The `attach_yaw_only` property will be deprecated in a future release. Please use `ray_alignment='yaw'` instead.\n2026-09-07T10:20:20Z [196,286ms] [Warning] [isaaclab.sensors.ray_caster.ray_caster] The `attach_yaw_only` property will be deprecated in a future release. Please use `ray_alignment='yaw'` instead.\n"
+    }
+  },
+  "v6_session_alive": true
+}

@@ -1,0 +1,176 @@
+# Copyright (c) 2021-2024, The RSL-RL Project Developers.
+# All rights reserved.
+# Original code is licensed under the BSD-3-Clause license.
+#
+# Copyright (c) 2022-2025, The Isaac Lab Project Developers.
+# All rights reserved.
+#
+# Copyright (c) 2025-2026, The Legged Lab Project Developers.
+# All rights reserved.
+#
+# Copyright (c) 2025-2026, The TienKung-Lab Project Developers.
+# All rights reserved.
+# Modifications are licensed under the BSD-3-Clause license.
+#
+# This file contains code derived from the RSL-RL, Isaac Lab, and Legged Lab Projects,
+# with additional modifications by the TienKung-Lab Project,
+# and is distributed under the BSD-3-Clause license.
+
+"""Cold AMP data ablation against the frozen zero-root-velocity control."""
+
+import argparse
+import hashlib
+import json
+import os
+import random
+import threading
+import time
+from pathlib import Path
+
+from isaaclab.app import AppLauncher
+
+from legged_lab.scripts.isaaclab_runtime_compat import (
+    patch_missing_physx_material_attributes,
+    patch_physx_backward_compatibility_setting,
+)
+
+parser = argparse.ArgumentParser(description=__doc__)
+parser.add_argument("--group", choices=("rob2rob",), required=True)
+parser.add_argument("--output", type=Path, required=True)
+parser.add_argument("--start-file", type=Path, required=True)
+patch_physx_backward_compatibility_setting(AppLauncher)
+AppLauncher.add_app_launcher_args(parser)
+args = parser.parse_args()
+args.headless = True
+app = AppLauncher(args).app
+
+# isort: off
+import numpy as np
+import torch
+from isaaclab.utils.io import dump_yaml
+from rsl_rl.runners import AmpOnPolicyRunner
+
+from legged_lab.envs import *  # noqa: F401,F403
+from legged_lab.utils import task_registry
+
+# isort: on
+
+
+def seed_all():
+    random.seed(42)
+    np.random.seed(42)
+    torch.manual_seed(42)
+    torch.cuda.manual_seed_all(42)
+
+
+def tensor_hash(tensor):
+    value = tensor.detach().cpu().contiguous()
+    return hashlib.sha256(value.numpy().tobytes()).hexdigest()
+
+
+def state_hash(module):
+    digest = hashlib.sha256()
+    for key, value in sorted(module.state_dict().items()):
+        digest.update(key.encode())
+        digest.update(value.detach().cpu().contiguous().numpy().tobytes())
+    return digest.hexdigest()
+
+
+def write_json(path, value):
+    temporary = path.with_suffix(".tmp")
+    temporary.write_text(json.dumps(value, indent=2))
+    temporary.replace(path)
+
+
+def main():
+    patch_missing_physx_material_attributes()
+    seed_all()
+    torch.backends.cuda.matmul.allow_tf32 = True
+    torch.backends.cudnn.allow_tf32 = True
+    torch.backends.cudnn.deterministic = False
+    torch.backends.cudnn.benchmark = False
+    cfg, agent = task_registry.get_cfgs("g1_loco_teacher")
+    cfg.device = cfg.sim.device = agent.device = args.device
+    cfg.scene.num_envs = 2048
+    cfg.scene.seed = agent.seed = 42
+    agent.max_iterations = 4000
+    agent.save_interval = 500
+    agent.resume = False
+    agent.run_name = "g1_reset_xy_ablation"
+    agent.logger = "tensorboard"
+    assert cfg.domain_rand.events.reset_base.params["velocity_range"] == {}
+    dataset = Path("legged_lab/envs/g1/datasets/motion_amp_expert_t4_rob2rob_v1")
+    manifest = json.loads((dataset / "_manifest.json").read_text())
+    validation = json.loads(Path("artifacts/portability/t4_rob2rob_v1/isaac_validation.json").read_text())
+    assert validation["passed"]
+    assert set(validation["clips"]) == set(manifest["clips"])
+    for name, clip in manifest["clips"].items():
+        actual = hashlib.sha256((dataset / f"{name}.txt").read_bytes()).hexdigest()
+        assert actual == clip["sha256"] == validation["clips"][name]["sha256"]
+    agent.amp_expert_dir = str(dataset)
+    agent.amp_motion_files = [str(dataset / f"{name}.txt") for name in manifest["clips"]]
+    assert cfg.robot.action_scale == 0.25
+    assert cfg.domain_rand.events.reset_robot_joints.params["position_range"] == (
+        1.0,
+        1.0,
+    )
+    args.output.mkdir(parents=True, exist_ok=True)
+    env = task_registry.get_task_class("g1_loco_teacher")(cfg, True)
+    env.reset(torch.arange(env.num_envs, device=env.device))
+    velocity = env.robot.data.root_vel_w.clone()
+    assert torch.allclose(velocity[:, 2:], torch.zeros_like(velocity[:, 2:]), atol=1e-6)
+    assert float(velocity.abs().max()) < 1e-6
+    # Reset model initialization RNG identically after building both environments.
+    seed_all()
+    runner = AmpOnPolicyRunner(env, agent.to_dict(), log_dir=str(args.output), device=env.device)
+    assert runner.current_learning_iteration == 0
+    dump_yaml(str(args.output / "params/env.yaml"), cfg)
+    dump_yaml(str(args.output / "params/agent.yaml"), agent)
+    ready = {
+        "group": args.group,
+        "pid": os.getpid(),
+        "seed": 42,
+        "num_envs": env.num_envs,
+        "steps_per_env": runner.num_steps_per_env,
+        "iterations": 4000,
+        "resume": False,
+        "root_velocity_mean": velocity.mean(0).tolist(),
+        "root_velocity_std": velocity.std(0).tolist(),
+        "root_velocity_abs_max": velocity.abs().max(0).values.tolist(),
+        "initial_policy_sha256": state_hash(runner.alg.policy),
+        "initial_discriminator_sha256": state_hash(runner.alg.discriminator),
+        "initial_expert_samples_sha256": tensor_hash(runner.alg.amp_data.preloaded_s),
+        "initial_q_sha256": tensor_hash(env.robot.data.joint_pos),
+        "initial_root_pose_sha256": tensor_hash(env.robot.data.root_state_w[:, :7]),
+        "initial_terrain_levels_sha256": tensor_hash(env.scene.terrain.terrain_levels),
+        "initial_terrain_origins_sha256": tensor_hash(env.scene.terrain.env_origins),
+    }
+    write_json(args.output / "ready.json", ready)
+    print("PAIR_READY", json.dumps(ready), flush=True)
+    deadline = time.monotonic() + 600
+    while not args.start_file.exists():
+        if time.monotonic() > deadline:
+            raise TimeoutError("Pair configuration/initialization verification was not released in 600 seconds")
+        time.sleep(0.5)
+    print("PAIR_TRAINING_STARTED", time.time(), flush=True)
+    runner.learn(num_learning_iterations=4000, init_at_random_ep_len=True)
+    assert (args.output / "model_3999.pt").is_file()
+    write_json(
+        args.output / "training_complete.json",
+        {"time": time.time(), "checkpoint": "model_3999.pt"},
+    )
+
+
+if __name__ == "__main__":
+    code = 0
+    try:
+        main()
+    except BaseException:
+        import traceback
+
+        traceback.print_exc()
+        code = 1
+    finally:
+        threading.Timer(30, os._exit, args=(code,)).start()
+        app.close()
+        os._exit(code)

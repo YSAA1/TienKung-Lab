@@ -1,8 +1,21 @@
 # 机器人无关的运动训练算法整理
 
-Status: v6作为参照继续运行（GPU1/3、TB8035）；第3000轮平地仍站立。用户已批准根平面初速度单变量冷训练对照：GPU0/2，各2048env、4000轮、seed42，TB8036；16:44完成配对核验并放行。训练有效性目标未完成。
+Status: 用户要求重制AMP并立即开启数据对照。T4→G1 rob2rob前进走跑专家已制作、全帧Isaac核验及回放检查通过；18:18在GPU2放行新组。GPU0原零初速/旧数据组为基线，TB8037；原随机初速组已停止并保留工件，v6在GPU1/3继续参照。训练有效性目标未完成。
 
-## 当前执行：根平面初速度单变量对照
+## 当前执行：只替换AMP专家的数据对照
+
+- 原始问题已量化：旧6段G1专家均只截取前30秒，按既有采样权重约26.3%帧水平速度低于0.1m/s；未加载dance文件，但低速与风格化动作不能靠walk/run文件名排除。该现象不单独证明训练失败的唯一根因。
+- 全序列筛选曾得到21段，再按脚部运动筛到8段；回放发现后者偏向弯腰、手扶腰的walk4，未用于训练。候选统计及否决证据在 `artifacts/portability/t4_rob2rob_v1/rejected_candidates.json` 与对应contact sheet；草稿原件归档在 `artifacts/diagnostics/g1_curated_ablation/rejected_drafts/`，不属于正式数据。
+- 最终采用用户允许的rob2rob：从现有T4 `t4_walk_forward.csv` / `t4_jog_forward.csv` 求解G1有界IK，保持按腿长/髋宽缩放的脚掌位置和方向，以及按臂长缩放的肩部相对手腕轨迹。腿长比例0.91938、髋宽1.01722、臂长0.73515；腰yaw映射，G1额外腰roll/pitch为0。不是把27维关节角直接填成29维。
+- 每条转换轨迹仅作一次刚性竖直平移以对齐地面，无逐帧抬根、时间缩放、跨片段拼接或关节硬裁剪。全源CSV保留在 `legged_lab/envs/g1/datasets/motion_source_t4_rob2rob_v1/`；带源帧范围及SHA的70D专家在 `legged_lab/envs/g1/datasets/motion_amp_expert_t4_rob2rob_v1/`。
+- 走路197帧/6.57秒/6个stride周期，均速0.896m/s；慢跑90帧/3秒/4个周期，均速1.861m/s。低于0.1m/s帧占0，硬关节限位超出0，最大关节速度分别为官方限值的54.1%/76.0%。脚掌位置最大拟合误差1.184mm，方向0.0932rad；手腕最大3.98cm。脚底几何接近地面的运动代理p95为0.423/0.318m/s，不等同真实接触滑移验收。
+- 官方IsaacLab同一G1 articulation、同一AMP builder对全部287帧70维逐帧重算通过；独立17项数据/资产检查通过。连续专家回放9.6秒，144帧，SHA及12帧审阅图在 `artifacts/portability/t4_rob2rob_v1/`。这是运动学专家验收，不是动力学跟踪或已训练策略能力验收；只有两条短源动作，需通过新实验检验泛化与学习效果。
+- 数据对照：GPU0/tmux `g1-reset-control` 使用原6段数据；GPU2/tmux `g1-amp-rob2rob` 使用新2段rob2rob数据。均seed42、单GPU2048env、24steps/update、4000更新、冷启动、零根速度、官方固定初姿/纯29DoF/scale0.25。walk/run采样总概率仍为62.5%/37.5%，奖励与AMP算法不变。
+- 已核对两组环境配置完全一致，agent配置仅 `amp_expert_dir` / `amp_motion_files` 不同；初始policy、discriminator、q、root pose、terrain levels/origins的6组SHA完全一致。新组18:18:01放行，专家预采样SHA按预期不同。基线启动更早，必须按相同更新/样本量比较，不按同一墙钟时刻判优劣。
+- TensorBoard `http://100.100.188.39:8037/#scalars`，tmux `g1-amp-data-tb`，工件 `/home/nubot/phn_ws/t4_train/TienKung-Lab-g1-unitree-v6-20260907/artifacts/portability/rob2rob_amp_ablation_20260907/`。`control` 为原基线目录的软链接；`rob2rob` 为新组。初始化、停止旧随机初速组、源码与数据哈希均有JSON记录。恢复查询脚本 `artifacts/diagnostics/g1_curated_ablation/status.py`。
+- 每组4000更新后自动做同条件零初速平地/踏石/圆桩评估及平地/踏石连续回放。最终checkpoint为model_3999，结果只按自主起步、持续行走、速度与reach2m评判；不把奖励上涨作为解决证明。
+
+## 历史对照：根平面初速度（随机组已停止，零速组复用）
 
 - 触发证据：v6 `model_3000`，vx=0.7、32回合固定平地，实际速度0.00333m/s、最大前进距离均值0.02472m、reach2m=0/32，全部到时限。见 `artifacts/diagnostics/plateau_3000/flat.json`。专家回放和数值健康不能替代策略验收。
 - 2026-09-07用户批准开始。两组均冷启动，seed42、2048env、24steps/update、4000更新（每组196,608,000样本），单GPU；最终checkpoint为 `model_3999.pt`。不加载v6旧策略。
