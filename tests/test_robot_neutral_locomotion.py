@@ -30,7 +30,7 @@ def _third_robot():
 
 
 def _articulation(spec):
-    names = tuple(reversed(spec.joint_names))
+    names = tuple(reversed(spec.joint_names)) + spec.auxiliary_joint_names
     bodies = tuple(dict.fromkeys(spec.feet + spec.hands + spec.diagnostic_bodies + (spec.torso,)))
     q = torch.arange(len(names)).float().unsqueeze(0)
     b = len(bodies)
@@ -111,3 +111,20 @@ def test_algorithm_modules_do_not_import_robot_implementations():
             if isinstance(node, (ast.Import, ast.ImportFrom)):
                 statement = ast.unparse(node)
                 assert not any(name in statement for name in ("legged_lab.assets", "legged_lab.envs")), path
+
+
+def test_auxiliary_joints_are_explicit_and_excluded_from_amp():
+    robot = _articulation(G1_LOCOMOTION)
+    assert len(robot.joint_names) == 43
+    builder = AmpFeatureBuilder(robot, "cpu", G1_LOCOMOTION)
+    before = builder.compute()
+    robot.data.joint_pos[:, 29:] = 1000
+    assert torch.equal(before, builder.compute())
+    robot.joint_names = robot.joint_names + ("undeclared_joint",)
+    with pytest.raises(ValueError, match="unexpected"):
+        G1_LOCOMOTION.validate_articulation(robot)
+
+
+def test_auxiliary_joints_cannot_overlap_policy():
+    with pytest.raises(ValueError, match="auxiliary joints"):
+        replace(G1_LOCOMOTION, auxiliary_joint_names=(G1_LOCOMOTION.joint_names[0],)).validate()

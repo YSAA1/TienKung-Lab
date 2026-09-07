@@ -70,7 +70,7 @@ def test_g1_teacher_uses_shared_full_level_sparse_curriculum() -> None:
 
 
 def test_g1_actuators_use_urdf_effort_limits() -> None:
-    src = (ROOT / "legged_lab/assets/unitree_g1/g1.py").read_text(encoding="utf-8")
+    src = (ROOT / "legged_lab/assets/unitree_g1/legacy_mode15.py").read_text(encoding="utf-8")
     assert "effort_limit_sim=300.0" not in src
     assert "enabled_self_collisions=False" in src
     assert "effort_limit_sim=25.0" in src
@@ -301,14 +301,14 @@ def test_g1_standing_pose_matches_mjcf_keyframe() -> None:
     assert G1_STANDING_JOINT_POS["left_hip_pitch_joint"] == pytest.approx(-0.312)
     assert G1_STANDING_JOINT_POS["left_knee_joint"] == pytest.approx(0.669)
     assert G1_STANDING_JOINT_POS["left_ankle_pitch_joint"] == pytest.approx(-0.363)
-    src = (G1_ASSET / "g1.py").read_text(encoding="utf-8")
+    src = (G1_ASSET / "legacy_mode15.py").read_text(encoding="utf-8")
     assert "G1_STANDING_JOINT_POS" in src
     assert "G1_STANDING_PELVIS_Z" in src
     assert '"left_hip_pitch_joint": -0.20' not in src
 
 
 def test_g1_does_not_use_isaaclab_bundled_g1_cfg() -> None:
-    src = (G1_ASSET / "g1.py").read_text(encoding="utf-8")
+    src = (G1_ASSET / "legacy_mode15.py").read_text(encoding="utf-8")
     assert "from isaaclab_assets" not in src
     assert "g1_29dof_mode_15.urdf" in src
     assert "G1_STANDING_JOINT_POS" in src

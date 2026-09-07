@@ -23,7 +23,7 @@ class G1LocoTeacherEnvCfg(LightLPLocomotionEnvCfg):
 
     def __post_init__(self):
         super().__post_init__()
-        self.scene.robot = G1_29DOF_CFG
+        self.scene.robot = G1_29DOF_CFG.copy()
         self.reward = G1SparseTeacherRewardCfg()
         # Match the official G1 velocity task's uniform position-action scale.
         self.robot.action_scale = 0.5
@@ -38,12 +38,16 @@ class G1LocoTeacherEnvCfg(LightLPLocomotionEnvCfg):
         self.amp_terrain_schedule.enable = True
         self.commands.debug_vis = False
         self.domain_rand.action_delay.enable = False
+        # Honor the official initial joint pose; independent angle scaling can
+        # introduce foot penetration without adjusting root height.
+        self.domain_rand.events.reset_robot_joints.params["position_range"] = (1.0, 1.0)
+        self.domain_rand.events.reset_base.params["velocity_range"] = {}
 
 
 @configclass
 class G1LocoTeacherAgentCfg(LightLPLocomotionAgentCfg):
     experiment_name = "g1_loco_teacher_sparse"
-    run_name = "g1_lightlp_teacher_v3"
+    run_name = "g1_official_teacher_v4"
     max_iterations = 30000
     neptune_project = "g1_loco_teacher_sparse"
     wandb_project = "g1_loco_teacher_sparse"

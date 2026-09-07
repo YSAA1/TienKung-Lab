@@ -55,7 +55,7 @@ AMP_MOTION_CLASSES: dict[str, str] = {
 
 AMP_HELD_OUT_MOTIONS: tuple[str, ...] = ("sprint1_subject2",)
 
-AMP_FORMAL_EXPERT_DIR = "legged_lab/envs/g1/datasets/motion_amp_expert"
+AMP_FORMAL_EXPERT_DIR = "legged_lab/envs/g1/datasets/motion_amp_expert_official_v4"
 AMP_MOTION_SOURCE_DIR = "legged_lab/envs/g1/datasets/motion_source"
 
 

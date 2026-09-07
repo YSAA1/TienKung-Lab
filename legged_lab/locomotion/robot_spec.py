@@ -24,6 +24,9 @@ class LocomotionRobotSpec:
     reward_bodies: dict[str, tuple[str, ...]]
     reward_joints: dict[str, tuple[str, ...]]
 
+    # Named simulator joints held at their default targets, outside the policy.
+    auxiliary_joint_names: tuple[str, ...] = ()
+
     @property
     def amp_frame_dim(self) -> int:
         return 2 * len(self.joint_names) + 3 * (len(self.hands) + len(self.feet))
@@ -36,6 +39,9 @@ class LocomotionRobotSpec:
         n = len(self.joint_names)
         if not self.name or n == 0 or len(set(self.joint_names)) != n:
             raise ValueError("robot spec requires a name and unique ordered policy joints")
+        if (len(set(self.auxiliary_joint_names)) != len(self.auxiliary_joint_names)
+                or set(self.auxiliary_joint_names) & set(self.joint_names)):
+            raise ValueError("auxiliary joints must be unique and outside the policy joint set")
         if len(set(self.feet)) != 2 or len(set(self.hands)) != 2:
             raise ValueError(f"{self.name}: locomotion requires two ordered feet and two ordered hands")
         if len(self.left_leg) != 6 or len(self.right_leg) != 6:
@@ -60,11 +66,12 @@ class LocomotionRobotSpec:
     def validate_articulation(self, robot) -> None:
         self.validate()
         actual = tuple(robot.joint_names)
-        if len(actual) != len(self.joint_names) or set(actual) != set(self.joint_names):
+        expected = self.joint_names + self.auxiliary_joint_names
+        if len(actual) != len(expected) or set(actual) != set(expected):
             raise ValueError(
                 f"{self.name}: articulation/policy joint mismatch; "
-                f"missing={sorted(set(self.joint_names) - set(actual))}, "
-                f"unexpected={sorted(set(actual) - set(self.joint_names))}"
+                f"missing={sorted(set(expected) - set(actual))}, "
+                f"unexpected={sorted(set(actual) - set(expected))}"
             )
         bodies = set(robot.body_names)
         required = set(self.feet + self.hands + self.diagnostic_bodies + (self.torso,))

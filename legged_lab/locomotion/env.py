@@ -376,9 +376,11 @@ class LocomotionEnv(VecEnv):
         )
 
         self.action = torch.zeros(
-            self.num_envs, self.num_actions, dtype=torch.float, device=self.device, requires_grad=False
+            self.num_envs, self.robot.num_joints, dtype=torch.float, device=self.device, requires_grad=False
         )
-        self.policy_action = torch.zeros_like(self.action)
+        self.policy_action = torch.zeros(
+            self.num_envs, self.num_actions, dtype=torch.float, device=self.device
+        )
         self.avg_feet_force_per_step = torch.zeros(
             self.num_envs, len(self.feet_cfg.body_ids), dtype=torch.float, device=self.device, requires_grad=False
         )

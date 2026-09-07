@@ -50,6 +50,7 @@ import torch  # noqa: E402
 from isaaclab.assets import Articulation  # noqa: E402
 
 from legged_lab.assets.unitree_g1.constants import G1_29DOF_JOINT_NAMES  # noqa: E402
+from legged_lab.assets.unitree_g1.locomotion import G1_LOCOMOTION
 from legged_lab.assets.unitree_g1.g1 import G1_29DOF_CFG  # noqa: E402
 from legged_lab.assets.unitree_g1.schemas import (  # noqa: E402
     AMP_FRAME_DIM,
@@ -102,13 +103,19 @@ def _write_state(
     sim: sim_utils.SimulationContext,
     row: list[float],
     joint_vel_row: list[float],
-    motion_to_sim: list[int],
+    motion_to_sim: list[int | None],
     device: torch.device,
 ) -> None:
     x, y, z, qx, qy, qz, qw = row[:7]
     root_pose = torch.tensor([[x, y, z, qw, qx, qy, qz]], dtype=torch.float32, device=device)
-    joint_pos = torch.tensor([[row[7:][index] for index in motion_to_sim]], dtype=torch.float32, device=device)
-    joint_vel = torch.tensor([[joint_vel_row[index] for index in motion_to_sim]], dtype=torch.float32, device=device)
+    joint_pos = torch.tensor(
+        [[row[7:][index] if index is not None else 0.0 for index in motion_to_sim]], dtype=torch.float32, device=device
+    )
+    joint_vel = torch.tensor(
+        [[joint_vel_row[index] if index is not None else 0.0 for index in motion_to_sim]],
+        dtype=torch.float32,
+        device=device,
+    )
 
     robot.write_root_pose_to_sim(root_pose)
     robot.write_root_velocity_to_sim(torch.zeros((1, 6), dtype=torch.float32, device=device))
@@ -145,7 +152,7 @@ def _generate_motion(
     robot: Articulation,
     sim: sim_utils.SimulationContext,
     builder: G1AmpFeatureBuilder,
-    motion_to_sim: list[int],
+    motion_to_sim: list[int | None],
     device: torch.device,
 ) -> tuple[list[list[float]], dict]:
     rows = _read_motion(path)
@@ -164,7 +171,9 @@ def _generate_motion(
         state = builder.compute()
         if not torch.isfinite(state).all():
             raise ValueError(f"{path} produced non-finite AMP features at frame {index}")
-        written = torch.tensor([[row[7:][i] for i in motion_to_sim]], dtype=torch.float32, device=device)
+        written = torch.tensor(
+            [[row[7:][i] if i is not None else 0.0 for i in motion_to_sim]], dtype=torch.float32, device=device
+        )
         applied = robot.data.joint_pos[:, :]
         if not torch.allclose(applied, written, atol=1.0e-4):
             raise RuntimeError(
@@ -201,9 +210,8 @@ def main() -> None:
 
     sim_joint_names = list(robot.joint_names)
     motion_index = {name: index for index, name in enumerate(G1_29DOF_JOINT_NAMES)}
-    if set(sim_joint_names) != set(G1_29DOF_JOINT_NAMES):
-        raise RuntimeError(f"simulator joints {sorted(sim_joint_names)} do not match G1_29DOF_JOINT_NAMES")
-    motion_to_sim = [motion_index[name] for name in sim_joint_names]
+    G1_LOCOMOTION.validate_articulation(robot)
+    motion_to_sim = [motion_index.get(name) for name in sim_joint_names]
     builder = G1AmpFeatureBuilder(robot, args_cli.sim_device)
 
     kinematics_response = _kinematics_response(robot, sim, builder)
@@ -268,5 +276,10 @@ if __name__ == "__main__":
         traceback.print_exc(file=sys.stdout)
         sys.stdout.flush()
         exit_code = 1
+    import os
+    import threading
+
+    # Bound Isaac shutdown after all output files have been closed.
+    threading.Timer(30.0, os._exit, args=(exit_code,)).start()
     app.close()
     sys.exit(exit_code)
