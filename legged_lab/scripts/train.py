@@ -17,6 +17,9 @@
 # and is distributed under the BSD-3-Clause license.
 
 import argparse
+import hashlib
+import json
+from pathlib import Path
 
 from isaaclab.app import AppLauncher
 
@@ -35,6 +38,9 @@ parser = argparse.ArgumentParser(description="Train an RL agent with RSL-RL.")
 parser.add_argument("--task", type=str, default=None, help="Name of the task.")
 parser.add_argument("--num_envs", type=int, default=None, help="Number of environments to simulate.")
 parser.add_argument("--seed", type=int, default=None, help="Seed used for the environment")
+parser.add_argument(
+    "--amp_expert_manifest", type=Path, help="Use the exact AMP files and hashes in this dataset manifest"
+)
 
 # append RSL-RL cli arguments
 cli_args.add_rsl_rl_args(parser)
@@ -78,6 +84,19 @@ def train():
         env_cfg.scene.num_envs = args_cli.num_envs
 
     agent_cfg = update_rsl_rl_cfg(agent_cfg, args_cli)
+    if args_cli.amp_expert_manifest is not None:
+        manifest_path = args_cli.amp_expert_manifest.resolve()
+        manifest = json.loads(manifest_path.read_text())
+        if not manifest["clips"]:
+            raise ValueError("AMP manifest has no clips")
+        files = []
+        for name, clip in manifest["clips"].items():
+            path = manifest_path.parent / f"{name}.txt"
+            if hashlib.sha256(path.read_bytes()).hexdigest() != clip["sha256"]:
+                raise ValueError(f"AMP clip hash mismatch: {path}")
+            files.append(str(path))
+        agent_cfg.amp_expert_dir = str(manifest_path.parent)
+        agent_cfg.amp_motion_files = files
     env_cfg.scene.seed = agent_cfg.seed
 
     if args_cli.distributed:

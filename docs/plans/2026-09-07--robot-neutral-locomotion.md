@@ -1,8 +1,23 @@
 # 机器人无关的运动训练算法整理
 
-Status: 用户要求重制AMP并立即开启数据对照。T4→G1 rob2rob前进走跑专家已制作、全帧Isaac核验及回放检查通过；18:18在GPU2放行新组。GPU0原零初速/旧数据组为基线，TB8037；原随机初速组已停止并保留工件，v6在GPU1/3继续参照。训练有效性目标未完成。
+Status: 用户改为完整正式训练，不再做对照。T4 实际使用的 17 段已全部转换为 G1 29DoF，3303 帧 / 110.1 秒，逐文件权重保持一致；18:51 启动 GPU0/2 双卡、每卡 2048env、冷启动 30000 轮，TB8038。此前 GPU0/2 对照已停止，v6 在 GPU1/3 保留。训练行为有效性尚待验收。
 
-## 当前执行：只替换AMP专家的数据对照
+
+## 当前执行：完整 17 段、双卡正式训练 30000 轮
+
+- 用户最新明确取消对照，直接双卡正式训练 30000 轮。运行 `g1-full17-30k`，物理 GPU0/2，DDP world_size=2，每卡2048env、全局4096env、24steps/update、seed42、不续旧模型。正式日志根目录 `logs/g1_full17_30k/`；TensorBoard `http://100.100.188.39:8038/#scalars`，会话 `g1-full17-30k-tb`。
+- 数据清单由 T4 S11b 保存的 agent.yaml 和实际17个 expert 文件逐项核对；远端源CSV关节角与当时expert一致，本地源CSV的LF哈希与远端一致。证据 `artifacts/portability/t4_rob2rob_full17_v1/t4_runtime_manifest.json`、`t4_source_check.json`。
+- 全部17段：站立1、前进走1、后退走1、侧移类3、转向7、jog4；保留每个原始姿态，N帧CSV产生N-1帧前向差分AMP，不按前进速度裁剪、不跨片段拼接。总3303个70D expert帧、110.1秒。`t4_run`原本未用于T4训练，继续保持原有held-out状态。`walk_left`及`jog_left/right`包含曲线运动，文件名/类别沿用实际T4训练合同。
+- 保持T4实际逐文件MotionWeight；归一化类别概率：stand20.833%、walk_forward20.833%、walk_backward12.5%、walk_lateral16.667%、turn16.667%、jog12.5%。不再沿用两段版62.5%/37.5%的配比。
+- 修复全量检查暴露的后退跑IK分支错误：膝关节接近伸直时，允许的小幅超伸会把暖启动吸入反向屈膝分支。求解按T4正向屈膝约束G1膝角非负，保留官方训练关节限位不变；脚部误差较大时用源解剖姿态重试有界IK，不裁剪输出、不删除后退跑。回归检查覆盖后退跑完整轨迹。
+- 全量最大脚掌位置误差4.30mm，关节硬限位超出0，最高关节速度为官方限值82.43%。Isaac同一G1 articulation / AMP builder逐帧重算全部3303帧，最大70D特征误差小于1e-6；CPU AMPLoader实际预采样100000条transition有限且权重一致；19项数据/资产/IK回归检查通过。
+- 数据在 `legged_lab/envs/g1/datasets/motion_amp_expert_t4_rob2rob_full17_v1/`，完整根位姿/q29在 `motion_source_t4_rob2rob_full17_v1/`。连续回放 `artifacts/portability/t4_rob2rob_full17_v1/all_clips.mp4`，17段均包含，110.4秒/15fps；3页审阅图共68帧覆盖所有动作。
+- 限制：运动学转换不代表动力学可跟踪或训练已成功。侧移最大足部方向拟合差约0.408rad；一次刚性根高度平移后脚底几何最低约-20.95mm，未逐帧抬根掩盖接触误差。足部近地运动只是几何代理，不能称为物理滑移验收。
+- 正式训练复用冻结c125f74运行代码（204个文件哈希核验），仅使用支持 `--amp_expert_manifest` 的正式train入口快照选择新数据；原配置、奖励、动作尺度0.25、官方纯29DoF资产不改。启动脚本、训练入口快照、数据SHA和旧任务停止记录：`artifacts/portability/g1_full17_30k_20260907/`。维护版入口 `legged_lab/scripts/train.py`；实际远端入口为该工件目录下 `train.py`，避免改写仍运行的v6源码。
+- 启动核验18:53:38：正式run `2026-09-07_18-52-02_g1_full17_30k` 已到27轮，model_0已保存，两个rank存活，已保存配置确认17文件/30000轮/不resume。所查PPO/AMP数值有限，早期能力未验收。恢复查询可在远端系统Python执行工件目录的 `status_snapshot.py.txt`；最新启动证据 `latest_health.json`。
+- 原两段组已停止；全17段4000轮组只完成初始化，未放行学习，随后按用户最新指令停止；原旧数据零速control也停止并保留checkpoint。此后的正式目标是30000轮，不再等待4000轮对照或自动切换阶段。最终能力按同checkpoint的evaluator JSON、lineage和连续策略回放验收，不能用奖励或启动验证代替。
+
+## 历史：两段前进走跑数据对照（已停止）
 
 - 原始问题已量化：旧6段G1专家均只截取前30秒，按既有采样权重约26.3%帧水平速度低于0.1m/s；未加载dance文件，但低速与风格化动作不能靠walk/run文件名排除。该现象不单独证明训练失败的唯一根因。
 - 全序列筛选曾得到21段，再按脚部运动筛到8段；回放发现后者偏向弯腰、手扶腰的walk4，未用于训练。候选统计及否决证据在 `artifacts/portability/t4_rob2rob_v1/rejected_candidates.json` 与对应contact sheet；草稿原件归档在 `artifacts/diagnostics/g1_curated_ablation/rejected_drafts/`，不属于正式数据。

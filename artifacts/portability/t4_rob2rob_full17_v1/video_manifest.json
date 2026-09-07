@@ -1,0 +1,27 @@
+{
+  "sha256": "20b9cdd4a4b655d682ade446be766416553f639bbcf94565ddc1b9060425258f",
+  "video_frames": 1656,
+  "video_fps": 15.0,
+  "video_duration_s": 110.4,
+  "all_clips": [
+    "g1_from_B10_-__Walk_turn_left_45_stageii_0000_0178",
+    "g1_from_B13_-__Walk_turn_right_90_stageii_0000_0167",
+    "g1_from_B14_-__Walk_turn_right_45_t2_stageii_0000_0173",
+    "g1_from_B15_-__Walk_turn_around_stageii_0000_0224",
+    "g1_from_B4_-_Stand_to_Walk_backwards_stageii_0000_0137",
+    "g1_from_B9_-__Walk_turn_left_90_stageii_0000_0150",
+    "g1_from_t4_jog_backward_0000_0170",
+    "g1_from_t4_jog_forward_0000_0151",
+    "g1_from_t4_jog_left_0000_0206",
+    "g1_from_t4_jog_right_0000_0226",
+    "g1_from_t4_left_rotate_0000_0231",
+    "g1_from_t4_right_rotate_0000_0193",
+    "g1_from_t4_side_left_0000_0137",
+    "g1_from_t4_side_right_0000_0150",
+    "g1_from_t4_stand_0000_0149",
+    "g1_from_t4_walk_forward_0000_0289",
+    "g1_from_t4_walk_left_0000_0372"
+  ],
+  "source_amp_frames": 3303,
+  "sampling": "Every other 30Hz frame at 15Hz; four review samples per clip"
+}

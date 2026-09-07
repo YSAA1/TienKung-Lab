@@ -1,0 +1,98 @@
+{
+  "time": "2026-09-07T18:53:38.606308+08:00",
+  "session_alive": true,
+  "runs": {
+    "/home/nubot/phn_ws/t4_train/TienKung-Lab-g1-unitree-v6-20260907/logs/g1_full17_30k/2026-09-07_18-52-02_g1_full17_30k": {
+      "checkpoints": [
+        "model_0.pt"
+      ],
+      "saved_config_verified": true,
+      "amp_files": 17,
+      "num_envs": "2048",
+      "max_iterations": "30000",
+      "resume": "false",
+      "metrics": {
+        "Train/mean_reward": {
+          "step": 27,
+          "last": -3.235466718673706,
+          "finite_last20": true
+        },
+        "Train/mean_episode_length": {
+          "step": 27,
+          "last": 45.56999969482422,
+          "finite_last20": true
+        },
+        "Loss/value_function": {
+          "step": 27,
+          "last": 0.0528450682759285,
+          "finite_last20": true
+        },
+        "Loss/surrogate": {
+          "step": 27,
+          "last": -0.01264373492449522,
+          "finite_last20": true
+        },
+        "Loss/amp": {
+          "step": 27,
+          "last": 0.0007938769995234907,
+          "finite_last20": true
+        },
+        "Loss/learning_rate": {
+          "step": 27,
+          "last": 0.0002562890585977584,
+          "finite_last20": true
+        },
+        "Policy/mean_noise_std": {
+          "step": 27,
+          "last": 0.8498570322990417,
+          "finite_last20": true
+        },
+        "Reset/collapsed": {
+          "step": 27,
+          "last": 0.983081042766571,
+          "finite_last20": true
+        },
+        "Perf/total_fps": {
+          "step": 27,
+          "last": 31417.0,
+          "finite_last20": true
+        }
+      }
+    }
+  },
+  "processes": [
+    {
+      "pid": 523021,
+      "command": "/bin/bash /home/nubot/isaac-sim-standalone-5.1.0-linux-x86_64/python.sh -m torch.distributed.run --nproc_per_node=2 --master_port=29608 /home/nubot/phn_ws/t4_train/TienKung-Lab-g1-unitree-v6-20260907/artifacts/portability/g1_full17_30k_20260907/train.py --task g1_loco_teacher --num_envs 2048 --seed 42 --distributed --headless --max_iterations 30000 --experiment_name g1_full17_30k --run_name g1_full17_30k --amp_expert_manifest /home/nubot/phn_ws/t4_train/TienKung-Lab-g1-unitree-v6-20260907/legged_lab/envs/g1/datasets/motion_amp_expert_t4_rob2rob_full17_v1/_manifest.json ",
+      "rank": null,
+      "world_size": null,
+      "local_rank": null,
+      "physical_devices": "0,2"
+    },
+    {
+      "pid": 523032,
+      "command": "/home/nubot/isaac-sim-standalone-5.1.0-linux-x86_64/kit/python/bin/python3 -m torch.distributed.run --nproc_per_node=2 --master_port=29608 /home/nubot/phn_ws/t4_train/TienKung-Lab-g1-unitree-v6-20260907/artifacts/portability/g1_full17_30k_20260907/train.py --task g1_loco_teacher --num_envs 2048 --seed 42 --distributed --headless --max_iterations 30000 --experiment_name g1_full17_30k --run_name g1_full17_30k --amp_expert_manifest /home/nubot/phn_ws/t4_train/TienKung-Lab-g1-unitree-v6-20260907/legged_lab/envs/g1/datasets/motion_amp_expert_t4_rob2rob_full17_v1/_manifest.json ",
+      "rank": null,
+      "world_size": null,
+      "local_rank": null,
+      "physical_devices": "0,2"
+    },
+    {
+      "pid": 523120,
+      "command": "/home/nubot/isaac-sim-standalone-5.1.0-linux-x86_64/kit/python/bin/python3 -u /home/nubot/phn_ws/t4_train/TienKung-Lab-g1-unitree-v6-20260907/artifacts/portability/g1_full17_30k_20260907/train.py --task g1_loco_teacher --num_envs 2048 --seed 42 --distributed --headless --max_iterations 30000 --experiment_name g1_full17_30k --run_name g1_full17_30k --amp_expert_manifest /home/nubot/phn_ws/t4_train/TienKung-Lab-g1-unitree-v6-20260907/legged_lab/envs/g1/datasets/motion_amp_expert_t4_rob2rob_full17_v1/_manifest.json ",
+      "rank": "0",
+      "world_size": "2",
+      "local_rank": "0",
+      "physical_devices": "0,2"
+    },
+    {
+      "pid": 523121,
+      "command": "/home/nubot/isaac-sim-standalone-5.1.0-linux-x86_64/kit/python/bin/python3 -u /home/nubot/phn_ws/t4_train/TienKung-Lab-g1-unitree-v6-20260907/artifacts/portability/g1_full17_30k_20260907/train.py --task g1_loco_teacher --num_envs 2048 --seed 42 --distributed --headless --max_iterations 30000 --experiment_name g1_full17_30k --run_name g1_full17_30k --amp_expert_manifest /home/nubot/phn_ws/t4_train/TienKung-Lab-g1-unitree-v6-20260907/legged_lab/envs/g1/datasets/motion_amp_expert_t4_rob2rob_full17_v1/_manifest.json ",
+      "rank": "1",
+      "world_size": "2",
+      "local_rank": "1",
+      "physical_devices": "0,2"
+    }
+  ],
+  "gpu_processes": "523121, GPU-a29f1f68-af1a-73f1-1877-008a6793fd95, 408 MiB\n523120, GPU-a29f1f68-af1a-73f1-1877-008a6793fd95, 8238 MiB\n401128, GPU-75ba5f3b-b50f-26cb-3493-2dd1cf36984c, 7992 MiB\n401129, GPU-75ba5f3b-b50f-26cb-3493-2dd1cf36984c, 577 MiB\n523121, GPU-b2434cbe-4058-969d-d482-13f6718d33de, 7994 MiB\n523120, GPU-b2434cbe-4058-969d-d482-13f6718d33de, 448 MiB\n401128, GPU-d577411e-b527-1992-ff7d-41e7a9b86015, 450 MiB\n401129, GPU-d577411e-b527-1992-ff7d-41e7a9b86015, 7992 MiB\n"
+}
