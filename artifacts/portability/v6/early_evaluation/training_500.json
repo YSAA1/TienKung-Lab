@@ -1,0 +1,34 @@
+{
+  "run": "/home/nubot/phn_ws/t4_train/TienKung-Lab-g1-unitree-v6-20260907/logs/g1_loco_teacher_sparse/2026-09-07_13-55-07_g1_unitree_29dof_teacher_v6",
+  "time": "2026-09-07T14:22:03.590265+08:00",
+  "metrics": {
+    "Train/mean_episode_length": {
+      "count": 100,
+      "mean_401_500": 85.9597998046875
+    },
+    "Train/mean_reward": {
+      "count": 100,
+      "mean_401_500": 3.9399228739738463
+    },
+    "Reset/collapsed": {
+      "count": 100,
+      "mean_401_500": 0.9427720326185226
+    },
+    "Reset/accel": {
+      "count": 100,
+      "mean_401_500": 0.09097565338015556
+    },
+    "Loss/learning_rate": {
+      "count": 100,
+      "mean_401_500": 4.4737502994394165e-05
+    },
+    "Curriculum/terrain_levels": {
+      "count": 100,
+      "mean_401_500": 1.7014809238910675
+    },
+    "Policy/mean_noise_std": {
+      "count": 100,
+      "mean_401_500": 0.3748238533735275
+    }
+  }
+}

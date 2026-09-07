@@ -1,0 +1,46 @@
+#!/bin/bash
+set -euo pipefail
+cd /home/nubot/phn_ws/t4_train/TienKung-Lab-g1-unitree-v6-20260907
+export CUDA_DEVICE_ORDER=PCI_BUS_ID
+export CUDA_VISIBLE_DEVICES=0
+export PYTHONPATH="/home/nubot/phn_ws/t4_train/TienKung-Lab-g1-unitree-v6-20260907:${PYTHONPATH:-}"
+isaac_nv=/home/nubot/isaac-sim-standalone-5.1.0-linux-x86_64/kit/python/lib/python3.11/site-packages/nvidia
+export LD_LIBRARY_PATH="$isaac_nv/nvjitlink/lib:$isaac_nv/cusparse/lib:${LD_LIBRARY_PATH:-}"
+
+set -euo pipefail
+
+exec > /home/nubot/phn_ws/t4_train/TienKung-Lab-g1-unitree-v6-20260907/artifacts/portability/v6/evaluation_1000/supervisor.log 2>&1
+sha256sum /home/nubot/phn_ws/t4_train/TienKung-Lab-s11b-upright-tbslim/logs/t4_loco_teacher_sparse/2026-08-22_01-12-08_t_sparse_lightlp_s11b_upright_tbslim/model_2000.pt > /home/nubot/phn_ws/t4_train/TienKung-Lab-g1-unitree-v6-20260907/artifacts/portability/v6/evaluation_1000/t4_model_2000/checkpoint.sha256
+timeout -k 15s 480s bash scripts/nubot_run.sh legged_lab/scripts/eval_locomotion.py --task t4_loco_teacher_sparse --num_envs 32 --episodes 32 --seed 42 --load_run 2026-08-22_01-12-08_t_sparse_lightlp_s11b_upright_tbslim --checkpoint /home/nubot/phn_ws/t4_train/TienKung-Lab-s11b-upright-tbslim/logs/t4_loco_teacher_sparse/2026-08-22_01-12-08_t_sparse_lightlp_s11b_upright_tbslim/model_2000.pt --terrain_type flat --difficulty 0 --command_vx .7 --headless --output /home/nubot/phn_ws/t4_train/TienKung-Lab-g1-unitree-v6-20260907/artifacts/portability/v6/evaluation_1000/t4_model_2000/flat.json > /home/nubot/phn_ws/t4_train/TienKung-Lab-g1-unitree-v6-20260907/artifacts/portability/v6/evaluation_1000/t4_model_2000/flat.log 2>&1
+test -s /home/nubot/phn_ws/t4_train/TienKung-Lab-g1-unitree-v6-20260907/artifacts/portability/v6/evaluation_1000/t4_model_2000/flat.json
+timeout -k 15s 480s bash scripts/nubot_run.sh legged_lab/scripts/eval_locomotion.py --task t4_loco_teacher_sparse --num_envs 32 --episodes 32 --seed 42 --load_run 2026-08-22_01-12-08_t_sparse_lightlp_s11b_upright_tbslim --checkpoint /home/nubot/phn_ws/t4_train/TienKung-Lab-s11b-upright-tbslim/logs/t4_loco_teacher_sparse/2026-08-22_01-12-08_t_sparse_lightlp_s11b_upright_tbslim/model_2000.pt --terrain_type stepping_stones --difficulty 0 --command_vx .7 --headless --spawn_y_offset_m 0 --spawn_yaw_deg 0 --output /home/nubot/phn_ws/t4_train/TienKung-Lab-g1-unitree-v6-20260907/artifacts/portability/v6/evaluation_1000/t4_model_2000/stepping_stones.json > /home/nubot/phn_ws/t4_train/TienKung-Lab-g1-unitree-v6-20260907/artifacts/portability/v6/evaluation_1000/t4_model_2000/stepping_stones.log 2>&1
+test -s /home/nubot/phn_ws/t4_train/TienKung-Lab-g1-unitree-v6-20260907/artifacts/portability/v6/evaluation_1000/t4_model_2000/stepping_stones.json
+date -Is > /home/nubot/phn_ws/t4_train/TienKung-Lab-g1-unitree-v6-20260907/artifacts/portability/v6/evaluation_1000/t4_model_2000/completed.txt
+deadline=$((SECONDS + 7200))
+until [[ -s /home/nubot/phn_ws/t4_train/TienKung-Lab-g1-unitree-v6-20260907/logs/g1_loco_teacher_sparse/2026-09-07_13-55-07_g1_unitree_29dof_teacher_v6/model_1000.pt ]]; do
+  tmux has-session -t g1-teacher-v6 || exit 2
+  (( SECONDS < deadline )) || exit 3
+  sleep 30
+done
+sleep 5
+sha256sum /home/nubot/phn_ws/t4_train/TienKung-Lab-g1-unitree-v6-20260907/logs/g1_loco_teacher_sparse/2026-09-07_13-55-07_g1_unitree_29dof_teacher_v6/model_1000.pt > /home/nubot/phn_ws/t4_train/TienKung-Lab-g1-unitree-v6-20260907/artifacts/portability/v6/evaluation_1000/g1_model_1000/checkpoint.sha256
+timeout -k 15s 480s bash scripts/nubot_run.sh legged_lab/scripts/eval_locomotion.py --task g1_loco_teacher --num_envs 32 --episodes 32 --seed 42 --load_run 2026-09-07_13-55-07_g1_unitree_29dof_teacher_v6 --checkpoint /home/nubot/phn_ws/t4_train/TienKung-Lab-g1-unitree-v6-20260907/logs/g1_loco_teacher_sparse/2026-09-07_13-55-07_g1_unitree_29dof_teacher_v6/model_1000.pt --terrain_type flat --difficulty 0 --command_vx .7 --headless --output /home/nubot/phn_ws/t4_train/TienKung-Lab-g1-unitree-v6-20260907/artifacts/portability/v6/evaluation_1000/g1_model_1000/flat.json > /home/nubot/phn_ws/t4_train/TienKung-Lab-g1-unitree-v6-20260907/artifacts/portability/v6/evaluation_1000/g1_model_1000/flat.log 2>&1
+test -s /home/nubot/phn_ws/t4_train/TienKung-Lab-g1-unitree-v6-20260907/artifacts/portability/v6/evaluation_1000/g1_model_1000/flat.json
+timeout -k 15s 480s bash scripts/nubot_run.sh legged_lab/scripts/eval_locomotion.py --task g1_loco_teacher --num_envs 32 --episodes 32 --seed 42 --load_run 2026-09-07_13-55-07_g1_unitree_29dof_teacher_v6 --checkpoint /home/nubot/phn_ws/t4_train/TienKung-Lab-g1-unitree-v6-20260907/logs/g1_loco_teacher_sparse/2026-09-07_13-55-07_g1_unitree_29dof_teacher_v6/model_1000.pt --terrain_type stepping_stones --difficulty 0 --command_vx .7 --headless --spawn_y_offset_m 0 --spawn_yaw_deg 0 --output /home/nubot/phn_ws/t4_train/TienKung-Lab-g1-unitree-v6-20260907/artifacts/portability/v6/evaluation_1000/g1_model_1000/stepping_stones.json > /home/nubot/phn_ws/t4_train/TienKung-Lab-g1-unitree-v6-20260907/artifacts/portability/v6/evaluation_1000/g1_model_1000/stepping_stones.log 2>&1
+test -s /home/nubot/phn_ws/t4_train/TienKung-Lab-g1-unitree-v6-20260907/artifacts/portability/v6/evaluation_1000/g1_model_1000/stepping_stones.json
+timeout -k 15s 480s bash scripts/nubot_run.sh legged_lab/scripts/play.py --task g1_loco_teacher --num_envs 1 --seed 42 --checkpoint_path /home/nubot/phn_ws/t4_train/TienKung-Lab-g1-unitree-v6-20260907/logs/g1_loco_teacher_sparse/2026-09-07_13-55-07_g1_unitree_29dof_teacher_v6/model_1000.pt --command_vx .7 --duration 16 --headless --terrain --terrain_types flat --difficulty 0 --record /home/nubot/phn_ws/t4_train/TienKung-Lab-g1-unitree-v6-20260907/artifacts/portability/v6/evaluation_1000/g1_model_1000/flat.mp4 > /home/nubot/phn_ws/t4_train/TienKung-Lab-g1-unitree-v6-20260907/artifacts/portability/v6/evaluation_1000/g1_model_1000/flat_replay.log 2>&1
+if [[ ! -s /home/nubot/phn_ws/t4_train/TienKung-Lab-g1-unitree-v6-20260907/artifacts/portability/v6/evaluation_1000/g1_model_1000/flat.mp4 ]]; then
+  test -s /home/nubot/phn_ws/t4_train/TienKung-Lab-g1-unitree-v6-20260907/artifacts/portability/v6/evaluation_1000/g1_model_1000/flat.gif
+  env -u LD_LIBRARY_PATH /usr/bin/ffmpeg -hide_banner -loglevel error -y -i /home/nubot/phn_ws/t4_train/TienKung-Lab-g1-unitree-v6-20260907/artifacts/portability/v6/evaluation_1000/g1_model_1000/flat.gif -vf 'setpts=N/(12.5*TB)' -r 12.5 -c:v libx264 -crf 18 -pix_fmt yuv420p -movflags +faststart /home/nubot/phn_ws/t4_train/TienKung-Lab-g1-unitree-v6-20260907/artifacts/portability/v6/evaluation_1000/g1_model_1000/flat.mp4
+fi
+test -s /home/nubot/phn_ws/t4_train/TienKung-Lab-g1-unitree-v6-20260907/artifacts/portability/v6/evaluation_1000/g1_model_1000/flat.mp4
+sha256sum /home/nubot/phn_ws/t4_train/TienKung-Lab-g1-unitree-v6-20260907/artifacts/portability/v6/evaluation_1000/g1_model_1000/flat.mp4 > /home/nubot/phn_ws/t4_train/TienKung-Lab-g1-unitree-v6-20260907/artifacts/portability/v6/evaluation_1000/g1_model_1000/flat.sha256
+timeout -k 15s 480s bash scripts/nubot_run.sh legged_lab/scripts/play.py --task g1_loco_teacher --num_envs 1 --seed 42 --checkpoint_path /home/nubot/phn_ws/t4_train/TienKung-Lab-g1-unitree-v6-20260907/logs/g1_loco_teacher_sparse/2026-09-07_13-55-07_g1_unitree_29dof_teacher_v6/model_1000.pt --command_vx .7 --duration 16 --headless --terrain --terrain_types stepping_stones --difficulty 0 --record /home/nubot/phn_ws/t4_train/TienKung-Lab-g1-unitree-v6-20260907/artifacts/portability/v6/evaluation_1000/g1_model_1000/stepping_stones.mp4 > /home/nubot/phn_ws/t4_train/TienKung-Lab-g1-unitree-v6-20260907/artifacts/portability/v6/evaluation_1000/g1_model_1000/stepping_stones_replay.log 2>&1
+if [[ ! -s /home/nubot/phn_ws/t4_train/TienKung-Lab-g1-unitree-v6-20260907/artifacts/portability/v6/evaluation_1000/g1_model_1000/stepping_stones.mp4 ]]; then
+  test -s /home/nubot/phn_ws/t4_train/TienKung-Lab-g1-unitree-v6-20260907/artifacts/portability/v6/evaluation_1000/g1_model_1000/stepping_stones.gif
+  env -u LD_LIBRARY_PATH /usr/bin/ffmpeg -hide_banner -loglevel error -y -i /home/nubot/phn_ws/t4_train/TienKung-Lab-g1-unitree-v6-20260907/artifacts/portability/v6/evaluation_1000/g1_model_1000/stepping_stones.gif -vf 'setpts=N/(12.5*TB)' -r 12.5 -c:v libx264 -crf 18 -pix_fmt yuv420p -movflags +faststart /home/nubot/phn_ws/t4_train/TienKung-Lab-g1-unitree-v6-20260907/artifacts/portability/v6/evaluation_1000/g1_model_1000/stepping_stones.mp4
+fi
+test -s /home/nubot/phn_ws/t4_train/TienKung-Lab-g1-unitree-v6-20260907/artifacts/portability/v6/evaluation_1000/g1_model_1000/stepping_stones.mp4
+sha256sum /home/nubot/phn_ws/t4_train/TienKung-Lab-g1-unitree-v6-20260907/artifacts/portability/v6/evaluation_1000/g1_model_1000/stepping_stones.mp4 > /home/nubot/phn_ws/t4_train/TienKung-Lab-g1-unitree-v6-20260907/artifacts/portability/v6/evaluation_1000/g1_model_1000/stepping_stones.sha256
+date -Is > /home/nubot/phn_ws/t4_train/TienKung-Lab-g1-unitree-v6-20260907/artifacts/portability/v6/evaluation_1000/g1_model_1000/completed.txt
+date -Is > /home/nubot/phn_ws/t4_train/TienKung-Lab-g1-unitree-v6-20260907/artifacts/portability/v6/evaluation_1000/completed.txt
