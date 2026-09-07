@@ -1,0 +1,13 @@
+{
+  "physics_equal_fields": [
+    "root_height",
+    "root_tilt",
+    "torso_height",
+    "torso_force"
+  ],
+  "steps": 50,
+  "before_torso_terminal_flags": 101,
+  "after_torso_terminal_flags": 0,
+  "note": "v5 raw group labels were stale; the exact shared actions are preserved in v6/contact_probe.py. Only the hard torso contact body list differs. All dynamics values compare exactly.",
+  "full_training_success": false
+}

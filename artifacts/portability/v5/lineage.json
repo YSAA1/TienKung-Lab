@@ -1,0 +1,21 @@
+{
+  "start_requested_at": "2026-09-07T13:35:57.769559+08:00",
+  "source_commit": "5b3402b85d21bbdd64a51b826ec7d7b2bbc41344",
+  "remote_snapshot": "/home/nubot/phn_ws/t4_train/TienKung-Lab-g1-unitree-v5-20260907",
+  "training_tmux": "g1-teacher-v5",
+  "tensorboard": "http://100.100.188.39:8034/#scalars",
+  "gpu_ids": [
+    1,
+    3
+  ],
+  "num_envs_per_rank": 2048,
+  "budget": 30000,
+  "resume": false,
+  "official_configuration": "Unitree-G1-29dof-Velocity asset and uniform action scale .25",
+  "config_commit": "4960b84732b0c2ec593dccbfe963fda1bcd7b1e3",
+  "description_commit": "7d6075f7f58588b189b940130e3edab3c839b2df",
+  "articulation_joints": 29,
+  "auxiliary_joints": 0,
+  "shared_mdp": "LightLP mixed terrain, 10 percent reset levels 0 through 9, original AMP terrain schedule and reward weights",
+  "learning_success_verified": false
+}

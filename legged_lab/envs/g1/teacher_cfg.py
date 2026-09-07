@@ -25,6 +25,10 @@ class G1LocoTeacherEnvCfg(LightLPLocomotionEnvCfg):
         super().__post_init__()
         self.scene.robot = G1_29DOF_CFG.copy()
         self.reward = G1SparseTeacherRewardCfg()
+        # Official G1 enables self-collision. Torso net force also includes
+        # internal impacts, so it cannot serve as a ground-fall detector.
+        # Keep soft contact costs and geometric/impact failure conditions.
+        self.robot.terminate_contacts_body_names = []
         # Match the official G1 velocity task's uniform position-action scale.
         self.robot.action_scale = 0.25
         self.robot.action_scale_effort_fraction = None
@@ -47,7 +51,7 @@ class G1LocoTeacherEnvCfg(LightLPLocomotionEnvCfg):
 @configclass
 class G1LocoTeacherAgentCfg(LightLPLocomotionAgentCfg):
     experiment_name = "g1_loco_teacher_sparse"
-    run_name = "g1_unitree_29dof_teacher_v5"
+    run_name = "g1_unitree_29dof_teacher_v6"
     max_iterations = 30000
     neptune_project = "g1_loco_teacher_sparse"
     wandb_project = "g1_loco_teacher_sparse"
