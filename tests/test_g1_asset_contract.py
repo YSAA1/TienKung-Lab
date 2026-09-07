@@ -58,7 +58,8 @@ def test_g1_teacher_uses_shared_full_level_sparse_curriculum() -> None:
     assert "self.scene.max_init_terrain_level = 0" in text
     assert "self.random_level_reset_max_level = None" in text
     assert "self.sparse_command_min_speed_scale = 0.5" in text
-    assert "self.robot.action_scale_effort_fraction = 0.25" in text
+    assert "self.robot.action_scale_effort_fraction = None" in text
+    assert "self.robot.action_scale = 0.5" in text
     assert "self.random_level_reset_fraction = 0.10" in text
     assert "self.random_level_reset_min_level = None" in text
     assert "self.commands.ranges.lin_vel_x" not in text

@@ -4,11 +4,11 @@
 set -euo pipefail
 cd "$(dirname "$0")/.."
 mkdir -p artifacts/portability/v3 logs
-run_name=g1_lightlp_amp_action_units_v3
+run_name=g1_lightlp_teacher_v3
 shopt -s nullglob
 previous=(logs/g1_loco_teacher_sparse/*_${run_name}/model_*.pt)
 if (( ${#previous[@]} )); then
-  echo "Existing action-units-v3 checkpoints found; inspect lineage before restarting." >&2
+  echo "Existing teacher-v3 checkpoints found; inspect lineage before restarting." >&2
   exit 1
 fi
 export CUDA_DEVICE_ORDER=PCI_BUS_ID
@@ -18,7 +18,7 @@ export LD_LIBRARY_PATH="$isaac_nv/nvjitlink/lib:$isaac_nv/cusparse/lib:${LD_LIBR
 printf 'TRAIN_START %s\n' "$(date -Is)" >artifacts/portability/v3/supervisor.log
 if bash scripts/nubot_run.sh -m torch.distributed.run --nnodes=1 --nproc_per_node=2 --master_port=29587 \
   legged_lab/scripts/train.py --task=g1_loco_teacher --num_envs=2048 --distributed --headless \
-  --run_name "$run_name" --max_iterations 30000 >logs/g1_action_units_v3.log 2>&1; then
+  --run_name "$run_name" --max_iterations 30000 >logs/g1_teacher_v3.log 2>&1; then
   printf 'TRAIN_DONE %s\n' "$(date -Is)" >>artifacts/portability/v3/supervisor.log
 else
   printf 'TRAIN_FAILED %s\n' "$(date -Is)" >>artifacts/portability/v3/supervisor.log

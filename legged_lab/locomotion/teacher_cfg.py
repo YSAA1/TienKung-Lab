@@ -113,8 +113,7 @@ class AmpLocomotionRewardCfg:
     ang_vel_xy_l2 = RewTerm(func=mdp.ang_vel_xy_l2, weight=-0.05)
     energy = RewTerm(func=mdp.energy, weight=-1e-3)
     dof_acc_l2 = RewTerm(func=mdp.joint_acc_l2, weight=-2.5e-7)
-    # Keep the calibrated 0.25-radian reward units when actuator scales differ.
-    action_rate_l2 = RewTerm(func=mdp.action_rate_l2, weight=-0.01, params={"reference_scale": 0.25})
+    action_rate_l2 = RewTerm(func=mdp.action_rate_l2, weight=-0.01)
     undesired_contacts = RewTerm(
         func=mdp.undesired_contacts,
         weight=-1.0,
@@ -213,7 +212,7 @@ class AmpLocomotionRewardCfg:
     gait_feet_frc_support_perio = RewTerm(func=mdp.gait_feet_frc_support_perio, weight=0.6, params={"delta_t": 0.02})
 
     ankle_torque = RewTerm(func=mdp.ankle_torque, weight=-0.0005)
-    ankle_action = RewTerm(func=mdp.ankle_action, weight=-0.001, params={"reference_scale": 0.25})
+    ankle_action = RewTerm(func=mdp.ankle_action, weight=-0.001)
     feet_y_distance = RewTerm(func=mdp.feet_y_distance, weight=-2.0, params={"target": 0.0})
 
 
@@ -454,7 +453,7 @@ class LightLPRewardCfg(AmpLocomotionRewardCfg):
         params={"sensor_cfg": SceneEntityCfg("contact_sensor", body_names="$shanks"), "threshold": 1.0},
     )
     dof_pos_limits = RewTerm(func=mdp.joint_pos_limits, weight=-10.0)
-    action_rate_l2 = RewTerm(func=mdp.action_rate_l2, weight=-0.1, params={"reference_scale": 0.25})
+    action_rate_l2 = RewTerm(func=mdp.action_rate_l2, weight=-0.1)
     # LightLP sparse locomotion uses the paper reward table without an extra
     # terminal cost. Physical falls remain terminations and lose future return.
     termination_penalty = RewTerm(func=mdp.is_terminated, weight=0.0)

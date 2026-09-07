@@ -25,8 +25,9 @@ class G1LocoTeacherEnvCfg(LightLPLocomotionEnvCfg):
         super().__post_init__()
         self.scene.robot = G1_29DOF_CFG
         self.reward = G1SparseTeacherRewardCfg()
-        # Nominal PD request per unit action, retaining the asset's gains/limits.
-        self.robot.action_scale_effort_fraction = 0.25
+        # Match the official G1 velocity task's uniform position-action scale.
+        self.robot.action_scale = 0.5
+        self.robot.action_scale_effort_fraction = None
         self.scene.max_init_terrain_level = 0
         # 10% resets sample all ten rows, independently of initial terrain levels.
         self.random_level_reset_fraction = 0.10
@@ -42,7 +43,7 @@ class G1LocoTeacherEnvCfg(LightLPLocomotionEnvCfg):
 @configclass
 class G1LocoTeacherAgentCfg(LightLPLocomotionAgentCfg):
     experiment_name = "g1_loco_teacher_sparse"
-    run_name = "g1_lightlp_amp_action_units_v3"
+    run_name = "g1_lightlp_teacher_v3"
     max_iterations = 30000
     neptune_project = "g1_loco_teacher_sparse"
     wandb_project = "g1_loco_teacher_sparse"
