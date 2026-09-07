@@ -5,7 +5,7 @@
 | Work surface | Status | Active slice | Source |
 | --- | --- | --- | --- |
 | T4 梅花桩 LightLP teacher | paused | G1 老师开训优先。T4 plant DR 计划仍在 `docs/plans/2026-09-02--t4-s12-teacher-plant-retrain-plan.md`，不开 | `docs/plans/2026-09-02--t4-s12-teacher-plant-retrain-plan.md` |
-| Unitree G1 越障 teacher | active | v3 已冷启动 30k，统一 scale=0.5，修复 AMP 输入/多卡同步，GPU 0/2、TB 8032；原 AMP、10% 全 0～9。旧 v2 已按用户要求在 9662 轮停止 | `docs/plans/2026-09-07--robot-neutral-locomotion.md` |
+| Unitree G1 越障 teacher | active | 官方G1 v4，GPU1/3、各2048env、30k冷启动、TB8033；代码7243c66；旧v3已停止，7个checkpoint保留 | `docs/plans/2026-09-07--robot-neutral-locomotion.md` |
 | T4 梅花桩 GRU 深度学生 | done | `s12_repr_first` `model_13999` Isaac hard 过门；MuJoCo 稀疏仍摔。下一刀跟新老师，不续 14k 蒸馏 | `docs/plans/2026-09-01--t4-s12-repr-first-distill-plan.md` |
 | T4 梅花桩学生 LightLP 成本 | done | warp + 3168/MLP + 单次 backward；collection p50 ~2.2 s。质量未过，已转配方修复 | `docs/archive/plans/2026-08-23--t4-sparse-s12-student-lightlp-distill-cost-plan.md` |
 | T4 学生 headless RTX 出图正确性 | done | `sim.render()` 调度 + checksum probe 绿；`s12_gru_ppo_rtx167` 已按 16.7 Hz 真出图 | `docs/archive/plans/2026-08-23--t4-sparse-s12-student-rtx-correctness-plan.md` |

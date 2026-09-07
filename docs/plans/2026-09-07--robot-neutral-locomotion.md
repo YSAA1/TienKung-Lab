@@ -1,6 +1,6 @@
 # 机器人无关的运动训练算法整理
 
-Status: ??G1 v4??3?PPO?????policy/discriminator/AMP normalizer??????0?14????????????????????????????????????????30k??v3?????????checkpoint??????
+Status: 官方G1 v4已冷启动30000轮，GPU1/3、各2048env，model_0已生成、更新至15轮；旧v3已停止，7个checkpoint保留，最新model_3000。
 
 ## 官方 G1 v4 替换（2026-09-07）
 
@@ -10,7 +10,7 @@ Status: ??G1 v4??3?PPO?????policy/discriminator/AMP normalizer??????0?14????????
 - 官方USD实测为29身体关节+14手指关节。策略仍控制29身体关节；14手指显式列为辅助关节，保持默认目标。Actor/critic/AMP仍为1997/2076/70。辅助关节仍属于整机动力学及整机接触、速度/限位约束；不宣称这是只含29关节的USD。
 - 使用官方默认关节姿态重置，关闭独立角度乘0.5～1.5与初始根速度扰动，避免改写新资产默认出生姿态。地形、10%全0～9随机等级、AMP原曲线、统一action_scale=0.5、奖励权重及30k预算保持。
 - 在新USD上重新生成6个LAFAN1专家，路径为 `legged_lab/envs/g1/datasets/motion_amp_expert_official_v4`，每份899帧，70D；旧URDF与旧专家保留。`legacy_mode15.py`只用于旧资产复现。
-- 候选远端：`/home/nubot/phn_ws/t4_train/TienKung-Lab-g1-official-v4-20260907`。新run名 `g1_official_teacher_v4`，计划GPU1/3、各2048env，resume=false；旧v3在新运行验证后停止，checkpoint保留。
+- 候选远端：`/home/nubot/phn_ws/t4_train/TienKung-Lab-g1-official-v4-20260907`。新run名 `g1_official_teacher_v4`，计划GPU1/3、各2048env，resume=false；旧v3在新运行验证后已停止，7个checkpoint保留。
 - 当前验证：104项相关检查通过（其中一项最初因Windows pytest默认临时目录权限在setup失败，指定新临时目录后通过）。官方USD加载成功，32env/240步接口probe有限，终止AMP快照160项一致。双卡更新与正式开训待完成。
 
 ## 工作面和不可缩减的验收
