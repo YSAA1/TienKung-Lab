@@ -1,0 +1,147 @@
+{
+  "rank": 0,
+  "world_size": 2,
+  "device": "cuda:0",
+  "action_scale": 0.25,
+  "rank_differences_after_training": {
+    "policy": 0.0,
+    "discriminator": 0.0,
+    "amp_normalizer": 0.0
+  },
+  "amp_count": 184320.0001,
+  "obs_shape": [
+    128,
+    1997
+  ],
+  "formal_budget": 30000,
+  "probe_iterations": 3,
+  "resume": false,
+  "learning_capability_proven": false,
+  "actuators": {
+    "N7520-14.3": {
+      "class": "ImplicitActuator",
+      "stiffness": [
+        100.0,
+        100.0,
+        200.0,
+        100.0,
+        100.0
+      ],
+      "damping": [
+        2.0,
+        2.0,
+        5.0,
+        2.0,
+        2.0
+      ],
+      "effort_limit": [
+        88.0,
+        88.0,
+        88.0,
+        88.0,
+        88.0
+      ]
+    },
+    "N7520-22.5": {
+      "class": "ImplicitActuator",
+      "stiffness": [
+        100.0,
+        100.0,
+        150.0,
+        150.0
+      ],
+      "damping": [
+        2.0,
+        2.0,
+        4.0,
+        4.0
+      ],
+      "effort_limit": [
+        139.0,
+        139.0,
+        139.0,
+        139.0
+      ]
+    },
+    "N5020-16": {
+      "class": "ImplicitActuator",
+      "stiffness": [
+        40.0,
+        40.0,
+        40.0,
+        40.0,
+        40.0,
+        40.0,
+        40.0,
+        40.0,
+        40.0,
+        40.0,
+        40.0,
+        40.0,
+        40.0,
+        40.0,
+        40.0,
+        40.0
+      ],
+      "damping": [
+        5.0,
+        5.0,
+        1.0,
+        1.0,
+        2.0,
+        2.0,
+        1.0,
+        1.0,
+        2.0,
+        2.0,
+        1.0,
+        1.0,
+        1.0,
+        1.0,
+        1.0,
+        1.0
+      ],
+      "effort_limit": [
+        25.0,
+        25.0,
+        25.0,
+        25.0,
+        25.0,
+        25.0,
+        25.0,
+        25.0,
+        25.0,
+        25.0,
+        25.0,
+        25.0,
+        25.0,
+        25.0,
+        25.0,
+        25.0
+      ]
+    },
+    "W4010-25": {
+      "class": "ImplicitActuator",
+      "stiffness": [
+        40.0,
+        40.0,
+        40.0,
+        40.0
+      ],
+      "damping": [
+        1.0,
+        1.0,
+        1.0,
+        1.0
+      ],
+      "effort_limit": [
+        5.0,
+        5.0,
+        5.0,
+        5.0
+      ]
+    }
+  },
+  "num_sim_joints": 29,
+  "asset_path": "/home/nubot/phn_ws/t4_train/TienKung-Lab-g1-unitree-v5-20260907/legged_lab/assets/unitree_g1/urdf/g1_29dof_rev_1_0.urdf"
+}

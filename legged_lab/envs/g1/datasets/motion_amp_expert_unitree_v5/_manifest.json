@@ -1,0 +1,90 @@
+{
+  "amp_schema_version": "g1_amp.v1",
+  "fps": 30.0,
+  "frame_dim": 70,
+  "held_out_motions": [
+    "sprint1_subject2"
+  ],
+  "joint_order": [
+    "left_hip_pitch_joint",
+    "left_hip_roll_joint",
+    "left_hip_yaw_joint",
+    "left_knee_joint",
+    "left_ankle_pitch_joint",
+    "left_ankle_roll_joint",
+    "right_hip_pitch_joint",
+    "right_hip_roll_joint",
+    "right_hip_yaw_joint",
+    "right_knee_joint",
+    "right_ankle_pitch_joint",
+    "right_ankle_roll_joint",
+    "waist_yaw_joint",
+    "waist_roll_joint",
+    "waist_pitch_joint",
+    "left_shoulder_pitch_joint",
+    "left_shoulder_roll_joint",
+    "left_shoulder_yaw_joint",
+    "left_elbow_joint",
+    "left_wrist_roll_joint",
+    "left_wrist_pitch_joint",
+    "left_wrist_yaw_joint",
+    "right_shoulder_pitch_joint",
+    "right_shoulder_roll_joint",
+    "right_shoulder_yaw_joint",
+    "right_elbow_joint",
+    "right_wrist_roll_joint",
+    "right_wrist_pitch_joint",
+    "right_wrist_yaw_joint"
+  ],
+  "kinematics_response": 0.11663296818733215,
+  "max_frames": 900,
+  "motions": {
+    "run1_subject2": {
+      "foot_feature_travel": 66.5087010175921,
+      "frame_duration": 0.03333333333333333,
+      "frames": 899,
+      "motion_class": "run",
+      "motion_weight": 0.3
+    },
+    "run2_subject1": {
+      "foot_feature_travel": 133.76020267838612,
+      "frame_duration": 0.03333333333333333,
+      "frames": 899,
+      "motion_class": "run",
+      "motion_weight": 0.3
+    },
+    "walk1_subject1": {
+      "foot_feature_travel": 47.67224546696525,
+      "frame_duration": 0.03333333333333333,
+      "frames": 899,
+      "motion_class": "walk_forward",
+      "motion_weight": 0.25
+    },
+    "walk2_subject1": {
+      "foot_feature_travel": 54.13407717458904,
+      "frame_duration": 0.03333333333333333,
+      "frames": 899,
+      "motion_class": "walk_forward",
+      "motion_weight": 0.25
+    },
+    "walk3_subject1": {
+      "foot_feature_travel": 42.41090892534703,
+      "frame_duration": 0.03333333333333333,
+      "frames": 899,
+      "motion_class": "walk_forward",
+      "motion_weight": 0.25
+    },
+    "walk4_subject1": {
+      "foot_feature_travel": 20.9232311823871,
+      "frame_duration": 0.03333333333333333,
+      "frames": 899,
+      "motion_class": "walk_forward",
+      "motion_weight": 0.25
+    }
+  },
+  "sim_dt": 0.005,
+  "simulator": "isaaclab",
+  "source_dataset": "lvhaidong/LAFAN1_Retargeting_Dataset",
+  "status": "lafan1_retarget_provisional",
+  "transition_dim": 140
+}

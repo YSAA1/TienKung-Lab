@@ -26,7 +26,7 @@ class G1LocoTeacherEnvCfg(LightLPLocomotionEnvCfg):
         self.scene.robot = G1_29DOF_CFG.copy()
         self.reward = G1SparseTeacherRewardCfg()
         # Match the official G1 velocity task's uniform position-action scale.
-        self.robot.action_scale = 0.5
+        self.robot.action_scale = 0.25
         self.robot.action_scale_effort_fraction = None
         self.scene.max_init_terrain_level = 0
         # 10% resets sample all ten rows, independently of initial terrain levels.
@@ -47,7 +47,7 @@ class G1LocoTeacherEnvCfg(LightLPLocomotionEnvCfg):
 @configclass
 class G1LocoTeacherAgentCfg(LightLPLocomotionAgentCfg):
     experiment_name = "g1_loco_teacher_sparse"
-    run_name = "g1_official_teacher_v4"
+    run_name = "g1_unitree_29dof_teacher_v5"
     max_iterations = 30000
     neptune_project = "g1_loco_teacher_sparse"
     wandb_project = "g1_loco_teacher_sparse"

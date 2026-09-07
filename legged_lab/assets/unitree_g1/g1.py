@@ -1,16 +1,10 @@
-"""Official G1 locomanipulation asset adapted to the pinned Isaac 5.1 runtime.
+"""Unitree's pure 29-DoF velocity asset using its documented URDF option."""
 
-PD, limits, motor types, geometry and initial state come from official_g1.
-Only the asset root and contact-sensor activation adapt the locomotion host.
-The legacy mode15 URDF configuration remains in legacy_mode15.py.
-"""
+from pathlib import Path
 
-from .official_g1 import G1_29DOF_CFG as OFFICIAL_G1_29DOF_CFG
+from .official_velocity_g1 import UNITREE_G1_29DOF_CFG, UnitreeUrdfFileCfg
 
-OFFICIAL_G1_USD_URL = (
-    "https://omniverse-content-production.s3-us-west-2.amazonaws.com/Assets/Isaac/5.1" "/Isaac/Robots/Unitree/G1/g1.usd"
+G1_29DOF_CFG = UNITREE_G1_29DOF_CFG.copy()
+G1_29DOF_CFG.spawn = UnitreeUrdfFileCfg(
+    asset_path=str(Path(__file__).resolve().parent / "urdf" / "g1_29dof_rev_1_0.urdf"),
 )
-G1_29DOF_CFG = OFFICIAL_G1_29DOF_CFG.copy()
-# This server's IsaacLab asset constant points to an incomplete local 4.5 cache.
-G1_29DOF_CFG.spawn.usd_path = OFFICIAL_G1_USD_URL
-G1_29DOF_CFG.spawn.activate_contact_sensors = True

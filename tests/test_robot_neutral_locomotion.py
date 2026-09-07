@@ -114,15 +114,16 @@ def test_algorithm_modules_do_not_import_robot_implementations():
 
 
 def test_auxiliary_joints_are_explicit_and_excluded_from_amp():
-    robot = _articulation(G1_LOCOMOTION)
-    assert len(robot.joint_names) == 43
-    builder = AmpFeatureBuilder(robot, "cpu", G1_LOCOMOTION)
+    spec = replace(G1_LOCOMOTION, auxiliary_joint_names=("test_auxiliary_joint",))
+    robot = _articulation(spec)
+    assert len(robot.joint_names) == 30
+    builder = AmpFeatureBuilder(robot, "cpu", spec)
     before = builder.compute()
     robot.data.joint_pos[:, 29:] = 1000
     assert torch.equal(before, builder.compute())
     robot.joint_names = robot.joint_names + ("undeclared_joint",)
     with pytest.raises(ValueError, match="unexpected"):
-        G1_LOCOMOTION.validate_articulation(robot)
+        spec.validate_articulation(robot)
 
 
 def test_auxiliary_joints_cannot_overlap_policy():

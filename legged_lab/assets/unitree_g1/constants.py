@@ -38,7 +38,7 @@ G1_29DOF_JOINT_NAMES: tuple[str, ...] = (
 
 NUM_G1_29DOF_JOINTS = len(G1_29DOF_JOINT_NAMES)
 
-# Legacy mode15 standing pose only; the active official USD pose is in official_g1.py.
+# Legacy mode15 pose only; the active Unitree velocity pose is in official_velocity_g1.py.
 # Unitree RL / ``xmls/g1_actuated.xml`` keyframe. Isaac Lab bundled G1_CFG uses a
 # different robot (old 23-DoF-style USD) and a shallower walk pose that puts this
 # URDF's 5 mm foot spheres ~18 mm below ground.

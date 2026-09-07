@@ -24,12 +24,6 @@ def _mirror():
 
 G1_LOCOMOTION = LocomotionRobotSpec(
     name="g1", joint_names=G1_29DOF_JOINT_NAMES,
-    auxiliary_joint_names=tuple(
-        f"{side}_hand_{finger}_{index}_joint"
-        for side in ("left", "right")
-        for finger, count in (("index", 2), ("middle", 2), ("thumb", 3))
-        for index in range(count)
-    ),
     feet=AMP_FOOT_BODIES, hands=AMP_HAND_BODIES, torso="torso_link",
     diagnostic_bodies=("torso_link", "left_knee_link", "right_knee_link"),
     left_leg=("left_hip_roll_joint", "left_hip_pitch_joint", "left_hip_yaw_joint", "left_knee_joint",
