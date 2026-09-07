@@ -1,0 +1,126 @@
+seed: 42
+device: cuda:0
+num_steps_per_env: 24
+max_iterations: 4000
+empirical_normalization: false
+policy:
+  class_name: ActorCritic
+  init_noise_std: 1.0
+  noise_std_type: scalar
+  actor_hidden_dims:
+  - 512
+  - 256
+  - 128
+  critic_hidden_dims:
+  - 512
+  - 256
+  - 128
+  activation: elu
+algorithm:
+  class_name: AMPPPO
+  num_learning_epochs: 5
+  num_mini_batches: 4
+  learning_rate: 0.001
+  schedule: adaptive
+  gamma: 0.99
+  lam: 0.95
+  entropy_coef: 0.005
+  desired_kl: 0.01
+  max_grad_norm: 1.0
+  value_loss_coef: 1.0
+  use_clipped_value_loss: true
+  clip_param: 0.2
+  normalize_advantage_per_mini_batch: false
+  symmetry_cfg:
+    use_data_augmentation: true
+    use_mirror_loss: true
+    data_augmentation_func: legged_lab.locomotion.symmetry:get_symmetric_states
+    mirror_loss_coeff: 5.0
+  rnd_cfg: null
+clip_actions: null
+save_interval: 500
+experiment_name: g1_loco_teacher_sparse
+run_name: g1_reset_xy_ablation
+logger: tensorboard
+neptune_project: g1_loco_teacher_sparse
+wandb_project: g1_loco_teacher_sparse
+resume: false
+load_run: .*
+load_checkpoint: model_.*.pt
+amp_frame_dim: 70
+amp_joint_order:
+- left_hip_pitch_joint
+- left_hip_roll_joint
+- left_hip_yaw_joint
+- left_knee_joint
+- left_ankle_pitch_joint
+- left_ankle_roll_joint
+- right_hip_pitch_joint
+- right_hip_roll_joint
+- right_hip_yaw_joint
+- right_knee_joint
+- right_ankle_pitch_joint
+- right_ankle_roll_joint
+- waist_yaw_joint
+- waist_roll_joint
+- waist_pitch_joint
+- left_shoulder_pitch_joint
+- left_shoulder_roll_joint
+- left_shoulder_yaw_joint
+- left_elbow_joint
+- left_wrist_roll_joint
+- left_wrist_pitch_joint
+- left_wrist_yaw_joint
+- right_shoulder_pitch_joint
+- right_shoulder_roll_joint
+- right_shoulder_yaw_joint
+- right_elbow_joint
+- right_wrist_roll_joint
+- right_wrist_pitch_joint
+- right_wrist_yaw_joint
+amp_expert_dir: legged_lab/envs/g1/datasets/motion_amp_expert_unitree_v5
+amp_motion_files:
+- legged_lab/envs/g1/datasets/motion_amp_expert_unitree_v5/run1_subject2.txt
+- legged_lab/envs/g1/datasets/motion_amp_expert_unitree_v5/run2_subject1.txt
+- legged_lab/envs/g1/datasets/motion_amp_expert_unitree_v5/walk1_subject1.txt
+- legged_lab/envs/g1/datasets/motion_amp_expert_unitree_v5/walk2_subject1.txt
+- legged_lab/envs/g1/datasets/motion_amp_expert_unitree_v5/walk3_subject1.txt
+- legged_lab/envs/g1/datasets/motion_amp_expert_unitree_v5/walk4_subject1.txt
+min_normalized_std:
+- 0.05
+- 0.05
+- 0.05
+- 0.05
+- 0.05
+- 0.05
+- 0.05
+- 0.05
+- 0.05
+- 0.05
+- 0.05
+- 0.05
+- 0.05
+- 0.05
+- 0.05
+- 0.05
+- 0.05
+- 0.05
+- 0.05
+- 0.05
+- 0.05
+- 0.05
+- 0.05
+- 0.05
+- 0.05
+- 0.05
+- 0.05
+- 0.05
+- 0.05
+runner_class_name: AmpOnPolicyRunner
+amp_reward_coef: 0.3
+amp_num_preload_transitions: 200000
+amp_task_reward_lerp: 0.7
+amp_discr_hidden_dims:
+- 1024
+- 512
+- 256

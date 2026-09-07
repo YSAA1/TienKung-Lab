@@ -1,0 +1,2 @@
+# Preserve the exact launched source bytes for the lineage SHA256.
+train_snapshot.py.txt -text

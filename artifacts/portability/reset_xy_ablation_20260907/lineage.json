@@ -1,0 +1,32 @@
+{
+  "created_at": "2026-09-07T16:43:56.109448+08:00",
+  "runtime_source_commit": "c125f74d50b9d1aef70ae6ce8bd8b3fcb7b26d52",
+  "train_script_sha256": "0b9ad1aee08aa44455fb893348f20124f57ba843e30b8a34ab66666a8f8b362f",
+  "verified_runtime_file_count": 204,
+  "seed": 42,
+  "envs_per_group": 2048,
+  "updates_per_group": 4000,
+  "steps_per_env": 24,
+  "samples_per_group": 196608000,
+  "cold_start": true,
+  "single_task_difference": "reset root linear velocities x/y: zero vs Uniform(-0.5, 0.5) m/s",
+  "evaluation": "Same frozen G1 task defaults for both groups: zero root velocity and official joint pose",
+  "limitations": [
+    "One paired seed is an exploratory causal comparison, not multi-seed proof.",
+    "Each group uses one GPU; comparisons to historical two-GPU v6 are contextual only.",
+    "The model_3999 file represents 4000 completed updates."
+  ],
+  "groups": {
+    "control": {
+      "gpu": 0,
+      "tmux": "g1-reset-control",
+      "directory": "/home/nubot/phn_ws/t4_train/TienKung-Lab-g1-unitree-v6-20260907/artifacts/portability/reset_xy_ablation_20260907/control"
+    },
+    "random_xy": {
+      "gpu": 2,
+      "tmux": "g1-reset-random_xy",
+      "directory": "/home/nubot/phn_ws/t4_train/TienKung-Lab-g1-unitree-v6-20260907/artifacts/portability/reset_xy_ablation_20260907/random_xy"
+    }
+  },
+  "tensorboard": "http://100.100.188.39:8036/#scalars"
+}

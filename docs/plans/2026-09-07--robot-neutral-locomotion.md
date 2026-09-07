@@ -1,6 +1,22 @@
 # 机器人无关的运动训练算法整理
 
-Status: v6冷训练继续，GPU1/3、每卡2048env、预算30000、TB8035；代码c125f74。第500轮固定评估与回放未通过正常步态验收；GPU0正在准备第1000轮与T4第2000轮对照。训练有效性目标未完成。
+Status: v6作为参照继续运行（GPU1/3、TB8035）；第3000轮平地仍站立。用户已批准根平面初速度单变量冷训练对照：GPU0/2，各2048env、4000轮、seed42，TB8036；16:44完成配对核验并放行。训练有效性目标未完成。
+
+## 当前执行：根平面初速度单变量对照
+
+- 触发证据：v6 `model_3000`，vx=0.7、32回合固定平地，实际速度0.00333m/s、最大前进距离均值0.02472m、reach2m=0/32，全部到时限。见 `artifacts/diagnostics/plateau_3000/flat.json`。专家回放和数值健康不能替代策略验收。
+- 2026-09-07用户批准开始。两组均冷启动，seed42、2048env、24steps/update、4000更新（每组196,608,000样本），单GPU；最终checkpoint为 `model_3999.pt`。不加载v6旧策略。
+- 唯一任务差异：`control` 根速度为零；`random_xy` 只将 `reset_base.params.velocity_range` 的x/y设为[-0.5,0.5]m/s。z与角速度仍为零，官方纯29DoF资产、PD、0.25动作尺度、固定关节姿态、奖励、AMP、混合地形及10%全等级重置保持一致。
+- 原运行源码c125f74保持冻结，204个源码/专家文件LF哈希再次核对通过。独立训练入口为 `artifacts/diagnostics/g1_reset_ablation/train.py`；远端目录 `/home/nubot/phn_ws/t4_train/TienKung-Lab-g1-unitree-v6-20260907/artifacts/portability/reset_xy_ablation_20260907/`。
+- tmux：`g1-reset-control`（GPU0）、`g1-reset-random_xy`（GPU2）；TensorBoard：`http://100.100.188.39:8036/#scalars`，会话 `g1-reset-ab-tb`。原v6继续在GPU1/3运行，未热改源码。
+- 16:44:45开训前，两组保存配置除根x/y速度范围外完全相同；初始policy、discriminator、专家采样、关节姿态、根位姿、地形等级与地形原点的7组SHA完全一致。实际control速度全0；random_xy的x/y标准差0.2873/0.2890m/s，其余四维为0。证据 `artifacts/portability/reset_xy_ablation_20260907/pair_verification.json`。
+- 两组完成后分别自动运行同一冻结G1配置的平地、简单踏石、简单圆桩评估（32env/32episodes，vx=0.7）；评估均从零根速度及官方关节姿态开始。随后各录16秒平地/踏石回放，并保存checkpoint、视频SHA。`play.py`保留默认材质/质量随机化，连续回放用于辅助行为检查。
+- 验收看自主起步、持续行走、速度跟踪、reach2m及失败类型；不以总奖励判胜，不自动把实验组部署为正式新配置。单seed对照只能检验该候选解释，不能证明唯一根因。单GPU对照与历史双GPUv6仅作背景比较。
+- 当前启动核验：16:50两组分别更新到109/99轮，均已保存model_0，所查PPO/AMP loss有限；早期塌低率仍约99%，尚无改善结论。正式行为结果待4000轮后的JSON及回放。恢复查询可在远端系统Python运行 `artifacts/diagnostics/g1_reset_ablation/status.py`；本地可用既有SSH工具发送执行。
+- 启动原始脚本按字节保存在同一证据目录的 `train_snapshot.py.txt`，SHA与lineage一致；本地维护入口后续格式化不改变运行中的源码。该证据目录同时保存两组配置、启动健康和TensorBoard双run核验。
+- 本次脚本与文档的适用pre-commit检查通过；旧flake8-return、pyupgrade与本机默认Python不兼容，改用现有Python3.12执行同版本插件通过，其余hooks正常通过。维护版train与启动快照的AST一致，远端恢复查询入口已实跑验证；16:55两组为195/177轮，原v6仍存活。
+
+以下为历史修复与实验记录；当前执行以本页上方的单变量对照为准。
 
 ## 当前修复：纯29DoF与训练有效性（2026-09-07）
 

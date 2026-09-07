@@ -1,0 +1,7 @@
+{
+  "runs": [
+    "control",
+    "random_xy"
+  ],
+  "url": "http://100.100.188.39:8036/#scalars"
+}

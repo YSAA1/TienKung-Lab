@@ -1,9 +1,9 @@
 # Current State
 
-- 2026-09-07：排查后的 v3 已独立冷启动 30000 轮，统一 action_scale=0.5、原动作惩罚，撤回逐关节尺度补偿。之后按用户要求关闭旧 v2，未部署任何接续任务。
+- 2026-09-07：当前为官方纯29DoF、action_scale=0.25。v6第3000轮仍站立；用户已批准根x/y初速度单变量对照，两组已在GPU0/2冷启动，各2048env/4000轮，TB8036；配对配置和初始模型SHA已验证。
 - Living index: `docs/README.md`
-- 当前 G1 唯一执行计划：`docs/plans/2026-09-07--robot-neutral-locomotion.md`。v3 远端 `TienKung-Lab-g1-amp-fix-20260907`，代码冻结于 `d1f7f52`，tmux `g1-teacher-v3`，GPU 0/2、TB 8032；run `2026-09-07_10-08-58_g1_lightlp_teacher_v3`。原 AMP 难度曲线和 10% 全 0～9 保持。
-- 新修复：AMP 统计更新使用原始样本、梯度惩罚与判别器使用同一坐标、多卡判别器参数/梯度与 AMP 统计同步。双 GPU 实测一致；启动核验 iteration 18、model_0、保存预算 30000。证据在 `artifacts/portability/v3/`，不把数值健康当作学习成功。
+- 当前 G1 唯一执行计划：`docs/plans/2026-09-07--robot-neutral-locomotion.md`。远端 `TienKung-Lab-g1-unitree-v6-20260907`，源码c125f74；tmux `g1-reset-control` / `g1-reset-random_xy`，工件 `artifacts/portability/reset_xy_ablation_20260907/`。原v6仍在GPU1/3、TB8035运行。
+- 当前对照只改变重置根x/y初速度：零 vs [-0.5,0.5]m/s。官方资产、PD、奖励、AMP及地形不变。结束后自动做三类简单地形零初速评估和两段连续回放；初始模型一致及有限loss只证明实验正确启动，不证明学习成功。v3/v4/v5均为已停止的历史尝试。
 - 旧 v2 按用户要求在 iteration 9662 停止：tmux `g1-full-levels-v2` 与原 5 个训练进程全部退出，GPU 1/3 释放，20 个 checkpoint 保留；TB 8031 仍可查旧曲线。停止证据 `artifacts/portability/v3/stopped_v2.json`。共享教师、深度学生、动作跟踪与全库接入整理已完成；各候选行为能力仍由固定评估和连续回放判定。
 - S12 学生 `s12_repr_first` `model_13999` Isaac hard 过门，MuJoCo 残留交给老师 plant 重训。老师本机 `artifacts/checkpoints/nubot/s12_teacher/model_21500.pt`。
 - Approved specs: `docs/specs/2026-08-12--t4-unified-depth-locomotion.md`（走跑/学生合同）、`docs/specs/2026-08-13--t4-vault-loco-merge.md`（G1→G2→G3 目标）、`docs/specs/2026-08-15--t4-stepping-stones-and-hurdle-stable.md`（梅花桩目标；执行已改单阶段）、`docs/specs/2026-09-01--t4-s12-repr-first-distill.md`（表示先行蒸馏）

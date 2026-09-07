@@ -1,0 +1,40 @@
+{
+  "group": "control",
+  "pid": 479835,
+  "seed": 42,
+  "num_envs": 2048,
+  "steps_per_env": 24,
+  "iterations": 4000,
+  "resume": false,
+  "root_velocity_mean": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+  ],
+  "root_velocity_std": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+  ],
+  "root_velocity_abs_max": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+  ],
+  "initial_policy_sha256": "1bd186c6d45dcdb42ee233385ecb1eaf48c060fd37dcc2f1e1f60519d846e418",
+  "initial_discriminator_sha256": "b4c437fe23d9a1d00dccd9b789392c8860fc36489fb6f64ad191605689b70eac",
+  "initial_expert_samples_sha256": "d96ab4c5e9a4bd9160376449b8ce81457f42ccc0d511f21321028e9065fa8d20",
+  "initial_q_sha256": "89f0c55888f762e8fd71b150f60d21ed0e7832674ae9e730c7e5bda176c7edc5",
+  "initial_root_pose_sha256": "aa6799fda79c79c09f76924a4bb3977b55e3f2bd563ced94142fd2b70f4d5a5c",
+  "initial_terrain_levels_sha256": "118d55c0659c042881a6b51dbacec63ad84881d518da6c9b0d64455c99fa3653",
+  "initial_terrain_origins_sha256": "90af13223fec33f8de444b986d931448fb9611659a70dd2c6ac9f28cfedce7e3"
+}
