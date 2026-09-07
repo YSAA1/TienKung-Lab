@@ -1,0 +1,7 @@
+{
+  "source": "/home/nubot/phn_ws/t4_train/TienKung-Lab-g1-portability-20260906/legged_lab/scripts/eval_locomotion.py",
+  "source_sha256": "6f2421315f13d710a0e03f2de83086ebebeb2b1cd18bd7c549542f71ecaff30d",
+  "instrumented": "/tmp/g1_teacher_audit_20260907/instrumented_eval.py",
+  "instrumented_sha256": "e18f4224b0ff2c4f6fcbda83925a2c0f57accbd9a1aa6aeb96c51d62413683b0",
+  "change": "Read-only pre-reset state capture; bounded app shutdown. Training code unchanged."
+}

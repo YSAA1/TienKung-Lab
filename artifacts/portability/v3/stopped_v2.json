@@ -1,0 +1,65 @@
+{
+  "requested_at": 1788747213.3482773,
+  "reason": "User explicitly requested closing old v2; new v3 continues",
+  "session": "g1-full-levels-v2",
+  "root": "/home/nubot/phn_ws/t4_train/TienKung-Lab-g1-portability-20260906",
+  "process_tree_before": [
+    {
+      "pid": 169426,
+      "ppid": 139444,
+      "pgid": 169426,
+      "args": "bash scripts/train_g1_portable.sh"
+    },
+    {
+      "pid": 169432,
+      "ppid": 169426,
+      "pgid": 169426,
+      "args": "/bin/bash /home/nubot/isaac-sim-standalone-5.1.0-linux-x86_64/python.sh -m torch.distributed.run --nnodes=1 --nproc_per_node=2 --master_port=29586 legged_lab/scripts/train.py --task=g1_loco_teacher --num_envs=2048 --distributed --headless --run_name g1_lightlp_amp_full_levels_v2 --max_iterations 10000"
+    },
+    {
+      "pid": 169439,
+      "ppid": 169432,
+      "pgid": 169426,
+      "args": "/home/nubot/isaac-sim-standalone-5.1.0-linux-x86_64/kit/python/bin/python3 -m torch.distributed.run --nnodes=1 --nproc_per_node=2 --master_port=29586 legged_lab/scripts/train.py --task=g1_loco_teacher --num_envs=2048 --distributed --headless --run_name g1_lightlp_amp_full_levels_v2 --max_iterations 10000"
+    },
+    {
+      "pid": 169506,
+      "ppid": 169439,
+      "pgid": 169506,
+      "args": "/home/nubot/isaac-sim-standalone-5.1.0-linux-x86_64/kit/python/bin/python3 -u legged_lab/scripts/train.py --task=g1_loco_teacher --num_envs=2048 --distributed --headless --run_name g1_lightlp_amp_full_levels_v2 --max_iterations 10000"
+    },
+    {
+      "pid": 169507,
+      "ppid": 169439,
+      "pgid": 169507,
+      "args": "/home/nubot/isaac-sim-standalone-5.1.0-linux-x86_64/kit/python/bin/python3 -u legged_lab/scripts/train.py --task=g1_loco_teacher --num_envs=2048 --distributed --headless --run_name g1_lightlp_amp_full_levels_v2 --max_iterations 10000"
+    }
+  ],
+  "signal": "tmux send-keys C-c",
+  "remaining_original_process_ids": [],
+  "session_exists_after": false,
+  "verified_at": 1788747462.6318343,
+  "last_iteration": 9662,
+  "checkpoints_preserved": [
+    "/home/nubot/phn_ws/t4_train/TienKung-Lab-g1-portability-20260906/logs/g1_loco_teacher_sparse/2026-09-07_01-35-42_g1_lightlp_amp_full_levels_v2/model_9000.pt",
+    "/home/nubot/phn_ws/t4_train/TienKung-Lab-g1-portability-20260906/logs/g1_loco_teacher_sparse/2026-09-07_01-35-42_g1_lightlp_amp_full_levels_v2/model_1000.pt",
+    "/home/nubot/phn_ws/t4_train/TienKung-Lab-g1-portability-20260906/logs/g1_loco_teacher_sparse/2026-09-07_01-35-42_g1_lightlp_amp_full_levels_v2/model_5000.pt",
+    "/home/nubot/phn_ws/t4_train/TienKung-Lab-g1-portability-20260906/logs/g1_loco_teacher_sparse/2026-09-07_01-35-42_g1_lightlp_amp_full_levels_v2/model_3000.pt",
+    "/home/nubot/phn_ws/t4_train/TienKung-Lab-g1-portability-20260906/logs/g1_loco_teacher_sparse/2026-09-07_01-35-42_g1_lightlp_amp_full_levels_v2/model_8500.pt",
+    "/home/nubot/phn_ws/t4_train/TienKung-Lab-g1-portability-20260906/logs/g1_loco_teacher_sparse/2026-09-07_01-35-42_g1_lightlp_amp_full_levels_v2/model_4500.pt",
+    "/home/nubot/phn_ws/t4_train/TienKung-Lab-g1-portability-20260906/logs/g1_loco_teacher_sparse/2026-09-07_01-35-42_g1_lightlp_amp_full_levels_v2/model_500.pt",
+    "/home/nubot/phn_ws/t4_train/TienKung-Lab-g1-portability-20260906/logs/g1_loco_teacher_sparse/2026-09-07_01-35-42_g1_lightlp_amp_full_levels_v2/model_6000.pt",
+    "/home/nubot/phn_ws/t4_train/TienKung-Lab-g1-portability-20260906/logs/g1_loco_teacher_sparse/2026-09-07_01-35-42_g1_lightlp_amp_full_levels_v2/model_2000.pt",
+    "/home/nubot/phn_ws/t4_train/TienKung-Lab-g1-portability-20260906/logs/g1_loco_teacher_sparse/2026-09-07_01-35-42_g1_lightlp_amp_full_levels_v2/model_2500.pt",
+    "/home/nubot/phn_ws/t4_train/TienKung-Lab-g1-portability-20260906/logs/g1_loco_teacher_sparse/2026-09-07_01-35-42_g1_lightlp_amp_full_levels_v2/model_9500.pt",
+    "/home/nubot/phn_ws/t4_train/TienKung-Lab-g1-portability-20260906/logs/g1_loco_teacher_sparse/2026-09-07_01-35-42_g1_lightlp_amp_full_levels_v2/model_7500.pt",
+    "/home/nubot/phn_ws/t4_train/TienKung-Lab-g1-portability-20260906/logs/g1_loco_teacher_sparse/2026-09-07_01-35-42_g1_lightlp_amp_full_levels_v2/model_3500.pt",
+    "/home/nubot/phn_ws/t4_train/TienKung-Lab-g1-portability-20260906/logs/g1_loco_teacher_sparse/2026-09-07_01-35-42_g1_lightlp_amp_full_levels_v2/model_8000.pt",
+    "/home/nubot/phn_ws/t4_train/TienKung-Lab-g1-portability-20260906/logs/g1_loco_teacher_sparse/2026-09-07_01-35-42_g1_lightlp_amp_full_levels_v2/model_4000.pt",
+    "/home/nubot/phn_ws/t4_train/TienKung-Lab-g1-portability-20260906/logs/g1_loco_teacher_sparse/2026-09-07_01-35-42_g1_lightlp_amp_full_levels_v2/model_0.pt",
+    "/home/nubot/phn_ws/t4_train/TienKung-Lab-g1-portability-20260906/logs/g1_loco_teacher_sparse/2026-09-07_01-35-42_g1_lightlp_amp_full_levels_v2/model_6500.pt",
+    "/home/nubot/phn_ws/t4_train/TienKung-Lab-g1-portability-20260906/logs/g1_loco_teacher_sparse/2026-09-07_01-35-42_g1_lightlp_amp_full_levels_v2/model_1500.pt",
+    "/home/nubot/phn_ws/t4_train/TienKung-Lab-g1-portability-20260906/logs/g1_loco_teacher_sparse/2026-09-07_01-35-42_g1_lightlp_amp_full_levels_v2/model_5500.pt",
+    "/home/nubot/phn_ws/t4_train/TienKung-Lab-g1-portability-20260906/logs/g1_loco_teacher_sparse/2026-09-07_01-35-42_g1_lightlp_amp_full_levels_v2/model_7000.pt"
+  ]
+}

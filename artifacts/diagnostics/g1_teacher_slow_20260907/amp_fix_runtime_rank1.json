@@ -1,0 +1,20 @@
+{
+  "rank": 1,
+  "world_size": 2,
+  "device": "cuda:1",
+  "action_scale": 0.5,
+  "rank_differences_after_training": {
+    "policy": 0.0,
+    "discriminator": 0.0,
+    "amp_normalizer": 0.0
+  },
+  "amp_count": 184320.0001,
+  "obs_shape": [
+    128,
+    1997
+  ],
+  "formal_budget": 30000,
+  "probe_iterations": 3,
+  "resume": false,
+  "learning_capability_proven": false
+}

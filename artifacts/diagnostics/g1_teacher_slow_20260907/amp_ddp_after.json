@@ -1,0 +1,12 @@
+{
+  "world_size": 2,
+  "policy_difference_after_broadcast": 0.0,
+  "discriminator_difference_after_broadcast": 0.0,
+  "normalizer_difference_after_broadcast": 0.0,
+  "policy_gradient_difference_after_reduce": 0.0,
+  "discriminator_gradient_difference_after_reduce": 0.0,
+  "normalizer_mean_error": 0.0,
+  "normalizer_variance_error": 4.218847493575595e-15,
+  "normalizer_difference_after_update": 0.0,
+  "normalizer_count": 6.0001
+}

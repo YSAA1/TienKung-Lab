@@ -1,0 +1,180 @@
+{
+  "training_comparison_window": "7901 through 8000 inclusive",
+  "training_metrics_at_8000": {
+    "T4_S11b": {
+      "Curriculum/terrain_levels": 4.682170095443726,
+      "Curriculum/episode_path_length": 4.106137320995331,
+      "Curriculum/episode_tracking_mean": 0.535880865752697,
+      "Train/mean_episode_length": 307.763200378418,
+      "Loss/learning_rate": 6.328125338768587e-05,
+      "Terrain/stepping_stones/easy_reach_2m_rate": 0.8927463746070862,
+      "Terrain/raised_pillars/easy_reach_2m_rate": 0.9150005942583084
+    },
+    "G1_v2": {
+      "Curriculum/terrain_levels": 1.6024479210376739,
+      "Curriculum/episode_path_length": 1.1311730027198792,
+      "Curriculum/episode_tracking_mean": 0.4193959200382233,
+      "Train/mean_episode_length": 153.67700050354003,
+      "Loss/learning_rate": 1.2175000410934444e-05,
+      "Terrain/stepping_stones/easy_reach_2m_rate": 4.236604877274506e-05,
+      "Terrain/raised_pillars/easy_reach_2m_rate": 5.5617226945665134e-05
+    }
+  },
+  "fixed_evaluations": {
+    "g1_m8000_flat": {
+      "reach_2m_rate": 0.0,
+      "progress_mean_m": 0.1920553791205748,
+      "actual_forward_mean_mps": 0.012886342111500164,
+      "reset_reason_counts": {
+        "horizon": 25,
+        "oob": 0,
+        "joint_vel": 0,
+        "torso": 0,
+        "accel": 0,
+        "fall_over": 1,
+        "immune_skip": 0,
+        "collapsed": 6
+      }
+    },
+    "g1_m8000_stepping_stones": {
+      "reach_2m_rate": 0.0,
+      "progress_mean_m": 0.7770073036663234,
+      "actual_forward_mean_mps": 0.2895690188381081,
+      "reset_reason_counts": {
+        "horizon": 1,
+        "oob": 0,
+        "joint_vel": 0,
+        "torso": 0,
+        "accel": 1,
+        "fall_over": 0,
+        "immune_skip": 0,
+        "collapsed": 31
+      }
+    },
+    "t4_m8000_flat": {
+      "reach_2m_rate": 1.0,
+      "progress_mean_m": 4.666135109961033,
+      "actual_forward_mean_mps": 0.5987890029060543,
+      "reset_reason_counts": {
+        "horizon": 0,
+        "oob": 32,
+        "joint_vel": 0,
+        "torso": 0,
+        "accel": 0,
+        "fall_over": 0,
+        "immune_skip": 0
+      }
+    },
+    "t4_m8000_stepping_stones": {
+      "reach_2m_rate": 1.0,
+      "progress_mean_m": 4.2021419405937195,
+      "actual_forward_mean_mps": 0.6882543173286213,
+      "reset_reason_counts": {
+        "horizon": 0,
+        "oob": 31,
+        "joint_vel": 0,
+        "torso": 0,
+        "accel": 1,
+        "fall_over": 0,
+        "immune_skip": 0
+      }
+    }
+  },
+  "implemented_fixes": [
+    "AMP running statistics receive raw samples",
+    "AMP gradient penalty uses the discriminator input coordinates",
+    "broadcast and reduce discriminator; merge raw AMP moments across ranks"
+  ],
+  "user_action_scale": 0.5,
+  "next_formal_budget": 30000,
+  "action_reward_compensation_rejected": true,
+  "full_convergence_gap_explained": false,
+  "amp_input_before": {
+    "source": "D:\\TienKung-Lab-g1-portability-20260906\\rsl_rl\\rsl_rl\\algorithms\\amp_ppo.py",
+    "raw_expert_first_row": [
+      10.0,
+      -20.0,
+      30.0
+    ],
+    "normalized_expert_first_row": [
+      3.9999499320983887,
+      -5.666635036468506,
+      6.4999799728393555
+    ],
+    "normalizer_update_first_row": [
+      3.9999499320983887,
+      -5.666635036468506,
+      6.4999799728393555
+    ],
+    "grad_penalty_input_first_row": [
+      10.0,
+      -20.0,
+      30.0
+    ],
+    "normalizer_receives_raw": false,
+    "gradient_penalty_receives_discriminator_coordinates": false,
+    "loss": {
+      "value_function": 3.7014291286468506,
+      "surrogate": 1.4901161193847656e-07,
+      "entropy": 2.837877035140991,
+      "amp": 4.336426734924316,
+      "amp_grad_pen": 0.5224769711494446,
+      "amp_policy_pred": -1.8240580558776855,
+      "amp_expert_pred": -1.8240580558776855
+    }
+  },
+  "amp_input_after": {
+    "source": "D:\\TienKung-Lab-g1-portability-20260906\\rsl_rl\\rsl_rl\\algorithms\\amp_ppo.py",
+    "raw_expert_first_row": [
+      10.0,
+      -20.0,
+      30.0
+    ],
+    "normalized_expert_first_row": [
+      3.9999499320983887,
+      -5.666635036468506,
+      6.4999799728393555
+    ],
+    "normalizer_update_first_row": [
+      10.0,
+      -20.0,
+      30.0
+    ],
+    "grad_penalty_input_first_row": [
+      3.9999499320983887,
+      -5.666635036468506,
+      6.4999799728393555
+    ],
+    "normalizer_receives_raw": true,
+    "gradient_penalty_receives_discriminator_coordinates": true,
+    "loss": {
+      "value_function": 3.7014291286468506,
+      "surrogate": 1.4901161193847656e-07,
+      "entropy": 2.837877035140991,
+      "amp": 4.336426734924316,
+      "amp_grad_pen": 0.3385019302368164,
+      "amp_policy_pred": -1.8240580558776855,
+      "amp_expert_pred": -1.8240580558776855
+    }
+  },
+  "amp_ddp_before": {
+    "world_size": 2,
+    "policy_difference_after_broadcast": 0.0,
+    "discriminator_difference_after_broadcast": 0.6052441596984863,
+    "normalizer_difference_after_broadcast": 1.0,
+    "policy_gradient_difference_after_reduce": 0.0,
+    "discriminator_gradient_difference_after_reduce": 1.0
+  },
+  "amp_ddp_after": {
+    "world_size": 2,
+    "policy_difference_after_broadcast": 0.0,
+    "discriminator_difference_after_broadcast": 0.0,
+    "normalizer_difference_after_broadcast": 0.0,
+    "policy_gradient_difference_after_reduce": 0.0,
+    "discriminator_gradient_difference_after_reduce": 0.0,
+    "normalizer_mean_error": 0.0,
+    "normalizer_variance_error": 4.218847493575595e-15,
+    "normalizer_difference_after_update": 0.0,
+    "normalizer_count": 6.0001
+  }
+}

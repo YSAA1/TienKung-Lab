@@ -1,0 +1,43 @@
+{
+  "source_checkpoint_iteration": 8000,
+  "rows": [
+    {
+      "role": "hip_pitch",
+      "t4_scale_rad": 0.25,
+      "g1_scale_rad": 0.17374999821186066,
+      "t4_target_noise_std_rad": 0.12069860845804214,
+      "g1_target_noise_std_rad": 0.03229500912421246,
+      "g1_vs_t4_penalty_for_same_target_delta": 2.0702862596820024
+    },
+    {
+      "role": "knee",
+      "t4_scale_rad": 0.25,
+      "g1_scale_rad": 0.17374999821186066,
+      "t4_target_noise_std_rad": 0.11962176859378815,
+      "g1_target_noise_std_rad": 0.05122458278569386,
+      "g1_vs_t4_penalty_for_same_target_delta": 2.0702862596820024
+    },
+    {
+      "role": "ankle_pitch",
+      "t4_scale_rad": 0.25,
+      "g1_scale_rad": 0.4375,
+      "t4_target_noise_std_rad": 0.1212211474776268,
+      "g1_target_noise_std_rad": 0.19319823756814003,
+      "g1_vs_t4_penalty_for_same_target_delta": 0.32653061224489793
+    },
+    {
+      "role": "waist_yaw",
+      "t4_scale_rad": 0.25,
+      "g1_scale_rad": 0.10999999940395355,
+      "t4_target_noise_std_rad": 0.07393840700387955,
+      "g1_target_noise_std_rad": 0.01999257359996398,
+      "g1_vs_t4_penalty_for_same_target_delta": 5.165289312175662
+    }
+  ],
+  "waist_pitch_scale_rad": 0.05833333358168602,
+  "waist_pitch_penalty_ratio": 18.36734678237848,
+  "same_delta_rad": 0.1,
+  "old_action_rate_cost_one_joint": 0.016000000000000004,
+  "current_waist_pitch_action_rate_cost_one_joint": 0.29387754851805575,
+  "interpretation": "Exact unit and checkpoint comparison; not an isolated training ablation proving sole causality."
+}

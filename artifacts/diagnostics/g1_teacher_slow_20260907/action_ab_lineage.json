@@ -1,0 +1,15 @@
+{
+  "source_commit": "4fd6ec262dde7e0e3dd83dce73a71e8bb6916d93",
+  "original_sha256": "23c28c32f21430b95541fd2364e39028657f63bb5abaf8a63925ea285abc8aa0",
+  "probe_sha256": "f3a78d31c5d5591177cc163b9fd16d5660ad904f426b1c2f40560f80691419ad",
+  "modes": [
+    "current_effort",
+    "legacy_radians"
+  ],
+  "variable": "robot.action_scale_effort_fraction: 0.25 versus None (legacy action_scale=0.25 rad)",
+  "iterations_per_mode": 200,
+  "num_envs_per_mode": 512,
+  "seed": 42,
+  "gpu": 0,
+  "scope": "Early optimizer/exploration diagnostic, not proof of final locomotion convergence."
+}

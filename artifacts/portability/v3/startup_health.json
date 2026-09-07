@@ -1,0 +1,87 @@
+{
+  "run": "/home/nubot/phn_ws/t4_train/TienKung-Lab-g1-amp-fix-20260907/logs/g1_loco_teacher_sparse/2026-09-07_10-08-58_g1_lightlp_teacher_v3",
+  "verified_at": 1788747008.8769135,
+  "iteration": 18,
+  "source_commit": "d1f7f5256ffb1e9db6399dc6c8a001bf6b8eab83",
+  "max_iterations": 30000,
+  "resume": false,
+  "action_scale": 0.5,
+  "metrics": {
+    "Curriculum/random_level_after_mean": {
+      "step": 18,
+      "last": 4.69072151184082
+    },
+    "Curriculum/random_level_before_mean": {
+      "step": 18,
+      "last": 1.123711347579956
+    },
+    "Curriculum/random_level_reset_frac": {
+      "step": 18,
+      "last": 0.09938524663448334
+    },
+    "Curriculum/terrain_levels": {
+      "step": 18,
+      "last": 1.4573974609375
+    },
+    "Terrain/random_rough/episodes": {
+      "step": 18,
+      "last": 2433.583251953125
+    },
+    "Terrain/random_rough/progress_m": {
+      "step": 18,
+      "last": 0.6184330582618713
+    },
+    "Terrain/random_rough/reach_2m_rate": {
+      "step": 18,
+      "last": 0.0
+    },
+    "Terrain/random_rough/reach_4m_rate": {
+      "step": 18,
+      "last": 0.0
+    },
+    "Loss/value_function": {
+      "step": 18,
+      "last": 0.330710768699646
+    },
+    "Loss/surrogate": {
+      "step": 18,
+      "last": -0.0075375293381512165
+    },
+    "Loss/entropy": {
+      "step": 18,
+      "last": 39.823768615722656
+    },
+    "Loss/amp": {
+      "step": 18,
+      "last": 0.016821548342704773
+    },
+    "Loss/amp_grad_pen": {
+      "step": 18,
+      "last": 0.04671347513794899
+    },
+    "Loss/amp_policy_pred": {
+      "step": 18,
+      "last": -0.9390183687210083
+    },
+    "Loss/amp_expert_pred": {
+      "step": 18,
+      "last": 0.930241584777832
+    },
+    "Loss/symmetry": {
+      "step": 18,
+      "last": 0.0016665548318997025
+    },
+    "Loss/learning_rate": {
+      "step": 18,
+      "last": 0.00017085937724914402
+    },
+    "Policy/mean_noise_std": {
+      "step": 18,
+      "last": 0.9557960033416748
+    }
+  },
+  "checkpoint_zero": true,
+  "tensorboard": "http://100.100.188.39:8032/#scalars",
+  "session": "g1-teacher-v3",
+  "learning_capability_proven": false
+}
