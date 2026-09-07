@@ -10,7 +10,7 @@
 | 轨道 | 现在做什么 | 执行计划 | 规格 |
 | --- | --- | --- | --- |
 | 梅花桩 | paused：G1 越障老师优先。T4 plant DR 计划仍在 | [老师 plant 重训](plans/2026-09-02--t4-s12-teacher-plant-retrain-plan.md) | [表示先行蒸馏](specs/2026-09-01--t4-s12-repr-first-distill.md)（学生对照） |
-| Unitree G1 越障 teacher | active：完整17段AMP，GPU0/2双卡正式训练30000轮、TB8038 | [机器人无关算法与现行训练](plans/2026-09-07--robot-neutral-locomotion.md) | 3303帧Isaac核验通过；保留T4原采样权重，每卡2048env；原对照停止，行为未验收 |
+| Unitree G1 越障 teacher | active：全17段AMP，GPU0/2权重2基线、GPU1/3权重4对照，均30000轮；合并TB8039 | [机器人无关算法与现行训练](plans/2026-09-07--robot-neutral-locomotion.md) | 每卡2048env、原AMP采样权重；配置单变量已核验，行为未验收 |
 | 翻箱 | G1 跟踪专家 → G2 heightscan 技能（zhuoqun）。**G2 学生与 G3 合并（走跑+翻箱成一条策略）等 G2 过箱后再开。** | [翻箱 recovery](plans/2026-08-15--t4-vault-g1-g2-recovery-plan.md) | [合并规格](specs/2026-08-13--t4-vault-loco-merge.md) |
 
 运行时切片与机器占用：`.harness/work_index.md`、`.harness/state.md`。

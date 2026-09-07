@@ -1,0 +1,20 @@
+from pathlib import Path
+import json, hashlib, datetime, subprocess, ast
+root=Path('/home/nubot/phn_ws/t4_train/TienKung-Lab-g1-unitree-v6-20260907')
+base=root/'artifacts/portability/g1_full17_30k_20260907'
+out=root/'artifacts/portability/g1_full17_lin4_20260907'
+out.mkdir(exist_ok=True)
+src=(base/'train.py').read_text()
+assert hashlib.sha256((base/'train.py').read_bytes()).hexdigest()==json.loads((base/'lineage.json').read_text())['train_sha256']
+needle='    env = env_class(env_cfg, args_cli.headless)'
+assert src.count(needle)==1
+src=src.replace(needle,'    env_cfg.reward.track_lin_vel_xy_exp.weight = 4.0\n\n'+needle)
+ast.parse(src)
+(out/'train.py').write_text(src)
+run=(base/'run.sh').read_text().replace('CUDA_VISIBLE_DEVICES=0,2','CUDA_VISIBLE_DEVICES=1,3').replace('29608','29609').replace('g1_full17_30k_20260907','g1_full17_lin4_20260907').replace('--experiment_name g1_full17_30k --run_name g1_full17_30k','--experiment_name g1_full17_lin4 --run_name g1_full17_lin4')
+(out/'run.sh').write_text(run)
+subprocess.run(['bash','-n',str(out/'run.sh')],check=True)
+lineage=json.loads((base/'lineage.json').read_text())
+lineage.update(created_at=datetime.datetime.now().astimezone().isoformat(),request='User requested linear velocity weight 4 controlled experiment',physical_gpus=[1,3],train_sha256=hashlib.sha256((out/'train.py').read_bytes()).hexdigest(),baseline_train_sha256=hashlib.sha256((base/'train.py').read_bytes()).hexdigest(),only_behavior_change={'reward.track_lin_vel_xy_exp.weight':[2.0,4.0]},log_root=str(root/'logs/g1_full17_lin4'),tensorboard='http://100.100.188.39:8039/#scalars')
+(out/'lineage.json').write_text(json.dumps(lineage,indent=2))
+print(json.dumps(lineage))

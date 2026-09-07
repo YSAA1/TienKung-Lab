@@ -1,0 +1,27 @@
+from pathlib import Path
+import json, urllib.request, urllib.parse, datetime, yaml
+from tensorboard.backend.event_processing.event_accumulator import EventAccumulator
+root=Path('/home/nubot/phn_ws/t4_train')
+tags=['Curriculum/episode_tracking_mean','Curriculum/terrain_levels','Curriculum/promotion_rate','Curriculum/episode_path_length','Terrain/flat/reach_2m_rate','Episode_Reward/track_lin_vel_xy_exp','Perf/total_fps']
+result={'time':datetime.datetime.now().astimezone().isoformat(),'runs':{}}
+for label,port in [('full17',8038),('v6',8035)]:
+ url=f'http://localhost:{port}/data/plugin/scalars/'
+ runs=json.load(urllib.request.urlopen(url+'tags',timeout=15));run=next(iter(runs));metrics={}
+ for tag in tags:
+  q=urllib.parse.urlencode({'run':run,'tag':tag})
+  vals=json.load(urllib.request.urlopen(url+'scalars?'+q,timeout=15))
+  metrics[tag]=vals
+ result['runs'][label]={'run':run,'scalars':metrics}
+t4=next((root/'TienKung-Lab-s11b-upright-tbslim/logs/t4_loco_teacher_sparse').glob('*01-12-08*'))
+a=EventAccumulator(str(t4),size_guidance={'scalars':0});a.Reload()
+result['runs']['t4']={'run':str(t4),'scalars':{tag:[[v.wall_time,v.step,v.value] for v in a.Scalars(tag)] for tag in tags if tag in a.Tags()['scalars']}}
+for f in ['env','agent']:
+ cfg=yaml.load((t4/f'params/{f}.yaml').read_text(),Loader=yaml.BaseLoader)
+ result['runs']['t4'][f]=cfg
+out=root/'TienKung-Lab-g1-unitree-v6-20260907/artifacts/portability/g1_full17_lin4_20260907/comparison.json'
+out.write_text(json.dumps(result,indent=2))
+for k,r in result['runs'].items():
+ print(k,r['run'])
+ for tag,vals in r['scalars'].items():
+  print(tag,'latest',vals[-1][1:], 'last50',sum(v[2] for v in vals[-50:])/len(vals[-50:]),'windows', {str(hi):round(sum(v[2] for v in vals if hi-200<=v[1]<=hi)/max(1,sum(1 for v in vals if hi-200<=v[1]<=hi)),4) for hi in [500,1000,1500,2000,3000]})
+print('T4 ENVS',result['runs']['t4']['env']['scene']['num_envs'],'STEPS',result['runs']['t4']['agent']['num_steps_per_env'],'RESUME',result['runs']['t4']['agent']['resume'])

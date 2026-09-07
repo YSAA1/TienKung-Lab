@@ -1,0 +1,39 @@
+{
+  "created_at": "2026-09-07T21:09:03.422746+08:00",
+  "request": "User requested linear velocity weight 4 controlled experiment",
+  "runtime_source_commit": "c125f74d50b9d1aef70ae6ce8bd8b3fcb7b26d52",
+  "verified_runtime_files": 204,
+  "train_sha256": "78f61e8e07961b316a3df5506547088a99dcef2347cfd7f0b911192da0dda042",
+  "data_manifest_sha256": "49f2c8b3d7ed3e01992e1ac1c6532ed26e32e5403d174560a3188579c87a57ef",
+  "physical_gpus": [
+    1,
+    3
+  ],
+  "world_size": 2,
+  "num_envs_per_rank": 2048,
+  "global_num_envs": 4096,
+  "updates": 30000,
+  "steps_per_env": 24,
+  "seed": 42,
+  "cold_start": true,
+  "amp_clips": 17,
+  "amp_frames": 3303,
+  "class_probabilities": {
+    "stand": 0.20833333333333334,
+    "walk_forward": 0.20833333333333334,
+    "walk_backward": 0.125,
+    "walk_lateral": 0.16666666666666669,
+    "turn": 0.16666666666666669,
+    "jog": 0.125
+  },
+  "log_root": "/home/nubot/phn_ws/t4_train/TienKung-Lab-g1-unitree-v6-20260907/logs/g1_full17_lin4",
+  "tensorboard": "http://100.100.188.39:8039/#scalars",
+  "behavior_success_verified": false,
+  "baseline_train_sha256": "92c1666aed86d68e3d895f9fd322a7f471a6947788134a795f4afce0b0f3c274",
+  "only_behavior_change": {
+    "reward.track_lin_vel_xy_exp.weight": [
+      2.0,
+      4.0
+    ]
+  }
+}

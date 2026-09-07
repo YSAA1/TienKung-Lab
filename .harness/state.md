@@ -1,9 +1,11 @@
 # Current State
 
+- 2026-09-07 21:13：新增全17段线速度权重4对照，GPU1/3，tmux `g1-full17-lin4`，冷启动30000轮。旧v6已停止，保留18个checkpoint；GPU0/2权重2基线继续。合并TB8039，配置唯一行为差异已核实，新组20轮/model_0/双rank数值健康。证据 `artifacts/portability/g1_full17_lin4_20260907/`。
+
 - 2026-09-07：用户取消对照，正式启动完整17段T4→G1 rob2rob、双卡30000轮。GPU0/2、每卡2048env、全局4096env、冷启动；17段3303帧/110.1秒及原逐文件权重完整保留，Isaac逐帧验证通过。
 - Living index: `docs/README.md`
 - 当前 G1 唯一执行计划：`docs/plans/2026-09-07--robot-neutral-locomotion.md`。远端 `TienKung-Lab-g1-unitree-v6-20260907`，tmux `g1-full17-30k`，TB8038；日志根 `logs/g1_full17_30k/`，启动工件 `artifacts/portability/g1_full17_30k_20260907/`。
-- GPU0旧数据control、GPU2两段组及仅初始化的全17段4000轮组均已停止，工件保留；v6仍在GPU1/3、TB8035参照。当前训练是30000轮正式任务，不再等待对照。数据回放 `artifacts/portability/t4_rob2rob_full17_v1/all_clips.mp4`；数据验收及更新不代表策略能力成功。
+- GPU0旧数据control、GPU2两段组及仅初始化的全17段4000轮组均已停止，工件保留；旧v6现已停止，TB8035保留历史，GPU1/3改跑上方权重4对照。数据回放 `artifacts/portability/t4_rob2rob_full17_v1/all_clips.mp4`；数据验收及更新不代表策略能力成功。
 - 旧 v2 按用户要求在 iteration 9662 停止：tmux `g1-full-levels-v2` 与原 5 个训练进程全部退出，GPU 1/3 释放，20 个 checkpoint 保留；TB 8031 仍可查旧曲线。停止证据 `artifacts/portability/v3/stopped_v2.json`。共享教师、深度学生、动作跟踪与全库接入整理已完成；各候选行为能力仍由固定评估和连续回放判定。
 - S12 学生 `s12_repr_first` `model_13999` Isaac hard 过门，MuJoCo 残留交给老师 plant 重训。老师本机 `artifacts/checkpoints/nubot/s12_teacher/model_21500.pt`。
 - Approved specs: `docs/specs/2026-08-12--t4-unified-depth-locomotion.md`（走跑/学生合同）、`docs/specs/2026-08-13--t4-vault-loco-merge.md`（G1→G2→G3 目标）、`docs/specs/2026-08-15--t4-stepping-stones-and-hurdle-stable.md`（梅花桩目标；执行已改单阶段）、`docs/specs/2026-09-01--t4-s12-repr-first-distill.md`（表示先行蒸馏）

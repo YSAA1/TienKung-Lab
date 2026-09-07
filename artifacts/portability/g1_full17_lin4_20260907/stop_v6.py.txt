@@ -1,0 +1,17 @@
+from pathlib import Path
+import subprocess,json,datetime
+root=Path('/home/nubot/phn_ws/t4_train/TienKung-Lab-g1-unitree-v6-20260907')
+out=root/'artifacts/portability/g1_full17_lin4_20260907'
+pids=[400980,400987,401128,401129]
+records=[]
+for pid in pids:
+ p=Path('/proc')/str(pid)
+ cmd=(p/'cmdline').read_bytes().replace(b'\0',b' ').decode()
+ assert 'g1_unitree_29dof_teacher_v6' in cmd and str(p.resolve())==f'/proc/{pid}'
+ assert (p/'cwd').resolve()==root
+ records.append({'pid':pid,'command':cmd})
+run=root/'logs/g1_loco_teacher_sparse/2026-09-07_13-55-07_g1_unitree_29dof_teacher_v6'
+record={'time':datetime.datetime.now().astimezone().isoformat(),'reason':'Replace old-data v6 with user-requested full17 linear weight 4 comparison; preserve full17 baseline','processes':records,'checkpoints':[p.name for p in run.glob('model_*.pt')]}
+(out/'stopped_v6.json').write_text(json.dumps(record,indent=2))
+subprocess.run(['tmux','send-keys','-t','g1-teacher-v6','C-c'],check=True)
+print(json.dumps(record))

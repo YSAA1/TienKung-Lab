@@ -1,0 +1,11 @@
+from pathlib import Path
+import subprocess,json,datetime
+root=Path('/home/nubot/phn_ws/t4_train/TienKung-Lab-g1-unitree-v6-20260907');out=root/'artifacts/portability/g1_full17_lin4_20260907'
+old=json.loads((out/'stopped_v6.json').read_text())
+assert all(not (Path('/proc')/str(p['pid'])).exists() for p in old['processes']), 'old v6 still exiting'
+assert subprocess.run(['tmux','has-session','-t','g1-full17-30k'],capture_output=True).returncode==0
+subprocess.run(['tmux','new-session','-d','-s','g1-full17-lin4','bash '+str(out/'run.sh')],check=True)
+tb=f'/usr/bin/python3 -m tensorboard.main --logdir_spec weight2:{root}/logs/g1_full17_30k,weight4:{root}/logs/g1_full17_lin4 --host 0.0.0.0 --port 8039 --load_fast=false > {out}/tensorboard.log 2>&1'
+subprocess.run(['tmux','new-session','-d','-s','g1-full17-lin4-tb',tb],check=True)
+old['exit_verified_at']=datetime.datetime.now().astimezone().isoformat();(out/'stopped_v6.json').write_text(json.dumps(old,indent=2))
+print('STARTED g1-full17-lin4; v6 exit verified; baseline session alive')

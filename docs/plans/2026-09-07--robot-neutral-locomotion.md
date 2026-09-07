@@ -1,9 +1,18 @@
 # 机器人无关的运动训练算法整理
 
-Status: 用户改为完整正式训练，不再做对照。T4 实际使用的 17 段已全部转换为 G1 29DoF，3303 帧 / 110.1 秒，逐文件权重保持一致；18:51 启动 GPU0/2 双卡、每卡 2048env、冷启动 30000 轮，TB8038。此前 GPU0/2 对照已停止，v6 在 GPU1/3 保留。训练行为有效性尚待验收。
+Status: 2026-09-07 用户新增线速度权重对照。GPU0/2 保留全17段权重2基线；旧v6停止并保留checkpoint，GPU1/3启动全17段权重4冷启动30000轮。配置已核验，行为效果待验收。
 
 
-## 当前执行：完整 17 段、双卡正式训练 30000 轮
+## 当前新增：线速度权重 2 / 4 对照
+
+- 基线 GPU0/2、tmux `g1-full17-30k`、权重2；实验 GPU1/3、tmux `g1-full17-lin4`、权重4。两组均全17段AMP、seed42、每卡2048env、24steps、双卡、全局4096env、冷启动30000轮，每轮98304样本。
+- 合并 TensorBoard：`http://100.100.188.39:8039/#scalars`，会话 `g1-full17-lin4-tb`，weight2/weight4 对应两个日志目录。原 TB8038 保留。
+- 实验 run `2026-09-07_21-11-47_g1_full17_lin4`，日志 `logs/g1_full17_lin4/`。21:13核验20轮、双rank存活、model_0保存、所查loss有限；基线继续至2730轮。旧v6的4个训练进程退出，18个历史checkpoint保留。
+- 保存的 env.yaml 唯一差异为 `reward.track_lin_vel_xy_exp.weight: 2.0 -> 4.0`；agent.yaml只差experiment_name/run_name。独立train入口从冻结基线快照派生，在构造env前设置该权重，不改共享运行源码。SHA、停止记录、配置差异及健康证据在 `artifacts/portability/g1_full17_lin4_20260907/`。
+- T4 S11b历史训练日志第0/1轮累计98304/196608样本，确认每轮采样量相同。2400～2600轮窗口：G1/T4未加权tracking均值0.250/0.302，terrain level 1.374/1.544，平地reach2m 0%/13.37%；晋级率3.52%/1.36%，路径长度1.956/1.405m。G1数据为TB抽样79点，T4为201点。证据支持平地进展及平均等级落后，但不是所有指标都慢，也不能归因为机器人本身或量化成慢几倍。
+- 两组权重不同，不直接按加权奖励判胜；路径长度也不是净前进距离。按相同轮数比较未加权tracking、等级、实际速度/净位移，最终仍以同预算checkpoint的evaluator JSON、lineage及连续回放验收。本次只确认实验正确开训，未宣称权重4更好。
+
+## 保留基线：完整 17 段、双卡正式训练 30000 轮
 
 - 用户最新明确取消对照，直接双卡正式训练 30000 轮。运行 `g1-full17-30k`，物理 GPU0/2，DDP world_size=2，每卡2048env、全局4096env、24steps/update、seed42、不续旧模型。正式日志根目录 `logs/g1_full17_30k/`；TensorBoard `http://100.100.188.39:8038/#scalars`，会话 `g1-full17-30k-tb`。
 - 数据清单由 T4 S11b 保存的 agent.yaml 和实际17个 expert 文件逐项核对；远端源CSV关节角与当时expert一致，本地源CSV的LF哈希与远端一致。证据 `artifacts/portability/t4_rob2rob_full17_v1/t4_runtime_manifest.json`、`t4_source_check.json`。
