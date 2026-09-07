@@ -41,8 +41,10 @@ def test_curated_frames_preserve_real_source_transitions():
         original_bytes = original.read_bytes()
         # Historical T4 CSVs follow repository autocrlf; the recorded source
         # bytes were read on Windows. Accept equivalent checkout line endings.
-        source_hashes = {hashlib.sha256(original_bytes).hexdigest(),
-                         hashlib.sha256(original_bytes.replace(b"\r\n", b"\n").replace(b"\n", b"\r\n")).hexdigest()}
+        source_hashes = {
+            hashlib.sha256(original_bytes).hexdigest(),
+            hashlib.sha256(original_bytes.replace(b"\r\n", b"\n").replace(b"\n", b"\r\n")).hexdigest(),
+        }
         assert lineage["original_sha256"] in source_hashes
         t4_rows = np.loadtxt(original, delimiter=",")
         rows = np.loadtxt(source, delimiter=",")
