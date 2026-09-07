@@ -437,7 +437,9 @@ class AMPPPO:
             expert_loss = torch.nn.MSELoss()(expert_d, torch.ones(expert_d.size(), device=self.device))
             policy_loss = torch.nn.MSELoss()(policy_d, -1 * torch.ones(policy_d.size(), device=self.device))
             amp_loss = 0.5 * (expert_loss + policy_loss)
-            grad_pen_loss = self.discriminator.compute_grad_pen(*sample_amp_expert, lambda_=10)
+            # The discriminator and its gradient penalty operate in the same
+            # normalized coordinates; the original samples remain raw below.
+            grad_pen_loss = self.discriminator.compute_grad_pen(expert_state, expert_next_state, lambda_=10)
             loss += self.amploss_coef * amp_loss + self.amploss_coef * grad_pen_loss
 
             # Compute the gradients
@@ -462,8 +464,7 @@ class AMPPPO:
                 self.rnd_optimizer.step()
 
             if self.amp_normalizer is not None:
-                self.amp_normalizer.update(policy_state.cpu().numpy())
-                self.amp_normalizer.update(expert_state.cpu().numpy())
+                self._update_amp_normalizer(sample_amp_policy[0], sample_amp_expert[0])
 
             # Store the losses
             mean_value_loss += value_loss.item()
@@ -519,18 +520,40 @@ class AMPPPO:
     Helper functions
     """
 
+    def _update_amp_normalizer(self, policy_state, expert_state):
+        """Accumulate raw AMP moments, using the same statistics on every rank."""
+        if not self.is_multi_gpu:
+            self.amp_normalizer.update(policy_state.detach().cpu().numpy())
+            self.amp_normalizer.update(expert_state.detach().cpu().numpy())
+            return
+        samples = torch.cat((policy_state, expert_state), dim=0).detach().double()
+        # Reduce sufficient statistics, not rank means: counts can differ.
+        moments = torch.cat((samples.sum(0), samples.square().sum(0), samples.new_tensor([samples.shape[0]])))
+        torch.distributed.all_reduce(moments, op=torch.distributed.ReduceOp.SUM)
+        width = samples.shape[1]
+        count = moments[-1]
+        mean = moments[:width] / count
+        variance = (moments[width : 2 * width] / count - mean.square()).clamp_min(0.0)
+        self.amp_normalizer.update_from_moments(mean.cpu().numpy(), variance.cpu().numpy(), count.item())
+
     def broadcast_parameters(self):
         """Broadcast model parameters to all GPUs."""
         # obtain the model parameters on current GPU
-        model_params = [self.policy.state_dict()]
+        normalizer_state = None
+        if self.amp_normalizer is not None:
+            normalizer_state = (self.amp_normalizer.mean, self.amp_normalizer.var, self.amp_normalizer.count)
+        model_params = [self.policy.state_dict(), self.discriminator.state_dict(), normalizer_state]
         if self.rnd:
             model_params.append(self.rnd.predictor.state_dict())
         # broadcast the model parameters
         torch.distributed.broadcast_object_list(model_params, src=0)
         # load the model parameters on all GPUs from source GPU
         self.policy.load_state_dict(model_params[0])
+        self.discriminator.load_state_dict(model_params[1])
+        if self.amp_normalizer is not None:
+            self.amp_normalizer.mean, self.amp_normalizer.var, self.amp_normalizer.count = model_params[2]
         if self.rnd:
-            self.rnd.predictor.load_state_dict(model_params[1])
+            self.rnd.predictor.load_state_dict(model_params[3])
 
     def reduce_parameters(self):
         """Collect gradients from all GPUs and average them.
@@ -538,19 +561,16 @@ class AMPPPO:
         This function is called after the backward pass to synchronize the gradients across all GPUs.
         """
         # Create a tensor to store the gradients
-        grads = [param.grad.view(-1) for param in self.policy.parameters() if param.grad is not None]
+        all_params = list(chain(self.policy.parameters(), self.discriminator.parameters()))
         if self.rnd:
-            grads += [param.grad.view(-1) for param in self.rnd.parameters() if param.grad is not None]
+            all_params += list(self.rnd.parameters())
+        all_params = [param for param in all_params if param.grad is not None]
+        grads = [param.grad.view(-1) for param in all_params]
         all_grads = torch.cat(grads)
 
         # Average the gradients across all GPUs
         torch.distributed.all_reduce(all_grads, op=torch.distributed.ReduceOp.SUM)
         all_grads /= self.gpu_world_size
-
-        # Get all parameters
-        all_params = self.policy.parameters()
-        if self.rnd:
-            all_params = chain(all_params, self.rnd.parameters())
 
         # Update the gradients for all parameters with the reduced gradients
         offset = 0
