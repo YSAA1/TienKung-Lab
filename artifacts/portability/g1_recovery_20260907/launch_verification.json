@@ -1,0 +1,64 @@
+{
+  "time": "2026-09-07T23:30:48.387782",
+  "run": "/home/nubot/phn_ws/t4_train/TienKung-Lab-g1-recovery-20260907/logs/g1_recovery_30k/2026-09-07_23-26-29_g1_recovery_30k",
+  "source_files_reverified": 339,
+  "expert_sha256": {
+    "g1_from_B10_-__Walk_turn_left_45_stageii_0000_0178.txt": "abbead7aa48037f3a10e0f888b8bbacc163a068992c98327ffc96841c61a0473",
+    "g1_from_B13_-__Walk_turn_right_90_stageii_0000_0167.txt": "25d20e7bc7c4413e89b2e733a198e19a385be87e5eb6d117bdc17dabcde4d7c4",
+    "g1_from_B14_-__Walk_turn_right_45_t2_stageii_0000_0173.txt": "5899b5fef712812232de55e5c933c361a518ff0df8bcb41ecc61c11ba7e8fa12",
+    "g1_from_B15_-__Walk_turn_around_stageii_0000_0224.txt": "92d743f573bbebaaf1d12d991b92da5b6a6067bdcc5db08b051ea7864077aa5f",
+    "g1_from_B4_-_Stand_to_Walk_backwards_stageii_0000_0137.txt": "058f8eb6ae763c226f23c0ca4b376f8450c3b824b55eb8af3d72a42295d90962",
+    "g1_from_B9_-__Walk_turn_left_90_stageii_0000_0150.txt": "e9c0a217fa2653d815f068b29fdbe6a391b1a265e1a103fb79fb9eea7809c66f",
+    "g1_from_t4_jog_backward_0000_0170.txt": "0ccce07ed3658c94bea3c1931bbc8fbb3b9d22c70fb22ef23dfdcbc2784cb7df",
+    "g1_from_t4_jog_forward_0000_0151.txt": "aea3d58abf9d616a19f9da293849d79e9c7540028cfc7d5eea5e1fab86e06c77",
+    "g1_from_t4_jog_left_0000_0206.txt": "a0ddb3e7474784ec70495ea8d4903fd6d3b82efc2d6156af66d3abc7a0b4335c",
+    "g1_from_t4_jog_right_0000_0226.txt": "9cf50001c896825f55e921385793effa197544321389b2a216df2dba62a66d46",
+    "g1_from_t4_left_rotate_0000_0231.txt": "5006a138cd0254db40506741bfcf3703fc6f3ba2c552cb8863308a67ab30eed9",
+    "g1_from_t4_right_rotate_0000_0193.txt": "436745a8017f2df9a325c1292ad52d10535abdeefea605d36b81df76c7e4ca71",
+    "g1_from_t4_side_left_0000_0137.txt": "04bf1a82e18cfa39d7d0a92ba4d7cd4a29bb7bf51175cf02216b063e8ad69295",
+    "g1_from_t4_side_right_0000_0150.txt": "bbcec641d0b22b87b016ff183226b1efdc62f7cab9dc52f328e61f75b8cb4a5d",
+    "g1_from_t4_stand_0000_0149.txt": "c175cae169e1c6366980c280eac72b07ba15c5a552b46300eb676bda2fb81f5d",
+    "g1_from_t4_walk_forward_0000_0289.txt": "016ddeb1aaedf3bdb952a07282877cafca5a05c6c41fd77216e3f5c2e4102697",
+    "g1_from_t4_walk_left_0000_0372.txt": "4a5378c07a879c3738f6e3f13268f36d6a8bc273ebd546e95ff22ed0ba55a790"
+  },
+  "ranks": [
+    {
+      "pid": 920838,
+      "command": "/home/nubot/isaac-sim-standalone-5.1.0-linux-x86_64/kit/python/bin/python3 -u artifacts/portability/g1_recovery_20260907/train.py --task g1_loco_teacher --num_envs 2048 --seed 42 --distributed --headless --max_iterations 30000 --experiment_name g1_recovery_30k --run_name g1_recovery_30k --amp_expert_manifest /home/nubot/phn_ws/t4_train/TienKung-Lab-g1-recovery-20260907/legged_lab/envs/g1/datasets/motion_amp_expert_t4_rob2rob_full17_v1/_manifest.json ",
+      "environment": {
+        "LOCAL_RANK": "0",
+        "RANK": "0",
+        "WORLD_SIZE": "2",
+        "CUDA_VISIBLE_DEVICES": "1,3"
+      }
+    },
+    {
+      "pid": 920839,
+      "command": "/home/nubot/isaac-sim-standalone-5.1.0-linux-x86_64/kit/python/bin/python3 -u artifacts/portability/g1_recovery_20260907/train.py --task g1_loco_teacher --num_envs 2048 --seed 42 --distributed --headless --max_iterations 30000 --experiment_name g1_recovery_30k --run_name g1_recovery_30k --amp_expert_manifest /home/nubot/phn_ws/t4_train/TienKung-Lab-g1-recovery-20260907/legged_lab/envs/g1/datasets/motion_amp_expert_t4_rob2rob_full17_v1/_manifest.json ",
+      "environment": {
+        "LOCAL_RANK": "1",
+        "RANK": "1",
+        "WORLD_SIZE": "2",
+        "CUDA_VISIBLE_DEVICES": "1,3"
+      }
+    }
+  ],
+  "baseline_pids": [
+    523120,
+    523121
+  ],
+  "env": {
+    "collapse_grace_s": "0.2",
+    "collapse_immunity": "true",
+    "linear_weight": "2.0",
+    "num_envs_per_rank": "2048",
+    "seed": "42"
+  },
+  "agent": {
+    "resume": "false",
+    "max_iterations": "30000",
+    "seed": "42"
+  },
+  "model_0_exists": true,
+  "tensorboard_http_status": 200
+}

@@ -1,13 +1,42 @@
+# Copyright (c) 2021-2024, The RSL-RL Project Developers.
+# All rights reserved.
+# Original code is licensed under the BSD-3-Clause license.
+#
+# Copyright (c) 2022-2025, The Isaac Lab Project Developers.
+# All rights reserved.
+#
+# Copyright (c) 2025-2026, The Legged Lab Project Developers.
+# All rights reserved.
+#
+# Copyright (c) 2025-2026, The TienKung-Lab Project Developers.
+# All rights reserved.
+# Modifications are licensed under the BSD-3-Clause license.
+#
+# This file contains code derived from the RSL-RL, Isaac Lab, and Legged Lab Projects,
+# with additional modifications by the TienKung-Lab Project,
+# and is distributed under the BSD-3-Clause license.
+
 """G1 recipe for the shared LightLP + AMP locomotion algorithm."""
 
 from isaaclab.utils import configclass
 
-from legged_lab.assets.unitree_g1.constants import G1_29DOF_JOINT_NAMES, NUM_G1_29DOF_JOINTS
+from legged_lab.assets.unitree_g1.constants import (
+    G1_29DOF_JOINT_NAMES,
+    NUM_G1_29DOF_JOINTS,
+)
 from legged_lab.assets.unitree_g1.g1 import G1_29DOF_CFG
 from legged_lab.assets.unitree_g1.locomotion import G1_LOCOMOTION
-from legged_lab.assets.unitree_g1.schemas import AMP_FORMAL_EXPERT_DIR, AMP_FRAME_DIM, amp_expert_files
+from legged_lab.assets.unitree_g1.schemas import (
+    AMP_FORMAL_EXPERT_DIR,
+    AMP_FRAME_DIM,
+    amp_expert_files,
+)
 from legged_lab.locomotion.config_binding import bind_reward_roles
-from legged_lab.locomotion.teacher_cfg import LightLPLocomotionAgentCfg, LightLPLocomotionEnvCfg, LightLPRewardCfg
+from legged_lab.locomotion.teacher_cfg import (
+    LightLPLocomotionAgentCfg,
+    LightLPLocomotionEnvCfg,
+    LightLPRewardCfg,
+)
 
 
 @configclass
@@ -39,6 +68,10 @@ class G1LocoTeacherEnvCfg(LightLPLocomotionEnvCfg):
         self.random_level_reset_max_level = None
         self.sparse_command_min_speed_scale = 0.5
         self.collapse_reset_pelvis_above_feet_m = 0.20
+        # A brief low pose is a recovery opportunity, not an immediate failure.
+        # Preserve the LightLP impact-immunity contract for sustained collapse.
+        self.collapse_reset_grace_s = 0.20
+        self.collapse_reset_respects_impact_immunity = True
         self.amp_terrain_schedule.enable = True
         self.commands.debug_vis = False
         self.domain_rand.action_delay.enable = False

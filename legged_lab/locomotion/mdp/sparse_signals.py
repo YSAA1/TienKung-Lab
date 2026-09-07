@@ -1,3 +1,21 @@
+# Copyright (c) 2021-2024, The RSL-RL Project Developers.
+# All rights reserved.
+# Original code is licensed under the BSD-3-Clause license.
+#
+# Copyright (c) 2022-2025, The Isaac Lab Project Developers.
+# All rights reserved.
+#
+# Copyright (c) 2025-2026, The Legged Lab Project Developers.
+# All rights reserved.
+#
+# Copyright (c) 2025-2026, The TienKung-Lab Project Developers.
+# All rights reserved.
+# Modifications are licensed under the BSD-3-Clause license.
+#
+# This file contains code derived from the RSL-RL, Isaac Lab, and Legged Lab Projects,
+# with additional modifications by the TienKung-Lab Project,
+# and is distributed under the BSD-3-Clause license.
+
 # Copyright (c) 2025-2026, The TienKung-Lab Project Developers.
 # All rights reserved.
 # Modifications are licensed under the BSD-3-Clause license.
@@ -251,7 +269,9 @@ def tilt_from_upright_rad(gx, gy, gz):
     return math.atan2(sin_tilt, cos_tilt)
 
 
-def stochastic_fall_over(tilt_rad, sample, *, limit_rad: float = LIGHTLP_TILT_LIMIT_RAD, prob: float = LIGHTLP_FALL_PROB):
+def stochastic_fall_over(
+    tilt_rad, sample, *, limit_rad: float = LIGHTLP_TILT_LIMIT_RAD, prob: float = LIGHTLP_FALL_PROB
+):
     """LightLP fall-over: tilt past 63° and a Bernoulli draw (expected ~100-step window)."""
     over = tilt_rad > limit_rad
     drawn = sample < prob
@@ -391,6 +411,19 @@ def collapsed_pelvis_above_feet_mask(root_z, foot_z, clearance_m: float):
     support. Min foot height keeps downstairs walking safe without that bias.
     """
     return (root_z - foot_z) < clearance_m
+
+
+def persistent_collapse_mask(low, previous_steps, required_steps: int, immunity):
+    """Count consecutive low samples; immunity suppresses termination, not evidence.
+
+    The caller clears per-environment counters on every episode reset. A recovered
+    pose clears its counter immediately, even while impact immunity is active.
+    """
+    if required_steps < 1:
+        raise ValueError("required_steps must be positive")
+    steps = (previous_steps + 1) * low
+    sustained = low & (steps >= required_steps)
+    return steps, sustained & ~immunity, sustained & immunity
 
 
 def sparse_pit_fall_mask(root_z, origin_z, is_sparse, drop_threshold: float = 0.5, soft_terrain: bool = False):

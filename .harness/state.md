@@ -1,5 +1,7 @@
 # Current State
 
+- 2026-09-07 23:30：G1恢复合同对照已启动。GPU0/2保留full17权重2基线；原GPU1/3权重4已停、6个checkpoint保留（model_2500）。新tmux `g1-recovery-30k`，冻结目录 `/home/nubot/phn_ws/t4_train/TienKung-Lab-g1-recovery-20260907`，主run `logs/g1_recovery_30k/2026-09-07_23-26-29_g1_recovery_30k`，TB8040，rank PID920838/920839。连续塌低.20s且无immunity才触发collapsed；线速度2、全17段、每卡2048env、冷启动30000。56项检查、真实Isaac和独立review通过。固定旧checkpoint探针仅证明合同正确，仍站立、未见稳定恢复，不宣称学习改善。证据 `artifacts/portability/g1_recovery_20260907/`，执行以当前plan顶部为准。
+
 - 2026-09-07 21:13：新增全17段线速度权重4对照，GPU1/3，tmux `g1-full17-lin4`，冷启动30000轮。旧v6已停止，保留18个checkpoint；GPU0/2权重2基线继续。合并TB8039，配置唯一行为差异已核实，新组20轮/model_0/双rank数值健康。证据 `artifacts/portability/g1_full17_lin4_20260907/`。
 
 - 2026-09-07：用户取消对照，正式启动完整17段T4→G1 rob2rob、双卡30000轮。GPU0/2、每卡2048env、全局4096env、冷启动；17段3303帧/110.1秒及原逐文件权重完整保留，Isaac逐帧验证通过。

@@ -1,11 +1,36 @@
 # 机器人无关的运动训练算法整理
 
-Status: 2026-09-07 用户新增线速度权重对照。GPU0/2 保留全17段权重2基线；旧v6停止并保留checkpoint，GPU1/3启动全17段权重4冷启动30000轮。配置已核验，行为效果待验收。
+Status: 2026-09-07 23:30，恢复合同已实现、真实Isaac验证及独立review通过；权重4已停止留档，GPU1/3新实验 `g1-recovery-30k` 已启动，GPU0/2权重2基线保留。新TB8040。能力效果待同预算评估。
+
+## 当前执行：G1 终止与恢复合同修复
+
+### 研究结论与方案
+
+- 全面对照证据：`docs/reports/2026-09-07-g1-t4-contract-comparison.md`。不能再声称历史T4与G1完全对齐。官方29DoF、PD、关节顺序与70D专家为必要适配；AMP原始统计/同步/终止帧修复保留。
+- 官方固定提交 `4960b84732b0c2ec593dccbfe963fda1bcd7b1e3` 的 G1 velocity `TerminationsCfg` 使用 root height .2m、orientation .8rad和timeout，无torso净接触硬终止。说明躯干接触gate不是G1必须照搬的接口；其高度是根高度，不能把本项目脚相对高度称为官方同一判据。
+- 当前PhysX对地形mesh的GPU contact filter实测不支持。拒绝全零过滤力，也不重新启用已复现内部自碰撞误判的torso净力终止。**修正上一轮“必须外部接触判据可用才能做任何协调”的过强前提**：第一组实验适配几何塌低与恢复语义，明确不宣称恢复了T4外部触地事件。
+- 实施可配置的塌低持续时间和碰撞豁免：保留.20m几何判据，G1需连续低姿态.20s才因collapsed结束，服从既有impact immunity；恢复高度即清零计时，每次reset也清零。其他机器人默认保持原行为。T4式63°/每步1%倾倒、加速度/时限/出界/关节速度保护保留；本次仅新增对collapsed的豁免，其他事件沿用既有规则（immunity原本就屏蔽接触/加速度冲击，但不屏蔽随机倾倒和timeout）。
+- .20s是待验证的短暂恢复窗口（当前20ms控制周期的10步），不是文献最优值或已证明能够治愈停步。记录原始塌低占比、被豁免的持续塌低、实际塌低终止，避免曲线归零制造假改善。
+- 首个新实验只改变“塌低与恢复”这一合同组，线速度回到2，其他奖励、全17段AMP、重置/命令/地形/官方资产保持基线。固定默认关节姿态与零根初速暂保留，因为这是起步能力的清晰验收起点；不把未经接触检验的T4姿态倍率直接套给G1。
+- 后续待因果证据：若恢复合同正常但仍站立，优先验证AMP相对强度/上肢速度判别，再验证初始化分布；不同时叠加奖励、PD、命令和地形修改。软接触选择器差异、稀疏速度缩放和实体边框保留为明示偏离。共享std下限失效不是本次单变量实验的修复项，另列问题，不偷偷混入。
+
+### 执行与验收
+
+- [x] 核实冻结历史配置、当前训练与官方G1终止设计；两组23:06分别有model_5000/model_2000，tmux存活。
+- [x] 实现塌低持续时间/豁免合同和原始事件诊断；56项新增/相关检查通过。旧flake8插件在Python3.13崩溃，改用既有3.12运行；R506/SIM901两处告警在HEAD原文件复现，未引入新告警。pyupgrade在3.12通过，其余适用hooks通过。
+- [x] 独立候选目录 `TienKung-Lab-g1-recovery-20260907` 的真实Isaac probe：部分episode计时清零通过；32env/1000步未发现持续时间或豁免违规；flat32/32站满6s、终止AMP快照验证通过。新组2 collapsed/28 accel、定义内恢复0，属于终止原因迁移，未证明冷启动学习改善。证据 `artifacts/portability/g1_recovery_20260907/probe_summary.json`；两组先执行部分reset校验，不能将旧审计的28例当成本轮legacy的27例。
+- [x] review-agent 独立只读审查完整diff，再复核原始JSON/SHA、摘要和开训脚本；No findings。修正计划中原加速度豁免的文字错误。启动状态待单独核验。
+- [x] 保留权重2基线；确认权重4五个进程退出，6个checkpoint保留（最后model_2500）。GPU1/3新lineage已启动：双卡各2048env、24steps、seed42、全17段、权重2、冷启动30000轮。339份源码/资产SHA复核，新旧保存env配置除rank/device差异外仅新增两项塌低恢复字段；17份专家启动逐项校验。23:28已36轮且所查loss有限，两个rank为920838/920839。
+- [x] cleanup：本轨道README/索引/状态与本计划已同步；原始轨迹无损压缩并验证压缩前后SHA，审计输入及脚本快照保留；仅删除本任务传输tar和lint基线临时副本。23:34再次核验训练推进至132轮，双rank和GPU0/2基线仍在，17段专家与基线SHA完全相同。相关变更与证据纳入本次中文里程碑提交。
+
+`final_integration_claim`：G1恢复合同实现、回归和真实物理验证通过；独立review无未解决阻断发现；新对照按冻结合同正确开训、基线未被污染、证据与恢复入口可追溯。**此声明不包含G1已学会行走/越障**。训练能力后续必须用同预算checkpoint的固定命令速度/净位移、恢复率、evaluator JSON、lineage及连续回放验收，不能由collapsed计数下降替代。
+
+参考：[官方固定提交G1速度配置](https://github.com/unitreerobotics/unitree_rl_lab/blob/4960b84732b0c2ec593dccbfe963fda1bcd7b1e3/source/unitree_rl_lab/unitree_rl_lab/tasks/locomotion/robots/g1/29dof/velocity_env_cfg.py)、[IsaacLab接触传感器](https://isaac-sim.github.io/IsaacLab/main/source/overview/core-concepts/sensors/contact_sensor.html)。运行时限制以本机实际IsaacLab源码和contact_probe日志为准。
 
 
-## 当前新增：线速度权重 2 / 4 对照
+## 已替换：线速度权重 2 / 4 对照
 
-- 基线 GPU0/2、tmux `g1-full17-30k`、权重2；实验 GPU1/3、tmux `g1-full17-lin4`、权重4。两组均全17段AMP、seed42、每卡2048env、24steps、双卡、全局4096env、冷启动30000轮，每轮98304样本。
+- 历史配置：基线 GPU0/2、tmux `g1-full17-30k`、权重2；原实验 GPU1/3、tmux `g1-full17-lin4`、权重4。两组均全17段AMP、seed42、每卡2048env、24steps、双卡、全局4096env、冷启动30000轮，每轮98304样本。权重4现已停止；TB8039和checkpoint作为历史对照保留。
 - 合并 TensorBoard：`http://100.100.188.39:8039/#scalars`，会话 `g1-full17-lin4-tb`，weight2/weight4 对应两个日志目录。原 TB8038 保留。
 - 实验 run `2026-09-07_21-11-47_g1_full17_lin4`，日志 `logs/g1_full17_lin4/`。21:13核验20轮、双rank存活、model_0保存、所查loss有限；基线继续至2730轮。旧v6的4个训练进程退出，18个历史checkpoint保留。
 - 保存的 env.yaml 唯一差异为 `reward.track_lin_vel_xy_exp.weight: 2.0 -> 4.0`；agent.yaml只差experiment_name/run_name。独立train入口从冻结基线快照派生，在构造env前设置该权重，不改共享运行源码。SHA、停止记录、配置差异及健康证据在 `artifacts/portability/g1_full17_lin4_20260907/`。
@@ -14,7 +39,7 @@ Status: 2026-09-07 用户新增线速度权重对照。GPU0/2 保留全17段权�
 
 ## 保留基线：完整 17 段、双卡正式训练 30000 轮
 
-- 用户最新明确取消对照，直接双卡正式训练 30000 轮。运行 `g1-full17-30k`，物理 GPU0/2，DDP world_size=2，每卡2048env、全局4096env、24steps/update、seed42、不续旧模型。正式日志根目录 `logs/g1_full17_30k/`；TensorBoard `http://100.100.188.39:8038/#scalars`，会话 `g1-full17-30k-tb`。
+- 18:51阶段用户取消当时的数据对照，启动双卡正式训练 30000 轮；后续新增的恢复对照以本页顶部为准。基线运行 `g1-full17-30k`，物理 GPU0/2，DDP world_size=2，每卡2048env、全局4096env、24steps/update、seed42、不续旧模型。正式日志根目录 `logs/g1_full17_30k/`；TensorBoard `http://100.100.188.39:8038/#scalars`，会话 `g1-full17-30k-tb`。
 - 数据清单由 T4 S11b 保存的 agent.yaml 和实际17个 expert 文件逐项核对；远端源CSV关节角与当时expert一致，本地源CSV的LF哈希与远端一致。证据 `artifacts/portability/t4_rob2rob_full17_v1/t4_runtime_manifest.json`、`t4_source_check.json`。
 - 全部17段：站立1、前进走1、后退走1、侧移类3、转向7、jog4；保留每个原始姿态，N帧CSV产生N-1帧前向差分AMP，不按前进速度裁剪、不跨片段拼接。总3303个70D expert帧、110.1秒。`t4_run`原本未用于T4训练，继续保持原有held-out状态。`walk_left`及`jog_left/right`包含曲线运动，文件名/类别沿用实际T4训练合同。
 - 保持T4实际逐文件MotionWeight；归一化类别概率：stand20.833%、walk_forward20.833%、walk_backward12.5%、walk_lateral16.667%、turn16.667%、jog12.5%。不再沿用两段版62.5%/37.5%的配比。

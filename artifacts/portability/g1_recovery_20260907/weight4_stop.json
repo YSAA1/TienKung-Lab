@@ -1,0 +1,21 @@
+{
+  "time": "2026-09-07T23:25:11.472122",
+  "method": "tmux send-keys g1-full17-lin4 C-c",
+  "processes_before": {
+    "792000": "bash /home/nubot/phn_ws/t4_train/TienKung-Lab-g1-unitree-v6-20260907/artifacts/portability/g1_full17_lin4_20260907/run.sh ",
+    "792003": "/bin/bash /home/nubot/isaac-sim-standalone-5.1.0-linux-x86_64/python.sh -m torch.distributed.run --nproc_per_node=2 --master_port=29609 /home/nubot/phn_ws/t4_train/TienKung-Lab-g1-unitree-v6-20260907/artifacts/portability/g1_full17_lin4_20260907/train.py --task g1_loco_teacher --num_envs 2048 --seed 42 --distributed --headless --max_iterations 30000 --experiment_name g1_full17_lin4 --run_name g1_full17_lin4 --amp_expert_manifest /home/nubot/phn_ws/t4_train/TienKung-Lab-g1-unitree-v6-20260907/legged_lab/envs/g1/datasets/motion_amp_expert_t4_rob2rob_full17_v1/_manifest.json ",
+    "792013": "/home/nubot/isaac-sim-standalone-5.1.0-linux-x86_64/kit/python/bin/python3 -m torch.distributed.run --nproc_per_node=2 --master_port=29609 /home/nubot/phn_ws/t4_train/TienKung-Lab-g1-unitree-v6-20260907/artifacts/portability/g1_full17_lin4_20260907/train.py --task g1_loco_teacher --num_envs 2048 --seed 42 --distributed --headless --max_iterations 30000 --experiment_name g1_full17_lin4 --run_name g1_full17_lin4 --amp_expert_manifest /home/nubot/phn_ws/t4_train/TienKung-Lab-g1-unitree-v6-20260907/legged_lab/envs/g1/datasets/motion_amp_expert_t4_rob2rob_full17_v1/_manifest.json ",
+    "792141": "/home/nubot/isaac-sim-standalone-5.1.0-linux-x86_64/kit/python/bin/python3 -u /home/nubot/phn_ws/t4_train/TienKung-Lab-g1-unitree-v6-20260907/artifacts/portability/g1_full17_lin4_20260907/train.py --task g1_loco_teacher --num_envs 2048 --seed 42 --distributed --headless --max_iterations 30000 --experiment_name g1_full17_lin4 --run_name g1_full17_lin4 --amp_expert_manifest /home/nubot/phn_ws/t4_train/TienKung-Lab-g1-unitree-v6-20260907/legged_lab/envs/g1/datasets/motion_amp_expert_t4_rob2rob_full17_v1/_manifest.json ",
+    "792142": "/home/nubot/isaac-sim-standalone-5.1.0-linux-x86_64/kit/python/bin/python3 -u /home/nubot/phn_ws/t4_train/TienKung-Lab-g1-unitree-v6-20260907/artifacts/portability/g1_full17_lin4_20260907/train.py --task g1_loco_teacher --num_envs 2048 --seed 42 --distributed --headless --max_iterations 30000 --experiment_name g1_full17_lin4 --run_name g1_full17_lin4 --amp_expert_manifest /home/nubot/phn_ws/t4_train/TienKung-Lab-g1-unitree-v6-20260907/legged_lab/envs/g1/datasets/motion_amp_expert_t4_rob2rob_full17_v1/_manifest.json "
+  },
+  "preserved_checkpoint": "/home/nubot/phn_ws/t4_train/TienKung-Lab-g1-unitree-v6-20260907/logs/g1_full17_lin4/2026-09-07_21-11-47_g1_full17_lin4/model_2500.pt",
+  "checkpoint_sha256": "a73c4c51e7874fa97f80467a00c7d0b4e72a79000708d80d2e823d39798e537a",
+  "checkpoint_count": 6,
+  "baseline_pids": [
+    523120,
+    523121
+  ],
+  "reason": "replace weight4 with reviewed G1 collapse recovery contract experiment",
+  "verified_stopped_at": "2026-09-07T23:25:57.493908",
+  "old_processes_remaining": []
+}

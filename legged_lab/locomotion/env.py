@@ -1,3 +1,21 @@
+# Copyright (c) 2021-2024, The RSL-RL Project Developers.
+# All rights reserved.
+# Original code is licensed under the BSD-3-Clause license.
+#
+# Copyright (c) 2022-2025, The Isaac Lab Project Developers.
+# All rights reserved.
+#
+# Copyright (c) 2025-2026, The Legged Lab Project Developers.
+# All rights reserved.
+#
+# Copyright (c) 2025-2026, The TienKung-Lab Project Developers.
+# All rights reserved.
+# Modifications are licensed under the BSD-3-Clause license.
+#
+# This file contains code derived from the RSL-RL, Isaac Lab, and Legged Lab Projects,
+# with additional modifications by the TienKung-Lab Project,
+# and is distributed under the BSD-3-Clause license.
+
 # Copyright (c) 2025-2026, The TienKung-Lab Project Developers.
 # All rights reserved.
 # Modifications are licensed under the BSD-3-Clause license.
@@ -26,11 +44,6 @@ from isaaclab.sim import PhysxCfg, SimulationContext
 from isaaclab.utils.buffers import CircularBuffer, DelayBuffer
 from isaaclab.utils.math import euler_xyz_from_quat, quat_rotate_inverse, yaw_quat
 
-from legged_lab.locomotion.schemas import (
-    ObservationLayout, TEACHER_PAPER_CONTACT_DIM, TEACHER_SCAN_CLIP,
-    TEACHER_SCAN_INVALID_VALUE, TEACHER_SPARSE_CONTACT_DIM,
-    assert_no_privilege_leakage, field_slice, proprio_fields,
-)
 from legged_lab.locomotion.amp_features import AmpFeatureBuilder
 from legged_lab.locomotion.curriculum import (
     LIGHTLP_TRACKING_WELL_THRESHOLD,
@@ -51,17 +64,29 @@ from legged_lab.locomotion.mdp.sparse_signals import (
     lightlp_sparse_promotion_guard,
     lightlp_timeout_and_reset,
     mask_recent_push_accel,
+    mask_sparse_curriculum_demote,
     monitor_outcome_flags,
+    persistent_collapse_mask,
     random_level_reset_high,
     random_level_reset_low,
     random_level_reset_mask,
     sample_sparse_foothold_velocity,
-    mask_sparse_curriculum_demote,
     sparse_curriculum_moves,
     sparse_pit_fall_mask,
     terrain_aware_commands_enabled,
     tilt_from_upright_rad,
 )
+from legged_lab.locomotion.schemas import (
+    TEACHER_PAPER_CONTACT_DIM,
+    TEACHER_SCAN_CLIP,
+    TEACHER_SCAN_INVALID_VALUE,
+    TEACHER_SPARSE_CONTACT_DIM,
+    ObservationLayout,
+    assert_no_privilege_leakage,
+    field_slice,
+    proprio_fields,
+)
+from legged_lab.locomotion.teacher_cfg import AmpLocomotionEnvCfg
 from legged_lab.locomotion.terrain_columns import (
     HURDLE_TERRAIN_NAMES,
     SPARSE_FOOTHOLD_NAMES,
@@ -70,20 +95,23 @@ from legged_lab.locomotion.terrain_columns import (
     name_to_columns,
     unique_names,
 )
-from legged_lab.locomotion.teacher_cfg import AmpLocomotionEnvCfg
 from legged_lab.terrains.stepping_stone_layout import (
     LIGHTLP_FOOTHOLD_PITCH_RANGE,
     LIGHTLP_PILLAR_DIAMETER_RANGE,
     LIGHTLP_PILLAR_PITCH_RANGE,
-    LIGHTLP_STONE_BORDER_WIDTH,
     LIGHTLP_SPARSE_RIM_WIDTH,
+    LIGHTLP_STONE_BORDER_WIDTH,
     LIGHTLP_STONE_PLATFORM_WIDTH,
     LIGHTLP_STONE_TILE_SIZE,
     LIGHTLP_STONE_WIDTH_RANGE,
     foot_scan_local_offsets,
 )
 from legged_lab.utils.action_scale import effort_scaled_action_scale
-from legged_lab.utils.env_utils.scene import SceneCfg, rtx_render_due, sensor_is_warp_raycast
+from legged_lab.utils.env_utils.scene import (
+    SceneCfg,
+    rtx_render_due,
+    sensor_is_warp_raycast,
+)
 from rsl_rl.env import VecEnv
 
 
@@ -113,6 +141,10 @@ class LocomotionEnv(VecEnv):
         self.device = self.cfg.device
         self.physics_dt = self.cfg.sim.dt
         self.step_dt = self.cfg.sim.decimation * self.cfg.sim.dt
+        collapse_grace_s = float(getattr(cfg, "collapse_reset_grace_s", 0.0))
+        if not math.isfinite(collapse_grace_s) or collapse_grace_s < 0.0:
+            raise ValueError("collapse_reset_grace_s must be finite and nonnegative")
+        self.collapse_required_steps = max(1, math.ceil(collapse_grace_s / self.step_dt))
         self.num_envs = self.cfg.scene.num_envs
         self.policy_role = self.cfg.policy_role
         self.seed(cfg.scene.seed)
@@ -145,7 +177,9 @@ class LocomotionEnv(VecEnv):
         self.robot: Articulation = self.scene["robot"]
         self.contact_sensor: ContactSensor = self.scene.sensors["contact_sensor"]
         if not self.cfg.scene.height_scanner.enable_height_scan:
-            raise ValueError("the AMP locomotion teacher requires the local terrain privilege; enable the height scanner")
+            raise ValueError(
+                "the AMP locomotion teacher requires the local terrain privilege; enable the height scanner"
+            )
         self.height_scanner: RayCaster = self.scene.sensors["height_scanner"]
 
         command_cfg = UniformVelocityCommandCfg(
@@ -186,9 +220,7 @@ class LocomotionEnv(VecEnv):
                 self.stone_column_ids = columns_named(self.terrain_column_names, "stepping_stones")
                 self.pillar_column_ids = columns_named(self.terrain_column_names, "raised_pillars")
                 self.hurdle_terrain_type_ids = columns_named(self.terrain_column_names, *HURDLE_TERRAIN_NAMES)
-                self.hurdle_terrain_type_id = (
-                    self.hurdle_terrain_type_ids[0] if self.hurdle_terrain_type_ids else None
-                )
+                self.hurdle_terrain_type_id = self.hurdle_terrain_type_ids[0] if self.hurdle_terrain_type_ids else None
 
         self.init_buffers()
 
@@ -267,8 +299,12 @@ class LocomotionEnv(VecEnv):
 
         self.feet_body_ids, _ = self.robot.find_bodies(name_keys=list(self.cfg.robot_spec.feet), preserve_order=True)
         self.left_leg_ids, _ = self.robot.find_joints(name_keys=list(self.cfg.robot_spec.left_leg), preserve_order=True)
-        self.right_leg_ids, _ = self.robot.find_joints(name_keys=list(self.cfg.robot_spec.right_leg), preserve_order=True)
-        self.ankle_joint_ids, _ = self.robot.find_joints(name_keys=list(self.cfg.robot_spec.ankles), preserve_order=True)
+        self.right_leg_ids, _ = self.robot.find_joints(
+            name_keys=list(self.cfg.robot_spec.right_leg), preserve_order=True
+        )
+        self.ankle_joint_ids, _ = self.robot.find_joints(
+            name_keys=list(self.cfg.robot_spec.ankles), preserve_order=True
+        )
 
         self.obs_scales = self.cfg.normalization.obs_scales
         self.add_noise = self.cfg.noise.add_noise
@@ -316,7 +352,9 @@ class LocomotionEnv(VecEnv):
         self.episode_max_radial_dist = torch.zeros(
             self.num_envs, dtype=torch.float, device=self.device, requires_grad=False
         )
-        self.episode_path_length = torch.zeros(self.num_envs, dtype=torch.float, device=self.device, requires_grad=False)
+        self.episode_path_length = torch.zeros(
+            self.num_envs, dtype=torch.float, device=self.device, requires_grad=False
+        )
         self.episode_tracking_sum = torch.zeros(
             self.num_envs, dtype=torch.float, device=self.device, requires_grad=False
         )
@@ -355,18 +393,14 @@ class LocomotionEnv(VecEnv):
         self.last_root_accel_mps2 = torch.zeros(
             self.num_envs, dtype=torch.float, device=self.device, requires_grad=False
         )
-        self.last_tilt_rad = torch.zeros(
-            self.num_envs, dtype=torch.float, device=self.device, requires_grad=False
-        )
+        self.last_tilt_rad = torch.zeros(self.num_envs, dtype=torch.float, device=self.device, requires_grad=False)
         self.terminal_root_lin_vel_w = torch.zeros(
             self.num_envs, 3, dtype=torch.float, device=self.device, requires_grad=False
         )
         self.terminal_root_accel_mps2 = torch.zeros(
             self.num_envs, dtype=torch.float, device=self.device, requires_grad=False
         )
-        self.terminal_tilt_rad = torch.zeros(
-            self.num_envs, dtype=torch.float, device=self.device, requires_grad=False
-        )
+        self.terminal_tilt_rad = torch.zeros(self.num_envs, dtype=torch.float, device=self.device, requires_grad=False)
         self.terminal_diagnostic_contact_force_n = torch.zeros(
             self.num_envs,
             len(self.diagnostic_contact_cfg.body_ids),
@@ -378,9 +412,7 @@ class LocomotionEnv(VecEnv):
         self.action = torch.zeros(
             self.num_envs, self.robot.num_joints, dtype=torch.float, device=self.device, requires_grad=False
         )
-        self.policy_action = torch.zeros(
-            self.num_envs, self.num_actions, dtype=torch.float, device=self.device
-        )
+        self.policy_action = torch.zeros(self.num_envs, self.num_actions, dtype=torch.float, device=self.device)
         self.avg_feet_force_per_step = torch.zeros(
             self.num_envs, len(self.feet_cfg.body_ids), dtype=torch.float, device=self.device, requires_grad=False
         )
@@ -413,6 +445,8 @@ class LocomotionEnv(VecEnv):
         self._sparse_command = torch.zeros(self.num_envs, 3, dtype=torch.float, device=self.device)
         self._sparse_command_active = torch.zeros(self.num_envs, dtype=torch.bool, device=self.device)
         self.reset_reason_masks: dict[str, torch.Tensor] = {}
+        self.collapse_low_steps = torch.zeros(self.num_envs, dtype=torch.long, device=self.device)
+        self._collapse_step_log: dict[str, torch.Tensor | float] = {}
 
         self.amp_builder = AmpFeatureBuilder(self.robot, self.device, self.cfg.robot_spec) if self.enable_amp else None
         self.init_obs_buffer()
@@ -523,7 +557,8 @@ class LocomotionEnv(VecEnv):
             height_scan = self._apply_algebraic_sparse_scan(height_scan)
         if height_scan.shape[-1] != self.observation_layout.scan_dim:
             raise RuntimeError(
-                f"teacher scan width {height_scan.shape[-1]} does not match schema width {self.observation_layout.scan_dim}"
+                f"teacher scan width {height_scan.shape[-1]} does not match schema width"
+                f" {self.observation_layout.scan_dim}"
             )
         return height_scan * self.obs_scales.height_scan
 
@@ -705,7 +740,7 @@ class LocomotionEnv(VecEnv):
             if self.teacher_scan_history_length > 1:
                 # Only noise the newest frame in the stacked scan history.
                 actor_scan = scan_hist.clone()
-                actor_scan[:, -self.observation_layout.scan_dim:] = noisy
+                actor_scan[:, -self.observation_layout.scan_dim :] = noisy
             else:
                 actor_scan = noisy
         actor_obs = torch.cat([actor_obs, actor_scan], dim=-1)
@@ -714,7 +749,9 @@ class LocomotionEnv(VecEnv):
             feet_contact = (
                 torch.max(torch.norm(net_contact_forces[:, :, self.feet_cfg.body_ids], dim=-1), dim=1)[0] > 0.5
             )
-            contact_dim = TEACHER_SPARSE_CONTACT_DIM if self.teacher_scan_history_length > 1 else TEACHER_PAPER_CONTACT_DIM
+            contact_dim = (
+                TEACHER_SPARSE_CONTACT_DIM if self.teacher_scan_history_length > 1 else TEACHER_PAPER_CONTACT_DIM
+            )
             if feet_contact.shape[-1] != contact_dim:
                 raise RuntimeError(f"feet contact width {tuple(feet_contact.shape)} != {contact_dim}")
             actor_obs = torch.cat([actor_obs, feet_contact.float()], dim=-1)
@@ -890,6 +927,8 @@ class LocomotionEnv(VecEnv):
         self.reset(self.reset_env_ids)
         if len(self.reset_env_ids) == 0:
             self.extras.pop("log", None)
+        if self._collapse_step_log:
+            self.extras.setdefault("log", {}).update(self._collapse_step_log)
 
         actor_obs, critic_obs = self.compute_observations()
         self.extras["observations"] = {"critic": critic_obs}
@@ -959,9 +998,7 @@ class LocomotionEnv(VecEnv):
         self.prev_root_lin_vel_w.copy_(lin_vel)
         gravity_b = self.robot.data.projected_gravity_b
         self.last_root_accel_mps2.copy_(accel)
-        self.last_tilt_rad.copy_(
-            tilt_from_upright_rad(gravity_b[:, 0], gravity_b[:, 1], gravity_b[:, 2])
-        )
+        self.last_tilt_rad.copy_(tilt_from_upright_rad(gravity_b[:, 0], gravity_b[:, 1], gravity_b[:, 2]))
         accel_for_gate = mask_recent_push_accel(
             accel, self.sim_step_counter, self._push_step_marker, int(self.cfg.sim.decimation)
         )
@@ -993,20 +1030,34 @@ class LocomotionEnv(VecEnv):
                 )
             )
         clearance = getattr(self.cfg, "collapse_reset_pelvis_above_feet_m", None)
+        self._collapse_step_log = {}
         if clearance is not None and self.feet_body_ids:
             foot_z_all = self.robot.data.body_pos_w[:, self.feet_body_ids, 2]
             foot_z = foot_z_all.min(dim=1).values
-            collapsed = collapsed_pelvis_above_feet_mask(
-                self.robot.data.root_pos_w[:, 2], foot_z, float(clearance)
+            low = collapsed_pelvis_above_feet_mask(self.robot.data.root_pos_w[:, 2], foot_z, float(clearance))
+            immunity = (
+                self.impact_immunity
+                if getattr(self.cfg, "collapse_reset_respects_impact_immunity", False)
+                else torch.zeros_like(low)
+            )
+            self.collapse_low_steps, collapsed, immune_skip = persistent_collapse_mask(
+                low, self.collapse_low_steps, self.collapse_required_steps, immunity
             )
             reset_buf = reset_buf | collapsed
             reasons["collapsed"] = collapsed
+            # These use all environment steps as denominator, not reset events.
+            for name, mask in (("low", low), ("immune_skip", immune_skip), ("terminated", collapsed)):
+                key = f"Collapse/{name}_fraction"
+                self._collapse_step_log[key] = mask.float().mean()
+                self._collapse_step_log[f"{key}{LOG_COUNT_SUFFIX}"] = float(self.num_envs)
         self.reset_reason_masks = reasons
         return reset_buf, time_out_buf
 
     def reset(self, env_ids):
         if len(env_ids) == 0:
             return
+
+        self.collapse_low_steps[env_ids] = 0
 
         self.avg_feet_force_per_step[env_ids] = 0.0
         self.avg_feet_speed_per_step[env_ids] = 0.0

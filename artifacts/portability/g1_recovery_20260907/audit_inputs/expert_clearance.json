@@ -1,0 +1,127 @@
+{
+  "frames": 3303,
+  "minimum_clearance": 0.5675449746519465,
+  "below_threshold": 0,
+  "clips": [
+    {
+      "clip": "g1_from_B10_-__Walk_turn_left_45_stageii",
+      "frames": 178,
+      "min_clearance": 0.6537815505604829,
+      "p1_clearance": 0.6578015969579654,
+      "below_0_2": 0
+    },
+    {
+      "clip": "g1_from_B13_-__Walk_turn_right_90_stageii",
+      "frames": 167,
+      "min_clearance": 0.6482977617057865,
+      "p1_clearance": 0.6520325536180197,
+      "below_0_2": 0
+    },
+    {
+      "clip": "g1_from_B14_-__Walk_turn_right_45_t2_stageii",
+      "frames": 173,
+      "min_clearance": 0.6503090656282995,
+      "p1_clearance": 0.6562527929379671,
+      "below_0_2": 0
+    },
+    {
+      "clip": "g1_from_B15_-__Walk_turn_around_stageii",
+      "frames": 224,
+      "min_clearance": 0.637584792659157,
+      "p1_clearance": 0.6481608623323146,
+      "below_0_2": 0
+    },
+    {
+      "clip": "g1_from_B4_-_Stand_to_Walk_backwards_stageii",
+      "frames": 137,
+      "min_clearance": 0.6580868279662638,
+      "p1_clearance": 0.6643262351338692,
+      "below_0_2": 0
+    },
+    {
+      "clip": "g1_from_B9_-__Walk_turn_left_90_stageii",
+      "frames": 150,
+      "min_clearance": 0.6586288937470188,
+      "p1_clearance": 0.66374449127529,
+      "below_0_2": 0
+    },
+    {
+      "clip": "g1_from_t4_jog_backward",
+      "frames": 170,
+      "min_clearance": 0.6767583842128598,
+      "p1_clearance": 0.6840256997718364,
+      "below_0_2": 0
+    },
+    {
+      "clip": "g1_from_t4_jog_forward",
+      "frames": 151,
+      "min_clearance": 0.6051752364202306,
+      "p1_clearance": 0.6105749224971149,
+      "below_0_2": 0
+    },
+    {
+      "clip": "g1_from_t4_jog_left",
+      "frames": 206,
+      "min_clearance": 0.5675449746519465,
+      "p1_clearance": 0.569878199866974,
+      "below_0_2": 0
+    },
+    {
+      "clip": "g1_from_t4_jog_right",
+      "frames": 226,
+      "min_clearance": 0.635122287534154,
+      "p1_clearance": 0.6389591680692626,
+      "below_0_2": 0
+    },
+    {
+      "clip": "g1_from_t4_left_rotate",
+      "frames": 231,
+      "min_clearance": 0.7477738593823757,
+      "p1_clearance": 0.7481677887210133,
+      "below_0_2": 0
+    },
+    {
+      "clip": "g1_from_t4_right_rotate",
+      "frames": 193,
+      "min_clearance": 0.7494708010509821,
+      "p1_clearance": 0.7496363768710593,
+      "below_0_2": 0
+    },
+    {
+      "clip": "g1_from_t4_side_left",
+      "frames": 137,
+      "min_clearance": 0.7305617211073016,
+      "p1_clearance": 0.7329698447586559,
+      "below_0_2": 0
+    },
+    {
+      "clip": "g1_from_t4_side_right",
+      "frames": 150,
+      "min_clearance": 0.7375946883822336,
+      "p1_clearance": 0.7394642302243759,
+      "below_0_2": 0
+    },
+    {
+      "clip": "g1_from_t4_stand",
+      "frames": 149,
+      "min_clearance": 0.7439757585525513,
+      "p1_clearance": 0.7439757585525513,
+      "below_0_2": 0
+    },
+    {
+      "clip": "g1_from_t4_walk_forward",
+      "frames": 289,
+      "min_clearance": 0.6862586611410499,
+      "p1_clearance": 0.6937046794514252,
+      "below_0_2": 0
+    },
+    {
+      "clip": "g1_from_t4_walk_left",
+      "frames": 372,
+      "min_clearance": 0.6806263654456991,
+      "p1_clearance": 0.6879894108922288,
+      "below_0_2": 0
+    }
+  ],
+  "method": "Rotate saved AMP ankle-body root positions by each source root quaternion; AMP foot site offset is zero."
+}

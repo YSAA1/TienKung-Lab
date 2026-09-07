@@ -1,0 +1,2287 @@
+{
+  "time": "2026-09-07T22:31:35.641970",
+  "metrics": {
+    "weight2/2026-09-07_18-52-02_g1_full17_30k": {
+      "Command/generated_ang_vel_z": {
+        "step": 4318,
+        "mean_last100": -9.175577191342655e-05,
+        "last": 0.003067966550588608
+      },
+      "Command/generated_lin_vel_x": {
+        "step": 4318,
+        "mean_last100": 0.6366846144199372,
+        "last": 0.6321483254432678
+      },
+      "Command/generated_lin_vel_y": {
+        "step": 4318,
+        "mean_last100": -0.002842595513538981,
+        "last": -0.0018008281476795673
+      },
+      "Curriculum/amp_reward_coef_scale": {
+        "step": 4318,
+        "mean_last100": 0.55989790558815,
+        "last": 0.559738039970398
+      },
+      "Curriculum/episode_max_radial_dist": {
+        "step": 4318,
+        "mean_last100": 0.9089008092880249,
+        "last": 0.8990270495414734
+      },
+      "Curriculum/episode_path_length": {
+        "step": 4318,
+        "mean_last100": 2.303267753124237,
+        "last": 2.3790764808654785
+      },
+      "Curriculum/episode_tracking_mean": {
+        "step": 4318,
+        "mean_last100": 0.2521756201982498,
+        "last": 0.2642989754676819
+      },
+      "Curriculum/gait_reward_scale": {
+        "step": 4318,
+        "mean_last100": 0.10667872689664364,
+        "last": 0.11136287450790405
+      },
+      "Curriculum/gait_tracking_scale": {
+        "step": 4318,
+        "mean_last100": 0.2483256258070469,
+        "last": 0.25334468483924866
+      },
+      "Curriculum/level_0_frac": {
+        "step": 4318,
+        "mean_last100": 0.5417205154895782,
+        "last": 0.5336710810661316
+      },
+      "Curriculum/level_1_frac": {
+        "step": 4318,
+        "mean_last100": 0.11788070946931839,
+        "last": 0.1192525252699852
+      },
+      "Curriculum/level_2_frac": {
+        "step": 4318,
+        "mean_last100": 0.08289373517036439,
+        "last": 0.0818583145737648
+      },
+      "Curriculum/level_3_frac": {
+        "step": 4318,
+        "mean_last100": 0.06347952634096146,
+        "last": 0.0660298690199852
+      },
+      "Curriculum/level_4_frac": {
+        "step": 4318,
+        "mean_last100": 0.05295798759907484,
+        "last": 0.0570271797478199
+      },
+      "Curriculum/level_5_frac": {
+        "step": 4318,
+        "mean_last100": 0.04618342649191618,
+        "last": 0.0453084297478199
+      },
+      "Curriculum/level_6_frac": {
+        "step": 4318,
+        "mean_last100": 0.03576621618121863,
+        "last": 0.0369059257209301
+      },
+      "Curriculum/level_7_frac": {
+        "step": 4318,
+        "mean_last100": 0.02976577468216419,
+        "last": 0.02998860739171505
+      },
+      "Curriculum/level_8_frac": {
+        "step": 4318,
+        "mean_last100": 0.019133026897907256,
+        "last": 0.01933797262609005
+      },
+      "Curriculum/level_9_frac": {
+        "step": 4318,
+        "mean_last100": 0.010219081630930304,
+        "last": 0.0106201171875
+      },
+      "Curriculum/promotion_rate": {
+        "step": 4318,
+        "mean_last100": 0.047810069657862185,
+        "last": 0.04887218028306961
+      },
+      "Curriculum/random_level_after_mean": {
+        "step": 4318,
+        "mean_last100": 4.763040447235108,
+        "last": 4.5
+      },
+      "Curriculum/random_level_before_mean": {
+        "step": 4318,
+        "mean_last100": 1.3726572424173356,
+        "last": 2.192307710647583
+      },
+      "Curriculum/random_level_reset_frac": {
+        "step": 4318,
+        "mean_last100": 0.10216778367757798,
+        "last": 0.09774436056613922
+      },
+      "Curriculum/terrain_difficulty": {
+        "step": 4318,
+        "mean_last100": 0.17609439343214034,
+        "last": 0.17970557510852814
+      },
+      "Curriculum/terrain_levels": {
+        "step": 4318,
+        "mean_last100": 1.5848495006561278,
+        "last": 1.6173502206802368
+      },
+      "Curriculum/timeout_success_rate": {
+        "step": 4318,
+        "mean_last100": 0.002071363013237715,
+        "last": 0.007518797181546688
+      },
+      "Episode_Reward/action_rate_l2": {
+        "step": 4318,
+        "mean_last100": -0.2239012114703655,
+        "last": -0.23370687663555145
+      },
+      "Episode_Reward/ang_vel_xy_l2": {
+        "step": 4318,
+        "mean_last100": -0.024950218480080368,
+        "last": -0.025425607338547707
+      },
+      "Episode_Reward/ankle_action": {
+        "step": 4318,
+        "mean_last100": -0.0008825660275761038,
+        "last": -0.000908802670892328
+      },
+      "Episode_Reward/ankle_torque": {
+        "step": 4318,
+        "mean_last100": -0.03894395846873522,
+        "last": -0.0401264950633049
+      },
+      "Episode_Reward/body_orientation_l2": {
+        "step": 4318,
+        "mean_last100": 0.0,
+        "last": 0.0
+      },
+      "Episode_Reward/dof_acc_l2": {
+        "step": 4318,
+        "mean_last100": -0.010744103183969855,
+        "last": -0.010933616198599339
+      },
+      "Episode_Reward/dof_pos_limits": {
+        "step": 4318,
+        "mean_last100": -0.004235764255281538,
+        "last": -0.004762496333569288
+      },
+      "Episode_Reward/energy": {
+        "step": 4318,
+        "mean_last100": -0.021485872846096755,
+        "last": -0.022655731067061424
+      },
+      "Episode_Reward/feet_force": {
+        "step": 4318,
+        "mean_last100": -0.0012514697940787301,
+        "last": -0.0008962565916590393
+      },
+      "Episode_Reward/feet_slide": {
+        "step": 4318,
+        "mean_last100": -0.015059292176738381,
+        "last": -0.015623561106622219
+      },
+      "Episode_Reward/feet_stumble": {
+        "step": 4318,
+        "mean_last100": -0.00260650729178451,
+        "last": -0.0019797859713435173
+      },
+      "Episode_Reward/feet_too_near": {
+        "step": 4318,
+        "mean_last100": -0.002078723075101152,
+        "last": -0.0019681574776768684
+      },
+      "Episode_Reward/feet_y_distance": {
+        "step": 4318,
+        "mean_last100": -0.011847297241911293,
+        "last": -0.01099866721779108
+      },
+      "Episode_Reward/foot_touchdown_impact": {
+        "step": 4318,
+        "mean_last100": -0.006977872503921389,
+        "last": -0.007053326815366745
+      },
+      "Episode_Reward/gait_feet_frc_perio": {
+        "step": 4318,
+        "mean_last100": 0.000830843424773775,
+        "last": 0.0009577076998539269
+      },
+      "Episode_Reward/gait_feet_frc_support_perio": {
+        "step": 4318,
+        "mean_last100": 0.027935944870114325,
+        "last": 0.026373600587248802
+      },
+      "Episode_Reward/gait_feet_spd_perio": {
+        "step": 4318,
+        "mean_last100": 0.026478947885334492,
+        "last": 0.025417527183890343
+      },
+      "Episode_Reward/heading_error": {
+        "step": 4318,
+        "mean_last100": -0.16620619371533393,
+        "last": -0.16130764782428741
+      },
+      "Episode_Reward/hurdle_bar_contact": {
+        "step": 4318,
+        "mean_last100": -5.208333732298342e-07,
+        "last": 0.0
+      },
+      "Episode_Reward/illegal_footstep": {
+        "step": 4318,
+        "mean_last100": -3.57790345333342e-06,
+        "last": 0.0
+      },
+      "Episode_Reward/joint_deviation_arms": {
+        "step": 4318,
+        "mean_last100": -0.025497379060834647,
+        "last": -0.024522699415683746
+      },
+      "Episode_Reward/joint_deviation_hip": {
+        "step": 4318,
+        "mean_last100": -0.0024118053377605976,
+        "last": -0.002109691733494401
+      },
+      "Episode_Reward/joint_deviation_legs": {
+        "step": 4318,
+        "mean_last100": -0.0006717338139424101,
+        "last": -0.0006149669061414897
+      },
+      "Episode_Reward/joint_deviation_wrist_waist": {
+        "step": 4318,
+        "mean_last100": -0.009540901123546063,
+        "last": -0.009631886146962643
+      },
+      "Episode_Reward/lin_vel_z_l2": {
+        "step": 4318,
+        "mean_last100": -0.0011594397074077278,
+        "last": -0.0011481032706797123
+      },
+      "Episode_Reward/opposite_direction": {
+        "step": 4318,
+        "mean_last100": -0.044459205120801926,
+        "last": -0.047030020505189896
+      },
+      "Episode_Reward/shank_contacts": {
+        "step": 4318,
+        "mean_last100": 0.0,
+        "last": 0.0
+      },
+      "Episode_Reward/termination_penalty": {
+        "step": 4318,
+        "mean_last100": 0.0,
+        "last": 0.0
+      },
+      "Episode_Reward/track_ang_vel_z_exp": {
+        "step": 4318,
+        "mean_last100": 0.3235973194241524,
+        "last": 0.33731305599212646
+      },
+      "Episode_Reward/track_lin_vel_xy_exp": {
+        "step": 4318,
+        "mean_last100": 0.258209665119648,
+        "last": 0.26477721333503723
+      },
+      "Episode_Reward/undesired_contacts": {
+        "step": 4318,
+        "mean_last100": -0.007355813193134964,
+        "last": -0.008488618768751621
+      },
+      "Episode_Reward/upright_orientation": {
+        "step": 4318,
+        "mean_last100": 0.36416445970535277,
+        "last": 0.3814075291156769
+      },
+      "Episode_Reward/velocity_slack": {
+        "step": 4318,
+        "mean_last100": 0.15712810829281806,
+        "last": 0.16432934999465942
+      },
+      "Reset/accel": {
+        "step": 4318,
+        "mean_last100": 0.12212972678244113,
+        "last": 0.11654135584831238
+      },
+      "Reset/collapsed": {
+        "step": 4318,
+        "mean_last100": 0.904187735915184,
+        "last": 0.8947368264198303
+      },
+      "Reset/fall_over": {
+        "step": 4318,
+        "mean_last100": 0.0309064706787467,
+        "last": 0.030075188726186752
+      },
+      "Reset/horizon": {
+        "step": 4318,
+        "mean_last100": 0.022784426296129822,
+        "last": 0.02631578966975212
+      },
+      "Reset/immune_skip": {
+        "step": 4318,
+        "mean_last100": 0.009367200720589608,
+        "last": 0.0
+      },
+      "Reset/joint_vel": {
+        "step": 4318,
+        "mean_last100": 0.0,
+        "last": 0.0
+      },
+      "Reset/n": {
+        "step": 4318,
+        "mean_last100": 5.66464216709137,
+        "last": 5.541666507720947
+      },
+      "Reset/oob": {
+        "step": 4318,
+        "mean_last100": 0.0,
+        "last": 0.0
+      },
+      "Reset/pit_fall": {
+        "step": 4318,
+        "mean_last100": 0.0,
+        "last": 0.0
+      },
+      "Reset/timeout": {
+        "step": 4318,
+        "mean_last100": 0.022784426296129822,
+        "last": 0.02631578966975212
+      },
+      "Reset/torso": {
+        "step": 4318,
+        "mean_last100": 0.0,
+        "last": 0.0
+      },
+      "Terrain/flat/episodes": {
+        "step": 4318,
+        "mean_last100": 40063.07421875,
+        "last": 40260.0625
+      },
+      "Terrain/flat/progress_m": {
+        "step": 4318,
+        "mean_last100": 0.8924434572458267,
+        "last": 0.8893575668334961
+      },
+      "Terrain/flat/reach_2m_rate": {
+        "step": 4318,
+        "mean_last100": 0.0,
+        "last": 0.0
+      },
+      "Terrain/flat/reach_4m_rate": {
+        "step": 4318,
+        "mean_last100": 0.0,
+        "last": 0.0
+      },
+      "Terrain/raised_pillars/easy_episodes": {
+        "step": 4318,
+        "mean_last100": 208384.74921875,
+        "last": 208974.890625
+      },
+      "Terrain/raised_pillars/easy_progress_m": {
+        "step": 4318,
+        "mean_last100": 0.9179351419210434,
+        "last": 0.9225638508796692
+      },
+      "Terrain/raised_pillars/easy_reach_2m_rate": {
+        "step": 4318,
+        "mean_last100": 0.0,
+        "last": 0.0
+      },
+      "Terrain/stepping_stones/easy_episodes": {
+        "step": 4318,
+        "mean_last100": 204574.63046875,
+        "last": 205150.0
+      },
+      "Terrain/stepping_stones/easy_progress_m": {
+        "step": 4318,
+        "mean_last100": 0.9185816258192062,
+        "last": 0.9087310433387756
+      },
+      "Terrain/stepping_stones/easy_reach_2m_rate": {
+        "step": 4318,
+        "mean_last100": 0.0,
+        "last": 0.0
+      },
+      "Loss/value_function": {
+        "step": 4318,
+        "mean_last100": 0.12151715569198132,
+        "last": 0.12325161695480347
+      },
+      "Loss/surrogate": {
+        "step": 4318,
+        "mean_last100": 0.0013545282739499953,
+        "last": -0.0002850396849680692
+      },
+      "Loss/entropy": {
+        "step": 4318,
+        "mean_last100": 2.4672340154647827,
+        "last": 2.499617099761963
+      },
+      "Loss/amp": {
+        "step": 4318,
+        "mean_last100": 0.15213068574666977,
+        "last": 0.1555333435535431
+      },
+      "Loss/amp_grad_pen": {
+        "step": 4318,
+        "mean_last100": 0.17416245937347413,
+        "last": 0.17178060114383698
+      },
+      "Loss/amp_policy_pred": {
+        "step": 4318,
+        "mean_last100": -0.6724612176418304,
+        "last": -0.6680685877799988
+      },
+      "Loss/amp_expert_pred": {
+        "step": 4318,
+        "mean_last100": 0.6664345264434814,
+        "last": 0.6631588935852051
+      },
+      "Loss/symmetry": {
+        "step": 4318,
+        "mean_last100": 0.0002355400451051537,
+        "last": 0.00022812274983152747
+      },
+      "Loss/learning_rate": {
+        "step": 4318,
+        "mean_last100": 2.9875002246626538e-05,
+        "last": 3.375000233063474e-05
+      },
+      "Policy/mean_noise_std": {
+        "step": 4318,
+        "mean_last100": 0.30769154578447344,
+        "last": 0.3076228201389313
+      },
+      "Amp/mean_reward_coef_scale": {
+        "step": 4318,
+        "mean_last100": 0.5567005753517151,
+        "last": 0.5555501580238342
+      },
+      "Train/mean_episode_length": {
+        "step": 4318,
+        "mean_last100": 361.6689987182617,
+        "last": 358.239990234375
+      }
+    },
+    "weight4/2026-09-07_21-11-47_g1_full17_lin4": {
+      "Command/generated_ang_vel_z": {
+        "step": 1556,
+        "mean_last100": 0.0015334853437707352,
+        "last": -0.002339109079912305
+      },
+      "Command/generated_lin_vel_x": {
+        "step": 1556,
+        "mean_last100": 0.4036988476291299,
+        "last": 0.4125297963619232
+      },
+      "Command/generated_lin_vel_y": {
+        "step": 1556,
+        "mean_last100": -0.0008457469775180471,
+        "last": 0.0006354875513352454
+      },
+      "Curriculum/amp_reward_coef_scale": {
+        "step": 1556,
+        "mean_last100": 0.5553174186497927,
+        "last": 0.5537275671958923
+      },
+      "Curriculum/episode_max_radial_dist": {
+        "step": 1556,
+        "mean_last100": 0.8724803943186998,
+        "last": 0.8759655356407166
+      },
+      "Curriculum/episode_path_length": {
+        "step": 1556,
+        "mean_last100": 0.94033273588866,
+        "last": 0.9321755170822144
+      },
+      "Curriculum/episode_tracking_mean": {
+        "step": 1556,
+        "mean_last100": 0.5018478273414075,
+        "last": 0.508350133895874
+      },
+      "Curriculum/gait_reward_scale": {
+        "step": 1556,
+        "mean_last100": 0.16504765767604113,
+        "last": 0.15714995563030243
+      },
+      "Curriculum/gait_tracking_scale": {
+        "step": 1556,
+        "mean_last100": 0.41443170607089996,
+        "last": 0.4099791944026947
+      },
+      "Curriculum/level_0_frac": {
+        "step": 1556,
+        "mean_last100": 0.47691869735717773,
+        "last": 0.4738871157169342
+      },
+      "Curriculum/level_1_frac": {
+        "step": 1556,
+        "mean_last100": 0.12291781092062593,
+        "last": 0.116943359375
+      },
+      "Curriculum/level_2_frac": {
+        "step": 1556,
+        "mean_last100": 0.10214932763483375,
+        "last": 0.1026814803481102
+      },
+      "Curriculum/level_3_frac": {
+        "step": 1556,
+        "mean_last100": 0.07510757446289062,
+        "last": 0.07861328125
+      },
+      "Curriculum/level_4_frac": {
+        "step": 1556,
+        "mean_last100": 0.06309477443573996,
+        "last": 0.0659993514418602
+      },
+      "Curriculum/level_5_frac": {
+        "step": 1556,
+        "mean_last100": 0.05070416157832369,
+        "last": 0.049468994140625
+      },
+      "Curriculum/level_6_frac": {
+        "step": 1556,
+        "mean_last100": 0.042735735478345305,
+        "last": 0.0459086112678051
+      },
+      "Curriculum/level_7_frac": {
+        "step": 1556,
+        "mean_last100": 0.03269004836329259,
+        "last": 0.0327657051384449
+      },
+      "Curriculum/level_8_frac": {
+        "step": 1556,
+        "mean_last100": 0.023035049438476562,
+        "last": 0.02086385153234005
+      },
+      "Curriculum/level_9_frac": {
+        "step": 1556,
+        "mean_last100": 0.010646820097463205,
+        "last": 0.012868245132267475
+      },
+      "Curriculum/promotion_rate": {
+        "step": 1556,
+        "mean_last100": 0.0,
+        "last": 0.0
+      },
+      "Curriculum/random_level_after_mean": {
+        "step": 1556,
+        "mean_last100": 4.556716296821833,
+        "last": 4.5714287757873535
+      },
+      "Curriculum/random_level_before_mean": {
+        "step": 1556,
+        "mean_last100": 2.009048368781805,
+        "last": 1.5102040767669678
+      },
+      "Curriculum/random_level_reset_frac": {
+        "step": 1556,
+        "mean_last100": 0.10109670180827379,
+        "last": 0.11652794480323792
+      },
+      "Curriculum/terrain_difficulty": {
+        "step": 1556,
+        "mean_last100": 0.2026428508106619,
+        "last": 0.2063361406326294
+      },
+      "Curriculum/terrain_levels": {
+        "step": 1556,
+        "mean_last100": 1.8237856235355139,
+        "last": 1.857025146484375
+      },
+      "Curriculum/timeout_success_rate": {
+        "step": 1556,
+        "mean_last100": 0.0,
+        "last": 0.0
+      },
+      "Episode_Reward/action_rate_l2": {
+        "step": 1556,
+        "mean_last100": -0.10317552904598415,
+        "last": -0.09949183464050293
+      },
+      "Episode_Reward/ang_vel_xy_l2": {
+        "step": 1556,
+        "mean_last100": -0.013792856203508563,
+        "last": -0.013602717779576778
+      },
+      "Episode_Reward/ankle_action": {
+        "step": 1556,
+        "mean_last100": -0.00036560893795467564,
+        "last": -0.00035655059036798775
+      },
+      "Episode_Reward/ankle_torque": {
+        "step": 1556,
+        "mean_last100": -0.01900558391935192,
+        "last": -0.01897665672004223
+      },
+      "Episode_Reward/body_orientation_l2": {
+        "step": 1556,
+        "mean_last100": 0.0,
+        "last": 0.0
+      },
+      "Episode_Reward/dof_acc_l2": {
+        "step": 1556,
+        "mean_last100": -0.005636705951474141,
+        "last": -0.00556732714176178
+      },
+      "Episode_Reward/dof_pos_limits": {
+        "step": 1556,
+        "mean_last100": -0.0027404758693592157,
+        "last": -0.002952794311568141
+      },
+      "Episode_Reward/energy": {
+        "step": 1556,
+        "mean_last100": -0.007340762276726309,
+        "last": -0.007216523867100477
+      },
+      "Episode_Reward/feet_force": {
+        "step": 1556,
+        "mean_last100": -0.0007442646337949554,
+        "last": -0.0006765530561096966
+      },
+      "Episode_Reward/feet_slide": {
+        "step": 1556,
+        "mean_last100": -0.008375467659789138,
+        "last": -0.008137610740959644
+      },
+      "Episode_Reward/feet_stumble": {
+        "step": 1556,
+        "mean_last100": -0.0008666150333738187,
+        "last": -0.0010979747166857123
+      },
+      "Episode_Reward/feet_too_near": {
+        "step": 1556,
+        "mean_last100": -0.0007007574458839372,
+        "last": -0.0006974663701839745
+      },
+      "Episode_Reward/feet_y_distance": {
+        "step": 1556,
+        "mean_last100": -0.003973138493165607,
+        "last": -0.003990562632679939
+      },
+      "Episode_Reward/foot_touchdown_impact": {
+        "step": 1556,
+        "mean_last100": -0.004460804469999857,
+        "last": -0.0045911637134850025
+      },
+      "Episode_Reward/gait_feet_frc_perio": {
+        "step": 1556,
+        "mean_last100": 0.0005189026974221633,
+        "last": 0.0005200710147619247
+      },
+      "Episode_Reward/gait_feet_frc_support_perio": {
+        "step": 1556,
+        "mean_last100": 0.014777067248360254,
+        "last": 0.012550712563097477
+      },
+      "Episode_Reward/gait_feet_spd_perio": {
+        "step": 1556,
+        "mean_last100": 0.010220478267001454,
+        "last": 0.008478987962007523
+      },
+      "Episode_Reward/heading_error": {
+        "step": 1556,
+        "mean_last100": -0.08576106396503747,
+        "last": -0.08149588108062744
+      },
+      "Episode_Reward/hurdle_bar_contact": {
+        "step": 1556,
+        "mean_last100": 0.0,
+        "last": 0.0
+      },
+      "Episode_Reward/illegal_footstep": {
+        "step": 1556,
+        "mean_last100": -3.7261737420024588e-06,
+        "last": -9.469697488384554e-07
+      },
+      "Episode_Reward/joint_deviation_arms": {
+        "step": 1556,
+        "mean_last100": -0.014449597452767193,
+        "last": -0.015013870783150196
+      },
+      "Episode_Reward/joint_deviation_hip": {
+        "step": 1556,
+        "mean_last100": -0.001593886396221933,
+        "last": -0.001467993832193315
+      },
+      "Episode_Reward/joint_deviation_legs": {
+        "step": 1556,
+        "mean_last100": -0.00035284992554807104,
+        "last": -0.0003804659063462168
+      },
+      "Episode_Reward/joint_deviation_wrist_waist": {
+        "step": 1556,
+        "mean_last100": -0.005715791881812038,
+        "last": -0.005895531270653009
+      },
+      "Episode_Reward/lin_vel_z_l2": {
+        "step": 1556,
+        "mean_last100": -0.002502281920897076,
+        "last": -0.0025028614327311516
+      },
+      "Episode_Reward/opposite_direction": {
+        "step": 1556,
+        "mean_last100": -0.003130642398900818,
+        "last": -0.0027813974302262068
+      },
+      "Episode_Reward/shank_contacts": {
+        "step": 1556,
+        "mean_last100": 0.0,
+        "last": 0.0
+      },
+      "Episode_Reward/termination_penalty": {
+        "step": 1556,
+        "mean_last100": 0.0,
+        "last": 0.0
+      },
+      "Episode_Reward/track_ang_vel_z_exp": {
+        "step": 1556,
+        "mean_last100": 0.0891309262951836,
+        "last": 0.08602098375558853
+      },
+      "Episode_Reward/track_lin_vel_xy_exp": {
+        "step": 1556,
+        "mean_last100": 0.2949303793720901,
+        "last": 0.28931066393852234
+      },
+      "Episode_Reward/undesired_contacts": {
+        "step": 1556,
+        "mean_last100": -0.0035080668567388784,
+        "last": -0.003361426293849945
+      },
+      "Episode_Reward/upright_orientation": {
+        "step": 1556,
+        "mean_last100": 0.12382795359008014,
+        "last": 0.11951687932014465
+      },
+      "Episode_Reward/velocity_slack": {
+        "step": 1556,
+        "mean_last100": 0.0798216046532616,
+        "last": 0.08018962293863297
+      },
+      "Reset/accel": {
+        "step": 1556,
+        "mean_last100": 0.13339162373449653,
+        "last": 0.14268727600574493
+      },
+      "Reset/collapsed": {
+        "step": 1556,
+        "mean_last100": 0.9193079695105553,
+        "last": 0.9227110743522644
+      },
+      "Reset/fall_over": {
+        "step": 1556,
+        "mean_last100": 0.01157193541257584,
+        "last": 0.008323424495756626
+      },
+      "Reset/horizon": {
+        "step": 1556,
+        "mean_last100": 0.002859641810573521,
+        "last": 0.003567181993275881
+      },
+      "Reset/immune_skip": {
+        "step": 1556,
+        "mean_last100": 0.0073164813802577555,
+        "last": 0.007134363986551762
+      },
+      "Reset/joint_vel": {
+        "step": 1556,
+        "mean_last100": 0.0,
+        "last": 0.0
+      },
+      "Reset/n": {
+        "step": 1556,
+        "mean_last100": 16.574218779802322,
+        "last": 17.52083396911621
+      },
+      "Reset/oob": {
+        "step": 1556,
+        "mean_last100": 0.0,
+        "last": 0.0
+      },
+      "Reset/pit_fall": {
+        "step": 1556,
+        "mean_last100": 0.0,
+        "last": 0.0
+      },
+      "Reset/timeout": {
+        "step": 1556,
+        "mean_last100": 0.002859641810573521,
+        "last": 0.003567181993275881
+      },
+      "Reset/torso": {
+        "step": 1556,
+        "mean_last100": 0.0,
+        "last": 0.0
+      },
+      "Terrain/flat/episodes": {
+        "step": 1556,
+        "mean_last100": 27432.25015258789,
+        "last": 27868.103515625
+      },
+      "Terrain/flat/progress_m": {
+        "step": 1556,
+        "mean_last100": 0.88764429371804,
+        "last": 0.9006571173667908
+      },
+      "Terrain/flat/reach_2m_rate": {
+        "step": 1556,
+        "mean_last100": 0.0,
+        "last": 0.0
+      },
+      "Terrain/flat/reach_4m_rate": {
+        "step": 1556,
+        "mean_last100": 0.0,
+        "last": 0.0
+      },
+      "Terrain/raised_pillars/easy_episodes": {
+        "step": 1556,
+        "mean_last100": 149408.05541992188,
+        "last": 153508.234375
+      },
+      "Terrain/raised_pillars/easy_progress_m": {
+        "step": 1556,
+        "mean_last100": 0.8471673112362623,
+        "last": 0.8450806736946106
+      },
+      "Terrain/raised_pillars/easy_reach_2m_rate": {
+        "step": 1556,
+        "mean_last100": 0.0,
+        "last": 0.0
+      },
+      "Terrain/stepping_stones/easy_episodes": {
+        "step": 1557,
+        "mean_last100": 147721.45947265625,
+        "last": 151777.328125
+      },
+      "Terrain/stepping_stones/easy_progress_m": {
+        "step": 1558,
+        "mean_last100": 0.8486801234502641,
+        "last": 0.8473065495491028
+      },
+      "Terrain/stepping_stones/easy_reach_2m_rate": {
+        "step": 1558,
+        "mean_last100": 0.0,
+        "last": 0.0
+      },
+      "Loss/value_function": {
+        "step": 1558,
+        "mean_last100": 0.1686550880235339,
+        "last": 0.18266193568706512
+      },
+      "Loss/surrogate": {
+        "step": 1558,
+        "mean_last100": 0.0015460518630817884,
+        "last": -0.00016409347881563008
+      },
+      "Loss/entropy": {
+        "step": 1558,
+        "mean_last100": 9.547115310790046,
+        "last": 9.504125595092773
+      },
+      "Loss/amp": {
+        "step": 1558,
+        "mean_last100": 0.13026440663943215,
+        "last": 0.1332552134990692
+      },
+      "Loss/amp_grad_pen": {
+        "step": 1558,
+        "mean_last100": 0.16924061590716952,
+        "last": 0.16859319806098938
+      },
+      "Loss/amp_policy_pred": {
+        "step": 1558,
+        "mean_last100": -0.6956766190983,
+        "last": -0.691678524017334
+      },
+      "Loss/amp_expert_pred": {
+        "step": 1558,
+        "mean_last100": 0.6983399835843889,
+        "last": 0.6951881051063538
+      },
+      "Loss/symmetry": {
+        "step": 1558,
+        "mean_last100": 0.00041926270147549016,
+        "last": 0.0004046546819154173
+      },
+      "Loss/learning_rate": {
+        "step": 1558,
+        "mean_last100": 4.422123315418416e-05,
+        "last": 5.0625003495952114e-05
+      },
+      "Policy/mean_noise_std": {
+        "step": 1558,
+        "mean_last100": 0.3709224590233394,
+        "last": 0.37054193019866943
+      },
+      "Amp/mean_reward_coef_scale": {
+        "step": 1558,
+        "mean_last100": 0.5527322207178388,
+        "last": 0.5533691644668579
+      },
+      "Train/mean_episode_length": {
+        "step": 1558,
+        "mean_last100": 123.94142841157459,
+        "last": 126.05000305175781
+      }
+    }
+  },
+  "config_diffs": {
+    "env": [
+      {
+        "path": ".ankle_joint_names",
+        "t4": null,
+        "g1": [
+          "left_ankle_pitch_joint",
+          "right_ankle_pitch_joint",
+          "left_ankle_roll_joint",
+          "right_ankle_roll_joint"
+        ]
+      },
+      {
+        "path": ".collapse_reset_pelvis_above_feet_m",
+        "t4": null,
+        "g1": "0.2"
+      },
+      {
+        "path": ".device",
+        "t4": "cuda:0",
+        "g1": "cuda:1"
+      },
+      {
+        "path": ".diagnostic_contact_body_names",
+        "t4": null,
+        "g1": [
+          "torso_link",
+          "left_knee_link",
+          "right_knee_link"
+        ]
+      },
+      {
+        "path": ".domain_rand.events.add_base_mass.params.asset_cfg.body_names",
+        "t4": "Trunk",
+        "g1": "torso_link"
+      },
+      {
+        "path": ".domain_rand.events.push_robot.func",
+        "t4": "isaaclab.envs.mdp.events:push_by_setting_velocity",
+        "g1": "legged_lab.mdp.events:push_by_setting_velocity_tagged"
+      },
+      {
+        "path": ".domain_rand.events.reset_base.params.velocity_range.pitch",
+        "t4": [
+          "-0.5",
+          "0.5"
+        ],
+        "g1": null
+      },
+      {
+        "path": ".domain_rand.events.reset_base.params.velocity_range.roll",
+        "t4": [
+          "-0.5",
+          "0.5"
+        ],
+        "g1": null
+      },
+      {
+        "path": ".domain_rand.events.reset_base.params.velocity_range.x",
+        "t4": [
+          "-0.5",
+          "0.5"
+        ],
+        "g1": null
+      },
+      {
+        "path": ".domain_rand.events.reset_base.params.velocity_range.y",
+        "t4": [
+          "-0.5",
+          "0.5"
+        ],
+        "g1": null
+      },
+      {
+        "path": ".domain_rand.events.reset_base.params.velocity_range.yaw",
+        "t4": [
+          "-0.5",
+          "0.5"
+        ],
+        "g1": null
+      },
+      {
+        "path": ".domain_rand.events.reset_base.params.velocity_range.z",
+        "t4": [
+          "-0.5",
+          "0.5"
+        ],
+        "g1": null
+      },
+      {
+        "path": ".domain_rand.events.reset_robot_joints.params.position_range",
+        "t4": [
+          "0.5",
+          "1.5"
+        ],
+        "g1": [
+          "1.0",
+          "1.0"
+        ]
+      },
+      {
+        "path": ".enable_amp",
+        "t4": null,
+        "g1": "true"
+      },
+      {
+        "path": ".feet_link_names",
+        "t4": null,
+        "g1": [
+          "left_ankle_roll_link",
+          "right_ankle_roll_link"
+        ]
+      },
+      {
+        "path": ".left_leg_joint_names",
+        "t4": null,
+        "g1": [
+          "left_hip_roll_joint",
+          "left_hip_pitch_joint",
+          "left_hip_yaw_joint",
+          "left_knee_joint",
+          "left_ankle_pitch_joint",
+          "left_ankle_roll_joint"
+        ]
+      },
+      {
+        "path": ".policy_joint_names",
+        "t4": null,
+        "g1": [
+          "left_hip_pitch_joint",
+          "left_hip_roll_joint",
+          "left_hip_yaw_joint",
+          "left_knee_joint",
+          "left_ankle_pitch_joint",
+          "left_ankle_roll_joint",
+          "right_hip_pitch_joint",
+          "right_hip_roll_joint",
+          "right_hip_yaw_joint",
+          "right_knee_joint",
+          "right_ankle_pitch_joint",
+          "right_ankle_roll_joint",
+          "waist_yaw_joint",
+          "waist_roll_joint",
+          "waist_pitch_joint",
+          "left_shoulder_pitch_joint",
+          "left_shoulder_roll_joint",
+          "left_shoulder_yaw_joint",
+          "left_elbow_joint",
+          "left_wrist_roll_joint",
+          "left_wrist_pitch_joint",
+          "left_wrist_yaw_joint",
+          "right_shoulder_pitch_joint",
+          "right_shoulder_roll_joint",
+          "right_shoulder_yaw_joint",
+          "right_elbow_joint",
+          "right_wrist_roll_joint",
+          "right_wrist_pitch_joint",
+          "right_wrist_yaw_joint"
+        ]
+      },
+      {
+        "path": ".random_level_reset_min_level",
+        "t4": null,
+        "g1": "null"
+      },
+      {
+        "path": ".reward.body_orientation_l2.params.asset_cfg.body_names",
+        "t4": "Trunk",
+        "g1": [
+          "torso_link"
+        ]
+      },
+      {
+        "path": ".reward.feet_force.params.sensor_cfg.body_names",
+        "t4": ".*_foot_link",
+        "g1": [
+          "left_ankle_roll_link",
+          "right_ankle_roll_link"
+        ]
+      },
+      {
+        "path": ".reward.feet_slide.params.asset_cfg.body_names",
+        "t4": ".*_foot_link",
+        "g1": [
+          "left_ankle_roll_link",
+          "right_ankle_roll_link"
+        ]
+      },
+      {
+        "path": ".reward.feet_slide.params.sensor_cfg.body_names",
+        "t4": ".*_foot_link",
+        "g1": [
+          "left_ankle_roll_link",
+          "right_ankle_roll_link"
+        ]
+      },
+      {
+        "path": ".reward.feet_stumble.params.sensor_cfg.body_names",
+        "t4": [
+          ".*_foot_link"
+        ],
+        "g1": [
+          "left_ankle_roll_link",
+          "right_ankle_roll_link"
+        ]
+      },
+      {
+        "path": ".reward.feet_too_near.params.asset_cfg.body_names",
+        "t4": [
+          ".*_foot_link"
+        ],
+        "g1": [
+          "left_ankle_roll_link",
+          "right_ankle_roll_link"
+        ]
+      },
+      {
+        "path": ".reward.feet_y_distance.params.target",
+        "t4": "0.233",
+        "g1": "0.22"
+      },
+      {
+        "path": ".reward.foot_touchdown_impact.params.asset_cfg.body_names",
+        "t4": [
+          ".*_foot_link"
+        ],
+        "g1": [
+          "left_ankle_roll_link",
+          "right_ankle_roll_link"
+        ]
+      },
+      {
+        "path": ".reward.illegal_footstep.params.sensor_cfg",
+        "t4": null,
+        "g1": {
+          "name": "contact_sensor",
+          "joint_names": "null",
+          "joint_ids": [
+            "null",
+            "null",
+            "null"
+          ],
+          "fixed_tendon_names": "null",
+          "fixed_tendon_ids": [
+            "null",
+            "null",
+            "null"
+          ],
+          "body_names": [
+            "left_ankle_roll_link",
+            "right_ankle_roll_link"
+          ],
+          "body_ids": [
+            "null",
+            "null",
+            "null"
+          ],
+          "object_collection_names": "null",
+          "object_collection_ids": [
+            "null",
+            "null",
+            "null"
+          ],
+          "preserve_order": "false"
+        }
+      },
+      {
+        "path": ".reward.joint_deviation_arms.params.asset_cfg.joint_names",
+        "t4": [
+          "J_arm_[lr]_02",
+          "J_arm_[lr]_03"
+        ],
+        "g1": [
+          ".*_shoulder_pitch_joint",
+          ".*_shoulder_roll_joint",
+          ".*_shoulder_yaw_joint",
+          ".*_elbow_joint"
+        ]
+      },
+      {
+        "path": ".reward.joint_deviation_hip.params.asset_cfg.joint_names",
+        "t4": [
+          "J_hip_[lr]_yaw",
+          "J_hip_[lr]_roll",
+          "J_arm_[lr]_01",
+          "J_arm_[lr]_04"
+        ],
+        "g1": [
+          ".*_hip_yaw_joint",
+          ".*_hip_roll_joint"
+        ]
+      },
+      {
+        "path": ".reward.joint_deviation_legs.params.asset_cfg.joint_names",
+        "t4": [
+          "J_hip_[lr]_pitch",
+          "J_knee_[lr]_pitch",
+          "J_ankle_[lr]_pitch",
+          "J_ankle_[lr]_roll"
+        ],
+        "g1": [
+          ".*_hip_pitch_joint",
+          ".*_knee_joint",
+          ".*_ankle_pitch_joint",
+          ".*_ankle_roll_joint"
+        ]
+      },
+      {
+        "path": ".reward.joint_deviation_wrist_waist.params.asset_cfg.joint_names",
+        "t4": [
+          "J_arm_[lr]_0[567]",
+          "J_waist_yaw"
+        ],
+        "g1": [
+          ".*_wrist_.*_joint",
+          "waist_.*_joint"
+        ]
+      },
+      {
+        "path": ".reward.shank_contacts.params.sensor_cfg.body_names",
+        "t4": [
+          "Shank_.*"
+        ],
+        "g1": [
+          ".*_knee_link"
+        ]
+      },
+      {
+        "path": ".reward.undesired_contacts.params.sensor_cfg.body_names",
+        "t4": [
+          "A[LR]2",
+          "A[LR]4",
+          "Trunk",
+          "Shank_.*"
+        ],
+        "g1": [
+          "(?!.*ankle.*).*"
+        ]
+      },
+      {
+        "path": ".reward.undesired_contacts.weight",
+        "t4": "-2.0",
+        "g1": "-1.0"
+      },
+      {
+        "path": ".reward.upright_orientation.params.asset_cfg.body_names",
+        "t4": "Trunk",
+        "g1": [
+          "torso_link"
+        ]
+      },
+      {
+        "path": ".right_leg_joint_names",
+        "t4": null,
+        "g1": [
+          "right_hip_roll_joint",
+          "right_hip_pitch_joint",
+          "right_hip_yaw_joint",
+          "right_knee_joint",
+          "right_ankle_pitch_joint",
+          "right_ankle_roll_joint"
+        ]
+      },
+      {
+        "path": ".robot.action_scale_effort_fraction",
+        "t4": null,
+        "g1": "null"
+      },
+      {
+        "path": ".robot.feet_body_names",
+        "t4": [
+          ".*_foot_link"
+        ],
+        "g1": [
+          "left_ankle_roll_link",
+          "right_ankle_roll_link"
+        ]
+      },
+      {
+        "path": ".robot.terminate_contacts_body_names",
+        "t4": [
+          "Trunk"
+        ],
+        "g1": []
+      },
+      {
+        "path": ".robot_spec",
+        "t4": null,
+        "g1": {
+          "name": "g1",
+          "joint_names": [
+            "left_hip_pitch_joint",
+            "left_hip_roll_joint",
+            "left_hip_yaw_joint",
+            "left_knee_joint",
+            "left_ankle_pitch_joint",
+            "left_ankle_roll_joint",
+            "right_hip_pitch_joint",
+            "right_hip_roll_joint",
+            "right_hip_yaw_joint",
+            "right_knee_joint",
+            "right_ankle_pitch_joint",
+            "right_ankle_roll_joint",
+            "waist_yaw_joint",
+            "waist_roll_joint",
+            "waist_pitch_joint",
+            "left_shoulder_pitch_joint",
+            "left_shoulder_roll_joint",
+            "left_shoulder_yaw_joint",
+            "left_elbow_joint",
+            "left_wrist_roll_joint",
+            "left_wrist_pitch_joint",
+            "left_wrist_yaw_joint",
+            "right_shoulder_pitch_joint",
+            "right_shoulder_roll_joint",
+            "right_shoulder_yaw_joint",
+            "right_elbow_joint",
+            "right_wrist_roll_joint",
+            "right_wrist_pitch_joint",
+            "right_wrist_yaw_joint"
+          ],
+          "feet": [
+            "left_ankle_roll_link",
+            "right_ankle_roll_link"
+          ],
+          "hands": [
+            "left_wrist_yaw_link",
+            "right_wrist_yaw_link"
+          ],
+          "torso": "torso_link",
+          "diagnostic_bodies": [
+            "torso_link",
+            "left_knee_link",
+            "right_knee_link"
+          ],
+          "left_leg": [
+            "left_hip_roll_joint",
+            "left_hip_pitch_joint",
+            "left_hip_yaw_joint",
+            "left_knee_joint",
+            "left_ankle_pitch_joint",
+            "left_ankle_roll_joint"
+          ],
+          "right_leg": [
+            "right_hip_roll_joint",
+            "right_hip_pitch_joint",
+            "right_hip_yaw_joint",
+            "right_knee_joint",
+            "right_ankle_pitch_joint",
+            "right_ankle_roll_joint"
+          ],
+          "ankles": [
+            "left_ankle_pitch_joint",
+            "right_ankle_pitch_joint",
+            "left_ankle_roll_joint",
+            "right_ankle_roll_joint"
+          ],
+          "hand_site_offset": [
+            "0.0",
+            "0.0",
+            "0.0"
+          ],
+          "foot_site_offset": [
+            "0.0",
+            "0.0",
+            "0.0"
+          ],
+          "mirror_indices": [
+            "6",
+            "7",
+            "8",
+            "9",
+            "10",
+            "11",
+            "0",
+            "1",
+            "2",
+            "3",
+            "4",
+            "5",
+            "12",
+            "13",
+            "14",
+            "22",
+            "23",
+            "24",
+            "25",
+            "26",
+            "27",
+            "28",
+            "15",
+            "16",
+            "17",
+            "18",
+            "19",
+            "20",
+            "21"
+          ],
+          "mirror_signs": [
+            "1.0",
+            "-1.0",
+            "-1.0",
+            "1.0",
+            "1.0",
+            "-1.0",
+            "1.0",
+            "-1.0",
+            "-1.0",
+            "1.0",
+            "1.0",
+            "-1.0",
+            "-1.0",
+            "-1.0",
+            "1.0",
+            "1.0",
+            "-1.0",
+            "-1.0",
+            "1.0",
+            "-1.0",
+            "1.0",
+            "-1.0",
+            "1.0",
+            "-1.0",
+            "-1.0",
+            "1.0",
+            "-1.0",
+            "1.0",
+            "-1.0"
+          ],
+          "nominal_feet_distance": "0.22",
+          "reward_bodies": {
+            "undesired": [
+              "(?!.*ankle.*).*"
+            ],
+            "sparse_undesired": [
+              "(?!.*ankle.*).*"
+            ],
+            "shanks": [
+              ".*_knee_link"
+            ]
+          },
+          "reward_joints": {
+            "hip": [
+              ".*_hip_yaw_joint",
+              ".*_hip_roll_joint"
+            ],
+            "arms": [
+              ".*_shoulder_pitch_joint",
+              ".*_shoulder_roll_joint",
+              ".*_shoulder_yaw_joint",
+              ".*_elbow_joint"
+            ],
+            "wrist_waist": [
+              ".*_wrist_.*_joint",
+              "waist_.*_joint"
+            ],
+            "legs": [
+              ".*_hip_pitch_joint",
+              ".*_knee_joint",
+              ".*_ankle_pitch_joint",
+              ".*_ankle_roll_joint"
+            ]
+          },
+          "auxiliary_joint_names": []
+        }
+      },
+      {
+        "path": ".scene.foot_scanner.body_names",
+        "t4": [
+          "left_foot_link",
+          "right_foot_link"
+        ],
+        "g1": [
+          "left_ankle_roll_link",
+          "right_ankle_roll_link"
+        ]
+      },
+      {
+        "path": ".scene.height_scanner.prim_body_name",
+        "t4": "Trunk",
+        "g1": "torso_link"
+      },
+      {
+        "path": ".scene.max_init_terrain_level",
+        "t4": "2",
+        "g1": "0"
+      },
+      {
+        "path": ".scene.num_envs",
+        "t4": "1024",
+        "g1": "2048"
+      },
+      {
+        "path": ".scene.robot.actuators.N5020-16",
+        "t4": null,
+        "g1": {
+          "class_type": "isaaclab.actuators.actuator_pd:ImplicitActuator",
+          "joint_names_expr": [
+            ".*_shoulder_.*",
+            ".*_elbow_.*",
+            ".*_wrist_roll.*",
+            ".*_ankle_.*",
+            "waist_roll_joint",
+            "waist_pitch_joint"
+          ],
+          "effort_limit": "null",
+          "velocity_limit": "null",
+          "effort_limit_sim": "25",
+          "velocity_limit_sim": "37",
+          "stiffness": "40.0",
+          "damping": {
+            ".*_shoulder_.*": "1.0",
+            ".*_elbow_.*": "1.0",
+            ".*_wrist_roll.*": "1.0",
+            ".*_ankle_.*": "2.0",
+            "waist_.*_joint": "5.0"
+          },
+          "armature": "0.01",
+          "friction": "null"
+        }
+      },
+      {
+        "path": ".scene.robot.actuators.N7520-14.3",
+        "t4": null,
+        "g1": {
+          "class_type": "isaaclab.actuators.actuator_pd:ImplicitActuator",
+          "joint_names_expr": [
+            ".*_hip_pitch_.*",
+            ".*_hip_yaw_.*",
+            "waist_yaw_joint"
+          ],
+          "effort_limit": "null",
+          "velocity_limit": "null",
+          "effort_limit_sim": "88",
+          "velocity_limit_sim": "32.0",
+          "stiffness": {
+            ".*_hip_.*": "100.0",
+            "waist_yaw_joint": "200.0"
+          },
+          "damping": {
+            ".*_hip_.*": "2.0",
+            "waist_yaw_joint": "5.0"
+          },
+          "armature": "0.01",
+          "friction": "null"
+        }
+      },
+      {
+        "path": ".scene.robot.actuators.N7520-22.5",
+        "t4": null,
+        "g1": {
+          "class_type": "isaaclab.actuators.actuator_pd:ImplicitActuator",
+          "joint_names_expr": [
+            ".*_hip_roll_.*",
+            ".*_knee_.*"
+          ],
+          "effort_limit": "null",
+          "velocity_limit": "null",
+          "effort_limit_sim": "139",
+          "velocity_limit_sim": "20.0",
+          "stiffness": {
+            ".*_hip_roll_.*": "100.0",
+            ".*_knee_.*": "150.0"
+          },
+          "damping": {
+            ".*_hip_roll_.*": "2.0",
+            ".*_knee_.*": "4.0"
+          },
+          "armature": "0.01",
+          "friction": "null"
+        }
+      },
+      {
+        "path": ".scene.robot.actuators.W4010-25",
+        "t4": null,
+        "g1": {
+          "class_type": "isaaclab.actuators.actuator_pd:ImplicitActuator",
+          "joint_names_expr": [
+            ".*_wrist_pitch.*",
+            ".*_wrist_yaw.*"
+          ],
+          "effort_limit": "null",
+          "velocity_limit": "null",
+          "effort_limit_sim": "5",
+          "velocity_limit_sim": "22",
+          "stiffness": "40.0",
+          "damping": "1.0",
+          "armature": "0.01",
+          "friction": "null"
+        }
+      },
+      {
+        "path": ".scene.robot.actuators.ankles",
+        "t4": {
+          "class_type": "isaaclab.actuators.actuator_pd:ImplicitActuator",
+          "joint_names_expr": [
+            "J_ankle_[lr]_(pitch|roll)"
+          ],
+          "effort_limit": "null",
+          "velocity_limit": "null",
+          "effort_limit_sim": "72.0",
+          "velocity_limit_sim": {
+            "J_ankle_[lr]_pitch": "18.8",
+            "J_ankle_[lr]_roll": "12.4"
+          },
+          "stiffness": {
+            "J_ankle_[lr]_pitch": "80.0",
+            "J_ankle_[lr]_roll": "20.0"
+          },
+          "damping": {
+            "J_ankle_[lr]_pitch": "4.0",
+            "J_ankle_[lr]_roll": "1.0"
+          },
+          "armature": "0.0472",
+          "friction": "null"
+        },
+        "g1": null
+      },
+      {
+        "path": ".scene.robot.actuators.arms",
+        "t4": {
+          "class_type": "isaaclab.actuators.actuator_pd:ImplicitActuator",
+          "joint_names_expr": [
+            "J_arm_[lr]_0[1-7]"
+          ],
+          "effort_limit": "null",
+          "velocity_limit": "null",
+          "effort_limit_sim": {
+            "J_arm_[lr]_0[1-4]": "36.0",
+            "J_arm_[lr]_0[5-7]": "12.0"
+          },
+          "velocity_limit_sim": "18.84",
+          "stiffness": {
+            "J_arm_[lr]_0[1-5]": "20.0",
+            "J_arm_[lr]_0[6-7]": "10.0"
+          },
+          "damping": "1.0",
+          "armature": {
+            "J_arm_[lr]_0[1-5]": "0.0236",
+            "J_arm_[lr]_0[6-7]": "0.0055"
+          },
+          "friction": "null"
+        },
+        "g1": null
+      },
+      {
+        "path": ".scene.robot.actuators.hips",
+        "t4": {
+          "class_type": "isaaclab.actuators.actuator_pd:ImplicitActuator",
+          "joint_names_expr": [
+            "J_hip_[lr]_(pitch|roll|yaw)"
+          ],
+          "effort_limit": "null",
+          "velocity_limit": "null",
+          "effort_limit_sim": {
+            "J_hip_[lr]_pitch": "130.0",
+            "J_hip_[lr]_(roll|yaw)": "120.0"
+          },
+          "velocity_limit_sim": {
+            "J_hip_[lr]_pitch": "12.5",
+            "J_hip_[lr]_(roll|yaw)": "10.9"
+          },
+          "stiffness": {
+            "J_hip_[lr]_pitch": "100.0",
+            "J_hip_[lr]_(roll|yaw)": "50.0"
+          },
+          "damping": {
+            "J_hip_[lr]_pitch": "4.0",
+            "J_hip_[lr]_(roll|yaw)": "2.0"
+          },
+          "armature": {
+            "J_hip_[lr]_pitch": "0.0625",
+            "J_hip_[lr]_(roll|yaw)": "0.0943"
+          },
+          "friction": "null"
+        },
+        "g1": null
+      },
+      {
+        "path": ".scene.robot.actuators.knees",
+        "t4": {
+          "class_type": "isaaclab.actuators.actuator_pd:ImplicitActuator",
+          "joint_names_expr": [
+            "J_knee_[lr]_pitch"
+          ],
+          "effort_limit": "null",
+          "velocity_limit": "null",
+          "effort_limit_sim": "130.0",
+          "velocity_limit_sim": "11.7",
+          "stiffness": "100.0",
+          "damping": "4.0",
+          "armature": "0.0625",
+          "friction": "null"
+        },
+        "g1": null
+      },
+      {
+        "path": ".scene.robot.actuators.waist",
+        "t4": {
+          "class_type": "isaaclab.actuators.actuator_pd:ImplicitActuator",
+          "joint_names_expr": [
+            "J_waist_yaw"
+          ],
+          "effort_limit": "null",
+          "velocity_limit": "null",
+          "effort_limit_sim": "120.0",
+          "velocity_limit_sim": "10.88",
+          "stiffness": "50.0",
+          "damping": "2.0",
+          "armature": "0.0943",
+          "friction": "null"
+        },
+        "g1": null
+      },
+      {
+        "path": ".scene.robot.init_state.joint_pos..*_ankle_pitch_joint",
+        "t4": null,
+        "g1": "-0.2"
+      },
+      {
+        "path": ".scene.robot.init_state.joint_pos..*_elbow_joint",
+        "t4": null,
+        "g1": "0.97"
+      },
+      {
+        "path": ".scene.robot.init_state.joint_pos..*_knee_joint",
+        "t4": null,
+        "g1": "0.3"
+      },
+      {
+        "path": ".scene.robot.init_state.joint_pos..*_shoulder_pitch_joint",
+        "t4": null,
+        "g1": "0.3"
+      },
+      {
+        "path": ".scene.robot.init_state.joint_pos.J_ankle_l_pitch",
+        "t4": "-0.24",
+        "g1": null
+      },
+      {
+        "path": ".scene.robot.init_state.joint_pos.J_ankle_l_roll",
+        "t4": "0.0",
+        "g1": null
+      },
+      {
+        "path": ".scene.robot.init_state.joint_pos.J_ankle_r_pitch",
+        "t4": "-0.24",
+        "g1": null
+      },
+      {
+        "path": ".scene.robot.init_state.joint_pos.J_ankle_r_roll",
+        "t4": "0.0",
+        "g1": null
+      },
+      {
+        "path": ".scene.robot.init_state.joint_pos.J_arm_l_01",
+        "t4": "0.2",
+        "g1": null
+      },
+      {
+        "path": ".scene.robot.init_state.joint_pos.J_arm_l_02",
+        "t4": "0.13",
+        "g1": null
+      },
+      {
+        "path": ".scene.robot.init_state.joint_pos.J_arm_l_03",
+        "t4": "0.0",
+        "g1": null
+      },
+      {
+        "path": ".scene.robot.init_state.joint_pos.J_arm_l_04",
+        "t4": "-0.43",
+        "g1": null
+      },
+      {
+        "path": ".scene.robot.init_state.joint_pos.J_arm_l_05",
+        "t4": "0.0",
+        "g1": null
+      },
+      {
+        "path": ".scene.robot.init_state.joint_pos.J_arm_l_06",
+        "t4": "0.0",
+        "g1": null
+      },
+      {
+        "path": ".scene.robot.init_state.joint_pos.J_arm_l_07",
+        "t4": "0.0",
+        "g1": null
+      },
+      {
+        "path": ".scene.robot.init_state.joint_pos.J_arm_r_01",
+        "t4": "0.2",
+        "g1": null
+      },
+      {
+        "path": ".scene.robot.init_state.joint_pos.J_arm_r_02",
+        "t4": "-0.13",
+        "g1": null
+      },
+      {
+        "path": ".scene.robot.init_state.joint_pos.J_arm_r_03",
+        "t4": "0.0",
+        "g1": null
+      },
+      {
+        "path": ".scene.robot.init_state.joint_pos.J_arm_r_04",
+        "t4": "-0.43",
+        "g1": null
+      },
+      {
+        "path": ".scene.robot.init_state.joint_pos.J_arm_r_05",
+        "t4": "0.0",
+        "g1": null
+      },
+      {
+        "path": ".scene.robot.init_state.joint_pos.J_arm_r_06",
+        "t4": "0.0",
+        "g1": null
+      },
+      {
+        "path": ".scene.robot.init_state.joint_pos.J_arm_r_07",
+        "t4": "0.0",
+        "g1": null
+      },
+      {
+        "path": ".scene.robot.init_state.joint_pos.J_hip_l_pitch",
+        "t4": "-0.2",
+        "g1": null
+      },
+      {
+        "path": ".scene.robot.init_state.joint_pos.J_hip_l_roll",
+        "t4": "0.0",
+        "g1": null
+      },
+      {
+        "path": ".scene.robot.init_state.joint_pos.J_hip_l_yaw",
+        "t4": "0.0",
+        "g1": null
+      },
+      {
+        "path": ".scene.robot.init_state.joint_pos.J_hip_r_pitch",
+        "t4": "-0.2",
+        "g1": null
+      },
+      {
+        "path": ".scene.robot.init_state.joint_pos.J_hip_r_roll",
+        "t4": "0.0",
+        "g1": null
+      },
+      {
+        "path": ".scene.robot.init_state.joint_pos.J_hip_r_yaw",
+        "t4": "0.0",
+        "g1": null
+      },
+      {
+        "path": ".scene.robot.init_state.joint_pos.J_knee_l_pitch",
+        "t4": "0.42",
+        "g1": null
+      },
+      {
+        "path": ".scene.robot.init_state.joint_pos.J_knee_r_pitch",
+        "t4": "0.42",
+        "g1": null
+      },
+      {
+        "path": ".scene.robot.init_state.joint_pos.J_waist_yaw",
+        "t4": "0.0",
+        "g1": null
+      },
+      {
+        "path": ".scene.robot.init_state.joint_pos.left_hip_pitch_joint",
+        "t4": null,
+        "g1": "-0.1"
+      },
+      {
+        "path": ".scene.robot.init_state.joint_pos.left_shoulder_roll_joint",
+        "t4": null,
+        "g1": "0.25"
+      },
+      {
+        "path": ".scene.robot.init_state.joint_pos.left_wrist_roll_joint",
+        "t4": null,
+        "g1": "0.15"
+      },
+      {
+        "path": ".scene.robot.init_state.joint_pos.right_hip_pitch_joint",
+        "t4": null,
+        "g1": "-0.1"
+      },
+      {
+        "path": ".scene.robot.init_state.joint_pos.right_shoulder_roll_joint",
+        "t4": null,
+        "g1": "-0.25"
+      },
+      {
+        "path": ".scene.robot.init_state.joint_pos.right_wrist_roll_joint",
+        "t4": null,
+        "g1": "-0.15"
+      },
+      {
+        "path": ".scene.robot.init_state.pos",
+        "t4": [
+          "0.0",
+          "0.0",
+          "0.85"
+        ],
+        "g1": [
+          "0.0",
+          "0.0",
+          "0.8"
+        ]
+      },
+      {
+        "path": ".scene.robot.joint_sdk_names",
+        "t4": null,
+        "g1": [
+          "left_hip_pitch_joint",
+          "left_hip_roll_joint",
+          "left_hip_yaw_joint",
+          "left_knee_joint",
+          "left_ankle_pitch_joint",
+          "left_ankle_roll_joint",
+          "right_hip_pitch_joint",
+          "right_hip_roll_joint",
+          "right_hip_yaw_joint",
+          "right_knee_joint",
+          "right_ankle_pitch_joint",
+          "right_ankle_roll_joint",
+          "waist_yaw_joint",
+          "waist_roll_joint",
+          "waist_pitch_joint",
+          "left_shoulder_pitch_joint",
+          "left_shoulder_roll_joint",
+          "left_shoulder_yaw_joint",
+          "left_elbow_joint",
+          "left_wrist_roll_joint",
+          "left_wrist_pitch_joint",
+          "left_wrist_yaw_joint",
+          "right_shoulder_pitch_joint",
+          "right_shoulder_roll_joint",
+          "right_shoulder_yaw_joint",
+          "right_elbow_joint",
+          "right_wrist_roll_joint",
+          "right_wrist_pitch_joint",
+          "right_wrist_yaw_joint"
+        ]
+      },
+      {
+        "path": ".scene.robot.spawn.articulation_props.fix_root_link",
+        "t4": "false",
+        "g1": "null"
+      },
+      {
+        "path": ".scene.robot.spawn.asset_path",
+        "t4": "/home/nubot/phn_ws/t4_train/TienKung-Lab-s11b-upright-tbslim/legged_lab/assets/t4/urdf/t4_std.urdf",
+        "g1": "/home/nubot/phn_ws/t4_train/TienKung-Lab-g1-unitree-v6-20260907/legged_lab/assets/unitree_g1/urdf/g1_29dof_rev_1_0.urdf"
+      },
+      {
+        "path": ".scene.robot.spawn.force_usd_conversion",
+        "t4": "true",
+        "g1": "false"
+      },
+      {
+        "path": ".scene.robot.spawn.joint_drive.gains.damping",
+        "t4": "0.0",
+        "g1": "0"
+      },
+      {
+        "path": ".scene.robot.spawn.joint_drive.gains.stiffness",
+        "t4": "0.0",
+        "g1": "0"
+      },
+      {
+        "path": ".scene.seed",
+        "t4": "42",
+        "g1": "43"
+      },
+      {
+        "path": ".scene.terrain_generator.sub_terrains.raised_pillars.diameter_scale_jitter",
+        "t4": null,
+        "g1": "0.0"
+      },
+      {
+        "path": ".scene.terrain_generator.sub_terrains.raised_pillars.height_jitter_m",
+        "t4": null,
+        "g1": "0.0"
+      },
+      {
+        "path": ".scene.terrain_generator.sub_terrains.raised_pillars.pitch_scale_jitter",
+        "t4": null,
+        "g1": "0.0"
+      },
+      {
+        "path": ".scene.terrain_generator.sub_terrains.raised_pillars.rim_width",
+        "t4": null,
+        "g1": "0.75"
+      },
+      {
+        "path": ".scene.terrain_generator.sub_terrains.raised_pillars.targeted_manufacturing_variation",
+        "t4": null,
+        "g1": "false"
+      },
+      {
+        "path": ".scene.terrain_generator.sub_terrains.raised_pillars.top_tilt_rad",
+        "t4": null,
+        "g1": "0.0"
+      },
+      {
+        "path": ".scene.terrain_generator.sub_terrains.raised_pillars.xy_jitter_m",
+        "t4": null,
+        "g1": "0.0"
+      },
+      {
+        "path": ".scene.terrain_generator.sub_terrains.stepping_stones.rim_width",
+        "t4": null,
+        "g1": "0.75"
+      },
+      {
+        "path": ".scene.terrain_generator.sub_terrains.stepping_stones.targeted_layout_seed",
+        "t4": null,
+        "g1": "false"
+      },
+      {
+        "path": ".sim.device",
+        "t4": "cuda:0",
+        "g1": "cuda:1"
+      },
+      {
+        "path": ".sparse_command_min_speed_scale",
+        "t4": null,
+        "g1": "0.5"
+      },
+      {
+        "path": ".sparse_command_straight_yaw_prob",
+        "t4": "0.8",
+        "g1": "0.6"
+      }
+    ],
+    "agent": [
+      {
+        "path": ".algorithm.symmetry_cfg.data_augmentation_func",
+        "t4": "legged_lab.envs.t4.symmetry:get_symmetric_states",
+        "g1": "legged_lab.locomotion.symmetry:get_symmetric_states"
+      },
+      {
+        "path": ".amp_expert_dir",
+        "t4": "/home/nubot/phn_ws/t4_train/TienKung-Lab/artifacts/amp_expert_provisional",
+        "g1": "/home/nubot/phn_ws/t4_train/TienKung-Lab-g1-unitree-v6-20260907/legged_lab/envs/g1/datasets/motion_amp_expert_t4_rob2rob_full17_v1"
+      },
+      {
+        "path": ".amp_frame_dim",
+        "t4": "66",
+        "g1": "70"
+      },
+      {
+        "path": ".amp_joint_order",
+        "t4": [
+          "J_arm_l_01",
+          "J_arm_l_02",
+          "J_arm_l_03",
+          "J_arm_l_04",
+          "J_arm_l_05",
+          "J_arm_l_06",
+          "J_arm_l_07",
+          "J_arm_r_01",
+          "J_arm_r_02",
+          "J_arm_r_03",
+          "J_arm_r_04",
+          "J_arm_r_05",
+          "J_arm_r_06",
+          "J_arm_r_07",
+          "J_waist_yaw",
+          "J_hip_l_pitch",
+          "J_hip_l_roll",
+          "J_hip_l_yaw",
+          "J_knee_l_pitch",
+          "J_ankle_l_pitch",
+          "J_ankle_l_roll",
+          "J_hip_r_pitch",
+          "J_hip_r_roll",
+          "J_hip_r_yaw",
+          "J_knee_r_pitch",
+          "J_ankle_r_pitch",
+          "J_ankle_r_roll"
+        ],
+        "g1": [
+          "left_hip_pitch_joint",
+          "left_hip_roll_joint",
+          "left_hip_yaw_joint",
+          "left_knee_joint",
+          "left_ankle_pitch_joint",
+          "left_ankle_roll_joint",
+          "right_hip_pitch_joint",
+          "right_hip_roll_joint",
+          "right_hip_yaw_joint",
+          "right_knee_joint",
+          "right_ankle_pitch_joint",
+          "right_ankle_roll_joint",
+          "waist_yaw_joint",
+          "waist_roll_joint",
+          "waist_pitch_joint",
+          "left_shoulder_pitch_joint",
+          "left_shoulder_roll_joint",
+          "left_shoulder_yaw_joint",
+          "left_elbow_joint",
+          "left_wrist_roll_joint",
+          "left_wrist_pitch_joint",
+          "left_wrist_yaw_joint",
+          "right_shoulder_pitch_joint",
+          "right_shoulder_roll_joint",
+          "right_shoulder_yaw_joint",
+          "right_elbow_joint",
+          "right_wrist_roll_joint",
+          "right_wrist_pitch_joint",
+          "right_wrist_yaw_joint"
+        ]
+      },
+      {
+        "path": ".amp_motion_files",
+        "t4": [
+          "/home/nubot/phn_ws/t4_train/TienKung-Lab/artifacts/amp_expert_provisional/B10_-__Walk_turn_left_45_stageii.txt",
+          "/home/nubot/phn_ws/t4_train/TienKung-Lab/artifacts/amp_expert_provisional/B13_-__Walk_turn_right_90_stageii.txt",
+          "/home/nubot/phn_ws/t4_train/TienKung-Lab/artifacts/amp_expert_provisional/B14_-__Walk_turn_right_45_t2_stageii.txt",
+          "/home/nubot/phn_ws/t4_train/TienKung-Lab/artifacts/amp_expert_provisional/B15_-__Walk_turn_around_stageii.txt",
+          "/home/nubot/phn_ws/t4_train/TienKung-Lab/artifacts/amp_expert_provisional/B4_-_Stand_to_Walk_backwards_stageii.txt",
+          "/home/nubot/phn_ws/t4_train/TienKung-Lab/artifacts/amp_expert_provisional/B9_-__Walk_turn_left_90_stageii.txt",
+          "/home/nubot/phn_ws/t4_train/TienKung-Lab/artifacts/amp_expert_provisional/t4_jog_backward.txt",
+          "/home/nubot/phn_ws/t4_train/TienKung-Lab/artifacts/amp_expert_provisional/t4_jog_forward.txt",
+          "/home/nubot/phn_ws/t4_train/TienKung-Lab/artifacts/amp_expert_provisional/t4_jog_left.txt",
+          "/home/nubot/phn_ws/t4_train/TienKung-Lab/artifacts/amp_expert_provisional/t4_jog_right.txt",
+          "/home/nubot/phn_ws/t4_train/TienKung-Lab/artifacts/amp_expert_provisional/t4_left_rotate.txt",
+          "/home/nubot/phn_ws/t4_train/TienKung-Lab/artifacts/amp_expert_provisional/t4_right_rotate.txt",
+          "/home/nubot/phn_ws/t4_train/TienKung-Lab/artifacts/amp_expert_provisional/t4_side_left.txt",
+          "/home/nubot/phn_ws/t4_train/TienKung-Lab/artifacts/amp_expert_provisional/t4_side_right.txt",
+          "/home/nubot/phn_ws/t4_train/TienKung-Lab/artifacts/amp_expert_provisional/t4_stand.txt",
+          "/home/nubot/phn_ws/t4_train/TienKung-Lab/artifacts/amp_expert_provisional/t4_walk_forward.txt",
+          "/home/nubot/phn_ws/t4_train/TienKung-Lab/artifacts/amp_expert_provisional/t4_walk_left.txt"
+        ],
+        "g1": [
+          "/home/nubot/phn_ws/t4_train/TienKung-Lab-g1-unitree-v6-20260907/legged_lab/envs/g1/datasets/motion_amp_expert_t4_rob2rob_full17_v1/g1_from_B10_-__Walk_turn_left_45_stageii_0000_0178.txt",
+          "/home/nubot/phn_ws/t4_train/TienKung-Lab-g1-unitree-v6-20260907/legged_lab/envs/g1/datasets/motion_amp_expert_t4_rob2rob_full17_v1/g1_from_B13_-__Walk_turn_right_90_stageii_0000_0167.txt",
+          "/home/nubot/phn_ws/t4_train/TienKung-Lab-g1-unitree-v6-20260907/legged_lab/envs/g1/datasets/motion_amp_expert_t4_rob2rob_full17_v1/g1_from_B14_-__Walk_turn_right_45_t2_stageii_0000_0173.txt",
+          "/home/nubot/phn_ws/t4_train/TienKung-Lab-g1-unitree-v6-20260907/legged_lab/envs/g1/datasets/motion_amp_expert_t4_rob2rob_full17_v1/g1_from_B15_-__Walk_turn_around_stageii_0000_0224.txt",
+          "/home/nubot/phn_ws/t4_train/TienKung-Lab-g1-unitree-v6-20260907/legged_lab/envs/g1/datasets/motion_amp_expert_t4_rob2rob_full17_v1/g1_from_B4_-_Stand_to_Walk_backwards_stageii_0000_0137.txt",
+          "/home/nubot/phn_ws/t4_train/TienKung-Lab-g1-unitree-v6-20260907/legged_lab/envs/g1/datasets/motion_amp_expert_t4_rob2rob_full17_v1/g1_from_B9_-__Walk_turn_left_90_stageii_0000_0150.txt",
+          "/home/nubot/phn_ws/t4_train/TienKung-Lab-g1-unitree-v6-20260907/legged_lab/envs/g1/datasets/motion_amp_expert_t4_rob2rob_full17_v1/g1_from_t4_jog_backward_0000_0170.txt",
+          "/home/nubot/phn_ws/t4_train/TienKung-Lab-g1-unitree-v6-20260907/legged_lab/envs/g1/datasets/motion_amp_expert_t4_rob2rob_full17_v1/g1_from_t4_jog_forward_0000_0151.txt",
+          "/home/nubot/phn_ws/t4_train/TienKung-Lab-g1-unitree-v6-20260907/legged_lab/envs/g1/datasets/motion_amp_expert_t4_rob2rob_full17_v1/g1_from_t4_jog_left_0000_0206.txt",
+          "/home/nubot/phn_ws/t4_train/TienKung-Lab-g1-unitree-v6-20260907/legged_lab/envs/g1/datasets/motion_amp_expert_t4_rob2rob_full17_v1/g1_from_t4_jog_right_0000_0226.txt",
+          "/home/nubot/phn_ws/t4_train/TienKung-Lab-g1-unitree-v6-20260907/legged_lab/envs/g1/datasets/motion_amp_expert_t4_rob2rob_full17_v1/g1_from_t4_left_rotate_0000_0231.txt",
+          "/home/nubot/phn_ws/t4_train/TienKung-Lab-g1-unitree-v6-20260907/legged_lab/envs/g1/datasets/motion_amp_expert_t4_rob2rob_full17_v1/g1_from_t4_right_rotate_0000_0193.txt",
+          "/home/nubot/phn_ws/t4_train/TienKung-Lab-g1-unitree-v6-20260907/legged_lab/envs/g1/datasets/motion_amp_expert_t4_rob2rob_full17_v1/g1_from_t4_side_left_0000_0137.txt",
+          "/home/nubot/phn_ws/t4_train/TienKung-Lab-g1-unitree-v6-20260907/legged_lab/envs/g1/datasets/motion_amp_expert_t4_rob2rob_full17_v1/g1_from_t4_side_right_0000_0150.txt",
+          "/home/nubot/phn_ws/t4_train/TienKung-Lab-g1-unitree-v6-20260907/legged_lab/envs/g1/datasets/motion_amp_expert_t4_rob2rob_full17_v1/g1_from_t4_stand_0000_0149.txt",
+          "/home/nubot/phn_ws/t4_train/TienKung-Lab-g1-unitree-v6-20260907/legged_lab/envs/g1/datasets/motion_amp_expert_t4_rob2rob_full17_v1/g1_from_t4_walk_forward_0000_0289.txt",
+          "/home/nubot/phn_ws/t4_train/TienKung-Lab-g1-unitree-v6-20260907/legged_lab/envs/g1/datasets/motion_amp_expert_t4_rob2rob_full17_v1/g1_from_t4_walk_left_0000_0372.txt"
+        ]
+      },
+      {
+        "path": ".device",
+        "t4": "cuda:0",
+        "g1": "cuda:1"
+      },
+      {
+        "path": ".experiment_name",
+        "t4": "t4_loco_teacher_sparse",
+        "g1": "g1_full17_30k"
+      },
+      {
+        "path": ".max_iterations",
+        "t4": "40000",
+        "g1": "30000"
+      },
+      {
+        "path": ".min_normalized_std",
+        "t4": [
+          "0.05",
+          "0.05",
+          "0.05",
+          "0.05",
+          "0.05",
+          "0.05",
+          "0.05",
+          "0.05",
+          "0.05",
+          "0.05",
+          "0.05",
+          "0.05",
+          "0.05",
+          "0.05",
+          "0.05",
+          "0.05",
+          "0.05",
+          "0.05",
+          "0.05",
+          "0.05",
+          "0.05",
+          "0.05",
+          "0.05",
+          "0.05",
+          "0.05",
+          "0.05",
+          "0.05"
+        ],
+        "g1": [
+          "0.05",
+          "0.05",
+          "0.05",
+          "0.05",
+          "0.05",
+          "0.05",
+          "0.05",
+          "0.05",
+          "0.05",
+          "0.05",
+          "0.05",
+          "0.05",
+          "0.05",
+          "0.05",
+          "0.05",
+          "0.05",
+          "0.05",
+          "0.05",
+          "0.05",
+          "0.05",
+          "0.05",
+          "0.05",
+          "0.05",
+          "0.05",
+          "0.05",
+          "0.05",
+          "0.05",
+          "0.05",
+          "0.05"
+        ]
+      },
+      {
+        "path": ".neptune_project",
+        "t4": "t4_loco_teacher_sparse",
+        "g1": "g1_loco_teacher_sparse"
+      },
+      {
+        "path": ".run_name",
+        "t4": "t_sparse_lightlp_s11b_upright_tbslim",
+        "g1": "g1_full17_30k"
+      },
+      {
+        "path": ".seed",
+        "t4": "42",
+        "g1": "43"
+      },
+      {
+        "path": ".wandb_project",
+        "t4": "t4_loco_teacher_sparse",
+        "g1": "g1_loco_teacher_sparse"
+      }
+    ]
+  }
+}

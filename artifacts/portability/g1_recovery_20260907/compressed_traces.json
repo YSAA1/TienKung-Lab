@@ -1,0 +1,10 @@
+{
+  "legacy": {
+    "uncompressed_sha256": "8a5ec1abb7e673fbf4197e990de857e43ba1420e2fa1192d15d37d3ac62f2803",
+    "compressed_sha256": "993be24e87bdff036d0d5f47285d658b496446fef0b628bfa9fc791c9ca82d89"
+  },
+  "recovery": {
+    "uncompressed_sha256": "c3548c97d675f93d0dc2dbc74d304cb212e8fb4298eb068517baf6b842b91922",
+    "compressed_sha256": "bc98edb860fc14429012c5ec86e6106027a8f2141d9c1d52123ce09adebdc14b"
+  }
+}

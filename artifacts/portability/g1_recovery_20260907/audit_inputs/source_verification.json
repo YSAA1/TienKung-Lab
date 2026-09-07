@@ -1,0 +1,11 @@
+{
+  "time": "2026-09-07T22:38:56.921402",
+  "source_files": 204,
+  "source_mismatches": [],
+  "expert_files": 17,
+  "expert_mismatches": [],
+  "training_sessions": {
+    "g1-full17-30k": true,
+    "g1-full17-lin4": true
+  }
+}

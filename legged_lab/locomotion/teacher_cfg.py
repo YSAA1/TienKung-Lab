@@ -1,3 +1,21 @@
+# Copyright (c) 2021-2024, The RSL-RL Project Developers.
+# All rights reserved.
+# Original code is licensed under the BSD-3-Clause license.
+#
+# Copyright (c) 2022-2025, The Isaac Lab Project Developers.
+# All rights reserved.
+#
+# Copyright (c) 2025-2026, The Legged Lab Project Developers.
+# All rights reserved.
+#
+# Copyright (c) 2025-2026, The TienKung-Lab Project Developers.
+# All rights reserved.
+# Modifications are licensed under the BSD-3-Clause license.
+#
+# This file contains code derived from the RSL-RL, Isaac Lab, and Legged Lab Projects,
+# with additional modifications by the TienKung-Lab Project,
+# and is distributed under the BSD-3-Clause license.
+
 # Copyright (c) 2025-2026, The TienKung-Lab Project Developers.
 # All rights reserved.
 # Modifications are licensed under the BSD-3-Clause license.
@@ -13,6 +31,7 @@ MDP change and therefore starts a new lineage.
 from __future__ import annotations
 
 import math
+from dataclasses import MISSING
 
 from isaaclab.managers import EventTermCfg as EventTerm
 from isaaclab.managers import RewardTermCfg as RewTerm
@@ -26,14 +45,6 @@ from isaaclab_rl.rsl_rl import (
 )
 
 import legged_lab.mdp as mdp
-from dataclasses import MISSING
-from legged_lab.locomotion.robot_spec import LocomotionRobotSpec
-from legged_lab.locomotion.config_binding import bind_robot_spec
-from legged_lab.locomotion.schemas import (
-    FOOT_SCAN_RESOLUTION, FOOT_SCAN_SIZE, PROPRIO_HISTORY_LENGTH,
-    TEACHER_SCAN_HEIGHT_OFFSET, TEACHER_SCAN_OFFSET, TEACHER_SCAN_RESOLUTION,
-    TEACHER_SCAN_SIZE, TEACHER_SPARSE_SCAN_HISTORY_LENGTH,
-)
 from legged_lab.config import (
     ActionDelayCfg,
     BaseSceneCfg,
@@ -51,7 +62,19 @@ from legged_lab.config import (
     RobotCfg,
     SimCfg,
 )
-from legged_lab.terrains import LIGHTLP_TERRAINS_CFG, AMP_LOCOMOTION_TERRAINS_CFG
+from legged_lab.locomotion.config_binding import bind_robot_spec
+from legged_lab.locomotion.robot_spec import LocomotionRobotSpec
+from legged_lab.locomotion.schemas import (
+    FOOT_SCAN_RESOLUTION,
+    FOOT_SCAN_SIZE,
+    PROPRIO_HISTORY_LENGTH,
+    TEACHER_SCAN_HEIGHT_OFFSET,
+    TEACHER_SCAN_OFFSET,
+    TEACHER_SCAN_RESOLUTION,
+    TEACHER_SCAN_SIZE,
+    TEACHER_SPARSE_SCAN_HISTORY_LENGTH,
+)
+from legged_lab.terrains import AMP_LOCOMOTION_TERRAINS_CFG, LIGHTLP_TERRAINS_CFG
 
 
 @configclass
@@ -225,6 +248,8 @@ class AmpLocomotionEnvCfg:
     random_level_reset_fraction: float = 0.0
     random_level_reset_max_level: int | None = None
     random_level_reset_min_level: int | None = None
+    collapse_reset_grace_s: float = 0.0
+    collapse_reset_respects_impact_immunity: bool = False
     scene: BaseSceneCfg = BaseSceneCfg(
         max_episode_length_s=20.0,
         # Formal starting point for the first Stage E lineage; the capacity probe
@@ -353,7 +378,6 @@ class AmpLocomotionEnvCfg:
     )
     sim: SimCfg = SimCfg(dt=0.005, decimation=4, physx=PhysxCfg(gpu_max_rigid_patch_count=10 * 2**15))
 
-
     def __post_init__(self):
         bind_robot_spec(self)
 
@@ -459,7 +483,11 @@ class LightLPRewardCfg(AmpLocomotionRewardCfg):
     termination_penalty = RewTerm(func=mdp.is_terminated, weight=0.0)
     heading_error = RewTerm(func=mdp.heading_error, weight=-1.0)
     velocity_slack = RewTerm(func=mdp.velocity_slack, weight=1.5)
-    illegal_footstep = RewTerm(func=mdp.illegal_footstep, weight=-1.0, params={"sensor_cfg": SceneEntityCfg("contact_sensor", body_names="$feet")})
+    illegal_footstep = RewTerm(
+        func=mdp.illegal_footstep,
+        weight=-1.0,
+        params={"sensor_cfg": SceneEntityCfg("contact_sensor", body_names="$feet")},
+    )
     opposite_direction = RewTerm(func=mdp.opposite_direction, weight=-1.0)
     hurdle_bar_contact = RewTerm(func=mdp.hurdle_bar_contact, weight=-2.0)
     foot_touchdown_impact = RewTerm(
