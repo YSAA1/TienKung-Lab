@@ -2,12 +2,12 @@
 # Single-factor G1 motion ablation. Keep the full vital_v1 run as the positive control.
 set -euo pipefail
 
-profile="${1:?profile required: vital_termination_only|vital_gait_gate_off_only|vital_action_rate_only}"
+profile="${1:?profile required}"
 gpu="${2:?gpu index required}"
 max_iterations="${3:-2000}"
 
 case "$profile" in
-  vital_termination_only|vital_gait_gate_off_only|vital_action_rate_only) ;;
+  vital_termination_only|vital_gait_gate_off_only|vital_action_rate_only|vital_no_action_rate|vital_no_gait_gate_off) ;;
   *)
     echo "unknown ablation profile: $profile" >&2
     exit 2

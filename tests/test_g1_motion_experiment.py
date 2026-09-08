@@ -48,6 +48,8 @@ def test_profile_rejects_other_robots_before_mutation():
         ("vital_termination_only", -0.1, False, (0.8, 1.0), True),
         ("vital_gait_gate_off_only", -0.1, True, None, False),
         ("vital_action_rate_only", -0.01, True, None, True),
+        ("vital_no_action_rate", -0.1, False, (0.8, 1.0), False),
+        ("vital_no_gait_gate_off", -0.01, False, (0.8, 1.0), True),
     ],
 )
 def test_motion_experiment_profiles_are_single_factor(profile, action_rate, accel_enabled, fall_limits, gait_gate):

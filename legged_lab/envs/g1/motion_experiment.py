@@ -29,6 +29,8 @@ G1_MOTION_EXPERIMENTS = (
     "vital_termination_only",
     "vital_gait_gate_off_only",
     "vital_action_rate_only",
+    "vital_no_action_rate",
+    "vital_no_gait_gate_off",
 )
 
 
@@ -67,6 +69,12 @@ def apply_vital_motion_experiment(env_cfg, profile: str):
     if profile == "vital_v1":
         _apply_vital_termination(env_cfg)
         _apply_gait_gate_off(env_cfg)
+        _apply_action_rate(env_cfg)
+    elif profile == "vital_no_action_rate":
+        _apply_vital_termination(env_cfg)
+        _apply_gait_gate_off(env_cfg)
+    elif profile == "vital_no_gait_gate_off":
+        _apply_vital_termination(env_cfg)
         _apply_action_rate(env_cfg)
     elif profile == "vital_termination_only":
         _apply_vital_termination(env_cfg)

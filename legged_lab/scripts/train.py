@@ -46,7 +46,14 @@ parser.add_argument(
 )
 parser.add_argument(
     "--g1_motion_experiment",
-    choices=("vital_v1", "vital_termination_only", "vital_gait_gate_off_only", "vital_action_rate_only"),
+    choices=(
+        "vital_v1",
+        "vital_termination_only",
+        "vital_gait_gate_off_only",
+        "vital_action_rate_only",
+        "vital_no_action_rate",
+        "vital_no_gait_gate_off",
+    ),
     help="Opt-in cold-start G1 motion recipe",
 )
 
