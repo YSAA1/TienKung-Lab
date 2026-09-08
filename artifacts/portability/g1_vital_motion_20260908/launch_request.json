@@ -1,0 +1,15 @@
+{
+  "time": "2026-09-08T16:24:28.640579+08:00",
+  "candidate": "/home/nubot/phn_ws/t4_train/TienKung-Lab-g1-vital-motion-20260908",
+  "baseline": "g1-core-fixes remains on GPU0/2",
+  "session": "g1-vital-motion",
+  "gpus": [
+    1,
+    3
+  ],
+  "budget": 30000,
+  "envs_per_rank": 2048,
+  "resume": false,
+  "tensorboard": "http://100.100.188.39:8043",
+  "scope": "launch requested; runtime readiness checked separately"
+}

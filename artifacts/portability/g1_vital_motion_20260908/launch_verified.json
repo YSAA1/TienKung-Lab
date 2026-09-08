@@ -1,0 +1,23 @@
+{
+  "time": "2026-09-08T16:25:51.583530+08:00",
+  "implementation_commit": "9bea04e7771fcf108887003699302a8690f8bdba",
+  "run": "/home/nubot/phn_ws/t4_train/TienKung-Lab-g1-vital-motion-20260908/logs/g1_vital_motion/2026-09-08_16-25-01_vital_motion_v1",
+  "iteration": 12,
+  "recent_losses_finite": true,
+  "reward_weight_diff": {
+    "action_rate_l2": [
+      "-0.1",
+      "-0.01"
+    ]
+  },
+  "config_verified": true,
+  "checkpoints": [
+    "model_0.pt"
+  ],
+  "tensorboard": "http://100.100.188.39:8043",
+  "envs_per_rank": 2048,
+  "steps": "24",
+  "budget": 30000,
+  "resume": false,
+  "scope": "startup only; no locomotion capability claim"
+}

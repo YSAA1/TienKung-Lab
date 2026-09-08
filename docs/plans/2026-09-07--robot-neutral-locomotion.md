@@ -11,6 +11,7 @@
 - GPU1/3各2048env、24steps、seed42+rank、30000更新、冷启动；GPU0/2上的 `g1_core_fixes_B30000` 保留作同预算对照，不热覆盖源码。
 - 这是组合配方有效性实验，不宣称某个变量的单独因果。参考VITAL源码commit `8b1a371b523a7d5024f7743c8581a7c4e8ae58a3`，不整包迁移VITAL网络或运行时。
 - 当前验收：62项受影响CPU检查通过；真实双GPU每rank32env、两次更新、17段专家、非对称截断、checkpoint重载通过，两rank策略/判别器/AMP统计差值全0；奖励保留与实验开关在实际cfg断言通过。正式启动记录见 `artifacts/portability/g1_vital_motion_20260908/`。
+- 已启动：实现`9bea04e`，run `2026-09-08_16-25-01_vital_motion_v1`，tmux `g1-vital-motion`，GPU1/3，PID1253798/1253799；TensorBoard8043。16:25:51快照iteration12，model_0已保存，最近loss有限。保存的env/agent配置再次核对：reward权重相对主训练只有action_rate不同；预算30000、resume=false、17专家、2048env/rank，三个实验开关生效。证据`launch_verified.json`仅为开训健康。
 - 按500/1000/2000更新与主训练同checkpoint预算比较。持续前进必须看固定vx=.7、零初速、flat/easy stones/easy pillars evaluator和连续回放，评估需显式应用各自训练profile；监控reward/净位移不单独作为能力结论。当前尚未完成训练与行为验收。
 
 Status: 2026-09-08，F1–F6/R1/R2修复和验收完成。173项CPU、三组单卡、G1/T4增强reset、真实双GPU两次更新与独立Standards/Spec审核通过；旧A/B已停止并保留历史；单组B径向判据30k已冷启动，GPU0/2各2048env，TB8042。
