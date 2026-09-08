@@ -1,6 +1,17 @@
-# 核心缺陷修复计划的修复前证据
+# 核心缺陷修复与验收证据
 
-状态：仅保存既有审计结果，用于2026-09-08用户要求的修复计划。没有实施修复、重新运行测试或修改训练。
+状态：F1–F6/R1/R2已完成修复及实际验收，独立审核通过。训练启动单独记录，不将开训合同等同运动能力。
+
+修复后入口：[manifest.json](manifest.json)，包含实际生产源码SHA、精确依赖、资源、验收JSON及独立审核状态。[code_review.md](code_review.md)保存两个审核轴结果。
+
+- `acceptance/`：三组32env/500步、两组8env reset和双GPU两次PPO/AMP更新的原始JSON/日志。7份JSON均通过；6个进程退出码均0。
+- `g1-core-final-integration-20260908.tar.gz`：最终原始结果与完整日志；`g1-core-runtime-records-20260908.tar.gz`：实际运行验收脚本、唯一IsaacLab内容补丁与依赖记录。
+- `g1-core-single-results-20260908.tar.gz`：三组单卡原始结果及保留的第一轮无效overlap注入失败，未将失败隐藏为通过。
+- `cpu_red.log`、`timeout_red.json`：修复前反例；`cpu_regression.log`：173项受影响检查通过。三条基线flake8告警在`flake8_baseline.log`复现。
+
+## 修复前证据（以下文件位于evidence/）
+
+以下仅是修复前审计快照，不能将其中探针`ok`解释为修复后的通过。
 
 唯一计划入口：[机器人无关运动训练计划](../../../docs/plans/2026-09-07--robot-neutral-locomotion.md)。文件完整性见 [evidence/manifest.json](evidence/manifest.json)。这些证据在进入仓库前已实际生成，原件位于本机临时审计目录；此副本避免后续执行依赖临时目录是否仍存在。
 

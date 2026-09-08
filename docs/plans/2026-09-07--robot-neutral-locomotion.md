@@ -1,8 +1,8 @@
 # 机器人无关的运动训练算法整理
 
-Status: 2026-09-08，按用户最新授权实施中。F1–F6/R1已落地，173项CPU回归通过，三组单卡语义验收通过；专门reset增强验收及双GPU更新进行中。旧A/B源码和历史保留，尚未停止或启动新正式训练。
+Status: 2026-09-08，F1–F6/R1/R2修复和验收完成。173项CPU、三组单卡、G1/T4增强reset、真实双GPU两次更新与独立Standards/Spec审核通过；已准备按授权停止旧A/B并冷启动单组30k，正式启动记录待填写。
 
-## 实施中：明确缺陷修复与真实环境验收
+## 已完成：明确缺陷修复与真实环境验收
 
 **目标与范围**：修复两轮审计已经复现的计算/重置/接线错误，并在服务器真实 Isaac 环境中验证。执行工作树为 `D:\TienKung-Lab-g1-portability-20260906`；修改不得热覆盖现有远端 `TienKung-Lab-g1-progress-ab-20260908`。下方 A/B 记录继续描述既有运行，不代表本修复已经启动。
 
@@ -43,9 +43,9 @@ Status: 2026-09-08，按用户最新授权实施中。F1–F6/R1已落地，173�
 - [x] **阶段1，修reset及transition边界**：优先F1、F2、F3，先把现有反例写成有意义的行为测试，再修实现。F2/F3共享同一组终止原因、terminal观测和history检查，避免两个实现互相覆盖。提取可复用的小型Isaac验收入口，不把旧probe的 `ok=true` 当作合同通过。
 - [x] **阶段2，修配置与采样接线**：完成F4、F5、F6及R1；互不影响的实现/审查可并行，相关验证通过后按范围提交。R2贯穿两个阶段。保持原专家内容与其权重，原奖励数值、动作尺度/PD、命令、地形、终止阈值不调参。
 - [x] **阶段3，CPU回归**：运行新增反例及受影响的AMP更新/地形transition、T4/G1观测与机器人映射、稀疏奖励/终止/部分reset回归。实现触及共享深度环境或其他runner时，仅补相应相邻检查；无需重训学生或机械跑全库部署测试。证据记录实际命令、解释器和结果，不能沿用修复前通过数。
-- [ ] **阶段4，真实单卡Isaac集成**：nubot独立tmux中串行跑G1 mixed、T4 mixed、G1 flat各32env约500步，加关节脉冲、部分reset、horizon后无reset、真实物理失败与截断重叠；重跑8env高速足速度reset反例和T4非零初速度版本。逐项断言F1/F2/F3语义，而非仅检查finite/shape；核对最新scan/历史、terminal AMP以及固定Actor/Critic/AMP维度。仍保留诊断注入与自然rollout的区别。
-- [ ] **阶段5，真实双GPU集成**：同一候选，每rank32～64env、原24steps/update、2次PPO/AMP更新，使用当前完整17段数据；在不同rank制造不同reset/截断分布。确认第二次采样正常、没有因某rank无截断而遗漏collective、policy/discriminator和AMP normalizer一致、std下限生效、checkpoint与新metadata可保存加载、进程正常退出。只在tmux运行，不与其他probe并行初始化USD。
-- [ ] **阶段6，独立审查与交付**：审查最终差异、所有反例的修复前后结果、运行模块/资产SHA和保存配置；仅提交任务相关修改，使用中文里程碑commit。产出修复后manifest、原始JSON及日志，更新本计划状态。最终行为验收未完成时，不将G1学习问题标为已解决。
+- [x] **阶段4，真实单卡Isaac集成**：nubot独立tmux中串行跑G1 mixed、T4 mixed、G1 flat各32env约500步，加关节脉冲、部分reset、horizon后无reset、真实物理失败与截断重叠；重跑8env高速足速度reset反例和T4非零初速度版本。逐项断言F1/F2/F3语义，而非仅检查finite/shape；核对最新scan/历史、terminal AMP以及固定Actor/Critic/AMP维度。仍保留诊断注入与自然rollout的区别。
+- [x] **阶段5，真实双GPU集成**：同一候选，每rank32～64env、原24steps/update、2次PPO/AMP更新，使用当前完整17段数据；在不同rank制造不同reset/截断分布。确认第二次采样正常、没有因某rank无截断而遗漏collective、policy/discriminator和AMP normalizer一致、std下限生效、checkpoint与新metadata可保存加载、进程正常退出。只在tmux运行，不与其他probe并行初始化USD。
+- [x] **阶段6，独立审查与交付**：审查最终差异、所有反例的修复前后结果、运行模块/资产SHA和保存配置；仅提交任务相关修改，使用中文里程碑commit。产出修复后manifest、原始JSON及日志，更新本计划状态。最终行为验收未完成时，不将G1学习问题标为已解决。
 
 CPU入口沿用现有测试组合，具体按实际修改选择：`tests/test_amp_update_contract.py`、`tests/test_amp_curriculum_transition.py`、`tests/test_t4_observation_contracts.py`、`tests/test_robot_neutral_locomotion.py`、`tests/test_t4_sparse_reward_contracts.py`、`tests/test_collapse_recovery_contract.py`及新增reset/bootstrap/loader反例。本机使用已有 `D:\anaconda\envs\pytorch\python.exe` 做CPU检查；Isaac验收使用nubot的 `scripts/nubot_run.sh`，不安装本机Docker来替代它。
 
@@ -60,13 +60,15 @@ CPU入口沿用现有测试组合，具体按实际修改选择：`tests/test_am
 ### 本次实施记录（2026-09-08）
 
 - 修复前基线 `c2cb0440519cb6a35b54c5554da2a6774398d577`；原有未跟踪工件未纳入修改，快照为 `artifacts/portability/g1_core_fixes_20260908/stage0.json`。候选运行面 `/home/nubot/phn_ws/t4_train/TienKung-Lab-g1-core-fixes-20260908`，旧A/B的342文件SHA仍匹配冻结清单。
-- F1采用reset写入与forward后的直接PhysX COM世界速度，沿用实际feet body索引；没有额外物理步，也没有采用首步跳过方案。G1零初速首步EMA已实测0/0；T4非零初速、部分和连续reset通过。进一步用第二步速度注入明确覆盖非零真实差分。
+- F1采用reset写入与forward后的直接PhysX COM世界速度，沿用实际feet body索引；没有额外物理步，也没有采用首步跳过方案。G1零初速首步EMA已实测0/0；T4非零初速、部分和连续reset通过。第二步真实速度注入后，G1 EMA91.27771/91.27771、T4 EMA50.30573/36.34017，均与实际差分预测一致。
 - F2每个控制步写当前timeout快照；F3从有效torso/accel/fall_over/collapsed原因独立计算terminated。终点Critic用临时oldest→newest历史，保留scan/foot scan/immunity排列；reset后的真实历史仅追加一次。AMP只给纯截断加终点价值，所有done截断GAE。
 - F4读取原`.05`配置并约束scalar/log参数的初始化、加载、optimizer更新；这是policy action标准差，对G1 `.25`动作尺度为`.0125 rad`。F5站立/非heading任务为0；F6按frame duration插值、在有效连续起点区间均匀采样，短clip显式拒绝。未修改奖励系数、动作尺度、PD、地形、命令、终止阈值或专家。
 - 兼容范围：共享T4/G1前馈AMP教师。未提供终点Critic的旧AMP环境和循环Critic在初始化明确拒绝；深度蒸馏环境输出的是teacher targets，保持其原step接口且不构造PPO终点Critic。相邻深度观测测试通过，未重训学生。
 - CPU：指定`D:/anaconda/envs/pytorch/python.exe`运行173项受影响检查通过；8个最初失败用例及额外timeout基线反例已保存。flake8在3.12运行，本次无新增问题；3条既有告警已用基线源码独立复现。其余适用pre-commit hooks通过，旧pyupgrade用3.12单独运行以避开3.14兼容问题。
 - 真实单卡G1 mixed/T4 mixed/G1 flat各32env、500步加pulse、部分reset、horizon后3个无reset步骤、真实加速度失败与截断重叠均通过；Actor/Critic/AMP仍1997/2076/70与1937/2016/66。首轮末尾的根位置下移注入没有触发物理失败，明确保留为失败记录；修正为实际根速度+物理步后重跑通过，不改变正式阈值。
-- 工件位于 `artifacts/portability/g1_core_fixes_20260908/`。单卡/双卡是计算与开训合同验收，不是行走或越障能力证明。阶段5、独立review与正式开训完成后继续更新本记录。
+- 双GPU：每rank32env、24steps/update、完整17段专家、两次更新通过；rank0有截断而rank1无截断及其反向分布均通过。policy/discriminator/AMP normalizer跨rank差异全0，std最小值0.05020105，checkpoint含新transition metadata且两rank加载一致，退出码0。
+- 独立code-review的Standards/Spec两个轴均无阻断代码发现；补充R2审核确认无剩余开训门槛。实现提交`24bf0aa`。依赖逐文件blob核实1534modified中1533仅mode，唯一内容补丁assets.py；Python3.11.13、Torch2.5.1+cu124、NumPy1.26.4、IsaacSim5.1.0-rc.19，IsaacLab固定3d5ea25，均未改动。
+- 工件位于 `artifacts/portability/g1_core_fixes_20260908/`，入口`manifest.json`包含源码、依赖、资源、实际导入与完整验收索引。单卡/双卡是计算与开训合同验收，不是行走或越障能力证明。正式启动记录待填写。
 
 ## 既有运行：恢复 T4 速度与真实进展晋级 A/B
 

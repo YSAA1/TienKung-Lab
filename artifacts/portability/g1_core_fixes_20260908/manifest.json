@@ -1,0 +1,900 @@
+{
+  "scope": "F1-F6/R1-R2 core computational and training startup contract; no locomotion capability claim",
+  "baseline_commit": "c2cb0440519cb6a35b54c5554da2a6774398d577",
+  "implementation_commit": "24bf0aa22f3e53389b2abb7c6db0950bbbe927f8",
+  "candidate": "/home/nubot/phn_ws/t4_train/TienKung-Lab-g1-core-fixes-20260908",
+  "production_files": {
+    "legged_lab/locomotion/depth_env.py": "e5d0a4803b376baee9cdfd3e181b84c8e6752b61629daa446fb36b45c49121eb",
+    "legged_lab/locomotion/env.py": "fd75474ebb7cff4729a08c16809b171db329c3046157c06e652ff18dd2b9c883",
+    "legged_lab/mdp/rewards.py": "da6b16bb0d158084a93ea124d23eae2caf05db642af958ffba5c7ec994c7b856",
+    "rsl_rl/rsl_rl/algorithms/amp_ppo.py": "ebe22f71af20de872716b8f1a7b85e382abd4cde2a1ba14a43488bb6dd18abb0",
+    "rsl_rl/rsl_rl/modules/actor_critic.py": "ad943331bca2ea7b5e0959f906c63e5e41f76c05b6267f09282adf38b3bef63f",
+    "rsl_rl/rsl_rl/runners/amp_on_policy_runner.py": "60b235a226bf472fac6b3a30322f696835f5b7ef5652592e7dba2b0c8a463085",
+    "rsl_rl/rsl_rl/utils/motion_loader.py": "53c23472adae5c1541605445c9263b889f9a891430d0f775e7d464d4b1a78ce0"
+  },
+  "runtime": {
+    "python": "3.11.13",
+    "torch": "2.5.1+cu124",
+    "numpy": "1.26.4",
+    "isaac_sim": "5.1.0-rc.19+release.26219.9c81211b.gl",
+    "isaaclab_commit": "3d5ea25ddbcba05bef4c9acd1dacb9fa728b289b",
+    "assets_sha256": "3511aadf5054ca6832f5d3869c137d0c74a6bb9eeed0e2df1681a0435e8569e3",
+    "assets_patch": "diff --git a/source/isaaclab/isaaclab/utils/assets.py b/source/isaaclab/isaaclab/utils/assets.py\nold mode 100644\nnew mode 100755\nindex 2318a9be55..f940e5311b\n--- a/source/isaaclab/isaaclab/utils/assets.py\n+++ b/source/isaaclab/isaaclab/utils/assets.py\n@@ -21,7 +21,9 @@ from typing import Literal\n import carb\n import omni.client\n \n-NUCLEUS_ASSET_ROOT_DIR = carb.settings.get_settings().get(\"/persistent/isaac/asset_root/cloud\")\n+# NUCLEUS_ASSET_ROOT_DIR = carb.settings.get_settings().get(\"/persistent/isaac/asset_root/cloud\")\n+NUCLEUS_ASSET_ROOT_DIR = (\"/home/nubot/lyk_/isaacsim_assets/Assets/Isaac/4.5\")\n+\n \"\"\"Path to the root directory on the Nucleus Server.\"\"\"\n \n NVIDIA_NUCLEUS_DIR = f\"{NUCLEUS_ASSET_ROOT_DIR}/NVIDIA\"\n",
+    "dependency_audit": {
+      "commit": "3d5ea25ddbcba05bef4c9acd1dacb9fa728b289b",
+      "modified_count": 1534,
+      "mode_only_count": 1533,
+      "content_changes": [
+        [
+          "3",
+          "1",
+          "source/isaaclab/isaaclab/utils/assets.py"
+        ]
+      ],
+      "assets_path": "/home/nubot/IsaacLab/source/isaaclab/isaaclab/utils/assets.py",
+      "assets_sha256": "3511aadf5054ca6832f5d3869c137d0c74a6bb9eeed0e2df1681a0435e8569e3",
+      "assets_patch_sha256": "f97745a900a344d447d280876cb5d575068897df88e4aa185062b8b3f941e6b0"
+    },
+    "imports": {
+      "legged_lab": {
+        "file": "/home/nubot/phn_ws/t4_train/TienKung-Lab-g1-core-fixes-20260908/legged_lab/__init__.py",
+        "sha256": "2d616bb1b3c6289455bdf016ced295557c725d81cad92b6e86b2252a4bac7dcf"
+      },
+      "legged_lab.envs": {
+        "file": "/home/nubot/phn_ws/t4_train/TienKung-Lab-g1-core-fixes-20260908/legged_lab/envs/__init__.py",
+        "sha256": "dcdf5eda5a6f797c316a6157983e1af454a6c7be4ec6bbbaa2b1011afe0e5da5"
+      },
+      "legged_lab.locomotion.env": {
+        "file": "/home/nubot/phn_ws/t4_train/TienKung-Lab-g1-core-fixes-20260908/legged_lab/locomotion/env.py",
+        "sha256": "fd75474ebb7cff4729a08c16809b171db329c3046157c06e652ff18dd2b9c883"
+      },
+      "legged_lab.locomotion.teacher_cfg": {
+        "file": "/home/nubot/phn_ws/t4_train/TienKung-Lab-g1-core-fixes-20260908/legged_lab/locomotion/teacher_cfg.py",
+        "sha256": "b54a7cce7238068aa5047e41f3ba459e69be42c329f05278171f3816c328300d"
+      },
+      "legged_lab.locomotion.amp_features": {
+        "file": "/home/nubot/phn_ws/t4_train/TienKung-Lab-g1-core-fixes-20260908/legged_lab/locomotion/amp_features.py",
+        "sha256": "6a07d246ce60fee40cea87693aebfa23aae4b8fddf390a9e985ea7a95cb9f2cd"
+      },
+      "legged_lab.locomotion.schemas": {
+        "file": "/home/nubot/phn_ws/t4_train/TienKung-Lab-g1-core-fixes-20260908/legged_lab/locomotion/schemas.py",
+        "sha256": "a2a3f8c7c20c4a44bfb2e60ffb44d9f799cea8d614357e6dad925716b0eeffd7"
+      },
+      "legged_lab.mdp.rewards": {
+        "file": "/home/nubot/phn_ws/t4_train/TienKung-Lab-g1-core-fixes-20260908/legged_lab/mdp/rewards.py",
+        "sha256": "da6b16bb0d158084a93ea124d23eae2caf05db642af958ffba5c7ec994c7b856"
+      },
+      "legged_lab.envs.g1.teacher_cfg": {
+        "file": "/home/nubot/phn_ws/t4_train/TienKung-Lab-g1-core-fixes-20260908/legged_lab/envs/g1/teacher_cfg.py",
+        "sha256": "48833b6ea964822a04ac5b32c3b36954e615e1e6294f4f37808588e3c4840a6b"
+      },
+      "legged_lab.envs.t4.teacher_cfg": {
+        "file": "/home/nubot/phn_ws/t4_train/TienKung-Lab-g1-core-fixes-20260908/legged_lab/envs/t4/teacher_cfg.py",
+        "sha256": "772c3398661224384516fbea1c75408a47eb1c4d3a3af3da0da9ac3d79cc3e72"
+      },
+      "isaaclab.envs.mdp.commands.velocity_command": {
+        "file": "/home/nubot/IsaacLab/source/isaaclab/isaaclab/envs/mdp/commands/velocity_command.py",
+        "sha256": "70ea4d30c9b90de9dbd9bf4e2eaacf3d3907da08a7465c4249e24b96cf8aa412"
+      },
+      "isaaclab.sensors.ray_caster.ray_caster": {
+        "file": "/home/nubot/IsaacLab/source/isaaclab/isaaclab/sensors/ray_caster/ray_caster.py",
+        "sha256": "791502f24885070ad6b6ed536142dece46de4855b0e555d0da5b46ffc908d202"
+      },
+      "isaaclab.utils.assets": {
+        "file": "/home/nubot/IsaacLab/source/isaaclab/isaaclab/utils/assets.py",
+        "sha256": "3511aadf5054ca6832f5d3869c137d0c74a6bb9eeed0e2df1681a0435e8569e3"
+      },
+      "rsl_rl.algorithms.amp_ppo": {
+        "file": "/home/nubot/phn_ws/t4_train/TienKung-Lab-g1-core-fixes-20260908/rsl_rl/rsl_rl/algorithms/amp_ppo.py",
+        "sha256": "ebe22f71af20de872716b8f1a7b85e382abd4cde2a1ba14a43488bb6dd18abb0"
+      }
+    }
+  },
+  "assets": {
+    "g1": {
+      "asset_path": "/home/nubot/phn_ws/t4_train/TienKung-Lab-g1-core-fixes-20260908/legged_lab/assets/unitree_g1/urdf/g1_29dof_rev_1_0.urdf",
+      "usd_dir": null,
+      "usd_file_name": null,
+      "force_usd_conversion": false,
+      "fix_base": false,
+      "merge_fixed_joints": true,
+      "replace_cylinders_with_capsules": true,
+      "self_collision": false,
+      "class": "legged_lab.assets.unitree_g1.official_velocity_g1.UnitreeUrdfFileCfg",
+      "class_source": "/home/nubot/phn_ws/t4_train/TienKung-Lab-g1-core-fixes-20260908/legged_lab/assets/unitree_g1/official_velocity_g1.py",
+      "asset_path_sha256": "4aa267edc4eb2458f43c15efb4a29590006112fa188005e8c5a79867f46eb629"
+    },
+    "t4": {
+      "asset_path": "/home/nubot/phn_ws/t4_train/TienKung-Lab-g1-core-fixes-20260908/legged_lab/assets/t4/urdf/t4_std.urdf",
+      "usd_dir": null,
+      "usd_file_name": null,
+      "force_usd_conversion": true,
+      "fix_base": false,
+      "merge_fixed_joints": true,
+      "replace_cylinders_with_capsules": true,
+      "self_collision": false,
+      "class": "isaaclab.sim.spawners.from_files.from_files_cfg.UrdfFileCfg",
+      "class_source": "/home/nubot/IsaacLab/source/isaaclab/isaaclab/sim/spawners/from_files/from_files_cfg.py",
+      "asset_path_sha256": "693723248099bf15ddd5ca9f5182487360f087e6aa964acd31d5fa7945ccb741"
+    }
+  },
+  "experts": {
+    "file": "/home/nubot/phn_ws/t4_train/TienKung-Lab-g1-core-fixes-20260908/legged_lab/envs/g1/datasets/motion_amp_expert_t4_rob2rob_full17_v1/_manifest.json",
+    "count": 17,
+    "clips": [
+      {
+        "file": "/home/nubot/phn_ws/t4_train/TienKung-Lab-g1-core-fixes-20260908/legged_lab/envs/g1/datasets/motion_amp_expert_t4_rob2rob_full17_v1/g1_from_B10_-__Walk_turn_left_45_stageii_0000_0178.txt",
+        "sha256": "abbead7aa48037f3a10e0f888b8bbacc163a068992c98327ffc96841c61a0473",
+        "manifest_metadata": {
+          "duration_s": 5.933333333333334,
+          "speed_mean_m_s": 0.8007249233930319,
+          "forward_speed_mean_m_s": 0.7914554346044823,
+          "speed_p10_p50_p90_m_s": [
+            0.15231723899301003,
+            0.9356461869256923,
+            1.080429369141779
+          ],
+          "fraction_speed_below_0_1": 0.07303370786516854,
+          "hard_joint_limit_excess_rad": 0.0,
+          "max_joint_velocity_limit_ratio": 0.45064524020145985,
+          "lowest_sole_m": -0.012546287413609494,
+          "highest_sole_m": 0.12403232187039256,
+          "max_root_tilt_rad": 0.2567412328973834,
+          "support_point_speed_proxy_p50_p95_m_s": [
+            0.15210493258764904,
+            0.4701743140125084
+          ],
+          "max_sole_position_error_m": 6.374465177893082e-07,
+          "max_wrist_position_error_m": 0.020494523569532738,
+          "max_sole_orientation_error_rad": 4.6658337773405416e-05,
+          "motion_class": "turn",
+          "source_start": 0,
+          "source_stop": 178,
+          "source": "B10_-__Walk_turn_left_45_stageii",
+          "full_stride_cycles": null,
+          "lateral_speed_mean_m_s": 0.07604195960578783,
+          "yaw_rate_mean_rad_s": 0.015573680806772471,
+          "root_vertical_shift_m": 0.04780025443533523,
+          "sha256": "abbead7aa48037f3a10e0f888b8bbacc163a068992c98327ffc96841c61a0473",
+          "motion_weight": 0.1142857142857143,
+          "frames": 178
+        }
+      },
+      {
+        "file": "/home/nubot/phn_ws/t4_train/TienKung-Lab-g1-core-fixes-20260908/legged_lab/envs/g1/datasets/motion_amp_expert_t4_rob2rob_full17_v1/g1_from_B13_-__Walk_turn_right_90_stageii_0000_0167.txt",
+        "sha256": "25d20e7bc7c4413e89b2e733a198e19a385be87e5eb6d117bdc17dabcde4d7c4",
+        "manifest_metadata": {
+          "duration_s": 5.566666666666666,
+          "speed_mean_m_s": 0.8887132034960532,
+          "forward_speed_mean_m_s": 0.8844594925281714,
+          "speed_p10_p50_p90_m_s": [
+            0.5204194629390095,
+            0.9858424308573833,
+            1.163128693979638
+          ],
+          "fraction_speed_below_0_1": 0.017964071856287425,
+          "hard_joint_limit_excess_rad": 0.0,
+          "max_joint_velocity_limit_ratio": 0.35648059656652065,
+          "lowest_sole_m": -0.010658541656617903,
+          "highest_sole_m": 0.110533543825663,
+          "max_root_tilt_rad": 0.25210765298922866,
+          "support_point_speed_proxy_p50_p95_m_s": [
+            0.11750522963264358,
+            0.4786781560333124
+          ],
+          "max_sole_position_error_m": 1.970872317717475e-06,
+          "max_wrist_position_error_m": 0.01926560055580057,
+          "max_sole_orientation_error_rad": 0.00011330179470752717,
+          "motion_class": "turn",
+          "source_start": 0,
+          "source_stop": 167,
+          "source": "B13_-__Walk_turn_right_90_stageii",
+          "full_stride_cycles": null,
+          "lateral_speed_mean_m_s": 0.02406676299327394,
+          "yaw_rate_mean_rad_s": -0.2217266653706555,
+          "root_vertical_shift_m": 0.04177609211739447,
+          "sha256": "25d20e7bc7c4413e89b2e733a198e19a385be87e5eb6d117bdc17dabcde4d7c4",
+          "motion_weight": 0.1142857142857143,
+          "frames": 167
+        }
+      },
+      {
+        "file": "/home/nubot/phn_ws/t4_train/TienKung-Lab-g1-core-fixes-20260908/legged_lab/envs/g1/datasets/motion_amp_expert_t4_rob2rob_full17_v1/g1_from_B14_-__Walk_turn_right_45_t2_stageii_0000_0173.txt",
+        "sha256": "5899b5fef712812232de55e5c933c361a518ff0df8bcb41ecc61c11ba7e8fa12",
+        "manifest_metadata": {
+          "duration_s": 5.766666666666667,
+          "speed_mean_m_s": 0.9246931588301786,
+          "forward_speed_mean_m_s": 0.9178849939394945,
+          "speed_p10_p50_p90_m_s": [
+            0.17263796398970777,
+            1.061117844894961,
+            1.2185241533494808
+          ],
+          "fraction_speed_below_0_1": 0.07514450867052024,
+          "hard_joint_limit_excess_rad": 0.0,
+          "max_joint_velocity_limit_ratio": 0.3740763754520923,
+          "lowest_sole_m": -0.011519911637503957,
+          "highest_sole_m": 0.11792119693263446,
+          "max_root_tilt_rad": 0.27132381518083293,
+          "support_point_speed_proxy_p50_p95_m_s": [
+            0.419800069527821,
+            0.5293262958850932
+          ],
+          "max_sole_position_error_m": 1.4411091544855475e-06,
+          "max_wrist_position_error_m": 0.023589035093675857,
+          "max_sole_orientation_error_rad": 7.828967058789826e-05,
+          "motion_class": "turn",
+          "source_start": 0,
+          "source_stop": 173,
+          "source": "B14_-__Walk_turn_right_45_t2_stageii",
+          "full_stride_cycles": null,
+          "lateral_speed_mean_m_s": 0.07952302358675167,
+          "yaw_rate_mean_rad_s": -0.13612596312254843,
+          "root_vertical_shift_m": 0.05403389123740995,
+          "sha256": "5899b5fef712812232de55e5c933c361a518ff0df8bcb41ecc61c11ba7e8fa12",
+          "motion_weight": 0.1142857142857143,
+          "frames": 173
+        }
+      },
+      {
+        "file": "/home/nubot/phn_ws/t4_train/TienKung-Lab-g1-core-fixes-20260908/legged_lab/envs/g1/datasets/motion_amp_expert_t4_rob2rob_full17_v1/g1_from_B15_-__Walk_turn_around_stageii_0000_0224.txt",
+        "sha256": "92d743f573bbebaaf1d12d991b92da5b6a6067bdcc5db08b051ea7864077aa5f",
+        "manifest_metadata": {
+          "duration_s": 7.466666666666667,
+          "speed_mean_m_s": 0.7914145672251459,
+          "forward_speed_mean_m_s": 0.7614211450884795,
+          "speed_p10_p50_p90_m_s": [
+            0.13517776148140245,
+            0.9132938485901125,
+            1.1770789239008763
+          ],
+          "fraction_speed_below_0_1": 0.07589285714285714,
+          "hard_joint_limit_excess_rad": 0.0,
+          "max_joint_velocity_limit_ratio": 0.5115072731930533,
+          "lowest_sole_m": -0.006055734741628553,
+          "highest_sole_m": 0.10684117536698395,
+          "max_root_tilt_rad": 0.3331798374625171,
+          "support_point_speed_proxy_p50_p95_m_s": [
+            0.3356780709861359,
+            0.5325866955478203
+          ],
+          "max_sole_position_error_m": 0.0007670366980692352,
+          "max_wrist_position_error_m": 0.022885330343832794,
+          "max_sole_orientation_error_rad": 0.048440423913718625,
+          "motion_class": "turn",
+          "source_start": 0,
+          "source_stop": 224,
+          "source": "B15_-__Walk_turn_around_stageii",
+          "full_stride_cycles": null,
+          "lateral_speed_mean_m_s": 0.06373299666282294,
+          "yaw_rate_mean_rad_s": 0.3911950394673201,
+          "root_vertical_shift_m": 0.04500183745893551,
+          "sha256": "92d743f573bbebaaf1d12d991b92da5b6a6067bdcc5db08b051ea7864077aa5f",
+          "motion_weight": 0.1142857142857143,
+          "frames": 224
+        }
+      },
+      {
+        "file": "/home/nubot/phn_ws/t4_train/TienKung-Lab-g1-core-fixes-20260908/legged_lab/envs/g1/datasets/motion_amp_expert_t4_rob2rob_full17_v1/g1_from_B4_-_Stand_to_Walk_backwards_stageii_0000_0137.txt",
+        "sha256": "058f8eb6ae763c226f23c0ca4b376f8450c3b824b55eb8af3d72a42295d90962",
+        "manifest_metadata": {
+          "duration_s": 4.566666666666666,
+          "speed_mean_m_s": 0.7311965380440866,
+          "forward_speed_mean_m_s": -0.7277381387041362,
+          "speed_p10_p50_p90_m_s": [
+            0.17379201027431926,
+            0.816688667078887,
+            1.0601660597621032
+          ],
+          "fraction_speed_below_0_1": 0.08029197080291971,
+          "hard_joint_limit_excess_rad": 0.0,
+          "max_joint_velocity_limit_ratio": 0.8104993246775246,
+          "lowest_sole_m": -0.013757542161512034,
+          "highest_sole_m": 0.09503849859956892,
+          "max_root_tilt_rad": 0.24281116701565414,
+          "support_point_speed_proxy_p50_p95_m_s": [
+            0.19556539800962672,
+            0.4821810852989819
+          ],
+          "max_sole_position_error_m": 0.004296303099045173,
+          "max_wrist_position_error_m": 0.018053361219592876,
+          "max_sole_orientation_error_rad": 0.3312356533966618,
+          "motion_class": "walk_backward",
+          "source_start": 0,
+          "source_stop": 137,
+          "source": "B4_-_Stand_to_Walk_backwards_stageii",
+          "full_stride_cycles": null,
+          "lateral_speed_mean_m_s": -0.016897130596791387,
+          "yaw_rate_mean_rad_s": -0.000499467304045361,
+          "root_vertical_shift_m": 0.0563745853028909,
+          "sha256": "058f8eb6ae763c226f23c0ca4b376f8450c3b824b55eb8af3d72a42295d90962",
+          "motion_weight": 0.6,
+          "frames": 137
+        }
+      },
+      {
+        "file": "/home/nubot/phn_ws/t4_train/TienKung-Lab-g1-core-fixes-20260908/legged_lab/envs/g1/datasets/motion_amp_expert_t4_rob2rob_full17_v1/g1_from_B9_-__Walk_turn_left_90_stageii_0000_0150.txt",
+        "sha256": "e9c0a217fa2653d815f068b29fdbe6a391b1a265e1a103fb79fb9eea7809c66f",
+        "manifest_metadata": {
+          "duration_s": 5.0,
+          "speed_mean_m_s": 0.8163547175642414,
+          "forward_speed_mean_m_s": 0.8106201551759981,
+          "speed_p10_p50_p90_m_s": [
+            0.4543757585431771,
+            0.8991600164724489,
+            1.0387205721221286
+          ],
+          "fraction_speed_below_0_1": 0.0,
+          "hard_joint_limit_excess_rad": 0.0,
+          "max_joint_velocity_limit_ratio": 0.5154975617721785,
+          "lowest_sole_m": -0.009523625452285713,
+          "highest_sole_m": 0.09905097508608016,
+          "max_root_tilt_rad": 0.2978546564795764,
+          "support_point_speed_proxy_p50_p95_m_s": [
+            0.11643498598582663,
+            0.38225278828467585
+          ],
+          "max_sole_position_error_m": 0.0030131986095218847,
+          "max_wrist_position_error_m": 0.021459046492008037,
+          "max_sole_orientation_error_rad": 0.040792947197945316,
+          "motion_class": "turn",
+          "source_start": 0,
+          "source_stop": 150,
+          "source": "B9_-__Walk_turn_left_90_stageii",
+          "full_stride_cycles": null,
+          "lateral_speed_mean_m_s": 0.07550426691121348,
+          "yaw_rate_mean_rad_s": 0.26464834080597116,
+          "root_vertical_shift_m": 0.04400420132109896,
+          "sha256": "e9c0a217fa2653d815f068b29fdbe6a391b1a265e1a103fb79fb9eea7809c66f",
+          "motion_weight": 0.1142857142857143,
+          "frames": 150
+        }
+      },
+      {
+        "file": "/home/nubot/phn_ws/t4_train/TienKung-Lab-g1-core-fixes-20260908/legged_lab/envs/g1/datasets/motion_amp_expert_t4_rob2rob_full17_v1/g1_from_t4_jog_backward_0000_0170.txt",
+        "sha256": "0ccce07ed3658c94bea3c1931bbc8fbb3b9d22c70fb22ef23dfdcbc2784cb7df",
+        "manifest_metadata": {
+          "duration_s": 5.666666666666667,
+          "speed_mean_m_s": 1.1512211542860475,
+          "forward_speed_mean_m_s": -1.1433670856562468,
+          "speed_p10_p50_p90_m_s": [
+            0.06394808449743732,
+            1.4119002280508761,
+            1.9444090436487917
+          ],
+          "fraction_speed_below_0_1": 0.12941176470588237,
+          "hard_joint_limit_excess_rad": 0.0,
+          "max_joint_velocity_limit_ratio": 0.718916888914173,
+          "lowest_sole_m": -0.0019716075384333285,
+          "highest_sole_m": 0.18593790274272648,
+          "max_root_tilt_rad": 0.2654001645268566,
+          "support_point_speed_proxy_p50_p95_m_s": [
+            0.0310554417360954,
+            0.23282942470894716
+          ],
+          "max_sole_position_error_m": 0.003038306518461677,
+          "max_wrist_position_error_m": 0.029667098233451643,
+          "max_sole_orientation_error_rad": 0.08375840969068225,
+          "motion_class": "jog",
+          "source_start": 0,
+          "source_stop": 170,
+          "source": "t4_jog_backward",
+          "full_stride_cycles": null,
+          "lateral_speed_mean_m_s": -0.03723267632273741,
+          "yaw_rate_mean_rad_s": 0.02130808893986942,
+          "root_vertical_shift_m": -0.03699718545163378,
+          "sha256": "0ccce07ed3658c94bea3c1931bbc8fbb3b9d22c70fb22ef23dfdcbc2784cb7df",
+          "motion_weight": 0.15,
+          "frames": 170
+        }
+      },
+      {
+        "file": "/home/nubot/phn_ws/t4_train/TienKung-Lab-g1-core-fixes-20260908/legged_lab/envs/g1/datasets/motion_amp_expert_t4_rob2rob_full17_v1/g1_from_t4_jog_forward_0000_0151.txt",
+        "sha256": "aea3d58abf9d616a19f9da293849d79e9c7540028cfc7d5eea5e1fab86e06c77",
+        "manifest_metadata": {
+          "duration_s": 5.033333333333333,
+          "speed_mean_m_s": 1.3008572698056438,
+          "forward_speed_mean_m_s": 1.2886240406252893,
+          "speed_p10_p50_p90_m_s": [
+            0.120555426756581,
+            1.6084951778675067,
+            2.129589837193382
+          ],
+          "fraction_speed_below_0_1": 0.08609271523178808,
+          "hard_joint_limit_excess_rad": 0.0,
+          "max_joint_velocity_limit_ratio": 0.7603420667418255,
+          "lowest_sole_m": 0.0008955506034748874,
+          "highest_sole_m": 0.12498223323559779,
+          "max_root_tilt_rad": 0.45505288517866466,
+          "support_point_speed_proxy_p50_p95_m_s": [
+            0.0636447615042582,
+            0.2286949279758018
+          ],
+          "max_sole_position_error_m": 0.0011839807007390398,
+          "max_wrist_position_error_m": 0.03971003787456319,
+          "max_sole_orientation_error_rad": 0.09316883988755467,
+          "motion_class": "jog",
+          "source_start": 0,
+          "source_stop": 151,
+          "source": "t4_jog_forward",
+          "full_stride_cycles": null,
+          "lateral_speed_mean_m_s": -0.0677368846240975,
+          "yaw_rate_mean_rad_s": 0.01438205282816103,
+          "root_vertical_shift_m": 0.03902101292334351,
+          "sha256": "aea3d58abf9d616a19f9da293849d79e9c7540028cfc7d5eea5e1fab86e06c77",
+          "motion_weight": 0.15,
+          "frames": 151
+        }
+      },
+      {
+        "file": "/home/nubot/phn_ws/t4_train/TienKung-Lab-g1-core-fixes-20260908/legged_lab/envs/g1/datasets/motion_amp_expert_t4_rob2rob_full17_v1/g1_from_t4_jog_left_0000_0206.txt",
+        "sha256": "a0ddb3e7474784ec70495ea8d4903fd6d3b82efc2d6156af66d3abc7a0b4335c",
+        "manifest_metadata": {
+          "duration_s": 6.866666666666666,
+          "speed_mean_m_s": 1.4721716006263308,
+          "forward_speed_mean_m_s": 1.4533831201062868,
+          "speed_p10_p50_p90_m_s": [
+            0.7000766666773357,
+            1.5949001277934065,
+            1.8483454802868333
+          ],
+          "fraction_speed_below_0_1": 0.038834951456310676,
+          "hard_joint_limit_excess_rad": 0.0,
+          "max_joint_velocity_limit_ratio": 0.8242595301497838,
+          "lowest_sole_m": -0.020948711192775245,
+          "highest_sole_m": 0.26512488488965674,
+          "max_root_tilt_rad": 0.3598005530482505,
+          "support_point_speed_proxy_p50_p95_m_s": [
+            0.11963978512975114,
+            0.37848536723870385
+          ],
+          "max_sole_position_error_m": 0.0002499787381559138,
+          "max_wrist_position_error_m": 0.040015587789804304,
+          "max_sole_orientation_error_rad": 0.13252904137360128,
+          "motion_class": "jog",
+          "source_start": 0,
+          "source_stop": 206,
+          "source": "t4_jog_left",
+          "full_stride_cycles": null,
+          "lateral_speed_mean_m_s": -0.1242548842923802,
+          "yaw_rate_mean_rad_s": 0.9966607997892211,
+          "root_vertical_shift_m": 0.018219784030479174,
+          "sha256": "a0ddb3e7474784ec70495ea8d4903fd6d3b82efc2d6156af66d3abc7a0b4335c",
+          "motion_weight": 0.15,
+          "frames": 206
+        }
+      },
+      {
+        "file": "/home/nubot/phn_ws/t4_train/TienKung-Lab-g1-core-fixes-20260908/legged_lab/envs/g1/datasets/motion_amp_expert_t4_rob2rob_full17_v1/g1_from_t4_jog_right_0000_0226.txt",
+        "sha256": "9cf50001c896825f55e921385793effa197544321389b2a216df2dba62a66d46",
+        "manifest_metadata": {
+          "duration_s": 7.533333333333333,
+          "speed_mean_m_s": 1.424438614958442,
+          "forward_speed_mean_m_s": 1.4088517703262047,
+          "speed_p10_p50_p90_m_s": [
+            0.6952133723717338,
+            1.5366792296786618,
+            1.7603299706484206
+          ],
+          "fraction_speed_below_0_1": 0.022123893805309734,
+          "hard_joint_limit_excess_rad": 0.0,
+          "max_joint_velocity_limit_ratio": 0.6854701590884925,
+          "lowest_sole_m": -0.0019771871082858534,
+          "highest_sole_m": 0.10800283496677959,
+          "max_root_tilt_rad": 0.3365426862310522,
+          "support_point_speed_proxy_p50_p95_m_s": [
+            0.10449179140371487,
+            0.38615742450616597
+          ],
+          "max_sole_position_error_m": 0.0014009500273169028,
+          "max_wrist_position_error_m": 0.039555479881942246,
+          "max_sole_orientation_error_rad": 0.09332196168030353,
+          "motion_class": "jog",
+          "source_start": 0,
+          "source_stop": 226,
+          "source": "t4_jog_right",
+          "full_stride_cycles": null,
+          "lateral_speed_mean_m_s": 0.06475324031644963,
+          "yaw_rate_mean_rad_s": -0.9205615696624627,
+          "root_vertical_shift_m": 0.02116655471466032,
+          "sha256": "9cf50001c896825f55e921385793effa197544321389b2a216df2dba62a66d46",
+          "motion_weight": 0.15,
+          "frames": 226
+        }
+      },
+      {
+        "file": "/home/nubot/phn_ws/t4_train/TienKung-Lab-g1-core-fixes-20260908/legged_lab/envs/g1/datasets/motion_amp_expert_t4_rob2rob_full17_v1/g1_from_t4_left_rotate_0000_0231.txt",
+        "sha256": "5006a138cd0254db40506741bfcf3703fc6f3ba2c552cb8863308a67ab30eed9",
+        "manifest_metadata": {
+          "duration_s": 7.7,
+          "speed_mean_m_s": 0.16146880849400266,
+          "forward_speed_mean_m_s": 0.07169709135103508,
+          "speed_p10_p50_p90_m_s": [
+            0.04361059908369515,
+            0.16548828481078304,
+            0.287958587087312
+          ],
+          "fraction_speed_below_0_1": 0.329004329004329,
+          "hard_joint_limit_excess_rad": 0.0,
+          "max_joint_velocity_limit_ratio": 0.26980294071456146,
+          "lowest_sole_m": 0.0005957579686750774,
+          "highest_sole_m": 0.03956787103074548,
+          "max_root_tilt_rad": 0.13143676574654597,
+          "support_point_speed_proxy_p50_p95_m_s": [
+            0.03782275971258957,
+            0.25259434405161857
+          ],
+          "max_sole_position_error_m": 1.3900621714127083e-06,
+          "max_wrist_position_error_m": 0.012153761238060697,
+          "max_sole_orientation_error_rad": 6.121396650796399e-05,
+          "motion_class": "turn",
+          "source_start": 0,
+          "source_stop": 231,
+          "source": "t4_left_rotate",
+          "full_stride_cycles": null,
+          "lateral_speed_mean_m_s": -0.04957921225212691,
+          "yaw_rate_mean_rad_s": 1.6401807729223516,
+          "root_vertical_shift_m": 0.014331076969839835,
+          "sha256": "5006a138cd0254db40506741bfcf3703fc6f3ba2c552cb8863308a67ab30eed9",
+          "motion_weight": 0.1142857142857143,
+          "frames": 231
+        }
+      },
+      {
+        "file": "/home/nubot/phn_ws/t4_train/TienKung-Lab-g1-core-fixes-20260908/legged_lab/envs/g1/datasets/motion_amp_expert_t4_rob2rob_full17_v1/g1_from_t4_right_rotate_0000_0193.txt",
+        "sha256": "436745a8017f2df9a325c1292ad52d10535abdeefea605d36b81df76c7e4ca71",
+        "manifest_metadata": {
+          "duration_s": 6.433333333333334,
+          "speed_mean_m_s": 0.13371166679821517,
+          "forward_speed_mean_m_s": 0.0004479635463981668,
+          "speed_p10_p50_p90_m_s": [
+            0.04181989915789292,
+            0.1385949861547203,
+            0.2083252606469744
+          ],
+          "fraction_speed_below_0_1": 0.33678756476683935,
+          "hard_joint_limit_excess_rad": 0.0,
+          "max_joint_velocity_limit_ratio": 0.2064212579008622,
+          "lowest_sole_m": 0.002184186925578491,
+          "highest_sole_m": 0.03339332342860197,
+          "max_root_tilt_rad": 0.11814044551183922,
+          "support_point_speed_proxy_p50_p95_m_s": [
+            0.03729166203763422,
+            0.20669209483935874
+          ],
+          "max_sole_position_error_m": 1.5057570369266422e-06,
+          "max_wrist_position_error_m": 0.012025953504962819,
+          "max_sole_orientation_error_rad": 6.673065993514205e-05,
+          "motion_class": "turn",
+          "source_start": 0,
+          "source_stop": 193,
+          "source": "t4_right_rotate",
+          "full_stride_cycles": null,
+          "lateral_speed_mean_m_s": 0.042418227990800625,
+          "yaw_rate_mean_rad_s": -1.4847145318499586,
+          "root_vertical_shift_m": 0.015987267867919416,
+          "sha256": "436745a8017f2df9a325c1292ad52d10535abdeefea605d36b81df76c7e4ca71",
+          "motion_weight": 0.1142857142857143,
+          "frames": 193
+        }
+      },
+      {
+        "file": "/home/nubot/phn_ws/t4_train/TienKung-Lab-g1-core-fixes-20260908/legged_lab/envs/g1/datasets/motion_amp_expert_t4_rob2rob_full17_v1/g1_from_t4_side_left_0000_0137.txt",
+        "sha256": "04bf1a82e18cfa39d7d0a92ba4d7cd4a29bb7bf51175cf02216b063e8ad69295",
+        "manifest_metadata": {
+          "duration_s": 4.566666666666666,
+          "speed_mean_m_s": 0.33326859361737765,
+          "forward_speed_mean_m_s": 0.03813979819163781,
+          "speed_p10_p50_p90_m_s": [
+            0.1379081612639288,
+            0.2789000368092734,
+            0.594616353448012
+          ],
+          "fraction_speed_below_0_1": 0.06569343065693431,
+          "hard_joint_limit_excess_rad": 0.0,
+          "max_joint_velocity_limit_ratio": 0.5710986543661668,
+          "lowest_sole_m": 0.0015120569197616023,
+          "highest_sole_m": 0.0856612256470629,
+          "max_root_tilt_rad": 0.14559887266927932,
+          "support_point_speed_proxy_p50_p95_m_s": [
+            0.06930995043992874,
+            0.19828456392420654
+          ],
+          "max_sole_position_error_m": 0.0016903045785414056,
+          "max_wrist_position_error_m": 0.012263668795175925,
+          "max_sole_orientation_error_rad": 0.10069636118178206,
+          "motion_class": "walk_lateral",
+          "source_start": 0,
+          "source_stop": 137,
+          "source": "t4_side_left",
+          "full_stride_cycles": null,
+          "lateral_speed_mean_m_s": 0.32593578580979454,
+          "yaw_rate_mean_rad_s": 0.029651324387988637,
+          "root_vertical_shift_m": 0.03959730389452472,
+          "sha256": "04bf1a82e18cfa39d7d0a92ba4d7cd4a29bb7bf51175cf02216b063e8ad69295",
+          "motion_weight": 0.26666666666666666,
+          "frames": 137
+        }
+      },
+      {
+        "file": "/home/nubot/phn_ws/t4_train/TienKung-Lab-g1-core-fixes-20260908/legged_lab/envs/g1/datasets/motion_amp_expert_t4_rob2rob_full17_v1/g1_from_t4_side_right_0000_0150.txt",
+        "sha256": "bbcec641d0b22b87b016ff183226b1efdc62f7cab9dc52f328e61f75b8cb4a5d",
+        "manifest_metadata": {
+          "duration_s": 5.0,
+          "speed_mean_m_s": 0.28063832191774957,
+          "forward_speed_mean_m_s": 0.05104029074700624,
+          "speed_p10_p50_p90_m_s": [
+            0.0822713115723865,
+            0.23706235054373337,
+            0.5532981774990572
+          ],
+          "fraction_speed_below_0_1": 0.12,
+          "hard_joint_limit_excess_rad": 0.0,
+          "max_joint_velocity_limit_ratio": 0.3056668585253358,
+          "lowest_sole_m": -0.00120587337856676,
+          "highest_sole_m": 0.06611911473043013,
+          "max_root_tilt_rad": 0.12885416006514347,
+          "support_point_speed_proxy_p50_p95_m_s": [
+            0.07018476639892218,
+            0.2059003717227596
+          ],
+          "max_sole_position_error_m": 0.0017656365809961925,
+          "max_wrist_position_error_m": 0.012062507280595642,
+          "max_sole_orientation_error_rad": 0.05118551596513178,
+          "motion_class": "walk_lateral",
+          "source_start": 0,
+          "source_stop": 150,
+          "source": "t4_side_right",
+          "full_stride_cycles": null,
+          "lateral_speed_mean_m_s": -0.26946836852525724,
+          "yaw_rate_mean_rad_s": -0.03917481403680702,
+          "root_vertical_shift_m": 0.03365002711562131,
+          "sha256": "bbcec641d0b22b87b016ff183226b1efdc62f7cab9dc52f328e61f75b8cb4a5d",
+          "motion_weight": 0.26666666666666666,
+          "frames": 150
+        }
+      },
+      {
+        "file": "/home/nubot/phn_ws/t4_train/TienKung-Lab-g1-core-fixes-20260908/legged_lab/envs/g1/datasets/motion_amp_expert_t4_rob2rob_full17_v1/g1_from_t4_stand_0000_0149.txt",
+        "sha256": "c175cae169e1c6366980c280eac72b07ba15c5a552b46300eb676bda2fb81f5d",
+        "manifest_metadata": {
+          "duration_s": 4.966666666666667,
+          "speed_mean_m_s": 0.0,
+          "forward_speed_mean_m_s": 0.0,
+          "speed_p10_p50_p90_m_s": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "fraction_speed_below_0_1": 1.0,
+          "hard_joint_limit_excess_rad": 0.0,
+          "max_joint_velocity_limit_ratio": 5.467744902496283e-06,
+          "lowest_sole_m": 0.00300000000000008,
+          "highest_sole_m": 0.003000093907863163,
+          "max_root_tilt_rad": 0.0,
+          "support_point_speed_proxy_p50_p95_m_s": [
+            0.0,
+            0.0
+          ],
+          "max_sole_position_error_m": 1.4631176349899578e-08,
+          "max_wrist_position_error_m": 0.011949433820909027,
+          "max_sole_orientation_error_rad": 1.2751593184446784e-06,
+          "motion_class": "stand",
+          "source_start": 0,
+          "source_stop": 149,
+          "source": "t4_stand",
+          "full_stride_cycles": null,
+          "lateral_speed_mean_m_s": 0.0,
+          "yaw_rate_mean_rad_s": 0.0,
+          "root_vertical_shift_m": 0.00149496625145331,
+          "sha256": "c175cae169e1c6366980c280eac72b07ba15c5a552b46300eb676bda2fb81f5d",
+          "motion_weight": 1.0,
+          "frames": 149
+        }
+      },
+      {
+        "file": "/home/nubot/phn_ws/t4_train/TienKung-Lab-g1-core-fixes-20260908/legged_lab/envs/g1/datasets/motion_amp_expert_t4_rob2rob_full17_v1/g1_from_t4_walk_forward_0000_0289.txt",
+        "sha256": "016ddeb1aaedf3bdb952a07282877cafca5a05c6c41fd77216e3f5c2e4102697",
+        "manifest_metadata": {
+          "duration_s": 9.633333333333333,
+          "speed_mean_m_s": 0.6688821657024264,
+          "forward_speed_mean_m_s": 0.6583462423215085,
+          "speed_p10_p50_p90_m_s": [
+            0.045001134153940484,
+            0.8220332970979161,
+            1.0562065851577473
+          ],
+          "fraction_speed_below_0_1": 0.14186851211072665,
+          "hard_joint_limit_excess_rad": 0.0,
+          "max_joint_velocity_limit_ratio": 0.5408814443833753,
+          "lowest_sole_m": 0.0010905330634451748,
+          "highest_sole_m": 0.06953092190988411,
+          "max_root_tilt_rad": 0.12668070966606182,
+          "support_point_speed_proxy_p50_p95_m_s": [
+            0.06696545429576067,
+            0.38837811515492876
+          ],
+          "max_sole_position_error_m": 1.1351343999039797e-06,
+          "max_wrist_position_error_m": 0.015564221485205811,
+          "max_sole_orientation_error_rad": 7.820341432532588e-05,
+          "motion_class": "walk_forward",
+          "source_start": 0,
+          "source_stop": 289,
+          "source": "t4_walk_forward",
+          "full_stride_cycles": null,
+          "lateral_speed_mean_m_s": 0.03582212120400778,
+          "yaw_rate_mean_rad_s": 0.0006401089193271208,
+          "root_vertical_shift_m": 0.027555009814612737,
+          "sha256": "016ddeb1aaedf3bdb952a07282877cafca5a05c6c41fd77216e3f5c2e4102697",
+          "motion_weight": 1.0,
+          "frames": 289
+        }
+      },
+      {
+        "file": "/home/nubot/phn_ws/t4_train/TienKung-Lab-g1-core-fixes-20260908/legged_lab/envs/g1/datasets/motion_amp_expert_t4_rob2rob_full17_v1/g1_from_t4_walk_left_0000_0372.txt",
+        "sha256": "4a5378c07a879c3738f6e3f13268f36d6a8bc273ebd546e95ff22ed0ba55a790",
+        "manifest_metadata": {
+          "duration_s": 12.4,
+          "speed_mean_m_s": 0.8914238906172152,
+          "forward_speed_mean_m_s": 0.880766313103542,
+          "speed_p10_p50_p90_m_s": [
+            0.7721064116989044,
+            0.9064042921951703,
+            1.0949805306849134
+          ],
+          "fraction_speed_below_0_1": 0.03225806451612903,
+          "hard_joint_limit_excess_rad": 0.0,
+          "max_joint_velocity_limit_ratio": 0.6354991048048503,
+          "lowest_sole_m": -0.003727147914984431,
+          "highest_sole_m": 0.11400252134616537,
+          "max_root_tilt_rad": 0.21928994590425394,
+          "support_point_speed_proxy_p50_p95_m_s": [
+            0.12385482321516267,
+            0.26439125168484356
+          ],
+          "max_sole_position_error_m": 2.5643989559330614e-05,
+          "max_wrist_position_error_m": 0.0211341351482415,
+          "max_sole_orientation_error_rad": 0.0022461218507639205,
+          "motion_class": "walk_lateral",
+          "source_start": 0,
+          "source_stop": 372,
+          "source": "t4_walk_left",
+          "full_stride_cycles": null,
+          "lateral_speed_mean_m_s": -0.07710582883880052,
+          "yaw_rate_mean_rad_s": 0.5958034559024162,
+          "root_vertical_shift_m": 0.028647306832390935,
+          "sha256": "4a5378c07a879c3738f6e3f13268f36d6a8bc273ebd546e95ff22ed0ba55a790",
+          "motion_weight": 0.26666666666666666,
+          "frames": 372
+        }
+      }
+    ],
+    "manifest_sha256": "49f2c8b3d7ed3e01992e1ac1c6532ed26e32e5403d174560a3188579c87a57ef"
+  },
+  "acceptance": {
+    "g1_mixed": {
+      "json": "artifacts/portability/g1_core_fixes_20260908/acceptance/g1_mixed.json",
+      "sha256": "b09446bee0514c45be7f095280d5208017277e5c232d2c61b2d1d8d96e82e4be",
+      "ok": true
+    },
+    "t4_mixed": {
+      "json": "artifacts/portability/g1_core_fixes_20260908/acceptance/t4_mixed.json",
+      "sha256": "2116f94790d4562792dc2d0024f7e0f97ab6022f04d03d41a6aa24333ed9b3ee",
+      "ok": true
+    },
+    "g1_flat": {
+      "json": "artifacts/portability/g1_core_fixes_20260908/acceptance/g1_flat.json",
+      "sha256": "3d65230e5deac6b2189d77d7cf5003425c74757bd266a779341ec10f013a0a90",
+      "ok": true
+    },
+    "reset_cache": {
+      "json": "artifacts/portability/g1_core_fixes_20260908/acceptance/reset_cache.json",
+      "sha256": "ba8d153c0daa2bd2fde7a3fa0ff4ad90e1bcfe0c057c2d1f0a983be6647ce213",
+      "ok": true
+    },
+    "t4_reset_cache": {
+      "json": "artifacts/portability/g1_core_fixes_20260908/acceptance/t4_reset_cache.json",
+      "sha256": "cbc9f06a0063a22ef6557c7c1e43ebbec4ebd2b528227d07b49d7c9436c3a988",
+      "ok": true
+    },
+    "distributed_rank0": {
+      "json": "artifacts/portability/g1_core_fixes_20260908/acceptance/distributed_rank0.json",
+      "sha256": "9ea0082307248c4fc9a5e67f7c32fcfb4896ee2cf60566fff8007727478c81bb",
+      "ok": true
+    },
+    "distributed_rank1": {
+      "json": "artifacts/portability/g1_core_fixes_20260908/acceptance/distributed_rank1.json",
+      "sha256": "8887637e5fb85f1b3bfbffca4aa61f5e1033ff011409b3ecaa22a27d44ea1c32",
+      "ok": true
+    }
+  },
+  "executed_scripts": {
+    "artifacts/portability/g1_core_fixes_20260908/dependency.json": {
+      "executed_sha256": "fcce225e014b116421c56976cbebf8b4a3199f8fffed51d35c03ebf52f20c51e",
+      "committed_worktree_sha256": "fcce225e014b116421c56976cbebf8b4a3199f8fffed51d35c03ebf52f20c51e"
+    },
+    "artifacts/portability/g1_core_fixes_20260908/isaaclab_assets.patch": {
+      "executed_sha256": "f97745a900a344d447d280876cb5d575068897df88e4aa185062b8b3f941e6b0",
+      "committed_worktree_sha256": "f97745a900a344d447d280876cb5d575068897df88e4aa185062b8b3f941e6b0"
+    },
+    "artifacts/portability/g1_core_fixes_20260908/acceptance/distributed_probe.py": {
+      "executed_sha256": "d4d523b6792cae1a0e7659ca4cd9cc559c565c3c355e89f1549ac654999ca1b4",
+      "committed_worktree_sha256": "d4d523b6792cae1a0e7659ca4cd9cc559c565c3c355e89f1549ac654999ca1b4",
+      "ast_equal": true
+    },
+    "artifacts/portability/g1_core_fixes_20260908/acceptance/reset_cache_probe.py": {
+      "executed_sha256": "da3b6f0cb558b13cbcda09aad18d24fe0fe8b4e94734b34dedd566074b12037b",
+      "committed_worktree_sha256": "df44c37c76a7c267d092172ae49d9f57c8ad251308d1477a6036aecb8e205afe",
+      "ast_equal": true
+    },
+    "artifacts/portability/g1_core_fixes_20260908/acceptance/server_probe.py": {
+      "executed_sha256": "ed646db79f0227068bc5dda3ad1f4554233551b5489a0ad1d5e2b9df7b7411c6",
+      "committed_worktree_sha256": "b5b8bc0f2777acfc3954570ce2dd5fdadf7a85085d1cdd6a1a3a9bbb87ea439f",
+      "ast_equal": true
+    },
+    "artifacts/portability/g1_core_fixes_20260908/acceptance/run_cache.sh": {
+      "executed_sha256": "116d374aaf0bae262c242f91039e9e8f710f2b5396aa6d6732c2420eabfc6609",
+      "committed_worktree_sha256": "116d374aaf0bae262c242f91039e9e8f710f2b5396aa6d6732c2420eabfc6609"
+    },
+    "artifacts/portability/g1_core_fixes_20260908/acceptance/run_distributed.sh": {
+      "executed_sha256": "d6b79954ce6130e385a22153091cfa05e31fc0a0178dd8c0c85864a6937721ff",
+      "committed_worktree_sha256": "d6b79954ce6130e385a22153091cfa05e31fc0a0178dd8c0c85864a6937721ff"
+    },
+    "artifacts/portability/g1_core_fixes_20260908/acceptance/run.sh": {
+      "executed_sha256": "230627c54d45e247356c7078ff0eb7c180f5ee9d2f4ce263929adf108b652008",
+      "committed_worktree_sha256": "230627c54d45e247356c7078ff0eb7c180f5ee9d2f4ce263929adf108b652008"
+    }
+  },
+  "cpu": {
+    "interpreter": "D:/anaconda/envs/pytorch/python.exe",
+    "result": "173 passed in 3.52s",
+    "log_sha256": "7ae8f473112b394b303820851c8c594fe587b6b1bd400f0e03cb5ae6e0b03dbe",
+    "tests": [
+      "test_core_transition_fixes.py",
+      "test_amp_update_contract.py",
+      "test_amp_curriculum_transition.py",
+      "test_t4_observation_contracts.py",
+      "test_robot_neutral_locomotion.py",
+      "test_robot_neutral_depth_env.py",
+      "test_t4_sparse_reward_contracts.py",
+      "test_collapse_recovery_contract.py",
+      "test_t4_sparse_command_contract.py",
+      "test_t4_terrain_column_map.py",
+      "test_distributed_log_reduce.py",
+      "test_g1_asset_contract.py",
+      "test_t4_asset_migration.py",
+      "test_t4_sparse_monitor_contract.py",
+      "test_t4_stepping_stone_contracts.py"
+    ],
+    "command": "D:/anaconda/envs/pytorch/python.exe -m pytest tests/test_core_transition_fixes.py tests/test_amp_update_contract.py tests/test_amp_curriculum_transition.py tests/test_t4_observation_contracts.py tests/test_robot_neutral_locomotion.py tests/test_robot_neutral_depth_env.py tests/test_t4_sparse_reward_contracts.py tests/test_collapse_recovery_contract.py tests/test_t4_sparse_command_contract.py tests/test_t4_terrain_column_map.py tests/test_distributed_log_reduce.py tests/test_g1_asset_contract.py tests/test_t4_asset_migration.py tests/test_t4_sparse_monitor_contract.py tests/test_t4_stepping_stone_contracts.py -q --basetemp artifacts/pytest-core-regression-final"
+  },
+  "frozen_source_check": {
+    "files": 342,
+    "errors": []
+  },
+  "review": {
+    "head": "24bf0aa22f3e53389b2abb7c6db0950bbbe927f8",
+    "standards_findings": 0,
+    "spec_code_findings": 0,
+    "final_provenance_confirmation": "passed; no remaining launch blockers"
+  },
+  "authorized_launch": {
+    "updates": 30000,
+    "gpus": [
+      0,
+      2
+    ],
+    "envs_per_rank": 2048,
+    "steps_per_update": 24,
+    "progress": "max_radial",
+    "cold_start": true,
+    "stop_old_ab_after_gates": true,
+    "preserve_all_old_artifacts": true
+  },
+  "training_status": "not_started",
+  "evidence_archives": {
+    "g1-core-final-integration-20260908.tar.gz": "330db57dbad5b9f60025f9d237e5aaa4050677e330bdf31d38a8a224a089a061",
+    "g1-core-runtime-records-20260908.tar.gz": "4bb6dd1be145b1d359b2c2f84c6336abf5c4819119cf78216de9369516e22226",
+    "g1-core-single-results-20260908.tar.gz": "1c79e71f46a5cd389f63595f0da0a80b196c6195d18ee62055de70dc10a1e004"
+  }
+}

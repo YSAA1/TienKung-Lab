@@ -1,0 +1,26 @@
+{
+  "candidate": "/home/nubot/phn_ws/t4_train/TienKung-Lab-g1-core-fixes-20260908",
+  "frozen": "/home/nubot/phn_ws/t4_train/TienKung-Lab-g1-progress-ab-20260908",
+  "files": {
+    "legged_lab/locomotion/env.py": "fd75474ebb7cff4729a08c16809b171db329c3046157c06e652ff18dd2b9c883",
+    "legged_lab/locomotion/depth_env.py": "e5d0a4803b376baee9cdfd3e181b84c8e6752b61629daa446fb36b45c49121eb",
+    "legged_lab/mdp/rewards.py": "da6b16bb0d158084a93ea124d23eae2caf05db642af958ffba5c7ec994c7b856",
+    "rsl_rl/rsl_rl/algorithms/amp_ppo.py": "ebe22f71af20de872716b8f1a7b85e382abd4cde2a1ba14a43488bb6dd18abb0",
+    "rsl_rl/rsl_rl/runners/amp_on_policy_runner.py": "60b235a226bf472fac6b3a30322f696835f5b7ef5652592e7dba2b0c8a463085",
+    "rsl_rl/rsl_rl/modules/actor_critic.py": "ad943331bca2ea7b5e0959f906c63e5e41f76c05b6267f09282adf38b3bef63f",
+    "rsl_rl/rsl_rl/utils/motion_loader.py": "53c23472adae5c1541605445c9263b889f9a891430d0f775e7d464d4b1a78ce0",
+    "artifacts/portability/g1_core_fixes_20260908/acceptance/reset_cache_probe.py": "df44c37c76a7c267d092172ae49d9f57c8ad251308d1477a6036aecb8e205afe",
+    "artifacts/portability/g1_core_fixes_20260908/acceptance/run.sh": "230627c54d45e247356c7078ff0eb7c180f5ee9d2f4ce263929adf108b652008",
+    "artifacts/portability/g1_core_fixes_20260908/acceptance/run_cache.sh": "116d374aaf0bae262c242f91039e9e8f710f2b5396aa6d6732c2420eabfc6609",
+    "artifacts/portability/g1_core_fixes_20260908/acceptance/server_probe.py": "b5b8bc0f2777acfc3954570ce2dd5fdadf7a85085d1cdd6a1a3a9bbb87ea439f",
+    "artifacts/portability/g1_progress_ab_20260908/source_manifest.json": "0b9bb3d64e778b47902df29234a9979e9e7d6ed6cef1aaa5237102161b601a8c",
+    "artifacts/portability/g1_core_fixes_20260908/verify_source.py": "f2490e7355d3c6d47ef9bbad15899ed54e3cccdbce357b49844967d979855459",
+    "artifacts/portability/g1_core_fixes_20260908/acceptance/distributed_probe.py": "d4d523b6792cae1a0e7659ca4cd9cc559c565c3c355e89f1549ac654999ca1b4",
+    "artifacts/portability/g1_core_fixes_20260908/acceptance/run_distributed.sh": "d6b79954ce6130e385a22153091cfa05e31fc0a0178dd8c0c85864a6937721ff",
+    "scripts/train_g1_core_fixes.sh": "f3026fde4502d680ab5404f016eafbdcaa3271f53300dc6f5cf535a207f89240",
+    "artifacts/portability/g1_core_fixes_20260908/collect_dependency.py": "dcb47ea42fbea95631b0dacaa02055a434b9988ea6002fede1541c6d94ed1c0c",
+    "artifacts/portability/g1_core_fixes_20260908/old_runs_snapshot.py": "62561b9e281565ca8abec8922fb1b2cb01cf82234d131d7c4e1ee299577aabae",
+    "artifacts/portability/g1_core_fixes_20260908/status.py": "75ea355f4d1b2a9e74b8f96b97de96b6b37537b8ec6aca7e4eadcda25e8c70e8"
+  },
+  "implementation_commit": "24bf0aa22f3e53389b2abb7c6db0950bbbe927f8"
+}

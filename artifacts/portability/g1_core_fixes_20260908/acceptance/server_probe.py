@@ -148,7 +148,7 @@ def mark(section):
     print("PROBE_SECTION " + section, flush=True)
 
 
-def main():
+def main():  # noqa: C901 - diagnostic phases deliberately share one live Isaac instance
     patch_missing_physx_material_attributes()
     cfg, agent_cfg = task_registry.get_cfgs(args.task)
     if args.g1_progress_ab is not None:

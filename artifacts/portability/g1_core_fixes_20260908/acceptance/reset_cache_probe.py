@@ -163,7 +163,9 @@ def main():
         second_accel = (robot.data.body_lin_vel_w[subset][:, foot_ids] - second_prev) / env.step_dt
         expected_second = decay * second_ema + (second_accel.norm(dim=-1) - 30).clamp(min=0).sum(-1)
         torch.testing.assert_close(env.foot_accel_ema[subset], expected_second, atol=1e-4, rtol=1e-5)
-        assert torch.all(expected_second > decay * second_ema), "second-step acceleration contribution was not exercised"
+        assert torch.all(
+            expected_second > decay * second_ema
+        ), "second-step acceleration contribution was not exercised"
         result["second_step"] = dict(
             expected=expected_second.cpu().tolist(), observed=env.foot_accel_ema[subset].cpu().tolist()
         )

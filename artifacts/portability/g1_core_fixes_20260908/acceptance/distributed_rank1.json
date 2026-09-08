@@ -1,0 +1,344 @@
+{
+  "ok": true,
+  "rank": 1,
+  "world_size": 2,
+  "steps_per_update": 24,
+  "num_envs": 32,
+  "expert_count": 17,
+  "steps": [
+    {
+      "step": 0,
+      "done": 0,
+      "timeouts": 0,
+      "bootstrap": 0
+    },
+    {
+      "step": 1,
+      "done": 0,
+      "timeouts": 0,
+      "bootstrap": 0
+    },
+    {
+      "step": 2,
+      "done": 0,
+      "timeouts": 0,
+      "bootstrap": 0
+    },
+    {
+      "step": 3,
+      "done": 0,
+      "timeouts": 0,
+      "bootstrap": 0
+    },
+    {
+      "step": 4,
+      "done": 0,
+      "timeouts": 0,
+      "bootstrap": 0
+    },
+    {
+      "step": 5,
+      "done": 0,
+      "timeouts": 0,
+      "bootstrap": 0
+    },
+    {
+      "step": 6,
+      "done": 0,
+      "timeouts": 0,
+      "bootstrap": 0
+    },
+    {
+      "step": 7,
+      "done": 0,
+      "timeouts": 0,
+      "bootstrap": 0
+    },
+    {
+      "step": 8,
+      "done": 0,
+      "timeouts": 0,
+      "bootstrap": 0
+    },
+    {
+      "step": 9,
+      "done": 0,
+      "timeouts": 0,
+      "bootstrap": 0
+    },
+    {
+      "step": 10,
+      "done": 0,
+      "timeouts": 0,
+      "bootstrap": 0
+    },
+    {
+      "step": 11,
+      "done": 0,
+      "timeouts": 0,
+      "bootstrap": 0
+    },
+    {
+      "step": 12,
+      "done": 0,
+      "timeouts": 0,
+      "bootstrap": 0
+    },
+    {
+      "step": 13,
+      "done": 0,
+      "timeouts": 0,
+      "bootstrap": 0
+    },
+    {
+      "step": 14,
+      "done": 0,
+      "timeouts": 0,
+      "bootstrap": 0
+    },
+    {
+      "step": 15,
+      "done": 0,
+      "timeouts": 0,
+      "bootstrap": 0
+    },
+    {
+      "step": 16,
+      "done": 0,
+      "timeouts": 0,
+      "bootstrap": 0
+    },
+    {
+      "step": 17,
+      "done": 0,
+      "timeouts": 0,
+      "bootstrap": 0
+    },
+    {
+      "step": 18,
+      "done": 0,
+      "timeouts": 0,
+      "bootstrap": 0
+    },
+    {
+      "step": 19,
+      "done": 0,
+      "timeouts": 0,
+      "bootstrap": 0
+    },
+    {
+      "step": 20,
+      "done": 0,
+      "timeouts": 0,
+      "bootstrap": 0
+    },
+    {
+      "step": 21,
+      "done": 0,
+      "timeouts": 0,
+      "bootstrap": 0
+    },
+    {
+      "step": 22,
+      "done": 0,
+      "timeouts": 0,
+      "bootstrap": 0
+    },
+    {
+      "step": 23,
+      "done": 0,
+      "timeouts": 0,
+      "bootstrap": 0
+    },
+    {
+      "step": 24,
+      "done": 0,
+      "timeouts": 0,
+      "bootstrap": 0
+    },
+    {
+      "step": 25,
+      "done": 3,
+      "timeouts": 3,
+      "bootstrap": 3
+    },
+    {
+      "step": 26,
+      "done": 0,
+      "timeouts": 0,
+      "bootstrap": 0
+    },
+    {
+      "step": 27,
+      "done": 0,
+      "timeouts": 0,
+      "bootstrap": 0
+    },
+    {
+      "step": 28,
+      "done": 0,
+      "timeouts": 0,
+      "bootstrap": 0
+    },
+    {
+      "step": 29,
+      "done": 0,
+      "timeouts": 0,
+      "bootstrap": 0
+    },
+    {
+      "step": 30,
+      "done": 0,
+      "timeouts": 0,
+      "bootstrap": 0
+    },
+    {
+      "step": 31,
+      "done": 0,
+      "timeouts": 0,
+      "bootstrap": 0
+    },
+    {
+      "step": 32,
+      "done": 0,
+      "timeouts": 0,
+      "bootstrap": 0
+    },
+    {
+      "step": 33,
+      "done": 0,
+      "timeouts": 0,
+      "bootstrap": 0
+    },
+    {
+      "step": 34,
+      "done": 0,
+      "timeouts": 0,
+      "bootstrap": 0
+    },
+    {
+      "step": 35,
+      "done": 0,
+      "timeouts": 0,
+      "bootstrap": 0
+    },
+    {
+      "step": 36,
+      "done": 0,
+      "timeouts": 0,
+      "bootstrap": 0
+    },
+    {
+      "step": 37,
+      "done": 0,
+      "timeouts": 0,
+      "bootstrap": 0
+    },
+    {
+      "step": 38,
+      "done": 0,
+      "timeouts": 0,
+      "bootstrap": 0
+    },
+    {
+      "step": 39,
+      "done": 0,
+      "timeouts": 0,
+      "bootstrap": 0
+    },
+    {
+      "step": 40,
+      "done": 0,
+      "timeouts": 0,
+      "bootstrap": 0
+    },
+    {
+      "step": 41,
+      "done": 0,
+      "timeouts": 0,
+      "bootstrap": 0
+    },
+    {
+      "step": 42,
+      "done": 0,
+      "timeouts": 0,
+      "bootstrap": 0
+    },
+    {
+      "step": 43,
+      "done": 0,
+      "timeouts": 0,
+      "bootstrap": 0
+    },
+    {
+      "step": 44,
+      "done": 0,
+      "timeouts": 0,
+      "bootstrap": 0
+    },
+    {
+      "step": 45,
+      "done": 0,
+      "timeouts": 0,
+      "bootstrap": 0
+    },
+    {
+      "step": 46,
+      "done": 0,
+      "timeouts": 0,
+      "bootstrap": 0
+    },
+    {
+      "step": 47,
+      "done": 0,
+      "timeouts": 0,
+      "bootstrap": 0
+    }
+  ],
+  "differences": {
+    "policy": 0.0,
+    "discriminator": 0.0,
+    "amp_normalizer": 0.0
+  },
+  "minimum_std": 0.05020105093717575,
+  "checkpoint": {
+    "path": "artifacts/portability/g1_core_fixes_20260908/acceptance/distributed_reload.pt",
+    "sha256": "065245c4e56f09a233da46cadcc17416ce41a9e622c34718c646cd548c3e7990",
+    "transition_contract": {
+      "version": 1,
+      "timeout_bootstrap": "pre_reset_terminal_critic_pure_truncation",
+      "min_action_std": [
+        0.05000000074505806,
+        0.05000000074505806,
+        0.05000000074505806,
+        0.05000000074505806,
+        0.05000000074505806,
+        0.05000000074505806,
+        0.05000000074505806,
+        0.05000000074505806,
+        0.05000000074505806,
+        0.05000000074505806,
+        0.05000000074505806,
+        0.05000000074505806,
+        0.05000000074505806,
+        0.05000000074505806,
+        0.05000000074505806,
+        0.05000000074505806,
+        0.05000000074505806,
+        0.05000000074505806,
+        0.05000000074505806,
+        0.05000000074505806,
+        0.05000000074505806,
+        0.05000000074505806,
+        0.05000000074505806,
+        0.05000000074505806,
+        0.05000000074505806,
+        0.05000000074505806,
+        0.05000000074505806,
+        0.05000000074505806,
+        0.05000000074505806
+      ]
+    },
+    "reload_equal": true
+  }
+}

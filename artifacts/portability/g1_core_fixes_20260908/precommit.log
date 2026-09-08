@@ -1,0 +1,18 @@
+black....................................................................Passed
+flake8..................................................................Skipped
+trim trailing whitespace.................................................Passed
+check for broken symlinks............................(no files to check)Skipped
+detect destroyed symlinks................................................Passed
+check yaml...........................................(no files to check)Skipped
+check for merge conflicts................................................Passed
+check for case conflicts.................................................Passed
+check that executables have shebangs.....................................Passed
+check toml...........................................(no files to check)Skipped
+fix end of files.........................................................Passed
+check that scripts with shebangs are executable..........................Passed
+detect private key.......................................................Passed
+debug statements (python)................................................Passed
+isort (python)...........................................................Passed
+pyupgrade...............................................................Skipped
+codespell................................................................Passed
+Insert license in comments...............................................Passed

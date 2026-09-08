@@ -41,6 +41,7 @@ def verify(root, entries):
 
 
 result = {
+    "implementation_commit": patch.get("implementation_commit"),
     "candidate": str(ROOT),
     "candidate_files": len(expected),
     "frozen_files": len(base["files"]),
