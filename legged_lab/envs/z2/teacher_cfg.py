@@ -57,6 +57,8 @@ class Z2LocoTeacherEnvCfg(LightLPLocomotionEnvCfg):
         self.scene.robot.init_state.pos = (0.0, 0.0, Z2_STANDING_PELVIS_Z)
         self.scene.foot_scanner.size = Z2_FOOT_SCAN_SIZE
         self.reward = Z2SparseTeacherRewardCfg()
+        # Single-variable action-rate trial from -0.1; not a claimed fix.
+        self.reward.action_rate_l2.weight = -0.01
         # Upstream 29DoF enables self-collision. Torso net force then includes
         # internal impacts, so it cannot serve as a ground-fall detector.
         self.robot.terminate_contacts_body_names = []
