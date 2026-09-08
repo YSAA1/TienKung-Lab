@@ -1,3 +1,21 @@
+# Copyright (c) 2021-2024, The RSL-RL Project Developers.
+# All rights reserved.
+# Original code is licensed under the BSD-3-Clause license.
+#
+# Copyright (c) 2022-2025, The Isaac Lab Project Developers.
+# All rights reserved.
+#
+# Copyright (c) 2025-2026, The Legged Lab Project Developers.
+# All rights reserved.
+#
+# Copyright (c) 2025-2026, The TienKung-Lab Project Developers.
+# All rights reserved.
+# Modifications are licensed under the BSD-3-Clause license.
+#
+# This file contains code derived from the RSL-RL, Isaac Lab, and Legged Lab Projects,
+# with additional modifications by the TienKung-Lab Project,
+# and is distributed under the BSD-3-Clause license.
+
 """Fixed-command behavior and perception evaluator for locomotion terrain buckets.
 
 The evaluator keeps the command and reset seeds fixed, separates terminal causes,
@@ -75,7 +93,16 @@ parser.add_argument(
 
 patch_physx_backward_compatibility_setting(AppLauncher)
 AppLauncher.add_app_launcher_args(parser)
-args_cli, _ = parser.parse_known_args()
+args_cli, unknown_cli = parser.parse_known_args()
+# Live registry config only. train.py experiment leftovers would otherwise be
+# dropped by parse_known_args and silently evaluate the current task defaults.
+ignored_g1_cli = [arg for arg in unknown_cli if arg.startswith("--g1_")]
+if ignored_g1_cli:
+    raise ValueError(
+        "eval_locomotion.py does not apply train.py G1 experiment flags "
+        f"{ignored_g1_cli}. Use a frozen env yaml from the G1 run or an explicit "
+        "profile helper. Registry config is used as-is."
+    )
 args_cli.headless = True
 if "depth_student" in (args_cli.task or ""):
     args_cli.enable_cameras = True
@@ -84,12 +111,9 @@ simulation_app = app_launcher.app
 
 import torch  # noqa: E402
 from isaaclab_tasks.utils import get_checkpoint_path  # noqa: E402
-from rsl_rl.runners import AmpOnPolicyRunner, OnPolicyRunner  # noqa: E402
 
-from legged_lab.locomotion.schemas import (  # noqa: E402
-    TEACHER_SCAN_INVALID_VALUE,
-)
 from legged_lab.envs import *  # noqa: F401,F403,E402
+from legged_lab.locomotion.schemas import TEACHER_SCAN_INVALID_VALUE  # noqa: E402
 from legged_lab.scripts.recurrent_policy_eval import (  # noqa: E402
     evaluate_counterfactual_actions,
     reset_recurrent_policy,
@@ -99,12 +123,15 @@ from legged_lab.terrains.stepping_stone_layout import (  # noqa: E402
     resolve_pinned_sparse_spawn,
 )
 from legged_lab.utils import task_registry  # noqa: E402
-from legged_lab.utils.cli_args import update_rsl_rl_cfg  # noqa: E402
+from rsl_rl.runners import (  # noqa: E402,F401 -- selected by runner class name
+    AmpOnPolicyRunner,
+    OnPolicyRunner,
+)
 
 patch_missing_physx_material_attributes()
 
 
-def evaluate() -> dict:
+def evaluate() -> dict:  # noqa: C901 -- existing sequential evaluation pipeline
     env_cfg, agent_cfg = task_registry.get_cfgs(args_cli.task)
     env_cfg.device = args_cli.device
     env_cfg.sim.device = args_cli.device
@@ -398,10 +425,7 @@ def evaluate() -> dict:
         local_feet_xy = transition_feet_pos[:, :, :2] - env.scene.env_origins[:, None, :2]
         off_platform = torch.any(torch.abs(local_feet_xy) > 0.5 * LIGHTLP_STONE_PLATFORM_WIDTH, dim=-1)
         first_contact_candidates = (
-            touchdown
-            & off_platform
-            & active_envs.unsqueeze(1)
-            & (~first_off_platform_contact_seen).unsqueeze(1)
+            touchdown & off_platform & active_envs.unsqueeze(1) & (~first_off_platform_contact_seen).unsqueeze(1)
         )
         first_contact_envs = torch.any(first_contact_candidates, dim=-1)
         if torch.any(first_contact_envs):
@@ -565,12 +589,14 @@ def evaluate() -> dict:
         "progress_min_m": min(progress_values, default=0.0),
         "progress_max_m": max(progress_values, default=0.0),
         "monitor_radial_progress_source": "terminal_episode_max_radial_dist_from_terrain_origin",
-        "monitor_radial_progress_mean_m": sum(monitor_radial_progress_values)
-        / max(1, len(monitor_radial_progress_values)),
+        "monitor_radial_progress_mean_m": sum(monitor_radial_progress_values) / max(
+            1, len(monitor_radial_progress_values)
+        ),
         "monitor_radial_progress_min_m": min(monitor_radial_progress_values, default=0.0),
         "monitor_radial_progress_max_m": max(monitor_radial_progress_values, default=0.0),
-        "final_forward_progress_mean_m": sum(final_forward_progress_values)
-        / max(1, len(final_forward_progress_values)),
+        "final_forward_progress_mean_m": sum(final_forward_progress_values) / max(
+            1, len(final_forward_progress_values)
+        ),
         "final_forward_progress_min_m": min(final_forward_progress_values, default=0.0),
         "final_forward_progress_max_m": max(final_forward_progress_values, default=0.0),
         "reach_1m_episodes": reach_1m_episodes,
@@ -600,10 +626,12 @@ def evaluate() -> dict:
         "raw_scan_std": scan_variance**0.5,
         "raw_scan_at_invalid_sentinel_fraction": scan_invalid_count / max(1.0, scan_count),
         "raw_scan_nonfinite_fraction": scan_nonfinite_count / max(1.0, scan_count + scan_nonfinite_count),
-        "counterfactual_normal_zero_action_l1_mean": counterfactual_normal_zero_action_delta_sum
-        / max(1, counterfactual_action_samples),
-        "counterfactual_normal_permuted_action_l1_mean": counterfactual_normal_permuted_action_delta_sum
-        / max(1, counterfactual_action_samples),
+        "counterfactual_normal_zero_action_l1_mean": counterfactual_normal_zero_action_delta_sum / max(
+            1, counterfactual_action_samples
+        ),
+        "counterfactual_normal_permuted_action_l1_mean": counterfactual_normal_permuted_action_delta_sum / max(
+            1, counterfactual_action_samples
+        ),
         "action_delta_l1_mean": action_delta_sum / max(1, action_delta_samples),
         "diagnostic_joint_action_abs_mean": {
             name: value / max(1, joint_action_samples) for name, value in joint_action_abs_sum.items()
@@ -615,14 +643,18 @@ def evaluate() -> dict:
         "first_swing_foot_max_lift_max_m": max(first_swing_lift_values, default=0.0),
         "first_off_platform_contact_episodes": first_off_platform_contact_episodes,
         "first_off_platform_contact_legal_episodes": first_off_platform_legal_episodes,
-        "first_off_platform_contact_legal_rate": first_off_platform_legal_episodes
-        / max(1, first_off_platform_contact_episodes),
-        "first_off_platform_contact_illegal_fraction_mean": sum(first_off_platform_illegal_values)
-        / max(1, first_off_platform_contact_episodes),
-        "first_off_platform_swing_peak_lift_mean_m": sum(first_off_platform_swing_peak_lift_values)
-        / max(1, first_off_platform_contact_episodes),
-        "first_off_platform_touchdown_lift_mean_m": sum(first_off_platform_touchdown_lift_values)
-        / max(1, first_off_platform_contact_episodes),
+        "first_off_platform_contact_legal_rate": first_off_platform_legal_episodes / max(
+            1, first_off_platform_contact_episodes
+        ),
+        "first_off_platform_contact_illegal_fraction_mean": sum(first_off_platform_illegal_values) / max(
+            1, first_off_platform_contact_episodes
+        ),
+        "first_off_platform_swing_peak_lift_mean_m": sum(first_off_platform_swing_peak_lift_values) / max(
+            1, first_off_platform_contact_episodes
+        ),
+        "first_off_platform_touchdown_lift_mean_m": sum(first_off_platform_touchdown_lift_values) / max(
+            1, first_off_platform_contact_episodes
+        ),
         "episode_records": episode_records,
         "exact_foothold_gate": False,
         "final_zero_contact_gate": False,

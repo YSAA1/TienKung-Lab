@@ -7,7 +7,7 @@
 | 物理模型 | `legged_lab/assets/<robot>/` | USD/URDF、碰撞、默认站姿、真实关节限位、PD 增益和力矩限制 |
 | 身体语义 | `assets/<robot>/locomotion.py` | `LocomotionRobotSpec`：唯一关节序、左右脚/手、躯干、六项腿关节语义、镜像置换和符号、AMP site 偏移、奖励身体/关节组 |
 | 训练配方 | `envs/<robot>/teacher_cfg.py` | 组合共同算法与该资产/spec，声明 AMP 专家路径和宽度、动作单位，以及有依据的机器人参数差异 |
-| 注册 | `envs/__init__.py` | 任务名绑定 `LocomotionEnv` 和自己的配置 |
+| 注册 | `envs/__init__.py` | 任务名绑定 `LocomotionEnv` 和自己的配置。已注册 `t4_loco_teacher`、`g1_loco_teacher`、`z2_loco_teacher` |
 | 公共训练/评估 | `scripts/train.py`、`scripts/eval_locomotion.py`、`scripts/play.py` | 使用 `--task` 选择机器人，不能加入机器人名字分支 |
 
 公共代码按运行时 spec 和 `ObservationLayout` 推导本体、scan、AMP 和镜像索引。控制量按声明关节序进入策略，再映射到模拟器关节序。原 T4 模块只保留兼容入口或机器人配方。已有 task ID、专家文件名、资产名和历史 checkpoint 名称不需要改写。

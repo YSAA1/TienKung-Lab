@@ -3,7 +3,7 @@
 Z2 29DoF 新迁移轨道仅在 `D:/TienKung-Lab-z2-teacher-20260909` 执行，权威计划为
 [Z2 教师迁移](plans/2026-09-09--z2-teacher-migration.md)。当前处于实施与验证阶段，尚未开训。
 
-本 checkout 在上游 TienKung-Lab 上维护共享 AMP/LightLP 运动算法，以及 **T4 27DoF、Unitree G1 29DoF** 的独立机器人配置。共享教师、深度学生运行时与参考动作跟踪按算法组织；[新机器人接入方法](runbooks/robot-locomotion-adapter.md) 是代码边界入口。
+本 checkout 在上游 TienKung-Lab 上维护共享 AMP/LightLP 运动算法，以及 **T4 27DoF、Unitree G1 29DoF、Z2 29DoF** 的独立机器人配置。共享教师、深度学生运行时与参考动作跟踪按算法组织；[新机器人接入方法](runbooks/robot-locomotion-adapter.md) 是代码边界入口。
 先读本文，再进代码。`docs/archive/` 与 `docs/research/` **不是**开训或接票权威。
 
 ## 当前工作面
@@ -14,6 +14,7 @@ Z2 29DoF 新迁移轨道仅在 `D:/TienKung-Lab-z2-teacher-20260909` 执行，�
 | --- | --- | --- | --- |
 | 梅花桩 | paused：G1 越障老师优先。T4 plant DR 计划仍在 | [老师 plant 重训](plans/2026-09-02--t4-s12-teacher-plant-retrain-plan.md) | [表示先行蒸馏](specs/2026-09-01--t4-s12-repr-first-distill.md)（学生对照） |
 | Unitree G1 越障 teacher | 核心修复B30000在GPU0/2、TB8042；另用GPU1/3做VITAL起步配方实验，保留LightLP奖励，独立冷启动 | [当前实验与核心修复计划](plans/2026-09-07--robot-neutral-locomotion.md) | 基线源码保持；实验仅改动作变化惩罚、终止与步态门控，不声明运动能力 |
+| Z2 29DoF 越障 teacher | 资产/spec/任务已接入 `z2_loco_teacher`；70D 专家需 Isaac FK；未开训 | [Z2 迁移](plans/2026-09-09--z2-teacher-migration.md) | 独立 spec，不复用 G1 形态或专家张量 |
 | 翻箱 | G1 跟踪专家 → G2 heightscan 技能（zhuoqun）。**G2 学生与 G3 合并（走跑+翻箱成一条策略）等 G2 过箱后再开。** | [翻箱 recovery](plans/2026-08-15--t4-vault-g1-g2-recovery-plan.md) | [合并规格](specs/2026-08-13--t4-vault-loco-merge.md) |
 
 运行时切片与机器占用：`.harness/work_index.md`、`.harness/state.md`。
@@ -58,7 +59,7 @@ Z2 29DoF 新迁移轨道仅在 `D:/TienKung-Lab-z2-teacher-20260909` 执行，�
 | 观测合同 | `python -m pytest tests/test_t4_observation_contracts.py` |
 | 稀疏奖励 / 终止 / 列映射 / S12 命令与边框合同 | `python -m pytest tests/test_t4_sparse_reward_contracts.py tests/test_t4_sparse_monitor_contract.py tests/test_t4_sparse_command_contract.py tests/test_t4_terrain_column_map.py tests/test_t4_stepping_stone_contracts.py tests/test_distributed_log_reduce.py` |
 
-已注册 T4 任务：`t4_loco_teacher`、`t4_loco_teacher_sparse`、`t4_loco_sparse_depth_student`、`t4_vault_mimic`、`t4_vault_skill`。上游 TienKung 的 `walk` / `run` 仍在，不是本 T4 路线。Stage E 深度学生仍走独立 train 脚本，不改任务名。
+已注册 T4 任务：`t4_loco_teacher`、`t4_loco_teacher_sparse`、`t4_loco_sparse_depth_student`、`t4_vault_mimic`、`t4_vault_skill`。G1 任务 `g1_loco_teacher`。Z2 任务 `z2_loco_teacher`。上游 TienKung 的 `walk` / `run` 仍在，不是本 T4 路线。Stage E 深度学生仍走独立 train 脚本，不改任务名。
 
 ## 文档货架
 

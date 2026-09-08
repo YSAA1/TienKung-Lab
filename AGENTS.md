@@ -1,6 +1,6 @@
 # AGENTS.md
 
-本仓库在 TienKung-Lab 上维护 T4 27DoF 与 Unitree G1 29DoF 运动训练。先读 `docs/README.md`，再读
+本仓库在 TienKung-Lab 上维护 T4 27DoF、Unitree G1 29DoF 与 Z2 29DoF 运动训练。先读 `docs/README.md`，再读
 `.harness/work_index.md`。不要把 `docs/archive/`、`docs/research/` 或
 `.harness/state.md` 的旧段落当执行计划。
 
@@ -11,6 +11,7 @@
 | `pip install -e .` | 安装根包 `LeggedLab`，需要已安装 Isaac Lab 的 Python 环境 |
 | `cd rsl_rl; pip install -e .` | 安装本仓库内置 `rsl_rl` |
 | `python -m pytest tests/test_g1_asset_contract.py` | 纯 Python G1 29DoF 资产、越障任务与 LAFAN1 AMP 合同 |
+| `python -m pytest tests/test_z2_asset_contract.py` | 纯 Python Z2 29DoF 资产、越障任务与 Z2 AMP 源合同 |
 | `python -m pytest tests/test_t4_asset_migration.py` | 纯 Python T4 资产与 motion 合同测试 |
 | `python legged_lab/scripts/t4_csv_motion_conversion.py --input legged_lab/envs/t4/datasets/motion_source --output-dir legged_lab/envs/t4/datasets/motion_visualization --fps 30` | 重新生成 T4 motion visualization 文件 |
 | `python -m legged_lab.scripts.render_t4_motions --output-dir artifacts/motion_review` | 用 MuJoCo 把 motion 渲染成三视角回放视频与足底接触指标，供人工复核；加 `--metrics-only` 只刷新指标，加 `--interactive` 开交互 viewer |
@@ -23,9 +24,11 @@
 - `legged_lab/config.py` - 共享场景/命令/事件配置字段，导入不触发机器人任务注册。
 - `legged_lab/motion_tracking/` - 共享命名参考动作加载和全身跟踪 MDP；`utils/rsl_rl_compat.py` 是共享 IsaacLab/RSL-RL 观测适配。T4 翻箱资产与验收阈值仍在 T4 配方中。
 - `legged_lab/assets/t4/` - T4 27DoF 资产；`constants.py::T4_JOINT_NAMES` 是唯一关节顺序真值。
-- `legged_lab/envs/t4/` - T4 任务配方、相机标定及兼容入口。已注册 `t4_loco_teacher`、`t4_loco_teacher_sparse`、`t4_loco_sparse_depth_student`、`t4_vault_mimic`、`t4_vault_skill`。`envs/g1/teacher_cfg.py` 独立组合共享 `LocomotionEnv`、LightLP 与 LAFAN1 AMP，任务名 `g1_loco_teacher`。Stage E 深度学生仍走独立 train 脚本，不改任务名。
+- `legged_lab/assets/z2/` - Z2 29DoF 资产；`constants.py::Z2_29DOF_JOINT_NAMES` 是策略关节序真值，与 URDF 出现序不同。
+- `legged_lab/envs/t4/` - T4 任务配方、相机标定及兼容入口。已注册 `t4_loco_teacher`、`t4_loco_teacher_sparse`、`t4_loco_sparse_depth_student`、`t4_vault_mimic`、`t4_vault_skill`。`envs/g1/teacher_cfg.py` 独立组合共享 `LocomotionEnv`、LightLP 与 LAFAN1 AMP，任务名 `g1_loco_teacher`。`envs/z2/teacher_cfg.py` 独立组合同一算法与 Z2 29DoF 资产，任务名 `z2_loco_teacher`。Stage E 深度学生仍走独立 train 脚本，不改任务名。
 - `legged_lab/envs/t4/datasets/motion_source/` - 原始 T4 CSV，schema 为 `root_xyz(3) + root_quat_xyzw(4) + q27`。
 - `legged_lab/envs/g1/datasets/motion_source/` - LAFAN1 G1 走跑 CSV（`lvhaidong/LAFAN1_Retargeting_Dataset` 镜像），`root_xyz + quat_xyzw + q29`。专家由 `generate_g1_amp_expert.py` 写成 70D txt。
+- `legged_lab/envs/z2/datasets/motion_source/` - Z2 walk/walk_l/run CSV，`root_xyz + quat_xyzw + q29`，策略关节序。70D 专家需 Isaac `generate_z2_amp_expert.py`。
 - `legged_lab/envs/t4/datasets/motion_visualization/` - 转换后的 playback 中间数据，不是最终 AMP expert。
 - `rsl_rl/` - 仓库内置 RSL-RL 训练库。
 - `docs/README.md` - T4 文档入口。`docs/specs/` 是合同，`docs/plans/` **只放现行执行计划**。
@@ -36,6 +39,7 @@
 
 - 代码改动后先跑最窄测试；T4 资产/motion 合同优先跑 `python -m pytest tests/test_t4_asset_migration.py`。
 - G1 资产 / LAFAN AMP 合同跑 `python -m pytest tests/test_g1_asset_contract.py`。
+- Z2 资产 / AMP 源合同跑 `python -m pytest tests/test_z2_asset_contract.py`。
 - 共享算法边界与不同关节数接入跑 `python -m pytest tests/test_robot_neutral_locomotion.py tests/test_robot_neutral_depth_env.py`（需要 torch）。
 - 全库机器人依赖扫描跑 `python scripts/audit_robot_boundaries.py`；检查扫描器跑 `python -m pytest tests/test_robot_boundary_audit.py`。
 - 共享跟踪/适配改动跑 `python -m pytest tests/test_robot_neutral_tracking.py tests/test_t4_asset_migration.py tests/test_t4_vault_rsl_rl_compat.py`。

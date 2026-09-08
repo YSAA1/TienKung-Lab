@@ -1,0 +1,1485 @@
+{
+  "source_urdf_sha256": "58772dbedbe89a00f721a503463dbcb4f95586368400a1eafdb95822e196c2b0",
+  "body_checks": {
+    "base_link": {
+      "pass": true,
+      "mass": 3.6594996452331543,
+      "expected_mass": 3.6595,
+      "com_max_abs_m": 6.413459693876966e-11,
+      "inertia_max_abs_kg_m2": 8.649229995411067e-10
+    },
+    "L_hip_pitch_link": {
+      "pass": true,
+      "mass": 1.5226000547409058,
+      "expected_mass": 1.5226,
+      "com_max_abs_m": 5.532503170868619e-10,
+      "inertia_max_abs_kg_m2": 2.2712498895516298e-10
+    },
+    "R_hip_pitch_link": {
+      "pass": true,
+      "mass": 1.5226000547409058,
+      "expected_mass": 1.5226,
+      "com_max_abs_m": 8.323192621229047e-10,
+      "inertia_max_abs_kg_m2": 2.0026220008602944e-10
+    },
+    "waist_yaw_link": {
+      "pass": true,
+      "mass": 0.1941400021314621,
+      "expected_mass": 0.19414,
+      "com_max_abs_m": 4.420876477395641e-10,
+      "inertia_max_abs_kg_m2": 1.8083490434250837e-11
+    },
+    "L_hip_roll_link": {
+      "pass": true,
+      "mass": 1.4043999910354614,
+      "expected_mass": 1.4044,
+      "com_max_abs_m": 3.57913970683299e-09,
+      "inertia_max_abs_kg_m2": 1.8161088236566536e-10
+    },
+    "R_hip_roll_link": {
+      "pass": true,
+      "mass": 1.4043999910354614,
+      "expected_mass": 1.4044,
+      "com_max_abs_m": 3.57913970683299e-09,
+      "inertia_max_abs_kg_m2": 1.8161088236566536e-10
+    },
+    "waist_pitch_link": {
+      "pass": true,
+      "mass": 0.08472099900245667,
+      "expected_mass": 0.084721,
+      "com_max_abs_m": 0.0,
+      "inertia_max_abs_kg_m2": 4.2035244303905393e-13
+    },
+    "L_hip_yaw_link": {
+      "pass": true,
+      "mass": 1.768300175666809,
+      "expected_mass": 1.7683,
+      "com_max_abs_m": 3.4856796199411733e-09,
+      "inertia_max_abs_kg_m2": 4.905223848633566e-10
+    },
+    "R_hip_yaw_link": {
+      "pass": true,
+      "mass": 1.768300175666809,
+      "expected_mass": 1.7683,
+      "com_max_abs_m": 2.6440620387591096e-09,
+      "inertia_max_abs_kg_m2": 1.15974545505243e-09
+    },
+    "waist_roll_link": {
+      "pass": true,
+      "mass": 12.257909774780273,
+      "expected_mass": 12.257909999999999,
+      "com_max_abs_m": 1.538146771409843e-10,
+      "inertia_max_abs_kg_m2": 8.968621983962421e-09
+    },
+    "L_knee_link": {
+      "pass": true,
+      "mass": 2.2354800701141357,
+      "expected_mass": 2.23548,
+      "com_max_abs_m": 5.888939058618092e-10,
+      "inertia_max_abs_kg_m2": 1.6617894178783121e-09
+    },
+    "R_knee_link": {
+      "pass": true,
+      "mass": 2.2355000972747803,
+      "expected_mass": 2.2355,
+      "com_max_abs_m": 2.281665786862952e-09,
+      "inertia_max_abs_kg_m2": 2.306938171742212e-09
+    },
+    "L_shoulder_pitch_link": {
+      "pass": true,
+      "mass": 0.6103600263595581,
+      "expected_mass": 0.61036,
+      "com_max_abs_m": 1.1539459249254591e-09,
+      "inertia_max_abs_kg_m2": 3.0879862606382415e-11
+    },
+    "R_shoulder_pitch_link": {
+      "pass": true,
+      "mass": 0.6103600263595581,
+      "expected_mass": 0.61036,
+      "com_max_abs_m": 1.1539459249254591e-09,
+      "inertia_max_abs_kg_m2": 4.1879713535451844e-11
+    },
+    "L_ankle_pitch_link": {
+      "pass": true,
+      "mass": 0.07637999951839447,
+      "expected_mass": 0.07638,
+      "com_max_abs_m": 0.0,
+      "inertia_max_abs_kg_m2": 3.1833769730774553e-13
+    },
+    "R_ankle_pitch_link": {
+      "pass": true,
+      "mass": 0.07637999951839447,
+      "expected_mass": 0.07638,
+      "com_max_abs_m": 0.0,
+      "inertia_max_abs_kg_m2": 3.1833769730774553e-13
+    },
+    "L_shoulder_roll_link": {
+      "pass": true,
+      "mass": 0.22592000663280487,
+      "expected_mass": 0.22592,
+      "com_max_abs_m": 1.6121864329643465e-09,
+      "inertia_max_abs_kg_m2": 5.95904886850282e-11
+    },
+    "R_shoulder_roll_link": {
+      "pass": true,
+      "mass": 0.22592000663280487,
+      "expected_mass": 0.22592,
+      "com_max_abs_m": 1.6121864329643465e-09,
+      "inertia_max_abs_kg_m2": 5.95904886850282e-11
+    },
+    "L_ankle_roll_link": {
+      "pass": true,
+      "mass": 0.5457900166511536,
+      "expected_mass": 0.54579,
+      "com_max_abs_m": 4.885196691617466e-10,
+      "inertia_max_abs_kg_m2": 5.081266163040055e-10
+    },
+    "R_ankle_roll_link": {
+      "pass": true,
+      "mass": 0.5457900166511536,
+      "expected_mass": 0.54579,
+      "com_max_abs_m": 4.885196691617466e-10,
+      "inertia_max_abs_kg_m2": 5.081266163040055e-10
+    },
+    "L_shoulder_yaw_link": {
+      "pass": true,
+      "mass": 1.084089994430542,
+      "expected_mass": 1.08409,
+      "com_max_abs_m": 1.967430121596614e-09,
+      "inertia_max_abs_kg_m2": 3.8699555734637945e-10
+    },
+    "R_shoulder_yaw_link": {
+      "pass": true,
+      "mass": 1.0841000080108643,
+      "expected_mass": 1.0841,
+      "com_max_abs_m": 2.4547576887856692e-09,
+      "inertia_max_abs_kg_m2": 4.1372478012946523e-10
+    },
+    "L_elbow_link": {
+      "pass": true,
+      "mass": 0.17056000232696533,
+      "expected_mass": 0.17056,
+      "com_max_abs_m": 5.450248724558904e-09,
+      "inertia_max_abs_kg_m2": 2.5951392948378015e-10
+    },
+    "R_elbow_link": {
+      "pass": true,
+      "mass": 0.17056000232696533,
+      "expected_mass": 0.17056,
+      "com_max_abs_m": 5.450248724558904e-09,
+      "inertia_max_abs_kg_m2": 2.5951392948378015e-10
+    },
+    "L_wrist_roll_link": {
+      "pass": true,
+      "mass": 0.07413999736309052,
+      "expected_mass": 0.07414,
+      "com_max_abs_m": 8.815526954253361e-10,
+      "inertia_max_abs_kg_m2": 6.521167232511477e-12
+    },
+    "R_wrist_roll_link": {
+      "pass": true,
+      "mass": 0.07413999736309052,
+      "expected_mass": 0.07414,
+      "com_max_abs_m": 8.815526954253361e-10,
+      "inertia_max_abs_kg_m2": 6.521167232511477e-12
+    },
+    "L_wrist_pitch_link": {
+      "pass": true,
+      "mass": 0.47133001685142517,
+      "expected_mass": 0.47133,
+      "com_max_abs_m": 4.874467843252184e-10,
+      "inertia_max_abs_kg_m2": 2.6819482445703282e-11
+    },
+    "R_wrist_pitch_link": {
+      "pass": true,
+      "mass": 0.47133001685142517,
+      "expected_mass": 0.47133,
+      "com_max_abs_m": 4.2653083842658646e-10,
+      "inertia_max_abs_kg_m2": 2.922341226429745e-11
+    },
+    "L_wrist_yaw_link": {
+      "pass": true,
+      "mass": 0.05797000229358673,
+      "expected_mass": 0.05797,
+      "com_max_abs_m": 9.702444091208573e-10,
+      "inertia_max_abs_kg_m2": 1.5177763966435151e-12
+    },
+    "R_wrist_yaw_link": {
+      "pass": true,
+      "mass": 0.05797000229358673,
+      "expected_mass": 0.05797,
+      "com_max_abs_m": 9.702444091208573e-10,
+      "inertia_max_abs_kg_m2": 1.5177763966435151e-12
+    }
+  },
+  "joint_checks": {
+    "L_hip_pitch_joint": {
+      "kp": {
+        "pass": true,
+        "actual": 120.0,
+        "expected": 120.0
+      },
+      "kd": {
+        "pass": true,
+        "actual": 6.0,
+        "expected": 6.0
+      },
+      "effort_limit_sim": {
+        "pass": true,
+        "actual": 130.0,
+        "expected": 130.0
+      },
+      "velocity_limit_sim": {
+        "pass": true,
+        "actual": 14.65999984741211,
+        "expected": 14.66
+      },
+      "armature": {
+        "pass": true,
+        "actual": 0.009999999776482582,
+        "expected": 0.01
+      },
+      "position_limits_rad": {
+        "pass": true,
+        "actual": [
+          -2.3499996662139893,
+          2.3499996662139893
+        ],
+        "expected": [
+          -2.35,
+          2.35
+        ]
+      },
+      "urdf_friction": {
+        "pass": true,
+        "actual": 0.0,
+        "expected": 0.0
+      }
+    },
+    "R_hip_pitch_joint": {
+      "kp": {
+        "pass": true,
+        "actual": 120.0,
+        "expected": 120.0
+      },
+      "kd": {
+        "pass": true,
+        "actual": 6.0,
+        "expected": 6.0
+      },
+      "effort_limit_sim": {
+        "pass": true,
+        "actual": 130.0,
+        "expected": 130.0
+      },
+      "velocity_limit_sim": {
+        "pass": true,
+        "actual": 14.65999984741211,
+        "expected": 14.66
+      },
+      "armature": {
+        "pass": true,
+        "actual": 0.009999999776482582,
+        "expected": 0.01
+      },
+      "position_limits_rad": {
+        "pass": true,
+        "actual": [
+          -2.3499996662139893,
+          2.3499996662139893
+        ],
+        "expected": [
+          -2.35,
+          2.35
+        ]
+      },
+      "urdf_friction": {
+        "pass": true,
+        "actual": 0.0,
+        "expected": 0.0
+      }
+    },
+    "waist_yaw_joint": {
+      "kp": {
+        "pass": true,
+        "actual": 200.0,
+        "expected": 200.0
+      },
+      "kd": {
+        "pass": true,
+        "actual": 5.0,
+        "expected": 5.0
+      },
+      "effort_limit_sim": {
+        "pass": true,
+        "actual": 90.0,
+        "expected": 90.0
+      },
+      "velocity_limit_sim": {
+        "pass": true,
+        "actual": 16.440000534057617,
+        "expected": 16.44
+      },
+      "armature": {
+        "pass": true,
+        "actual": 0.009999999776482582,
+        "expected": 0.01
+      },
+      "position_limits_rad": {
+        "pass": true,
+        "actual": [
+          -2.7899997234344482,
+          2.7899997234344482
+        ],
+        "expected": [
+          -2.79,
+          2.79
+        ]
+      },
+      "urdf_friction": {
+        "pass": true,
+        "actual": 0.0,
+        "expected": 0.0
+      }
+    },
+    "L_hip_roll_joint": {
+      "kp": {
+        "pass": true,
+        "actual": 120.0,
+        "expected": 120.0
+      },
+      "kd": {
+        "pass": true,
+        "actual": 4.0,
+        "expected": 4.0
+      },
+      "effort_limit_sim": {
+        "pass": true,
+        "actual": 132.0,
+        "expected": 132.0
+      },
+      "velocity_limit_sim": {
+        "pass": true,
+        "actual": 12.460000038146973,
+        "expected": 12.46
+      },
+      "armature": {
+        "pass": true,
+        "actual": 0.009999999776482582,
+        "expected": 0.01
+      },
+      "position_limits_rad": {
+        "pass": true,
+        "actual": [
+          -0.5199999213218689,
+          1.7399998903274536
+        ],
+        "expected": [
+          -0.52,
+          1.74
+        ]
+      },
+      "urdf_friction": {
+        "pass": true,
+        "actual": 0.0,
+        "expected": 0.0
+      }
+    },
+    "R_hip_roll_joint": {
+      "kp": {
+        "pass": true,
+        "actual": 120.0,
+        "expected": 120.0
+      },
+      "kd": {
+        "pass": true,
+        "actual": 4.0,
+        "expected": 4.0
+      },
+      "effort_limit_sim": {
+        "pass": true,
+        "actual": 132.0,
+        "expected": 132.0
+      },
+      "velocity_limit_sim": {
+        "pass": true,
+        "actual": 12.460000038146973,
+        "expected": 12.46
+      },
+      "armature": {
+        "pass": true,
+        "actual": 0.009999999776482582,
+        "expected": 0.01
+      },
+      "position_limits_rad": {
+        "pass": true,
+        "actual": [
+          -1.7399998903274536,
+          0.5199999213218689
+        ],
+        "expected": [
+          -1.74,
+          0.52
+        ]
+      },
+      "urdf_friction": {
+        "pass": true,
+        "actual": 0.0,
+        "expected": 0.0
+      }
+    },
+    "waist_pitch_joint": {
+      "kp": {
+        "pass": true,
+        "actual": 80.0,
+        "expected": 80.0
+      },
+      "kd": {
+        "pass": true,
+        "actual": 4.0,
+        "expected": 4.0
+      },
+      "effort_limit_sim": {
+        "pass": true,
+        "actual": 75.0,
+        "expected": 75.0
+      },
+      "velocity_limit_sim": {
+        "pass": true,
+        "actual": 12.25,
+        "expected": 12.25
+      },
+      "armature": {
+        "pass": true,
+        "actual": 0.009999999776482582,
+        "expected": 0.01
+      },
+      "position_limits_rad": {
+        "pass": true,
+        "actual": [
+          -0.25999996066093445,
+          0.429999977350235
+        ],
+        "expected": [
+          -0.26,
+          0.43
+        ]
+      },
+      "urdf_friction": {
+        "pass": true,
+        "actual": 0.0,
+        "expected": 0.0
+      }
+    },
+    "L_hip_yaw_joint": {
+      "kp": {
+        "pass": true,
+        "actual": 75.0,
+        "expected": 75.0
+      },
+      "kd": {
+        "pass": true,
+        "actual": 3.5,
+        "expected": 3.5
+      },
+      "effort_limit_sim": {
+        "pass": true,
+        "actual": 70.0,
+        "expected": 70.0
+      },
+      "velocity_limit_sim": {
+        "pass": true,
+        "actual": 13.399999618530273,
+        "expected": 13.4
+      },
+      "armature": {
+        "pass": true,
+        "actual": 0.009999999776482582,
+        "expected": 0.01
+      },
+      "position_limits_rad": {
+        "pass": true,
+        "actual": [
+          -2.7899997234344482,
+          2.7899997234344482
+        ],
+        "expected": [
+          -2.79,
+          2.79
+        ]
+      },
+      "urdf_friction": {
+        "pass": true,
+        "actual": 0.0,
+        "expected": 0.0
+      }
+    },
+    "R_hip_yaw_joint": {
+      "kp": {
+        "pass": true,
+        "actual": 75.0,
+        "expected": 75.0
+      },
+      "kd": {
+        "pass": true,
+        "actual": 3.5,
+        "expected": 3.5
+      },
+      "effort_limit_sim": {
+        "pass": true,
+        "actual": 70.0,
+        "expected": 70.0
+      },
+      "velocity_limit_sim": {
+        "pass": true,
+        "actual": 13.399999618530273,
+        "expected": 13.4
+      },
+      "armature": {
+        "pass": true,
+        "actual": 0.009999999776482582,
+        "expected": 0.01
+      },
+      "position_limits_rad": {
+        "pass": true,
+        "actual": [
+          -2.7899997234344482,
+          2.7899997234344482
+        ],
+        "expected": [
+          -2.79,
+          2.79
+        ]
+      },
+      "urdf_friction": {
+        "pass": true,
+        "actual": 0.0,
+        "expected": 0.0
+      }
+    },
+    "waist_roll_joint": {
+      "kp": {
+        "pass": true,
+        "actual": 80.0,
+        "expected": 80.0
+      },
+      "kd": {
+        "pass": true,
+        "actual": 4.0,
+        "expected": 4.0
+      },
+      "effort_limit_sim": {
+        "pass": true,
+        "actual": 75.0,
+        "expected": 75.0
+      },
+      "velocity_limit_sim": {
+        "pass": true,
+        "actual": 12.25,
+        "expected": 12.25
+      },
+      "armature": {
+        "pass": true,
+        "actual": 0.009999999776482582,
+        "expected": 0.01
+      },
+      "position_limits_rad": {
+        "pass": true,
+        "actual": [
+          -0.5199999213218689,
+          0.5199999213218689
+        ],
+        "expected": [
+          -0.52,
+          0.52
+        ]
+      },
+      "urdf_friction": {
+        "pass": true,
+        "actual": 0.0,
+        "expected": 0.0
+      }
+    },
+    "L_knee_joint": {
+      "kp": {
+        "pass": true,
+        "actual": 120.0,
+        "expected": 120.0
+      },
+      "kd": {
+        "pass": true,
+        "actual": 6.0,
+        "expected": 6.0
+      },
+      "effort_limit_sim": {
+        "pass": true,
+        "actual": 130.0,
+        "expected": 130.0
+      },
+      "velocity_limit_sim": {
+        "pass": true,
+        "actual": 14.65999984741211,
+        "expected": 14.66
+      },
+      "armature": {
+        "pass": true,
+        "actual": 0.009999999776482582,
+        "expected": 0.01
+      },
+      "position_limits_rad": {
+        "pass": true,
+        "actual": [
+          -0.07999999076128006,
+          2.179999828338623
+        ],
+        "expected": [
+          -0.08,
+          2.18
+        ]
+      },
+      "urdf_friction": {
+        "pass": true,
+        "actual": 0.0,
+        "expected": 0.0
+      }
+    },
+    "R_knee_joint": {
+      "kp": {
+        "pass": true,
+        "actual": 120.0,
+        "expected": 120.0
+      },
+      "kd": {
+        "pass": true,
+        "actual": 6.0,
+        "expected": 6.0
+      },
+      "effort_limit_sim": {
+        "pass": true,
+        "actual": 130.0,
+        "expected": 130.0
+      },
+      "velocity_limit_sim": {
+        "pass": true,
+        "actual": 14.65999984741211,
+        "expected": 14.66
+      },
+      "armature": {
+        "pass": true,
+        "actual": 0.009999999776482582,
+        "expected": 0.01
+      },
+      "position_limits_rad": {
+        "pass": true,
+        "actual": [
+          -0.07999999076128006,
+          2.179999828338623
+        ],
+        "expected": [
+          -0.08,
+          2.18
+        ]
+      },
+      "urdf_friction": {
+        "pass": true,
+        "actual": 0.0,
+        "expected": 0.0
+      }
+    },
+    "L_shoulder_pitch_joint": {
+      "kp": {
+        "pass": true,
+        "actual": 50.0,
+        "expected": 50.0
+      },
+      "kd": {
+        "pass": true,
+        "actual": 1.5,
+        "expected": 1.5
+      },
+      "effort_limit_sim": {
+        "pass": true,
+        "actual": 70.0,
+        "expected": 70.0
+      },
+      "velocity_limit_sim": {
+        "pass": true,
+        "actual": 13.399999618530273,
+        "expected": 13.4
+      },
+      "armature": {
+        "pass": true,
+        "actual": 0.009999999776482582,
+        "expected": 0.01
+      },
+      "position_limits_rad": {
+        "pass": true,
+        "actual": [
+          -3.0799999237060547,
+          2.669999837875366
+        ],
+        "expected": [
+          -3.08,
+          2.67
+        ]
+      },
+      "urdf_friction": {
+        "pass": true,
+        "actual": 0.0,
+        "expected": 0.0
+      }
+    },
+    "R_shoulder_pitch_joint": {
+      "kp": {
+        "pass": true,
+        "actual": 50.0,
+        "expected": 50.0
+      },
+      "kd": {
+        "pass": true,
+        "actual": 1.5,
+        "expected": 1.5
+      },
+      "effort_limit_sim": {
+        "pass": true,
+        "actual": 70.0,
+        "expected": 70.0
+      },
+      "velocity_limit_sim": {
+        "pass": true,
+        "actual": 13.399999618530273,
+        "expected": 13.4
+      },
+      "armature": {
+        "pass": true,
+        "actual": 0.009999999776482582,
+        "expected": 0.01
+      },
+      "position_limits_rad": {
+        "pass": true,
+        "actual": [
+          -3.0799999237060547,
+          2.669999837875366
+        ],
+        "expected": [
+          -3.08,
+          2.67
+        ]
+      },
+      "urdf_friction": {
+        "pass": true,
+        "actual": 0.0,
+        "expected": 0.0
+      }
+    },
+    "L_ankle_pitch_joint": {
+      "kp": {
+        "pass": true,
+        "actual": 50.0,
+        "expected": 50.0
+      },
+      "kd": {
+        "pass": true,
+        "actual": 4.0,
+        "expected": 4.0
+      },
+      "effort_limit_sim": {
+        "pass": true,
+        "actual": 150.0,
+        "expected": 150.0
+      },
+      "velocity_limit_sim": {
+        "pass": true,
+        "actual": 12.0,
+        "expected": 12.0
+      },
+      "armature": {
+        "pass": true,
+        "actual": 0.009999999776482582,
+        "expected": 0.01
+      },
+      "position_limits_rad": {
+        "pass": true,
+        "actual": [
+          -0.7799999117851257,
+          0.28999996185302734
+        ],
+        "expected": [
+          -0.78,
+          0.29
+        ]
+      },
+      "urdf_friction": {
+        "pass": true,
+        "actual": 0.0,
+        "expected": 0.0
+      }
+    },
+    "R_ankle_pitch_joint": {
+      "kp": {
+        "pass": true,
+        "actual": 50.0,
+        "expected": 50.0
+      },
+      "kd": {
+        "pass": true,
+        "actual": 4.0,
+        "expected": 4.0
+      },
+      "effort_limit_sim": {
+        "pass": true,
+        "actual": 150.0,
+        "expected": 150.0
+      },
+      "velocity_limit_sim": {
+        "pass": true,
+        "actual": 12.0,
+        "expected": 12.0
+      },
+      "armature": {
+        "pass": true,
+        "actual": 0.009999999776482582,
+        "expected": 0.01
+      },
+      "position_limits_rad": {
+        "pass": true,
+        "actual": [
+          -0.7799999117851257,
+          0.28999996185302734
+        ],
+        "expected": [
+          -0.78,
+          0.29
+        ]
+      },
+      "urdf_friction": {
+        "pass": true,
+        "actual": 0.0,
+        "expected": 0.0
+      }
+    },
+    "L_shoulder_roll_joint": {
+      "kp": {
+        "pass": true,
+        "actual": 40.0,
+        "expected": 40.0
+      },
+      "kd": {
+        "pass": true,
+        "actual": 1.0,
+        "expected": 1.0
+      },
+      "effort_limit_sim": {
+        "pass": true,
+        "actual": 36.0,
+        "expected": 36.0
+      },
+      "velocity_limit_sim": {
+        "pass": true,
+        "actual": 9.319999694824219,
+        "expected": 9.32
+      },
+      "armature": {
+        "pass": true,
+        "actual": 0.009999999776482582,
+        "expected": 0.01
+      },
+      "position_limits_rad": {
+        "pass": true,
+        "actual": [
+          -0.25999996066093445,
+          2.0899999141693115
+        ],
+        "expected": [
+          -0.26,
+          2.09
+        ]
+      },
+      "urdf_friction": {
+        "pass": true,
+        "actual": 0.0,
+        "expected": 0.0
+      }
+    },
+    "R_shoulder_roll_joint": {
+      "kp": {
+        "pass": true,
+        "actual": 40.0,
+        "expected": 40.0
+      },
+      "kd": {
+        "pass": true,
+        "actual": 1.0,
+        "expected": 1.0
+      },
+      "effort_limit_sim": {
+        "pass": true,
+        "actual": 36.0,
+        "expected": 36.0
+      },
+      "velocity_limit_sim": {
+        "pass": true,
+        "actual": 9.319999694824219,
+        "expected": 9.32
+      },
+      "armature": {
+        "pass": true,
+        "actual": 0.009999999776482582,
+        "expected": 0.01
+      },
+      "position_limits_rad": {
+        "pass": true,
+        "actual": [
+          -2.0899999141693115,
+          0.25999996066093445
+        ],
+        "expected": [
+          -2.09,
+          0.26
+        ]
+      },
+      "urdf_friction": {
+        "pass": true,
+        "actual": 0.0,
+        "expected": 0.0
+      }
+    },
+    "L_ankle_roll_joint": {
+      "kp": {
+        "pass": true,
+        "actual": 50.0,
+        "expected": 50.0
+      },
+      "kd": {
+        "pass": true,
+        "actual": 4.0,
+        "expected": 4.0
+      },
+      "effort_limit_sim": {
+        "pass": true,
+        "actual": 150.0,
+        "expected": 150.0
+      },
+      "velocity_limit_sim": {
+        "pass": true,
+        "actual": 12.0,
+        "expected": 12.0
+      },
+      "armature": {
+        "pass": true,
+        "actual": 0.009999999776482582,
+        "expected": 0.01
+      },
+      "position_limits_rad": {
+        "pass": true,
+        "actual": [
+          -0.35999998450279236,
+          0.35999998450279236
+        ],
+        "expected": [
+          -0.36,
+          0.36
+        ]
+      },
+      "urdf_friction": {
+        "pass": true,
+        "actual": 0.0,
+        "expected": 0.0
+      }
+    },
+    "R_ankle_roll_joint": {
+      "kp": {
+        "pass": true,
+        "actual": 50.0,
+        "expected": 50.0
+      },
+      "kd": {
+        "pass": true,
+        "actual": 4.0,
+        "expected": 4.0
+      },
+      "effort_limit_sim": {
+        "pass": true,
+        "actual": 150.0,
+        "expected": 150.0
+      },
+      "velocity_limit_sim": {
+        "pass": true,
+        "actual": 12.0,
+        "expected": 12.0
+      },
+      "armature": {
+        "pass": true,
+        "actual": 0.009999999776482582,
+        "expected": 0.01
+      },
+      "position_limits_rad": {
+        "pass": true,
+        "actual": [
+          -0.35999998450279236,
+          0.35999998450279236
+        ],
+        "expected": [
+          -0.36,
+          0.36
+        ]
+      },
+      "urdf_friction": {
+        "pass": true,
+        "actual": 0.0,
+        "expected": 0.0
+      }
+    },
+    "L_shoulder_yaw_joint": {
+      "kp": {
+        "pass": true,
+        "actual": 40.0,
+        "expected": 40.0
+      },
+      "kd": {
+        "pass": true,
+        "actual": 1.0,
+        "expected": 1.0
+      },
+      "effort_limit_sim": {
+        "pass": true,
+        "actual": 36.0,
+        "expected": 36.0
+      },
+      "velocity_limit_sim": {
+        "pass": true,
+        "actual": 9.319999694824219,
+        "expected": 9.32
+      },
+      "armature": {
+        "pass": true,
+        "actual": 0.009999999776482582,
+        "expected": 0.01
+      },
+      "position_limits_rad": {
+        "pass": true,
+        "actual": [
+          -2.7899997234344482,
+          2.7899997234344482
+        ],
+        "expected": [
+          -2.79,
+          2.79
+        ]
+      },
+      "urdf_friction": {
+        "pass": true,
+        "actual": 0.0,
+        "expected": 0.0
+      }
+    },
+    "R_shoulder_yaw_joint": {
+      "kp": {
+        "pass": true,
+        "actual": 40.0,
+        "expected": 40.0
+      },
+      "kd": {
+        "pass": true,
+        "actual": 1.0,
+        "expected": 1.0
+      },
+      "effort_limit_sim": {
+        "pass": true,
+        "actual": 36.0,
+        "expected": 36.0
+      },
+      "velocity_limit_sim": {
+        "pass": true,
+        "actual": 9.319999694824219,
+        "expected": 9.32
+      },
+      "armature": {
+        "pass": true,
+        "actual": 0.009999999776482582,
+        "expected": 0.01
+      },
+      "position_limits_rad": {
+        "pass": true,
+        "actual": [
+          -2.7899997234344482,
+          2.7899997234344482
+        ],
+        "expected": [
+          -2.79,
+          2.79
+        ]
+      },
+      "urdf_friction": {
+        "pass": true,
+        "actual": 0.0,
+        "expected": 0.0
+      }
+    },
+    "L_elbow_joint": {
+      "kp": {
+        "pass": true,
+        "actual": 40.0,
+        "expected": 40.0
+      },
+      "kd": {
+        "pass": true,
+        "actual": 1.0,
+        "expected": 1.0
+      },
+      "effort_limit_sim": {
+        "pass": true,
+        "actual": 36.0,
+        "expected": 36.0
+      },
+      "velocity_limit_sim": {
+        "pass": true,
+        "actual": 9.319999694824219,
+        "expected": 9.32
+      },
+      "armature": {
+        "pass": true,
+        "actual": 0.009999999776482582,
+        "expected": 0.01
+      },
+      "position_limits_rad": {
+        "pass": true,
+        "actual": [
+          -0.4999999701976776,
+          2.609999895095825
+        ],
+        "expected": [
+          -0.5,
+          2.61
+        ]
+      },
+      "urdf_friction": {
+        "pass": true,
+        "actual": 0.0,
+        "expected": 0.0
+      }
+    },
+    "R_elbow_joint": {
+      "kp": {
+        "pass": true,
+        "actual": 40.0,
+        "expected": 40.0
+      },
+      "kd": {
+        "pass": true,
+        "actual": 1.0,
+        "expected": 1.0
+      },
+      "effort_limit_sim": {
+        "pass": true,
+        "actual": 36.0,
+        "expected": 36.0
+      },
+      "velocity_limit_sim": {
+        "pass": true,
+        "actual": 9.319999694824219,
+        "expected": 9.32
+      },
+      "armature": {
+        "pass": true,
+        "actual": 0.009999999776482582,
+        "expected": 0.01
+      },
+      "position_limits_rad": {
+        "pass": true,
+        "actual": [
+          -0.4999999701976776,
+          2.609999895095825
+        ],
+        "expected": [
+          -0.5,
+          2.61
+        ]
+      },
+      "urdf_friction": {
+        "pass": true,
+        "actual": 0.0,
+        "expected": 0.0
+      }
+    },
+    "L_wrist_roll_joint": {
+      "kp": {
+        "pass": true,
+        "actual": 40.0,
+        "expected": 40
+      },
+      "kd": {
+        "pass": true,
+        "actual": 1.0,
+        "expected": 1
+      },
+      "effort_limit_sim": {
+        "pass": true,
+        "actual": 36.0,
+        "expected": 36.0
+      },
+      "velocity_limit_sim": {
+        "pass": true,
+        "actual": 9.319999694824219,
+        "expected": 9.32
+      },
+      "armature": {
+        "pass": true,
+        "actual": 0.009999999776482582,
+        "expected": 0.01
+      },
+      "position_limits_rad": {
+        "pass": true,
+        "actual": [
+          -2.7899997234344482,
+          2.7899997234344482
+        ],
+        "expected": [
+          -2.79,
+          2.79
+        ]
+      },
+      "urdf_friction": {
+        "pass": true,
+        "actual": 0.0,
+        "expected": 0.0
+      }
+    },
+    "R_wrist_roll_joint": {
+      "kp": {
+        "pass": true,
+        "actual": 40.0,
+        "expected": 40
+      },
+      "kd": {
+        "pass": true,
+        "actual": 1.0,
+        "expected": 1
+      },
+      "effort_limit_sim": {
+        "pass": true,
+        "actual": 36.0,
+        "expected": 36.0
+      },
+      "velocity_limit_sim": {
+        "pass": true,
+        "actual": 9.319999694824219,
+        "expected": 9.32
+      },
+      "armature": {
+        "pass": true,
+        "actual": 0.009999999776482582,
+        "expected": 0.01
+      },
+      "position_limits_rad": {
+        "pass": true,
+        "actual": [
+          -2.7899997234344482,
+          2.7899997234344482
+        ],
+        "expected": [
+          -2.79,
+          2.79
+        ]
+      },
+      "urdf_friction": {
+        "pass": true,
+        "actual": 0.0,
+        "expected": 0.0
+      }
+    },
+    "L_wrist_pitch_joint": {
+      "kp": {
+        "pass": true,
+        "actual": 40.0,
+        "expected": 40
+      },
+      "kd": {
+        "pass": true,
+        "actual": 1.0,
+        "expected": 1
+      },
+      "effort_limit_sim": {
+        "pass": true,
+        "actual": 12.0,
+        "expected": 12.0
+      },
+      "velocity_limit_sim": {
+        "pass": true,
+        "actual": 23.040000915527344,
+        "expected": 23.04
+      },
+      "armature": {
+        "pass": true,
+        "actual": 0.009999999776482582,
+        "expected": 0.01
+      },
+      "position_limits_rad": {
+        "pass": true,
+        "actual": [
+          -1.3899998664855957,
+          1.3899998664855957
+        ],
+        "expected": [
+          -1.39,
+          1.39
+        ]
+      },
+      "urdf_friction": {
+        "pass": true,
+        "actual": 0.0,
+        "expected": 0.0
+      }
+    },
+    "R_wrist_pitch_joint": {
+      "kp": {
+        "pass": true,
+        "actual": 40.0,
+        "expected": 40
+      },
+      "kd": {
+        "pass": true,
+        "actual": 1.0,
+        "expected": 1
+      },
+      "effort_limit_sim": {
+        "pass": true,
+        "actual": 12.0,
+        "expected": 12.0
+      },
+      "velocity_limit_sim": {
+        "pass": true,
+        "actual": 23.040000915527344,
+        "expected": 23.04
+      },
+      "armature": {
+        "pass": true,
+        "actual": 0.009999999776482582,
+        "expected": 0.01
+      },
+      "position_limits_rad": {
+        "pass": true,
+        "actual": [
+          -1.3899998664855957,
+          1.3899998664855957
+        ],
+        "expected": [
+          -1.39,
+          1.39
+        ]
+      },
+      "urdf_friction": {
+        "pass": true,
+        "actual": 0.0,
+        "expected": 0.0
+      }
+    },
+    "L_wrist_yaw_joint": {
+      "kp": {
+        "pass": true,
+        "actual": 40.0,
+        "expected": 40
+      },
+      "kd": {
+        "pass": true,
+        "actual": 1.0,
+        "expected": 1
+      },
+      "effort_limit_sim": {
+        "pass": true,
+        "actual": 12.0,
+        "expected": 12.0
+      },
+      "velocity_limit_sim": {
+        "pass": true,
+        "actual": 23.040000915527344,
+        "expected": 23.04
+      },
+      "armature": {
+        "pass": true,
+        "actual": 0.009999999776482582,
+        "expected": 0.01
+      },
+      "position_limits_rad": {
+        "pass": true,
+        "actual": [
+          -1.5699999332427979,
+          1.5699999332427979
+        ],
+        "expected": [
+          -1.57,
+          1.57
+        ]
+      },
+      "urdf_friction": {
+        "pass": true,
+        "actual": 0.0,
+        "expected": 0.0
+      }
+    },
+    "R_wrist_yaw_joint": {
+      "kp": {
+        "pass": true,
+        "actual": 40.0,
+        "expected": 40
+      },
+      "kd": {
+        "pass": true,
+        "actual": 1.0,
+        "expected": 1
+      },
+      "effort_limit_sim": {
+        "pass": true,
+        "actual": 12.0,
+        "expected": 12.0
+      },
+      "velocity_limit_sim": {
+        "pass": true,
+        "actual": 23.040000915527344,
+        "expected": 23.04
+      },
+      "armature": {
+        "pass": true,
+        "actual": 0.009999999776482582,
+        "expected": 0.01
+      },
+      "position_limits_rad": {
+        "pass": true,
+        "actual": [
+          -1.5699999332427979,
+          1.5699999332427979
+        ],
+        "expected": [
+          -1.57,
+          1.57
+        ]
+      },
+      "urdf_friction": {
+        "pass": true,
+        "actual": 0.0,
+        "expected": 0.0
+      }
+    }
+  },
+  "failures": [],
+  "articulation_roots": [
+    {
+      "path": "/World/Z2/base_link",
+      "self_collisions": true,
+      "position_iterations": 8,
+      "velocity_iterations": 4
+    }
+  ],
+  "collider_count": 13,
+  "converter": {
+    "make_instanceable": null,
+    "merge_fixed_joints": null,
+    "fix_base": null,
+    "collider_type": null,
+    "self_collision": null,
+    "replace_cylinders_with_capsules": null
+  },
+  "total_mass_actual_kg": 36.69094116985798,
+  "total_mass_source_kg": 36.690941,
+  "pass": true
+}
