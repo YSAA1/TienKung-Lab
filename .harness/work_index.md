@@ -4,6 +4,7 @@
 
 | Work surface | Status | Active slice | Source |
 | --- | --- | --- | --- |
+| Z2 29DoF teacher | active / migration | 独立工作树 `D:/TienKung-Lab-z2-teacher-20260909`，基线 `97b70e7`；Grok 4.6 xhigh 实施，对抗审查已派发；尚未开训 | `docs/plans/2026-09-09--z2-teacher-migration.md` |
 | T4 梅花桩 LightLP teacher | paused | G1 老师开训优先。T4 plant DR 计划仍在 `docs/plans/2026-09-02--t4-s12-teacher-plant-retrain-plan.md`，不开 | `docs/plans/2026-09-02--t4-s12-teacher-plant-retrain-plan.md` |
 | Unitree G1 越障 teacher | active / training + experiment | 核心修复B30000在GPU0/2、TB8042保持；VITAL起步实验已在GPU1/3冷启动30k，TB8043，run `2026-09-08_16-25-01_vital_motion_v1`。保留LightLP奖励，仅改动作变化惩罚、终止和步态门控；开训快照iter12，行为待验收 | `docs/plans/2026-09-07--robot-neutral-locomotion.md` |
 | T4 梅花桩 GRU 深度学生 | done | `s12_repr_first` `model_13999` Isaac hard 过门；MuJoCo 稀疏仍摔。下一刀跟新老师，不续 14k 蒸馏 | `docs/plans/2026-09-01--t4-s12-repr-first-distill-plan.md` |
