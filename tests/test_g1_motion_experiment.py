@@ -37,11 +37,20 @@ def test_profile_rejects_other_robots_before_mutation():
     spec.loader.exec_module(module)
     cfg = NS(robot_spec=NS(name="t4"))
     with pytest.raises(ValueError, match="G1-specific"):
-        module.apply_vital_motion_v1(cfg)
+        module.apply_vital_motion_experiment(cfg, "vital_v1")
     assert list(vars(cfg)) == ["robot_spec"]
 
 
-def test_profile_keeps_all_other_reward_weights():
+@pytest.mark.parametrize(
+    ("profile", "action_rate", "accel_enabled", "fall_limits", "gait_gate"),
+    [
+        ("vital_v1", -0.01, False, (0.8, 1.0), False),
+        ("vital_termination_only", -0.1, False, (0.8, 1.0), True),
+        ("vital_gait_gate_off_only", -0.1, True, None, False),
+        ("vital_action_rate_only", -0.01, True, None, True),
+    ],
+)
+def test_motion_experiment_profiles_are_single_factor(profile, action_rate, accel_enabled, fall_limits, gait_gate):
     spec = importlib.util.spec_from_file_location("motion_profile", ROOT / "legged_lab/envs/g1/motion_experiment.py")
     module = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(module)
@@ -57,12 +66,20 @@ def test_profile_keeps_all_other_reward_weights():
     }
     cfg = NS(
         robot_spec=NS(name="g1"),
+        acceleration_termination_enabled=True,
+        deterministic_fall_limits=None,
         gait=NS(tracking_gate_enabled=True),
         reward=NS(**{k: NS(weight=v) for k, v in weights.items()}),
     )
-    module.apply_vital_motion_v1(cfg)
+    module.apply_vital_motion_experiment(cfg, profile)
     actual = {k: v.weight for k, v in vars(cfg.reward).items()}
-    assert actual == {**weights, "action_rate_l2": -0.01}
+    assert actual == {**weights, "action_rate_l2": action_rate}
+    assert cfg.acceleration_termination_enabled is accel_enabled
+    assert cfg.deterministic_fall_limits == fall_limits
+    assert cfg.gait.tracking_gate_enabled is gait_gate
+    assert cfg.lightlp_promotion_distance == "max_radial"
+    assert cfg.progress_monitor_enabled is True
+    assert cfg.sparse_command_min_speed_scale == 1.0
 
 
 @pytest.mark.parametrize("experimental", [False, True])
