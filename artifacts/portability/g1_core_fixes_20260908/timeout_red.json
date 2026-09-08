@@ -1,0 +1,6 @@
+{
+  "baseline": "c2cb044",
+  "source_sha256": "f73f36dcb37c8cbac134af9b929a257606cb74a279e64f220390a5a75c9d78b1",
+  "expected_failure": "three no-reset steps return stale prior timeout",
+  "reproduced": true
+}

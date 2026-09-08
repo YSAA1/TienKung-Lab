@@ -116,6 +116,8 @@ class AMPPPO:
         # Discriminator components
         self.amploss_coef = 1.0
         self.min_std = min_std
+        if min_std is not None:
+            policy.set_minimum_action_std(min_std)
         self.discriminator = discriminator
         self.discriminator.to(self.device)
         self.amp_transition = RolloutStorage.Transition()
@@ -187,6 +189,10 @@ class AMPPPO:
         self.amp_transition.observations = amp_obs
         return self.transition.actions
 
+    def enforce_min_std(self):
+        if self.min_std is not None:
+            self.policy.enforce_minimum_action_std()
+
     def process_env_step(self, rewards, dones, infos, amp_obs):
         # Record the rewards and dones
         # Note: we clone here because later on we bootstrap the rewards based on timeouts
@@ -205,11 +211,18 @@ class AMPPPO:
             # Record the curiosity gates
             self.transition.rnd_state = rnd_state.clone()
 
-        # Bootstrapping on time outs
-        if "time_outs" in infos:
-            self.transition.rewards += self.gamma * torch.squeeze(
-                self.transition.values * infos["time_outs"].unsqueeze(1).to(self.device), 1
-            )
+        # Only pure truncations bootstrap, from the physical pre-reset endpoint.
+        if "time_outs" in infos and "bootstrap_mask" not in infos:
+            raise RuntimeError("AMP timeout handling requires bootstrap_mask and pre-reset terminal values")
+        if "bootstrap_mask" in infos:
+            mask = infos["bootstrap_mask"].to(self.device).bool()
+            if torch.any(mask & ~dones.bool()):
+                raise RuntimeError("bootstrap_mask must be a subset of done")
+            if torch.any(mask):
+                values = infos["terminal_values"].to(self.device).reshape(-1)
+                if values.numel() != int(mask.sum()):
+                    raise RuntimeError("terminal values must match bootstrap_mask")
+                self.transition.rewards[mask] += self.gamma * values
 
         # record the transition
         self.amp_storage.insert(self.amp_transition.observations, amp_obs)
@@ -459,6 +472,7 @@ class AMPPPO:
             # -- For PPO
             nn.utils.clip_grad_norm_(self.policy.parameters(), self.max_grad_norm)
             self.optimizer.step()
+            self.enforce_min_std()
             # -- For RND
             if self.rnd_optimizer:
                 self.rnd_optimizer.step()

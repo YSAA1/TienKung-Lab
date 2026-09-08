@@ -65,6 +65,11 @@ class AmpOnPolicyRunner:
         else:
             raise ValueError(f"Training type not found for algorithm {self.alg_cfg['class_name']}.")
 
+        if not callable(getattr(self.env, "preview_terminal_critic_observations", None)) or not getattr(
+            self.env, "supports_terminal_critic_bootstrap", True
+        ):
+            raise ValueError("AMP runner requires an environment with pre-reset terminal Critic observations")
+
         # resolve dimensions of observations
         obs, extras = self.env.get_observations()
         num_obs = obs.shape[1]
@@ -92,6 +97,8 @@ class AmpOnPolicyRunner:
         policy: ActorCritic | ActorCriticRecurrent | StudentTeacher | StudentTeacherRecurrent = policy_class(
             num_obs, num_privileged_obs, self.env.num_actions, **self.policy_cfg
         ).to(self.device)
+        if policy.is_recurrent:
+            raise ValueError("AMP terminal bootstrap currently supports feed-forward Critic policies only")
 
         # resolve dimension of rnd gated state
         if "rnd_cfg" in self.alg_cfg and self.alg_cfg["rnd_cfg"] is not None:
@@ -129,7 +136,8 @@ class AmpOnPolicyRunner:
             device,
             train_cfg["amp_task_reward_lerp"],
         ).to(self.device)
-        min_std = torch.zeros(len(train_cfg["min_normalized_std"]), device=self.device, requires_grad=False)
+        # These are policy-action standard deviations, not fractions of joint range.
+        min_std = torch.tensor(train_cfg["min_normalized_std"], device=self.device)
 
         # initialize algorithm
         alg_class = eval(self.alg_cfg.pop("class_name"))
@@ -313,6 +321,18 @@ class AmpOnPolicyRunner:
                                 infos.setdefault("log", {})[key] = value[mask].mean()
                                 infos["log"][f"{key}{COUNT_SUFFIX}"] = count
                     amp_obs = torch.clone(next_amp_obs)
+                    if "bootstrap_mask" in infos and torch.any(infos["bootstrap_mask"]):
+                        terminal_obs = infos["terminal_critic_obs"].to(self.device)
+                        normalizer = self.privileged_obs_normalizer
+                        was_training = normalizer.training
+                        try:
+                            normalizer.eval()
+                            terminal_obs = normalizer(terminal_obs)
+                        finally:
+                            normalizer.train(was_training)
+                        infos["terminal_values"] = self.alg.policy.evaluate(terminal_obs).detach()
+                    else:
+                        infos.pop("terminal_values", None)
                     self.alg.process_env_step(rewards, dones, infos, next_amp_obs_with_term)
 
                     # Extract intrinsic rewards (only for logging)
@@ -536,6 +556,11 @@ class AmpOnPolicyRunner:
             "amp_normalizer": self.alg.amp_normalizer,
             "iter": self.current_learning_iteration,
             "infos": infos,
+            "transition_contract": {
+                "version": 1,
+                "timeout_bootstrap": "pre_reset_terminal_critic_pure_truncation",
+                "min_action_std": self.alg.min_std.detach().cpu().tolist() if self.alg.min_std is not None else None,
+            },
         }
         # -- Save RND model if used
         if self.alg.rnd:

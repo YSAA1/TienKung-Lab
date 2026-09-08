@@ -443,6 +443,10 @@ class LocomotionEnv(VecEnv):
         self.append_critic_immunity = bool(getattr(self.cfg, "append_critic_immunity", False))
         self.teacher_scan_history_length = int(getattr(self.cfg, "teacher_scan_history_length", 1))
         self.append_critic_foot_scan = bool(getattr(self.cfg, "append_critic_foot_scan", False))
+        if self.append_critic_foot_scan:
+            missing = [name for name in ("left_foot_scanner", "right_foot_scanner") if name not in self.scene.sensors]
+            if missing:
+                raise RuntimeError(f"Required critic foot scanners missing: {missing}")
         self.impact_immunity = torch.zeros(self.num_envs, dtype=torch.bool, device=self.device)
         self._lightlp_step = 0
         self.prev_root_lin_vel_w = torch.zeros(self.num_envs, 3, dtype=torch.float, device=self.device)
@@ -642,6 +646,10 @@ class LocomotionEnv(VecEnv):
             if name in self.scene.sensors:
                 scanners.append(self.scene.sensors[name])
         if len(scanners) != 2:
+            if self.append_critic_foot_scan:
+                raise RuntimeError(
+                    "Required critic foot scanners missing: expected left_foot_scanner and right_foot_scanner"
+                )
             return torch.zeros(self.num_envs, (2 * self.observation_layout.foot_scan_dim), device=self.device)
         chunks = []
         for scanner in scanners:
@@ -724,6 +732,28 @@ class LocomotionEnv(VecEnv):
         decay = math.exp(-self.step_dt / max(tau_s, 1.0e-6))
         self.foot_accel_ema = decay * self.foot_accel_ema + excess_sum
         return self.foot_accel_ema
+
+    @staticmethod
+    def _preview_history(history, current, env_ids):
+        """Match CircularBuffer.append without changing its pointer or push counts."""
+        frames = history.buffer[env_ids].clone()
+        frames = torch.cat((frames[:, 1:], current[env_ids].unsqueeze(1)), dim=1)
+        first = history.current_length[env_ids] == 0
+        frames[first] = current[env_ids][first].unsqueeze(1)
+        return frames.flatten(1)
+
+    def preview_terminal_critic_observations(self, env_ids):
+        """Read-only endpoint observation; no actor noise or real history append."""
+        _, current = self.compute_current_observations()
+        critic = self._preview_history(self.critic_obs_buffer, current, env_ids)
+        scan = self.compute_teacher_terrain_privilege()
+        scan = self._preview_history(self.scan_obs_buffer, scan, env_ids)
+        parts = [critic, scan]
+        if self.append_critic_foot_scan:
+            parts.append(self.compute_foot_scan_privilege()[env_ids])
+        if self.append_critic_immunity:
+            parts.append(self.impact_immunity[env_ids].float().unsqueeze(-1))
+        return torch.cat(parts, dim=-1).clamp(-self.clip_obs, self.clip_obs)
 
     def compute_observations(self):
         current_actor_obs, current_critic_obs = self.compute_current_observations()
@@ -914,7 +944,16 @@ class LocomotionEnv(VecEnv):
             self.event_manager.apply(mode="interval", dt=self.step_dt)
 
         self.reset_buf, self.time_out_buf = self.check_reset()
+        self.extras["time_outs"] = self.time_out_buf.clone()
+        self.extras["terminated"] = self.terminated_buf.clone()
+        bootstrap_mask = self.time_out_buf & self.reset_buf & ~self.terminated_buf
+        self.extras["bootstrap_mask"] = bootstrap_mask
+        self.extras.pop("terminal_critic_obs", None)
         reward_buf = self.reward_manager.compute(self.step_dt)
+        if getattr(self, "supports_terminal_critic_bootstrap", True) and torch.any(bootstrap_mask):
+            self.extras["terminal_critic_obs"] = self.preview_terminal_critic_observations(
+                bootstrap_mask.nonzero(as_tuple=False).flatten()
+            )
         self.reset_env_ids = self.reset_buf.nonzero(as_tuple=False).flatten()
         self.prev_step_root_pos_w.copy_(self.robot.data.root_pos_w)
         # step() auto-resets. AMP transitions must end at the physical terminal
@@ -976,7 +1015,6 @@ class LocomotionEnv(VecEnv):
             dim=1,
         )
         time_out_buf = self.episode_length_buf >= self.max_episode_length
-        reset_buf |= time_out_buf
 
         # Orientation fall termination (VITAL parity) remains a geometric fallback:
         # the trunk now has collision, but a large tilt can occur before contact.
@@ -999,7 +1037,8 @@ class LocomotionEnv(VecEnv):
             )
             reset_buf |= self.pit_fall_buf
 
-        return reset_buf, time_out_buf
+        self.terminated_buf = reset_buf.clone()
+        return reset_buf | time_out_buf, time_out_buf
 
     def _check_reset_lightlp(self):
         """LightLP §IV-C2: gather tensors, then the shared helper decides flags."""
@@ -1072,6 +1111,9 @@ class LocomotionEnv(VecEnv):
                 self._collapse_step_log[key] = mask.float().mean()
                 self._collapse_step_log[f"{key}{LOG_COUNT_SUFFIX}"] = float(self.num_envs)
         self.reset_reason_masks = reasons
+        self.terminated_buf = reasons["torso"] | reasons["accel"] | reasons["fall_over"]
+        if "collapsed" in reasons:
+            self.terminated_buf = self.terminated_buf | reasons["collapsed"]
         return reset_buf, time_out_buf
 
     def reset(self, env_ids):
@@ -1099,7 +1141,6 @@ class LocomotionEnv(VecEnv):
         reward_extras = self.reward_manager.reset(env_ids)
         self.extras["log"].update(reward_extras)
         self.extras["log"].update(self.command_provenance_log())
-        self.extras["time_outs"] = self.time_out_buf
 
         self.command_generator.reset(env_ids)
         self._resample_terrain_aware_commands(env_ids)
@@ -1108,8 +1149,6 @@ class LocomotionEnv(VecEnv):
         self.critic_obs_buffer.reset(env_ids)
         self.scan_obs_buffer.reset(env_ids)
         self.foot_accel_ema[env_ids] = 0.0
-        # Seed with post-reset foot velocity so the first EMA step is not v/dt spike.
-        self.prev_foot_lin_vel_w[env_ids] = self.robot.data.body_lin_vel_w[env_ids][:, self.feet_body_ids, :]
         self.action_buffer.reset(env_ids)
         self.episode_length_buf[env_ids] = 0
         self.episode_max_radial_dist[env_ids] = 0.0
@@ -1120,6 +1159,11 @@ class LocomotionEnv(VecEnv):
 
         self.scene.write_data_to_sim()
         self.sim.forward()
+        # PhysX reports COM velocity in world coordinates, matching body_lin_vel_w.
+        # ArticulationData can still hold the previous episode at this timestamp.
+        self.prev_foot_lin_vel_w[env_ids] = self.robot.root_physx_view.get_link_velocities()[env_ids][
+            :, self.feet_body_ids, :3
+        ]
         if hasattr(self, "_rtx_reset_sim_step"):
             self._rtx_reset_sim_step[env_ids] = int(self.sim_step_counter)
         self.prev_step_root_pos_w[env_ids] = self.robot.data.root_pos_w[env_ids]

@@ -1,3 +1,21 @@
+# Copyright (c) 2021-2024, The RSL-RL Project Developers.
+# All rights reserved.
+# Original code is licensed under the BSD-3-Clause license.
+#
+# Copyright (c) 2022-2025, The Isaac Lab Project Developers.
+# All rights reserved.
+#
+# Copyright (c) 2025-2026, The Legged Lab Project Developers.
+# All rights reserved.
+#
+# Copyright (c) 2025-2026, The TienKung-Lab Project Developers.
+# All rights reserved.
+# Modifications are licensed under the BSD-3-Clause license.
+#
+# This file contains code derived from the RSL-RL, Isaac Lab, and Legged Lab Projects,
+# with additional modifications by the TienKung-Lab Project,
+# and is distributed under the BSD-3-Clause license.
+
 """Depth distillation observations and camera corruption shared across locomotion robots.
 
 The robot recipe supplies its calibrated camera and teacher physics configuration.
@@ -10,14 +28,6 @@ import torch
 import torch.nn.functional as F
 
 from legged_lab.locomotion.env import LocomotionEnv
-from legged_lab.locomotion.schemas import (
-    DEPTH_CLIP_RANGE,
-    DEPTH_HISTORY_LENGTH,
-    DEPTH_INVALID_VALUE,
-    DEPTH_POLICY_SIZE,
-    DEPTH_UPDATE_DECIMATION,
-    STUDENT_DEPTH_HISTORY_LENGTH,
-)
 from legged_lab.locomotion.mdp.camera_extrinsic import (
     apply_camera_local_offset,
     capture_nominal_camera_pose,
@@ -29,13 +39,21 @@ from legged_lab.locomotion.mdp.depth_noise import (
     LIGHTLP_DEPTH_DELAY_STEPS,
     LIGHTLP_DEPTH_HOLD_STEPS,
     LIGHTLP_DEPTH_SCALE_JITTER,
-    apply_metric_depth_noise,
     apply_depth_boundary_corruption,
+    apply_metric_depth_noise,
     apply_normalized_block_dropout,
     depth_refresh_plan,
     edge_biased_block_rows,
     scaled_block_hw,
     stamp_rectangular_blocks,
+)
+from legged_lab.locomotion.schemas import (
+    DEPTH_CLIP_RANGE,
+    DEPTH_HISTORY_LENGTH,
+    DEPTH_INVALID_VALUE,
+    DEPTH_POLICY_SIZE,
+    DEPTH_UPDATE_DECIMATION,
+    STUDENT_DEPTH_HISTORY_LENGTH,
 )
 
 SPARSE_STUDENT_RENDER_SIZE = DEPTH_POLICY_SIZE
@@ -43,6 +61,9 @@ SPARSE_STUDENT_RENDER_SIZE = DEPTH_POLICY_SIZE
 
 class DepthDistillationEnv(LocomotionEnv):
     """Locomotion teacher rollout with a depth-only deployable observation stream."""
+
+    # This interface returns teacher targets, not a PPO Critic observation.
+    supports_terminal_critic_bootstrap = False
 
     def __init__(self, cfg, headless):
         # LocomotionEnv's teacher initialization builds the shared physics/reward
@@ -102,7 +123,9 @@ class DepthDistillationEnv(LocomotionEnv):
         height_scan = self.compute_teacher_terrain_privilege()
         teacher_obs = torch.cat([proprio_history, height_scan], dim=-1)
         if teacher_obs.shape[-1] != self.observation_layout.actor_dim:
-            raise RuntimeError(f"teacher observation width {teacher_obs.shape[-1]} != {self.observation_layout.actor_dim}")
+            raise RuntimeError(
+                f"teacher observation width {teacher_obs.shape[-1]} != {self.observation_layout.actor_dim}"
+            )
 
         self._update_depth_history()
         student_obs = torch.cat([proprio_history, self.depth_history.flatten(start_dim=1)], dim=-1)
@@ -146,9 +169,7 @@ class LightLPDepthDistillationEnv(DepthDistillationEnv):
         self.student_depth_dropout_after_resize = bool(getattr(cfg, "student_depth_dropout_after_resize", True))
         self.student_depth_boundary_corruption = bool(getattr(cfg, "student_depth_boundary_corruption", False))
         self.student_depth_boundary_probability = float(getattr(cfg, "student_depth_boundary_probability", 0.0))
-        self.student_depth_boundary_threshold_m = float(
-            getattr(cfg, "student_depth_boundary_threshold_m", 0.08)
-        )
+        self.student_depth_boundary_threshold_m = float(getattr(cfg, "student_depth_boundary_threshold_m", 0.08))
         delay = getattr(cfg, "student_depth_delay_steps", LIGHTLP_DEPTH_DELAY_STEPS)
         self.student_depth_delay_lo = int(delay[0])
         self.student_depth_delay_hi = int(delay[1])
@@ -210,14 +231,10 @@ class LightLPDepthDistillationEnv(DepthDistillationEnv):
         pos = torch.empty(n, 3, device=self.device, dtype=torch.float32)
         quat = torch.empty(n, 4, device=self.device, dtype=torch.float32)
         for i in range(n):
-            composed_pos, composed_quat = compose_camera_offset(
-                nom_pos, nom_quat, dpos[i].tolist(), drpy[i].tolist()
-            )
+            composed_pos, composed_quat = compose_camera_offset(nom_pos, nom_quat, dpos[i].tolist(), drpy[i].tolist())
             pos[i] = torch.tensor(composed_pos, device=self.device, dtype=torch.float32)
             quat[i] = torch.tensor(composed_quat, device=self.device, dtype=torch.float32)
-        apply_camera_local_offset(
-            self.depth_camera, env_ids, pos, quat, mode=self._depth_cam_pose_mode
-        )
+        apply_camera_local_offset(self.depth_camera, env_ids, pos, quat, mode=self._depth_cam_pose_mode)
 
     def _resample_depth_corruption(self, env_ids=None):
         if env_ids is None:
@@ -344,7 +361,9 @@ class LightLPDepthDistillationEnv(DepthDistillationEnv):
             )
         proprio_frame = self.actor_obs_buffer.buffer[:, -1]
         if proprio_frame.shape[-1] != self.observation_layout.proprio_dim:
-            raise RuntimeError(f"student proprio width {proprio_frame.shape[-1]} != {self.observation_layout.proprio_dim}")
+            raise RuntimeError(
+                f"student proprio width {proprio_frame.shape[-1]} != {self.observation_layout.proprio_dim}"
+            )
         self._update_depth_history()
         depth_frame = self.depth_history[:, -1].flatten(start_dim=1)
         student_obs = torch.cat([proprio_frame, depth_frame], dim=-1)
