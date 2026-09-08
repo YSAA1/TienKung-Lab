@@ -2,7 +2,7 @@
 # All rights reserved.
 # Modifications are licensed under the BSD-3-Clause license.
 
-"""Pure-Python layout truth for T4 sparse footholds (LightLP pillars + stones).
+"""Pure-Python layout truth for LightLP sparse footholds (pillars + stones).
 
 No IsaacLab imports: contract tests run on any machine. Tile frame matches
 ``hurdle_layout`` — x/y in ``[0, tile_size]``, ground z=0, spawn at center.
@@ -20,40 +20,37 @@ from __future__ import annotations
 import math
 import hashlib
 
-T4_STONE_TILE_SIZE = 8.0
-T4_STONE_PLATFORM_WIDTH = 1.6
-T4_STONE_BORDER_WIDTH = 0.25
+LIGHTLP_STONE_TILE_SIZE = 8.0
+LIGHTLP_STONE_PLATFORM_WIDTH = 1.6
+LIGHTLP_STONE_BORDER_WIDTH = 0.25
 # Walkable rim so the last foothold meets a landing instead of a pit. 0.75 m
 # covers the hard-stone last edge (~3.37 m from origin) and the 0.25 m OOB
 # overflow onto the neighboring tile.
-T4_SPARSE_RIM_WIDTH = 0.75
+LIGHTLP_SPARSE_RIM_WIDTH = 0.75
 # Easy: 40 cm top, 10 cm inter-stone void, 9 cm rise. The 1.6 m pad meets the
 # first stone edge (first_gap ≈ 0). Hard still narrows. The lattice count is
 # derived from pitch so changing local step geometry cannot silently shorten the
 # traversable course inside the fixed 8 m tile.
-T4_FOOTHOLD_PITCH_RANGE = (0.50, 0.54)
-T4_STONE_WIDTH_RANGE = (0.40, 0.26)
-T4_STONE_HEIGHT_RANGE = (0.09, 0.24)
-T4_STONE_HEIGHT_JITTER_RANGE = (0.00, 0.04)
-T4_HOLE_DEPTH = -2.0
+LIGHTLP_FOOTHOLD_PITCH_RANGE = (0.50, 0.54)
+LIGHTLP_STONE_WIDTH_RANGE = (0.40, 0.26)
+LIGHTLP_STONE_HEIGHT_RANGE = (0.09, 0.24)
+LIGHTLP_STONE_HEIGHT_JITTER_RANGE = (0.00, 0.04)
+LIGHTLP_HOLE_DEPTH = -2.0
 
 # Pillars keep v3 plan-view (50→38 cm disks, ~5 cm easy void). Only the rise
 # drops so the first foot does not have to clear a 14 cm curb.
-T4_PILLAR_PITCH_RANGE = (0.55, 0.58)
-T4_PILLAR_DIAMETER_RANGE = (0.50, 0.38)
-T4_PILLAR_HEIGHT_RANGE = (0.08, 0.28)
+LIGHTLP_PILLAR_PITCH_RANGE = (0.55, 0.58)
+LIGHTLP_PILLAR_DIAMETER_RANGE = (0.50, 0.38)
+LIGHTLP_PILLAR_HEIGHT_RANGE = (0.08, 0.28)
 
 # Foot sole scan used by illegal-footstep contracts (matches FootScannerCfg).
-T4_FOOT_SCAN_SIZE = (0.16, 0.08)
-T4_FOOT_SCAN_RESOLUTION = 0.04
-# Neutral stance width used only to keep a pinned eval spawn on the 1.6 m pad.
-# Must match ``T4_NOMINAL_FEET_Y_DISTANCE``; the evaluator never spawns in a gap.
-PINNED_SPARSE_SPAWN_FEET_Y_DISTANCE = 0.233
+LIGHTLP_FOOT_SCAN_SIZE = (0.16, 0.08)
+LIGHTLP_FOOT_SCAN_RESOLUTION = 0.04
 PINNED_SPARSE_SPAWN_MAX_ABS_Y_M = 0.10
 PINNED_SPARSE_SPAWN_MAX_ABS_YAW_DEG = 10.0
 PINNED_SPARSE_SPAWN_TERRAINS = frozenset({"stepping_stones", "raised_pillars"})
 
-T4_SPARSE_TERRAIN_PROPORTIONS = {
+LIGHTLP_SPARSE_TERRAIN_PROPORTIONS = {
     "flat": 0.04,
     "random_rough": 0.08,
     "boxes": 0.06,
@@ -79,43 +76,43 @@ def _lerp(lo: float, hi: float, difficulty: float) -> float:
     return lo + d * (hi - lo)
 
 
-def stone_width(difficulty: float, width_range: tuple[float, float] = T4_STONE_WIDTH_RANGE) -> float:
+def stone_width(difficulty: float, width_range: tuple[float, float] = LIGHTLP_STONE_WIDTH_RANGE) -> float:
     return _lerp(width_range[0], width_range[1], difficulty)
 
 
-def foothold_pitch(difficulty: float, pitch_range: tuple[float, float] = T4_FOOTHOLD_PITCH_RANGE) -> float:
+def foothold_pitch(difficulty: float, pitch_range: tuple[float, float] = LIGHTLP_FOOTHOLD_PITCH_RANGE) -> float:
     return _lerp(pitch_range[0], pitch_range[1], difficulty)
 
 
 def stone_gap(
     difficulty: float,
-    width_range: tuple[float, float] = T4_STONE_WIDTH_RANGE,
-    pitch_range: tuple[float, float] = T4_FOOTHOLD_PITCH_RANGE,
+    width_range: tuple[float, float] = LIGHTLP_STONE_WIDTH_RANGE,
+    pitch_range: tuple[float, float] = LIGHTLP_FOOTHOLD_PITCH_RANGE,
 ) -> float:
     return foothold_pitch(difficulty, pitch_range) - stone_width(difficulty, width_range)
 
 
-def stone_height(difficulty: float, height_range: tuple[float, float] = T4_STONE_HEIGHT_RANGE) -> float:
+def stone_height(difficulty: float, height_range: tuple[float, float] = LIGHTLP_STONE_HEIGHT_RANGE) -> float:
     return _lerp(height_range[0], height_range[1], difficulty)
 
 
-def stone_height_jitter(difficulty: float, jitter_range: tuple[float, float] = T4_STONE_HEIGHT_JITTER_RANGE) -> float:
+def stone_height_jitter(difficulty: float, jitter_range: tuple[float, float] = LIGHTLP_STONE_HEIGHT_JITTER_RANGE) -> float:
     return _lerp(jitter_range[0], jitter_range[1], difficulty)
 
 
-def pillar_diameter(difficulty: float, diameter_range: tuple[float, float] = T4_PILLAR_DIAMETER_RANGE) -> float:
+def pillar_diameter(difficulty: float, diameter_range: tuple[float, float] = LIGHTLP_PILLAR_DIAMETER_RANGE) -> float:
     return _lerp(diameter_range[0], diameter_range[1], difficulty)
 
 
 def pillar_gap(
     difficulty: float,
-    diameter_range: tuple[float, float] = T4_PILLAR_DIAMETER_RANGE,
-    pitch_range: tuple[float, float] = T4_PILLAR_PITCH_RANGE,
+    diameter_range: tuple[float, float] = LIGHTLP_PILLAR_DIAMETER_RANGE,
+    pitch_range: tuple[float, float] = LIGHTLP_PILLAR_PITCH_RANGE,
 ) -> float:
     return foothold_pitch(difficulty, pitch_range) - pillar_diameter(difficulty, diameter_range)
 
 
-def pillar_height(difficulty: float, height_range: tuple[float, float] = T4_PILLAR_HEIGHT_RANGE) -> float:
+def pillar_height(difficulty: float, height_range: tuple[float, float] = LIGHTLP_PILLAR_HEIGHT_RANGE) -> float:
     return _lerp(height_range[0], height_range[1], difficulty)
 
 
@@ -129,9 +126,9 @@ def pinned_spawn_stays_on_platform(
     y_offset_m: float,
     yaw_rad: float,
     *,
-    platform_width: float = T4_STONE_PLATFORM_WIDTH,
-    feet_y_distance: float = PINNED_SPARSE_SPAWN_FEET_Y_DISTANCE,
-    foot_size: tuple[float, float] = T4_FOOT_SCAN_SIZE,
+    feet_y_distance: float,
+    foot_size: tuple[float, float],
+    platform_width: float = LIGHTLP_STONE_PLATFORM_WIDTH,
 ) -> bool:
     """True when both feet stay inside the square spawn pad after the pinned pose."""
     half_pad = 0.5 * float(platform_width)
@@ -154,6 +151,8 @@ def resolve_pinned_sparse_spawn(
     y_offset_m: float | None,
     yaw_deg: float | None,
     *,
+    feet_y_distance: float,
+    foot_size: tuple[float, float],
     terrain_type: str | None = None,
 ) -> dict | None:
     """Return reset ranges for a pad-safe pinned spawn, or None to keep random reset.
@@ -178,7 +177,7 @@ def resolve_pinned_sparse_spawn(
             f"pinned yaw {yaw_d} deg exceeds {PINNED_SPARSE_SPAWN_MAX_ABS_YAW_DEG} deg first-step diagnostic cap"
         )
     yaw = math.radians(yaw_d)
-    if not pinned_spawn_stays_on_platform(y, yaw):
+    if not pinned_spawn_stays_on_platform(y, yaw, feet_y_distance=feet_y_distance, foot_size=foot_size):
         raise ValueError(f"pinned spawn y={y} m yaw={yaw_d} deg would leave the 1.6 m spawn pad")
     zero6 = {axis: (0.0, 0.0) for axis in ("x", "y", "z", "roll", "pitch", "yaw")}
     return {
@@ -194,7 +193,7 @@ def resolve_pinned_sparse_spawn(
 
 def first_foothold_center_offset(
     pitch: float,
-    platform_width: float = T4_STONE_PLATFORM_WIDTH,
+    platform_width: float = LIGHTLP_STONE_PLATFORM_WIDTH,
 ) -> float:
     """Distance from tile center to the first lattice center outside the pad."""
     if pitch <= 0.0:
@@ -209,8 +208,8 @@ def first_foothold_center_offset(
 def platform_to_first_gap(
     difficulty: float,
     support: float,
-    pitch_range: tuple[float, float] = T4_FOOTHOLD_PITCH_RANGE,
-    platform_width: float = T4_STONE_PLATFORM_WIDTH,
+    pitch_range: tuple[float, float] = LIGHTLP_FOOTHOLD_PITCH_RANGE,
+    platform_width: float = LIGHTLP_STONE_PLATFORM_WIDTH,
 ) -> float:
     """Void from the spawn-pad edge to the first foothold edge, along a cardinal axis."""
     pitch = foothold_pitch(difficulty, pitch_range)
@@ -219,9 +218,9 @@ def platform_to_first_gap(
 
 def foothold_centers(
     pitch: float,
-    tile_size: float = T4_STONE_TILE_SIZE,
-    platform_width: float = T4_STONE_PLATFORM_WIDTH,
-    border_width: float = T4_STONE_BORDER_WIDTH,
+    tile_size: float = LIGHTLP_STONE_TILE_SIZE,
+    platform_width: float = LIGHTLP_STONE_PLATFORM_WIDTH,
+    border_width: float = LIGHTLP_STONE_BORDER_WIDTH,
 ) -> list[tuple[float, float]]:
     """Centers of a tile-filling square lattice that skips the spawn platform."""
     if pitch <= 0.0:
@@ -264,21 +263,21 @@ def point_on_disk(point_xy: tuple[float, float], center: tuple[float, float], di
 
 def point_on_platform(
     point_xy: tuple[float, float],
-    tile_size: float = T4_STONE_TILE_SIZE,
-    platform_width: float = T4_STONE_PLATFORM_WIDTH,
+    tile_size: float = LIGHTLP_STONE_TILE_SIZE,
+    platform_width: float = LIGHTLP_STONE_PLATFORM_WIDTH,
 ) -> bool:
     c = tile_size / 2.0
     return point_on_rect(point_xy, (c, c), platform_width)
 
 
-def rim_inner_offset(tile_size: float = T4_STONE_TILE_SIZE, rim_width: float = T4_SPARSE_RIM_WIDTH) -> float:
+def rim_inner_offset(tile_size: float = LIGHTLP_STONE_TILE_SIZE, rim_width: float = LIGHTLP_SPARSE_RIM_WIDTH) -> float:
     """Distance from tile center to the inner edge of the landing rim."""
     return 0.5 * float(tile_size) - float(rim_width)
 
 
 def rim_slab_centers_and_sizes(
-    tile_size: float = T4_STONE_TILE_SIZE,
-    rim_width: float = T4_SPARSE_RIM_WIDTH,
+    tile_size: float = LIGHTLP_STONE_TILE_SIZE,
+    rim_width: float = LIGHTLP_SPARSE_RIM_WIDTH,
 ) -> list[tuple[tuple[float, float], tuple[float, float]]]:
     """Four axis-aligned landing slabs: (center_xy, size_xy) south/north/west/east.
 
@@ -297,8 +296,8 @@ def rim_slab_centers_and_sizes(
 
 def point_on_rim(
     point_xy: tuple[float, float],
-    tile_size: float = T4_STONE_TILE_SIZE,
-    rim_width: float = T4_SPARSE_RIM_WIDTH,
+    tile_size: float = LIGHTLP_STONE_TILE_SIZE,
+    rim_width: float = LIGHTLP_SPARSE_RIM_WIDTH,
     *,
     overflow: bool = True,
 ) -> bool:
@@ -316,7 +315,7 @@ def point_on_rim(
 
 
 _ISAAC_TILE_PLATFORM_THICKNESS = 0.10
-_ISAAC_TILE_HALF = 0.5 * T4_STONE_TILE_SIZE
+_ISAAC_TILE_HALF = 0.5 * LIGHTLP_STONE_TILE_SIZE
 _RIM_DIRECTION_NAMES = ("south", "north", "west", "east")
 
 
@@ -346,7 +345,7 @@ def isaac_sparse_tile_geoms(
             "kind": "platform",
             "shape": "box",
             "pos": (ox, oy, -half_thick),
-            "size": (0.5 * T4_STONE_PLATFORM_WIDTH, 0.5 * T4_STONE_PLATFORM_WIDTH, half_thick),
+            "size": (0.5 * LIGHTLP_STONE_PLATFORM_WIDTH, 0.5 * LIGHTLP_STONE_PLATFORM_WIDTH, half_thick),
             "rgba": (0.28, 0.31, 0.34, 1.0),
         }
     ]
@@ -375,22 +374,22 @@ def isaac_sparse_tile_geoms(
         shape = "box"
         stem = "stone"
         rgba = (0.72, 0.63, 0.42, 1.0)
-        pitch_range = T4_FOOTHOLD_PITCH_RANGE
+        pitch_range = LIGHTLP_FOOTHOLD_PITCH_RANGE
     elif kind == "raised_pillars":
-        pitch = foothold_pitch(difficulty, T4_PILLAR_PITCH_RANGE)
+        pitch = foothold_pitch(difficulty, LIGHTLP_PILLAR_PITCH_RANGE)
         support = pillar_diameter(difficulty)
         height = pillar_height(difficulty)
         jitter = 0.0
         shape = "cylinder"
         stem = "pillar"
         rgba = (0.35, 0.58, 0.72, 1.0)
-        pitch_range = T4_PILLAR_PITCH_RANGE
+        pitch_range = LIGHTLP_PILLAR_PITCH_RANGE
     else:
         raise ValueError(f"unknown sparse kind {kind!r}")
     del pitch_range
     rng = random.Random(int(round(float(difficulty) * 1000.0)))
     c = _ISAAC_TILE_HALF
-    max_ring = math.floor((c - T4_STONE_BORDER_WIDTH) / pitch)
+    max_ring = math.floor((c - LIGHTLP_STONE_BORDER_WIDTH) / pitch)
     lo = c - max_ring * pitch
     for tile_x, tile_y in foothold_centers(pitch):
         ix = int(round((tile_x - lo) / pitch))
@@ -418,16 +417,16 @@ def isaac_sparse_tile_geoms(
 def last_cardinal_support_edge(
     kind: str,
     difficulty: float,
-    tile_size: float = T4_STONE_TILE_SIZE,
-    platform_width: float = T4_STONE_PLATFORM_WIDTH,
+    tile_size: float = LIGHTLP_STONE_TILE_SIZE,
+    platform_width: float = LIGHTLP_STONE_PLATFORM_WIDTH,
 ) -> float:
     """+x outer edge of the farthest foothold, in tile-local coordinates."""
     if kind == "stepping_stones":
-        pitch = foothold_pitch(difficulty, T4_FOOTHOLD_PITCH_RANGE)
-        half = 0.5 * stone_width(difficulty, T4_STONE_WIDTH_RANGE)
+        pitch = foothold_pitch(difficulty, LIGHTLP_FOOTHOLD_PITCH_RANGE)
+        half = 0.5 * stone_width(difficulty, LIGHTLP_STONE_WIDTH_RANGE)
     elif kind == "raised_pillars":
-        pitch = foothold_pitch(difficulty, T4_PILLAR_PITCH_RANGE)
-        half = 0.5 * pillar_diameter(difficulty, T4_PILLAR_DIAMETER_RANGE)
+        pitch = foothold_pitch(difficulty, LIGHTLP_PILLAR_PITCH_RANGE)
+        half = 0.5 * pillar_diameter(difficulty, LIGHTLP_PILLAR_DIAMETER_RANGE)
     else:
         raise ValueError(f"unknown sparse kind {kind!r}")
     last_center = max(x for x, _ in foothold_centers(pitch, tile_size=tile_size, platform_width=platform_width))
@@ -439,8 +438,8 @@ def point_on_support(
     *,
     kind: str,
     difficulty: float,
-    tile_size: float = T4_STONE_TILE_SIZE,
-    platform_width: float = T4_STONE_PLATFORM_WIDTH,
+    tile_size: float = LIGHTLP_STONE_TILE_SIZE,
+    platform_width: float = LIGHTLP_STONE_PLATFORM_WIDTH,
 ) -> bool:
     """True when ``point_xy`` is on the spawn pad, landing rim, or a foothold."""
     if point_on_platform(point_xy, tile_size=tile_size, platform_width=platform_width):
@@ -448,13 +447,13 @@ def point_on_support(
     if point_on_rim(point_xy, tile_size=tile_size):
         return True
     if kind == "stepping_stones":
-        pitch = foothold_pitch(difficulty, T4_FOOTHOLD_PITCH_RANGE)
-        width = stone_width(difficulty, T4_STONE_WIDTH_RANGE)
+        pitch = foothold_pitch(difficulty, LIGHTLP_FOOTHOLD_PITCH_RANGE)
+        width = stone_width(difficulty, LIGHTLP_STONE_WIDTH_RANGE)
         hit = point_on_rect
         size = width
     elif kind == "raised_pillars":
-        pitch = foothold_pitch(difficulty, T4_PILLAR_PITCH_RANGE)
-        size = pillar_diameter(difficulty, T4_PILLAR_DIAMETER_RANGE)
+        pitch = foothold_pitch(difficulty, LIGHTLP_PILLAR_PITCH_RANGE)
+        size = pillar_diameter(difficulty, LIGHTLP_PILLAR_DIAMETER_RANGE)
         hit = point_on_disk
     else:
         raise ValueError(f"unknown sparse kind {kind!r}")
@@ -465,8 +464,8 @@ def point_on_support(
 
 
 def foot_scan_local_offsets(
-    size: tuple[float, float] = T4_FOOT_SCAN_SIZE,
-    resolution: float = T4_FOOT_SCAN_RESOLUTION,
+    size: tuple[float, float] = LIGHTLP_FOOT_SCAN_SIZE,
+    resolution: float = LIGHTLP_FOOT_SCAN_RESOLUTION,
 ) -> list[tuple[float, float]]:
     """Yaw-frame (x, y) offsets for the downward foot grid, matching Isaac GridPattern."""
     num_x = int(round(size[0] / resolution)) + 1
@@ -479,8 +478,8 @@ def foot_scan_local_offsets(
 def foot_scan_world_points(
     foot_xy: tuple[float, float],
     yaw: float = 0.0,
-    size: tuple[float, float] = T4_FOOT_SCAN_SIZE,
-    resolution: float = T4_FOOT_SCAN_RESOLUTION,
+    size: tuple[float, float] = LIGHTLP_FOOT_SCAN_SIZE,
+    resolution: float = LIGHTLP_FOOT_SCAN_RESOLUTION,
 ) -> list[tuple[float, float]]:
     cos_y = math.cos(yaw)
     sin_y = math.sin(yaw)
@@ -524,3 +523,20 @@ def soft_reports_hole(
 ) -> bool:
     """Soft stage: eyes still see the true-hole map."""
     return not point_on_support(point_xy, kind=kind, difficulty=difficulty)
+
+# Compatibility for historical external scripts and checkpoint recipes.
+T4_STONE_TILE_SIZE = LIGHTLP_STONE_TILE_SIZE
+T4_STONE_PLATFORM_WIDTH = LIGHTLP_STONE_PLATFORM_WIDTH
+T4_STONE_BORDER_WIDTH = LIGHTLP_STONE_BORDER_WIDTH
+T4_SPARSE_RIM_WIDTH = LIGHTLP_SPARSE_RIM_WIDTH
+T4_FOOTHOLD_PITCH_RANGE = LIGHTLP_FOOTHOLD_PITCH_RANGE
+T4_STONE_WIDTH_RANGE = LIGHTLP_STONE_WIDTH_RANGE
+T4_STONE_HEIGHT_RANGE = LIGHTLP_STONE_HEIGHT_RANGE
+T4_STONE_HEIGHT_JITTER_RANGE = LIGHTLP_STONE_HEIGHT_JITTER_RANGE
+T4_HOLE_DEPTH = LIGHTLP_HOLE_DEPTH
+T4_PILLAR_PITCH_RANGE = LIGHTLP_PILLAR_PITCH_RANGE
+T4_PILLAR_DIAMETER_RANGE = LIGHTLP_PILLAR_DIAMETER_RANGE
+T4_PILLAR_HEIGHT_RANGE = LIGHTLP_PILLAR_HEIGHT_RANGE
+T4_FOOT_SCAN_SIZE = LIGHTLP_FOOT_SCAN_SIZE
+T4_FOOT_SCAN_RESOLUTION = LIGHTLP_FOOT_SCAN_RESOLUTION
+T4_SPARSE_TERRAIN_PROPORTIONS = LIGHTLP_SPARSE_TERRAIN_PROPORTIONS

@@ -1,0 +1,46 @@
+{
+  "time": "2026-09-08T10:20:46.549954",
+  "source_files_reverified": 342,
+  "config_difference_keys": [
+    "agent.experiment_name",
+    "agent.run_name",
+    "env.lightlp_promotion_distance"
+  ],
+  "processes": [
+    {
+      "pid": 1107854,
+      "command": "/home/nubot/isaac-sim-standalone-5.1.0-linux-x86_64/kit/python/bin/python3 -u legged_lab/scripts/train.py --task g1_loco_teacher --g1_progress_ab A --num_envs 2048 --seed 42 --distributed --headless --max_iterations 30000 --experiment_name g1_progress_A --run_name g1_progress_A --amp_expert_manifest /home/nubot/phn_ws/t4_train/TienKung-Lab-g1-progress-ab-20260908/legged_lab/envs/g1/datasets/motion_amp_expert_t4_rob2rob_full17_v1/_manifest.json ",
+      "CUDA_VISIBLE_DEVICES": "0,2",
+      "LOCAL_RANK": "0",
+      "RANK": "0"
+    },
+    {
+      "pid": 1107855,
+      "command": "/home/nubot/isaac-sim-standalone-5.1.0-linux-x86_64/kit/python/bin/python3 -u legged_lab/scripts/train.py --task g1_loco_teacher --g1_progress_ab A --num_envs 2048 --seed 42 --distributed --headless --max_iterations 30000 --experiment_name g1_progress_A --run_name g1_progress_A --amp_expert_manifest /home/nubot/phn_ws/t4_train/TienKung-Lab-g1-progress-ab-20260908/legged_lab/envs/g1/datasets/motion_amp_expert_t4_rob2rob_full17_v1/_manifest.json ",
+      "CUDA_VISIBLE_DEVICES": "0,2",
+      "LOCAL_RANK": "1",
+      "RANK": "1"
+    },
+    {
+      "pid": 1109813,
+      "command": "/home/nubot/isaac-sim-standalone-5.1.0-linux-x86_64/kit/python/bin/python3 -u legged_lab/scripts/train.py --task g1_loco_teacher --g1_progress_ab B --num_envs 2048 --seed 42 --distributed --headless --max_iterations 30000 --experiment_name g1_progress_B --run_name g1_progress_B --amp_expert_manifest /home/nubot/phn_ws/t4_train/TienKung-Lab-g1-progress-ab-20260908/legged_lab/envs/g1/datasets/motion_amp_expert_t4_rob2rob_full17_v1/_manifest.json ",
+      "CUDA_VISIBLE_DEVICES": "1,3",
+      "LOCAL_RANK": "0",
+      "RANK": "0"
+    },
+    {
+      "pid": 1109814,
+      "command": "/home/nubot/isaac-sim-standalone-5.1.0-linux-x86_64/kit/python/bin/python3 -u legged_lab/scripts/train.py --task g1_loco_teacher --g1_progress_ab B --num_envs 2048 --seed 42 --distributed --headless --max_iterations 30000 --experiment_name g1_progress_B --run_name g1_progress_B --amp_expert_manifest /home/nubot/phn_ws/t4_train/TienKung-Lab-g1-progress-ab-20260908/legged_lab/envs/g1/datasets/motion_amp_expert_t4_rob2rob_full17_v1/_manifest.json ",
+      "CUDA_VISIBLE_DEVICES": "1,3",
+      "LOCAL_RANK": "1",
+      "RANK": "1"
+    }
+  ],
+  "tensorboard_runs": [
+    "A/2026-09-08_10-16-38_g1_progress_A",
+    "B/2026-09-08_10-18-18_g1_progress_B"
+  ],
+  "tensorboard_url": "http://100.100.188.39:8041/#scalars",
+  "training_fatal_patterns_found": false,
+  "claim": "correct cold-start A/B launch; behavior remains unvalidated"
+}

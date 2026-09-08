@@ -17,6 +17,9 @@
 # and is distributed under the BSD-3-Clause license.
 
 import argparse
+import hashlib
+import json
+from pathlib import Path
 
 from isaaclab.app import AppLauncher
 
@@ -35,6 +38,24 @@ parser = argparse.ArgumentParser(description="Train an RL agent with RSL-RL.")
 parser.add_argument("--task", type=str, default=None, help="Name of the task.")
 parser.add_argument("--num_envs", type=int, default=None, help="Number of environments to simulate.")
 parser.add_argument("--seed", type=int, default=None, help="Seed used for the environment")
+parser.add_argument(
+    "--g1_progress_ab", choices=("A", "B"), help="Cold-start full-speed G1: A legacy path, B radial traversal"
+)
+parser.add_argument(
+    "--amp_expert_manifest", type=Path, help="Use the exact AMP files and hashes in this dataset manifest"
+)
+parser.add_argument(
+    "--g1_motion_experiment",
+    choices=(
+        "vital_v1",
+        "vital_termination_only",
+        "vital_gait_gate_off_only",
+        "vital_action_rate_only",
+        "vital_no_action_rate",
+        "vital_no_gait_gate_off",
+    ),
+    help="Opt-in cold-start G1 motion recipe",
+)
 
 # append RSL-RL cli arguments
 cli_args.add_rsl_rl_args(parser)
@@ -78,6 +99,33 @@ def train():
         env_cfg.scene.num_envs = args_cli.num_envs
 
     agent_cfg = update_rsl_rl_cfg(agent_cfg, args_cli)
+    if args_cli.g1_motion_experiment is not None:
+        if env_class_name != "g1_loco_teacher" or agent_cfg.resume or args_cli.amp_expert_manifest is None:
+            raise ValueError("G1 motion experiment requires G1, cold start and an explicit AMP manifest")
+        if args_cli.g1_progress_ab is not None:
+            raise ValueError("Select the motion experiment or the historical A/B flag, not both")
+        from legged_lab.envs.g1.motion_experiment import apply_vital_motion_experiment
+
+        apply_vital_motion_experiment(env_cfg, args_cli.g1_motion_experiment)
+    if args_cli.g1_progress_ab is not None:
+        if env_class_name != "g1_loco_teacher" or agent_cfg.resume or args_cli.amp_expert_manifest is None:
+            raise ValueError("G1 A/B requires g1_loco_teacher, cold start and an explicit full17 AMP manifest")
+        env_cfg.sparse_command_min_speed_scale = 1.0
+        env_cfg.lightlp_promotion_distance = "path_length" if args_cli.g1_progress_ab == "A" else "max_radial"
+        env_cfg.progress_monitor_enabled = True
+    if args_cli.amp_expert_manifest is not None:
+        manifest_path = args_cli.amp_expert_manifest.resolve()
+        manifest = json.loads(manifest_path.read_text())
+        if not manifest["clips"]:
+            raise ValueError("AMP manifest has no clips")
+        files = []
+        for name, clip in manifest["clips"].items():
+            path = manifest_path.parent / f"{name}.txt"
+            if hashlib.sha256(path.read_bytes()).hexdigest() != clip["sha256"]:
+                raise ValueError(f"AMP clip hash mismatch: {path}")
+            files.append(str(path))
+        agent_cfg.amp_expert_dir = str(manifest_path.parent)
+        agent_cfg.amp_motion_files = files
     env_cfg.scene.seed = agent_cfg.seed
 
     if args_cli.distributed:
@@ -121,5 +169,19 @@ def train():
 
 
 if __name__ == "__main__":
-    train()
-    simulation_app.close()
+    exit_code = 0
+    try:
+        train()
+    except BaseException:
+        import traceback
+
+        traceback.print_exc()
+        exit_code = 1
+    finally:
+        import threading
+
+        # Isaac shutdown can hang after the final checkpoint. Bound teardown so
+        # the tmux supervisor can release GPUs and run the behavior evaluations.
+        threading.Timer(30.0, os._exit, args=(exit_code,)).start()
+        simulation_app.close()
+        os._exit(exit_code)

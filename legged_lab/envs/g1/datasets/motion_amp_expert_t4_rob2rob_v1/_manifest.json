@@ -1,0 +1,110 @@
+{
+  "source_dataset": "T4 runtime forward walk/jog CSV robot-to-robot retarget",
+  "status": "kinematic_candidate_pending_isaac_and_visual_validation",
+  "fps": 30,
+  "frame_dim": 70,
+  "urdf_sha256": "c0ae739c640c3e2c00d1bdd8810b5d6e59601487bd1a3995859f9543269ee5c8",
+  "t4_mjcf_sha256": "60323af76cf3b3b9765e6f9657db54533c5be6c9c33b44f0db4b5dd187924e87",
+  "generator_sha256": "a6e88cc6bbfcb035f94b5e375334bb83cb537be17b95d79388af425ad009f9cc",
+  "leg_and_hip_scale": [
+    0.9193820415908641,
+    1.017222789699571,
+    0.9193820415908641
+  ],
+  "arm_scale": [
+    0.7351452981036465,
+    0.7351452981036465
+  ],
+  "class_probabilities": {
+    "walk_forward": 0.625,
+    "run": 0.375
+  },
+  "method": "Bounded sole pose and shoulder-relative wrist IK; waist yaw mapped; G1 waist roll/pitch neutral.",
+  "limitations": "Kinematic mapping; no claim of dynamic tracking or trained locomotion. Two short source clips.",
+  "sources": {
+    "t4_walk_forward": {
+      "original_path": "legged_lab/envs/t4/datasets/motion_source/t4_walk_forward.csv",
+      "original_sha256": "c2ebf40a47fdd2efd58d297325368f465707f7920d34c9c2504e593038c4f7ce",
+      "source_frames": 290,
+      "path": "legged_lab/envs/g1/datasets/motion_source_t4_rob2rob_v1/g1_from_t4_walk_forward.csv",
+      "sha256": "270237d1b9ffbb243fac4e9e9ed9f5ea7f11b2183be2bc026ee4b647a0d3dd33"
+    },
+    "t4_jog_forward": {
+      "original_path": "legged_lab/envs/t4/datasets/motion_source/t4_jog_forward.csv",
+      "original_sha256": "de4185c6a77c15b9610f9fb553790d9104c4899c31a8906e8b03cf067d50d2fb",
+      "source_frames": 152,
+      "path": "legged_lab/envs/g1/datasets/motion_source_t4_rob2rob_v1/g1_from_t4_jog_forward.csv",
+      "sha256": "b6cc37d29289cbc1994a518934d8268bc1572d76a4198fab6dbdde3df83ec9f5"
+    }
+  },
+  "clips": {
+    "g1_from_t4_walk_forward_0053_0250": {
+      "duration_s": 6.566666666666666,
+      "speed_mean_m_s": 0.8964310023745166,
+      "forward_speed_mean_m_s": 0.8909275487042789,
+      "speed_p10_p50_p90_m_s": [
+        0.7281043616425239,
+        0.8890592284952495,
+        1.073010948459029
+      ],
+      "fraction_speed_below_0_1": 0.0,
+      "hard_joint_limit_excess_rad": 0.0,
+      "max_joint_velocity_limit_ratio": 0.5408814444208017,
+      "lowest_sole_m": 0.0010905330634420661,
+      "highest_sole_m": 0.06953092190990075,
+      "max_root_tilt_rad": 0.12668070966606182,
+      "support_point_speed_proxy_p50_p95_m_s": [
+        0.0913048121270636,
+        0.4232489158802626
+      ],
+      "max_sole_position_error_m": 3.9744213750215836e-07,
+      "max_wrist_position_error_m": 0.015564221485205865,
+      "max_sole_orientation_error_rad": 6.245483366171226e-05,
+      "motion_class": "walk_forward",
+      "source_start": 53,
+      "source_stop": 250,
+      "source": "t4_walk_forward",
+      "full_stride_cycles": 6,
+      "root_vertical_shift_m": 0.02755500981460963,
+      "sha256": "b09dc3b0cbb91b759cc33cfd8c425307747f1c2a376d43be4e52bddd0fe1cd78",
+      "motion_weight": 0.625,
+      "frames": 197
+    },
+    "g1_from_t4_jog_forward_0025_0115": {
+      "duration_s": 3.0,
+      "speed_mean_m_s": 1.8614932713645516,
+      "forward_speed_mean_m_s": 1.850999797241601,
+      "speed_p10_p50_p90_m_s": [
+        1.5372919262273952,
+        1.904320997522893,
+        2.1767532984834657
+      ],
+      "fraction_speed_below_0_1": 0.0,
+      "hard_joint_limit_excess_rad": 0.0,
+      "max_joint_velocity_limit_ratio": 0.7603420664538646,
+      "lowest_sole_m": 0.004736268306316145,
+      "highest_sole_m": 0.12498240643784542,
+      "max_root_tilt_rad": 0.4530817926843166,
+      "support_point_speed_proxy_p50_p95_m_s": [
+        0.29730907031875786,
+        0.3176614678224186
+      ],
+      "max_sole_position_error_m": 0.0011835467341393226,
+      "max_wrist_position_error_m": 0.03971003787456316,
+      "max_sole_orientation_error_rad": 0.09316884161082326,
+      "motion_class": "run",
+      "source_start": 25,
+      "source_stop": 115,
+      "source": "t4_jog_forward",
+      "full_stride_cycles": 4,
+      "root_vertical_shift_m": 0.039021186125590857,
+      "sha256": "78db090cc66bd43008344d0abf59809d080ed34722f417c71c460b309ab2e217",
+      "motion_weight": 0.375,
+      "frames": 90
+    }
+  },
+  "duration_by_class_s": {
+    "walk_forward": 6.566666666666666,
+    "run": 3.0
+  }
+}

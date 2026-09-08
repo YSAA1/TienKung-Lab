@@ -1,0 +1,29 @@
+{
+  "scope": "shared depth runtime and independent common configuration imports",
+  "base_commit": "111cb16",
+  "review": "pass",
+  "verification": "pass",
+  "isolation": "subagent",
+  "reviewer": "review_curriculum",
+  "cold_verifier": "verify_teacher_gate",
+  "evidence": {
+    "new_depth_observation_tests": "9 passed; 27/29/21 joints; FF/GRU; no privilege leakage; malformed input",
+    "core_depth_contracts": "74 passed after configuration import repair",
+    "adjacent_regression": "79 passed, 1 skipped (requires IsaacLab); actual Isaac config covered by runtime probe",
+    "old_new_method_ast_equal": 14,
+    "old_new_tensor_comparisons_equal": 48,
+    "import_reproduction": "import_red.json",
+    "independent_cold_imports": ["import_depth_env.json", "import_teacher_cfg.json"],
+    "rtx_runtime": "neutral_depth_runtime_final.json",
+    "source_manifest": "final_source_manifest.json",
+    "verified_code_files": 214,
+    "probe_exit": "depth_final_exit.txt",
+    "probe_session_missing_after_exit": true,
+    "gpu_0_memory_after_exit_mib": 47
+  },
+  "limitations": [
+    "Real RTX evidence covers T4 sparse student only.",
+    "Other joint counts prove observation assembly, not trained student behavior.",
+    "The running G1 teacher remains frozen at 4fd6ec2; this local change was not hot-deployed."
+  ]
+}

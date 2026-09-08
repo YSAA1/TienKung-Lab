@@ -1,0 +1,2358 @@
+{
+  "schema_version": "robot_boundary_audit.v1",
+  "robot_packages": [
+    "g1",
+    "t4",
+    "tienkung"
+  ],
+  "excluded_directory_names": [
+    ".git",
+    ".pytest_cache",
+    ".venv",
+    "__pycache__"
+  ],
+  "excluded_globs": [
+    "artifacts/pytest-*/"
+  ],
+  "files": [
+    {
+      "path": ".cursor/skills/harness-builder/scripts/diff_harness_plan.py",
+      "role": "development_tool",
+      "sha256": "ac61eb9b6b1de6bd1cf155039f9ec99916365faa484d1f43375520a305e8b366",
+      "robot_imports": [],
+      "robot_named_classes": []
+    },
+    {
+      "path": ".cursor/skills/harness-builder/scripts/find_skills.py",
+      "role": "development_tool",
+      "sha256": "46e6dd777fbc3e2aaa9f92192ef9440500bec4d3b232c48069f2093b846ac9d8",
+      "robot_imports": [],
+      "robot_named_classes": []
+    },
+    {
+      "path": ".cursor/skills/harness-builder/scripts/inventory_references.py",
+      "role": "development_tool",
+      "sha256": "6b8ac9c05d25f5cd753c997fc2485054c64a09d42ddcaaecc800db31bb0823a3",
+      "robot_imports": [],
+      "robot_named_classes": []
+    },
+    {
+      "path": ".cursor/skills/harness-builder/scripts/scan_project.py",
+      "role": "development_tool",
+      "sha256": "267e5a0320359939d2ea8991fd0b8cef3d8ee972a408d63b9d3dfbcba46d2b56",
+      "robot_imports": [],
+      "robot_named_classes": []
+    },
+    {
+      "path": ".cursor/skills/harness-builder/scripts/scan_project_automation.py",
+      "role": "development_tool",
+      "sha256": "02459aedaf1d6b8fce41831c916a0704667d1b3a20a43068220cabb834c75ecd",
+      "robot_imports": [],
+      "robot_named_classes": []
+    },
+    {
+      "path": ".cursor/skills/harness-builder/scripts/scan_project_catalog.py",
+      "role": "development_tool",
+      "sha256": "435449c08dc7d2e00d97c6bbaf9ce1c723a0402e221da8edc20a83c6f99ee76f",
+      "robot_imports": [],
+      "robot_named_classes": []
+    },
+    {
+      "path": ".cursor/skills/harness-builder/scripts/scan_project_domain_types.py",
+      "role": "development_tool",
+      "sha256": "d9799339ed0fc0182f2e8b0c9275c0dd319d9fa31f862c93bbf3872e94ad8514",
+      "robot_imports": [],
+      "robot_named_classes": []
+    },
+    {
+      "path": ".cursor/skills/harness-builder/scripts/scan_project_git.py",
+      "role": "development_tool",
+      "sha256": "b8e5d4259ffe7c0cea6f81d8766b69d98a18ee07594e422d8e352a05e349e022",
+      "robot_imports": [],
+      "robot_named_classes": []
+    },
+    {
+      "path": ".cursor/skills/harness-builder/scripts/scan_project_matchers.py",
+      "role": "development_tool",
+      "sha256": "e36ced386850d1de954688b5d81e72ed8165bcebc1e83d8536d45d73e1418d3e",
+      "robot_imports": [],
+      "robot_named_classes": []
+    },
+    {
+      "path": ".cursor/skills/harness-builder/scripts/scan_project_packages.py",
+      "role": "development_tool",
+      "sha256": "18858bb2ff4064173ae4fcfdfe561e91ef494896f330a84af4de4853e5192494",
+      "robot_imports": [],
+      "robot_named_classes": []
+    },
+    {
+      "path": ".cursor/skills/harness-builder/scripts/scan_project_report.py",
+      "role": "development_tool",
+      "sha256": "2d2f1f1239274d9d1abc7d178d1eb2f92e0b3b62548e88c1901fb2367cdb2266",
+      "robot_imports": [],
+      "robot_named_classes": []
+    },
+    {
+      "path": ".cursor/skills/harness-builder/scripts/scan_project_types.py",
+      "role": "development_tool",
+      "sha256": "10beeecbc96944d20a22af16f6c35906f6ddf074b4b2034f0a735436b717b32e",
+      "robot_imports": [],
+      "robot_named_classes": []
+    },
+    {
+      "path": ".cursor/skills/harness-builder/scripts/validate_harness.py",
+      "role": "development_tool",
+      "sha256": "3dbc46c425bb05f8239b40d500e3e60172bcb68bc92e237d4412be00d246090c",
+      "robot_imports": [],
+      "robot_named_classes": []
+    },
+    {
+      "path": ".cursor/skills/harness-builder/scripts/validate_harness_assets.py",
+      "role": "development_tool",
+      "sha256": "e9845299038509a9e59fc573ce4586a749c57b2b750bb99c99b285324be70800",
+      "robot_imports": [],
+      "robot_named_classes": []
+    },
+    {
+      "path": ".cursor/skills/harness-builder/scripts/validate_harness_catalog.py",
+      "role": "development_tool",
+      "sha256": "6ed22e9e13c45cc82ea98a43cc08ef3af1c4f6435fcf8abdf05d2338559f2965",
+      "robot_imports": [],
+      "robot_named_classes": []
+    },
+    {
+      "path": ".cursor/skills/harness-builder/scripts/validate_harness_frontmatter.py",
+      "role": "development_tool",
+      "sha256": "e68662f205aebd405d95ca03eaf19f4ed20a2b90af3d1b0289c9550f8fe3dd34",
+      "robot_imports": [],
+      "robot_named_classes": []
+    },
+    {
+      "path": ".cursor/skills/harness-builder/scripts/validate_harness_integrity.py",
+      "role": "development_tool",
+      "sha256": "b18b368011ce989e84d647385c3b438c67893d8d8ce11a04959e3680978c81a0",
+      "robot_imports": [],
+      "robot_named_classes": []
+    },
+    {
+      "path": ".cursor/skills/harness-builder/scripts/validate_harness_scripts.py",
+      "role": "development_tool",
+      "sha256": "3b151f7231813db5109cfb8e179bbdd89b405aad2ee6a56df7d86958df113c2a",
+      "robot_imports": [],
+      "robot_named_classes": []
+    },
+    {
+      "path": ".cursor/skills/harness-builder/scripts/validate_harness_security.py",
+      "role": "development_tool",
+      "sha256": "758c2457fdf627f48fb9563d9960b58accb00701056efa6b5a86d9f77b6fc9b4",
+      "robot_imports": [],
+      "robot_named_classes": []
+    },
+    {
+      "path": ".cursor/skills/harness-builder/scripts/validate_harness_target.py",
+      "role": "development_tool",
+      "sha256": "f8ce6c6a650491ca1bb37cbdf5638c547ce1ab3ffeece3905433fe9673acff0d",
+      "robot_imports": [],
+      "robot_named_classes": []
+    },
+    {
+      "path": ".cursor/skills/harness-builder/tests/test_scripts.py",
+      "role": "development_tool",
+      "sha256": "c62a831824790e3971ed105f5f718f0581cc59ddc6c43bcb861960b46ea2e4cd",
+      "robot_imports": [],
+      "robot_named_classes": []
+    },
+    {
+      "path": "legged_lab/__init__.py",
+      "role": "framework_sensor_terrain_or_mdp",
+      "sha256": "2d616bb1b3c6289455bdf016ced295557c725d81cad92b6e86b2252a4bac7dcf",
+      "robot_imports": [],
+      "robot_named_classes": []
+    },
+    {
+      "path": "legged_lab/assets/__init__.py",
+      "role": "robot_asset_or_deployment_contract",
+      "sha256": "14f7f013a8c46ac78d3531840616493d5c4c2b5ffb20068ed6e968c7be6d2417",
+      "robot_imports": [],
+      "robot_named_classes": []
+    },
+    {
+      "path": "legged_lab/assets/t4/__init__.py",
+      "role": "robot_asset_or_deployment_contract",
+      "sha256": "494f2700f93913a53bc394546443c8a6b885ac873e2a446d7ff69b95cb377d09",
+      "robot_imports": [
+        "legged_lab.assets.t4",
+        "legged_lab.assets.t4.constants",
+        "legged_lab.assets.t4.constants.T4_JOINT_NAMES",
+        "legged_lab.assets.t4.constants.T4_NOMINAL_FEET_Y_DISTANCE",
+        "legged_lab.assets.t4.schemas"
+      ],
+      "robot_named_classes": []
+    },
+    {
+      "path": "legged_lab/assets/t4/constants.py",
+      "role": "robot_asset_or_deployment_contract",
+      "sha256": "7cbdd5c70e59df29172e6ebbf5010f5731f144d85282a1de71496be8b0144f74",
+      "robot_imports": [],
+      "robot_named_classes": []
+    },
+    {
+      "path": "legged_lab/assets/t4/locomotion.py",
+      "role": "robot_asset_or_deployment_contract",
+      "sha256": "fc447d7e710b646ed62d2fabaf0c2ce17fd1f9a96d40298b6bb23966eb9aedb8",
+      "robot_imports": [
+        "legged_lab.assets.t4.constants",
+        "legged_lab.assets.t4.constants.T4_JOINT_NAMES",
+        "legged_lab.assets.t4.constants.T4_NOMINAL_FEET_Y_DISTANCE",
+        "legged_lab.assets.t4.schemas",
+        "legged_lab.assets.t4.schemas.AMP_FOOT_BODIES",
+        "legged_lab.assets.t4.schemas.AMP_FOOT_SITE_OFFSET",
+        "legged_lab.assets.t4.schemas.AMP_HAND_BODIES",
+        "legged_lab.assets.t4.schemas.AMP_HAND_SITE_OFFSET"
+      ],
+      "robot_named_classes": []
+    },
+    {
+      "path": "legged_lab/assets/t4/mujoco_sim2sim.py",
+      "role": "robot_asset_or_deployment_contract",
+      "sha256": "2925632b0be18fce834e5d24f251947def0c7b969f425061cf5636018b2ce8d9",
+      "robot_imports": [
+        "legged_lab.assets.t4.constants",
+        "legged_lab.assets.t4.constants.T4_JOINT_NAMES"
+      ],
+      "robot_named_classes": []
+    },
+    {
+      "path": "legged_lab/assets/t4/navigation.py",
+      "role": "robot_asset_or_deployment_contract",
+      "sha256": "9f0b144d59421fa45476477995b6ac2c31a78e82deda7c03ec03da5f127ebde0",
+      "robot_imports": [],
+      "robot_named_classes": []
+    },
+    {
+      "path": "legged_lab/assets/t4/schemas.py",
+      "role": "robot_asset_or_deployment_contract",
+      "sha256": "6914086278f9d48a189086c22c2aae9b3fd0031cda572e7ef9f9bed77cbefd23",
+      "robot_imports": [
+        "legged_lab.assets.t4.constants",
+        "legged_lab.assets.t4.constants.T4_JOINT_NAMES"
+      ],
+      "robot_named_classes": []
+    },
+    {
+      "path": "legged_lab/assets/t4/student_lineage.py",
+      "role": "robot_asset_or_deployment_contract",
+      "sha256": "27d2c9764297e2e72d9fefbe2913a2b7ee1c506d86e75e3ba6a3f1cce57c311c",
+      "robot_imports": [
+        "legged_lab.assets.t4.schemas",
+        "legged_lab.assets.t4.schemas.TEACHER_ACTOR_OBS_DIM",
+        "legged_lab.assets.t4.schemas.TEACHER_SPARSE_ACTOR_OBS_DIM"
+      ],
+      "robot_named_classes": []
+    },
+    {
+      "path": "legged_lab/assets/t4/t4.py",
+      "role": "robot_asset_or_deployment_contract",
+      "sha256": "3a11e7dfffadcdd9b3b111b49625a850d219d5015af62402cc64574e4727b44c",
+      "robot_imports": [
+        "legged_lab.assets.t4.constants",
+        "legged_lab.assets.t4.constants.T4_JOINT_NAMES"
+      ],
+      "robot_named_classes": []
+    },
+    {
+      "path": "legged_lab/assets/t4/tracking_motion.py",
+      "role": "robot_asset_or_deployment_contract",
+      "sha256": "cb28eed0ab58b4b08bdf76a9f3ed5e0c640e5ebeb77d8fa7b8f8794f4c39659d",
+      "robot_imports": [
+        "legged_lab.assets.t4.constants",
+        "legged_lab.assets.t4.constants.T4_JOINT_NAMES"
+      ],
+      "robot_named_classes": []
+    },
+    {
+      "path": "legged_lab/assets/t4/vault_contract.py",
+      "role": "robot_asset_or_deployment_contract",
+      "sha256": "a718d1526f79af461937f885135bbc8c5664c2b42ba8bcb7cb2290d6cbdc7535",
+      "robot_imports": [],
+      "robot_named_classes": []
+    },
+    {
+      "path": "legged_lab/assets/t4/vault_skill_contract.py",
+      "role": "robot_asset_or_deployment_contract",
+      "sha256": "aae02227a69663e7c797070ffcef46401a1f40ccaa498a17a7f027b470ed12bd",
+      "robot_imports": [
+        "legged_lab.assets.t4.schemas",
+        "legged_lab.assets.t4.schemas.PROPRIO_FIELDS",
+        "legged_lab.assets.t4.schemas.PROPRIO_FRAME_DIM",
+        "legged_lab.assets.t4.schemas.PROPRIO_HISTORY_LENGTH",
+        "legged_lab.assets.t4.schemas.TEACHER_ACTOR_OBS_DIM",
+        "legged_lab.assets.t4.schemas.TEACHER_SCAN_BODY",
+        "legged_lab.assets.t4.schemas.TEACHER_SCAN_CLIP",
+        "legged_lab.assets.t4.schemas.TEACHER_SCAN_DIM",
+        "legged_lab.assets.t4.schemas.TEACHER_SCAN_HEIGHT_OFFSET",
+        "legged_lab.assets.t4.schemas.TEACHER_SCAN_INVALID_VALUE",
+        "legged_lab.assets.t4.schemas.TEACHER_SCAN_OFFSET",
+        "legged_lab.assets.t4.schemas.TEACHER_SCAN_RESOLUTION",
+        "legged_lab.assets.t4.schemas.TEACHER_SCAN_SIZE",
+        "legged_lab.assets.t4.vault_contract",
+        "legged_lab.assets.t4.vault_contract.T4_VAULT_ACTION_SCALE",
+        "legged_lab.assets.t4.vault_contract.T4_VAULT_BOX_POS",
+        "legged_lab.assets.t4.vault_contract.T4_VAULT_BOX_SIZE"
+      ],
+      "robot_named_classes": []
+    },
+    {
+      "path": "legged_lab/assets/tienkung2_lite/__init__.py",
+      "role": "robot_asset_or_deployment_contract",
+      "sha256": "b01ab4f23460844228d83271267c060804cc43e57ae00f3bdd8d8fff57917fc9",
+      "robot_imports": [
+        "legged_lab.assets.tienkung2_lite.tienkung"
+      ],
+      "robot_named_classes": []
+    },
+    {
+      "path": "legged_lab/assets/tienkung2_lite/tienkung.py",
+      "role": "robot_asset_or_deployment_contract",
+      "sha256": "45ea088db2a5351f1d0dd380e66c1905bc049476c8fe86ed82066dea58a816c5",
+      "robot_imports": [
+        "legged_lab.assets.ISAAC_ASSET_DIR"
+      ],
+      "robot_named_classes": []
+    },
+    {
+      "path": "legged_lab/assets/unitree_g1/__init__.py",
+      "role": "robot_asset_or_deployment_contract",
+      "sha256": "e6f1d1d0f3a95d39086830c2b4b8a02f0d980721a0091c637d732801bdbbb8b4",
+      "robot_imports": [
+        "legged_lab.assets.unitree_g1.constants",
+        "legged_lab.assets.unitree_g1.constants.G1_29DOF_JOINT_NAMES",
+        "legged_lab.assets.unitree_g1.constants.G1_NOMINAL_FEET_Y_DISTANCE",
+        "legged_lab.assets.unitree_g1.constants.NUM_G1_29DOF_JOINTS"
+      ],
+      "robot_named_classes": []
+    },
+    {
+      "path": "legged_lab/assets/unitree_g1/constants.py",
+      "role": "robot_asset_or_deployment_contract",
+      "sha256": "e38fb173ab6f8c66c51b1e53530a9ad365ca231bcef5e60d9cef8c71635041b5",
+      "robot_imports": [],
+      "robot_named_classes": []
+    },
+    {
+      "path": "legged_lab/assets/unitree_g1/g1.py",
+      "role": "robot_asset_or_deployment_contract",
+      "sha256": "6cc8966364c1b6ea54f9433397429c3a287eaea92d8107802c30bafded80e2a0",
+      "robot_imports": [
+        "legged_lab.assets.unitree_g1.constants",
+        "legged_lab.assets.unitree_g1.constants.G1_STANDING_JOINT_POS",
+        "legged_lab.assets.unitree_g1.constants.G1_STANDING_PELVIS_Z"
+      ],
+      "robot_named_classes": []
+    },
+    {
+      "path": "legged_lab/assets/unitree_g1/locomotion.py",
+      "role": "robot_asset_or_deployment_contract",
+      "sha256": "525ae5a58f88cdf719bd5c038d3dd162d1dbfcef74f193a9bdecb9555fe65209",
+      "robot_imports": [
+        "legged_lab.assets.unitree_g1.constants",
+        "legged_lab.assets.unitree_g1.constants.G1_29DOF_JOINT_NAMES",
+        "legged_lab.assets.unitree_g1.constants.G1_NOMINAL_FEET_Y_DISTANCE",
+        "legged_lab.assets.unitree_g1.schemas",
+        "legged_lab.assets.unitree_g1.schemas.AMP_FOOT_BODIES",
+        "legged_lab.assets.unitree_g1.schemas.AMP_FOOT_SITE_OFFSET",
+        "legged_lab.assets.unitree_g1.schemas.AMP_HAND_BODIES",
+        "legged_lab.assets.unitree_g1.schemas.AMP_HAND_SITE_OFFSET"
+      ],
+      "robot_named_classes": []
+    },
+    {
+      "path": "legged_lab/assets/unitree_g1/schemas.py",
+      "role": "robot_asset_or_deployment_contract",
+      "sha256": "ba600e08e1d59f4b1874861c5280fc65dc1571128ecc5279f57e80cfbaf18b81",
+      "robot_imports": [
+        "legged_lab.assets.unitree_g1.constants",
+        "legged_lab.assets.unitree_g1.constants.G1_29DOF_JOINT_NAMES",
+        "legged_lab.assets.unitree_g1.constants.NUM_G1_29DOF_JOINTS"
+      ],
+      "robot_named_classes": []
+    },
+    {
+      "path": "legged_lab/assets/unitree_g1/sync_urdf_collision_from_mjcf.py",
+      "role": "robot_asset_or_deployment_contract",
+      "sha256": "221cab0a295e675f16a901e7e5347e7861ede2e77c5b56f2c22d9fd8bde458a3",
+      "robot_imports": [],
+      "robot_named_classes": []
+    },
+    {
+      "path": "legged_lab/config.py",
+      "role": "shared_algorithm",
+      "sha256": "e7a487fc8b0bd0a6d33283f4bd2e632e532000f7d208ec6e9102a1b27786f0b9",
+      "robot_imports": [],
+      "robot_named_classes": []
+    },
+    {
+      "path": "legged_lab/envs/__init__.py",
+      "role": "robot_recipe_compatibility_or_legacy_task",
+      "sha256": "dcdf5eda5a6f797c316a6157983e1af454a6c7be4ec6bbbaa2b1011afe0e5da5",
+      "robot_imports": [
+        "legged_lab.envs.g1.teacher_cfg",
+        "legged_lab.envs.g1.teacher_cfg.G1LocoTeacherAgentCfg",
+        "legged_lab.envs.g1.teacher_cfg.G1LocoTeacherEnvCfg",
+        "legged_lab.envs.t4.depth_student_cfg",
+        "legged_lab.envs.t4.depth_student_cfg.T4SparseDepthStudentAgentCfg",
+        "legged_lab.envs.t4.depth_student_env",
+        "legged_lab.envs.t4.depth_student_env.T4LocoSparseDepthStudentEnvCfg",
+        "legged_lab.envs.t4.teacher_cfg",
+        "legged_lab.envs.t4.teacher_cfg.T4LocoSparseTeacherAgentCfg",
+        "legged_lab.envs.t4.teacher_cfg.T4LocoSparseTeacherEnvCfg",
+        "legged_lab.envs.t4.teacher_cfg.T4LocoTeacherAgentCfg",
+        "legged_lab.envs.t4.teacher_cfg.T4LocoTeacherEnvCfg",
+        "legged_lab.envs.tienkung.run_cfg",
+        "legged_lab.envs.tienkung.run_cfg.TienKungRunAgentCfg",
+        "legged_lab.envs.tienkung.run_cfg.TienKungRunFlatEnvCfg",
+        "legged_lab.envs.tienkung.run_with_sensor_cfg",
+        "legged_lab.envs.tienkung.run_with_sensor_cfg.TienKungRunWithSensorAgentCfg",
+        "legged_lab.envs.tienkung.run_with_sensor_cfg.TienKungRunWithSensorFlatEnvCfg",
+        "legged_lab.envs.tienkung.tienkung_env",
+        "legged_lab.envs.tienkung.tienkung_env.TienKungEnv",
+        "legged_lab.envs.tienkung.walk_cfg",
+        "legged_lab.envs.tienkung.walk_cfg.TienKungWalkAgentCfg",
+        "legged_lab.envs.tienkung.walk_cfg.TienKungWalkFlatEnvCfg",
+        "legged_lab.envs.tienkung.walk_with_sensor_cfg",
+        "legged_lab.envs.tienkung.walk_with_sensor_cfg.TienKungWalkWithSensorAgentCfg",
+        "legged_lab.envs.tienkung.walk_with_sensor_cfg.TienKungWalkWithSensorFlatEnvCfg"
+      ],
+      "robot_named_classes": []
+    },
+    {
+      "path": "legged_lab/envs/base/base_config.py",
+      "role": "robot_recipe_compatibility_or_legacy_task",
+      "sha256": "e7eff82df3578f39e8f37f6d0dd4286ba5b6684a44545b437bcc39fa07cc2015",
+      "robot_imports": [],
+      "robot_named_classes": []
+    },
+    {
+      "path": "legged_lab/envs/base/base_env.py",
+      "role": "robot_recipe_compatibility_or_legacy_task",
+      "sha256": "55b3ea5ad883be0d4fc504cdfb6e5fd2359d724c64d6df6f3646e48986d8ff77",
+      "robot_imports": [],
+      "robot_named_classes": []
+    },
+    {
+      "path": "legged_lab/envs/base/base_env_config.py",
+      "role": "robot_recipe_compatibility_or_legacy_task",
+      "sha256": "9ba6d310c8550fe3075ad989068e1f6f0503441ddb47bf404b9d55dc1ebdbe20",
+      "robot_imports": [],
+      "robot_named_classes": []
+    },
+    {
+      "path": "legged_lab/envs/g1/__init__.py",
+      "role": "robot_recipe_compatibility_or_legacy_task",
+      "sha256": "cafa43525cb67d643e017c7429dea744fae805331cf5b75dc2539519a4f1f97a",
+      "robot_imports": [],
+      "robot_named_classes": []
+    },
+    {
+      "path": "legged_lab/envs/g1/amp_features.py",
+      "role": "robot_recipe_compatibility_or_legacy_task",
+      "sha256": "937346bf88b3a65b4aabe3b111527039891ffdd5dd9dfae4d1f0c2b95ce0068d",
+      "robot_imports": [
+        "legged_lab.assets.unitree_g1.locomotion",
+        "legged_lab.assets.unitree_g1.locomotion.G1_LOCOMOTION"
+      ],
+      "robot_named_classes": [
+        "G1AmpFeatureBuilder"
+      ]
+    },
+    {
+      "path": "legged_lab/envs/g1/symmetry.py",
+      "role": "robot_recipe_compatibility_or_legacy_task",
+      "sha256": "5c74f4df04de91938e73e99e0cbbdf174e4bfc99e52319e0e78d44d73f6770b4",
+      "robot_imports": [
+        "legged_lab.assets.unitree_g1.locomotion",
+        "legged_lab.assets.unitree_g1.locomotion.G1_LOCOMOTION"
+      ],
+      "robot_named_classes": []
+    },
+    {
+      "path": "legged_lab/envs/g1/teacher_cfg.py",
+      "role": "robot_recipe_compatibility_or_legacy_task",
+      "sha256": "dac3cb9c5e38d790bb41175da4c87537b90e3f5b2c83d01bd9e6213f2973b4ef",
+      "robot_imports": [
+        "legged_lab.assets.unitree_g1.constants",
+        "legged_lab.assets.unitree_g1.constants.G1_29DOF_JOINT_NAMES",
+        "legged_lab.assets.unitree_g1.constants.NUM_G1_29DOF_JOINTS",
+        "legged_lab.assets.unitree_g1.g1",
+        "legged_lab.assets.unitree_g1.g1.G1_29DOF_CFG",
+        "legged_lab.assets.unitree_g1.locomotion",
+        "legged_lab.assets.unitree_g1.locomotion.G1_LOCOMOTION",
+        "legged_lab.assets.unitree_g1.schemas",
+        "legged_lab.assets.unitree_g1.schemas.AMP_FORMAL_EXPERT_DIR",
+        "legged_lab.assets.unitree_g1.schemas.AMP_FRAME_DIM",
+        "legged_lab.assets.unitree_g1.schemas.amp_expert_files"
+      ],
+      "robot_named_classes": [
+        "G1SparseTeacherRewardCfg",
+        "G1LocoTeacherEnvCfg",
+        "G1LocoTeacherAgentCfg"
+      ]
+    },
+    {
+      "path": "legged_lab/envs/t4/__init__.py",
+      "role": "robot_recipe_compatibility_or_legacy_task",
+      "sha256": "6471c5a4564a4213f3b380abe31ce4e9f0c5cc2922033cfd21034b1498491bdf",
+      "robot_imports": [],
+      "robot_named_classes": []
+    },
+    {
+      "path": "legged_lab/envs/t4/amp_features.py",
+      "role": "robot_recipe_compatibility_or_legacy_task",
+      "sha256": "4f8ad87494aa101a8c2d70616c63b5637aba990bbbbc539dbd04e51c1afd5bd2",
+      "robot_imports": [
+        "legged_lab.assets.t4.locomotion",
+        "legged_lab.assets.t4.locomotion.T4_LOCOMOTION"
+      ],
+      "robot_named_classes": [
+        "T4AmpFeatureBuilder"
+      ]
+    },
+    {
+      "path": "legged_lab/envs/t4/curriculum.py",
+      "role": "robot_recipe_compatibility_or_legacy_task",
+      "sha256": "2fd8428ea97dcd19b3f0dbf7abf6c00e9d4802dab514ec4256aedafd60a8e6fb",
+      "robot_imports": [],
+      "robot_named_classes": []
+    },
+    {
+      "path": "legged_lab/envs/t4/depth_student_cfg.py",
+      "role": "robot_recipe_compatibility_or_legacy_task",
+      "sha256": "e1a6022a72265ed9df286a4a27d0f120ed0127ef5a0fff23620dcce365dd2c05",
+      "robot_imports": [
+        "legged_lab.assets.t4.schemas",
+        "legged_lab.assets.t4.schemas.DEPTH_HISTORY_LENGTH",
+        "legged_lab.assets.t4.schemas.DEPTH_POLICY_SIZE",
+        "legged_lab.assets.t4.schemas.PROPRIO_FRAME_DIM",
+        "legged_lab.assets.t4.schemas.PROPRIO_HISTORY_LENGTH",
+        "legged_lab.assets.t4.schemas.STUDENT_DEPTH_HISTORY_LENGTH",
+        "legged_lab.assets.t4.schemas.STUDENT_PROPRIO_HISTORY_LENGTH",
+        "legged_lab.assets.t4.schemas.TEACHER_SCAN_DIM",
+        "legged_lab.assets.t4.schemas.sparse_teacher_latest_scan_range"
+      ],
+      "robot_named_classes": [
+        "T4DepthStudentPolicyCfg",
+        "T4DepthDistillationAlgCfg",
+        "T4DepthStudentAgentCfg",
+        "T4DepthStudentFtAlgCfg",
+        "T4DepthStudentFtAgentCfg",
+        "T4SparseDepthStudentPolicyCfg",
+        "T4SparseDepthStudentDaggerAlgCfg",
+        "T4SparseDepthStudentFinalMainAlgCfg",
+        "T4SparseDepthStudentAgentCfg",
+        "T4SparseDepthStudentReprFirstAlgCfg",
+        "T4SparseDepthStudentReprFirstAgentCfg",
+        "T4SparseDepthStudentJointAlgCfg",
+        "T4SparseDepthStudentDeployFtAlgCfg",
+        "T4SparseDepthStudentTargetedFtAlgCfg",
+        "T4SparseDepthStudentFtAgentCfg",
+        "T4SparseDepthStudentDeployFtAgentCfg",
+        "T4SparseDepthStudentTargetedFtAgentCfg",
+        "T4SparseDepthStudentResidualFtAlgCfg",
+        "T4SparseDepthStudentResidualFtAgentCfg",
+        "T4SparseDepthStudentPlantFtAlgCfg",
+        "T4SparseDepthStudentPlantFtAgentCfg"
+      ]
+    },
+    {
+      "path": "legged_lab/envs/t4/depth_student_env.py",
+      "role": "robot_recipe_compatibility_or_legacy_task",
+      "sha256": "86cfcf540456697633b81eba3e6bc340a7f9b9c5efbdb6148d159abcb79d92d8",
+      "robot_imports": [
+        "legged_lab.assets.t4.schemas",
+        "legged_lab.assets.t4.schemas.DEPTH_CAMERA_SITE_POS",
+        "legged_lab.assets.t4.schemas.DEPTH_POLICY_SIZE",
+        "legged_lab.assets.t4.schemas.depth_camera_ros_quat_wxyz",
+        "legged_lab.envs.t4.teacher_cfg",
+        "legged_lab.envs.t4.teacher_cfg.T4LocoSparseTeacherEnvCfg",
+        "legged_lab.envs.t4.teacher_cfg.T4LocoTeacherEnvCfg",
+        "legged_lab.envs.t4.teacher_cfg.T4SparseTeacherRewardCfg"
+      ],
+      "robot_named_classes": [
+        "T4LocoDepthStudentEnvCfg",
+        "T4LocoDepthStudentFtEnvCfg",
+        "T4LocoSparseDepthStudentEnvCfg",
+        "T4LocoSparseDepthStudentReprFirstEnvCfg",
+        "T4LocoSparseDepthStudentFtEnvCfg",
+        "T4LocoSparseDepthStudentResidualFtEnvCfg",
+        "T4TargetedFtEventCfg",
+        "T4LocoSparseDepthStudentTargetedFtEnvCfg",
+        "T4LocoSparseDepthStudentPlantFtEnvCfg"
+      ]
+    },
+    {
+      "path": "legged_lab/envs/t4/mdp/__init__.py",
+      "role": "robot_recipe_compatibility_or_legacy_task",
+      "sha256": "6adfa802b839f2972ebb1ead428d95602e7311d188961f9b57257663ceff49bd",
+      "robot_imports": [],
+      "robot_named_classes": []
+    },
+    {
+      "path": "legged_lab/envs/t4/mdp/camera_extrinsic.py",
+      "role": "robot_recipe_compatibility_or_legacy_task",
+      "sha256": "9057bcef947484349751909df94620b1bc3e29c6a5847501b7596875c11498b0",
+      "robot_imports": [],
+      "robot_named_classes": []
+    },
+    {
+      "path": "legged_lab/envs/t4/mdp/depth_noise.py",
+      "role": "robot_recipe_compatibility_or_legacy_task",
+      "sha256": "c07094f36e80b34a78e3ecb80138014db3a6182d6b20c0d18e40cfef8ad129ef",
+      "robot_imports": [],
+      "robot_named_classes": []
+    },
+    {
+      "path": "legged_lab/envs/t4/mdp/sparse_signals.py",
+      "role": "robot_recipe_compatibility_or_legacy_task",
+      "sha256": "689ca5c75c96f328598d8bf31a1aafb8ee284da631be21cbb0241ccf1da82d5f",
+      "robot_imports": [],
+      "robot_named_classes": []
+    },
+    {
+      "path": "legged_lab/envs/t4/symmetry.py",
+      "role": "robot_recipe_compatibility_or_legacy_task",
+      "sha256": "b15df5d7643bd13c2202c65c94fbda6312cf59a0d98b67686d2cc49966f62bb0",
+      "robot_imports": [
+        "legged_lab.assets.t4.locomotion",
+        "legged_lab.assets.t4.locomotion.T4_LOCOMOTION"
+      ],
+      "robot_named_classes": []
+    },
+    {
+      "path": "legged_lab/envs/t4/t4_env.py",
+      "role": "robot_recipe_compatibility_or_legacy_task",
+      "sha256": "8506c39193a19f12e22a52445c1d9130ae0b23a2038f5972b7369fbcd3111832",
+      "robot_imports": [],
+      "robot_named_classes": []
+    },
+    {
+      "path": "legged_lab/envs/t4/teacher_cfg.py",
+      "role": "robot_recipe_compatibility_or_legacy_task",
+      "sha256": "772c3398661224384516fbea1c75408a47eb1c4d3a3af3da0da9ac3d79cc3e72",
+      "robot_imports": [
+        "legged_lab.assets.t4.constants",
+        "legged_lab.assets.t4.constants.T4_JOINT_NAMES",
+        "legged_lab.assets.t4.locomotion",
+        "legged_lab.assets.t4.locomotion.T4_LOCOMOTION",
+        "legged_lab.assets.t4.schemas",
+        "legged_lab.assets.t4.schemas.AMP_FORMAL_EXPERT_DIR",
+        "legged_lab.assets.t4.schemas.AMP_FRAME_DIM",
+        "legged_lab.assets.t4.schemas.amp_expert_files",
+        "legged_lab.assets.t4.t4",
+        "legged_lab.assets.t4.t4.T4_CFG"
+      ],
+      "robot_named_classes": [
+        "T4TeacherRewardCfg",
+        "T4SparseTeacherRewardCfg",
+        "T4LocoTeacherEnvCfg",
+        "T4LocoSparseTeacherEnvCfg",
+        "T4LocoTeacherAgentCfg",
+        "T4LocoSparseTeacherAgentCfg"
+      ]
+    },
+    {
+      "path": "legged_lab/envs/t4/terrain_columns.py",
+      "role": "robot_recipe_compatibility_or_legacy_task",
+      "sha256": "b1b80714aa23b4bec9ecf1f35e4ba2af17b98a39eac46ab5e69ea7f36cc3b315",
+      "robot_imports": [],
+      "robot_named_classes": []
+    },
+    {
+      "path": "legged_lab/envs/t4/vault_eval.py",
+      "role": "robot_recipe_compatibility_or_legacy_task",
+      "sha256": "a12b89d3f3fd9c7d2db931d8bd7bd1f01d3fbfd96f8f83728bf32faf50d48176",
+      "robot_imports": [
+        "legged_lab.assets.t4.vault_contract",
+        "legged_lab.assets.t4.vault_contract.T4_VAULT_ACTION_SCALE",
+        "legged_lab.assets.t4.vault_contract.T4_VAULT_BOX_POS",
+        "legged_lab.assets.t4.vault_contract.T4_VAULT_BOX_ROT",
+        "legged_lab.assets.t4.vault_contract.T4_VAULT_BOX_SIZE"
+      ],
+      "robot_named_classes": []
+    },
+    {
+      "path": "legged_lab/envs/t4/vault_mimic/__init__.py",
+      "role": "robot_recipe_compatibility_or_legacy_task",
+      "sha256": "31f9d245ba6e60a1b6d8f308194d3497ef4c5ab416ba56b0c5b579c1e3707162",
+      "robot_imports": [
+        "legged_lab.envs.t4.vault_mimic.agents",
+        "legged_lab.envs.t4.vault_mimic.agents.T4VaultMimicPPORunnerCfg",
+        "legged_lab.envs.t4.vault_mimic.vault_env_cfg",
+        "legged_lab.envs.t4.vault_mimic.vault_env_cfg.T4VaultMimicEnvCfg",
+        "legged_lab.envs.t4.vault_mimic.vault_env_cfg.T4VaultMimicEvalEnvCfg",
+        "legged_lab.envs.t4.vault_mimic.vault_env_cfg.T4VaultMimicPlayEnvCfg"
+      ],
+      "robot_named_classes": []
+    },
+    {
+      "path": "legged_lab/envs/t4/vault_mimic/agents.py",
+      "role": "robot_recipe_compatibility_or_legacy_task",
+      "sha256": "45352c97e59c2f5a6675bc52ada1fb16b27b3833c7bd4fdfe85223a2a8ed5ef3",
+      "robot_imports": [],
+      "robot_named_classes": [
+        "T4VaultMimicPPORunnerCfg"
+      ]
+    },
+    {
+      "path": "legged_lab/envs/t4/vault_mimic/mdp/__init__.py",
+      "role": "robot_recipe_compatibility_or_legacy_task",
+      "sha256": "20e78c509e8675c772489cb045b68a5143038e2e72d6feaf0d5553c3afa33b2d",
+      "robot_imports": [],
+      "robot_named_classes": []
+    },
+    {
+      "path": "legged_lab/envs/t4/vault_mimic/mdp/commands.py",
+      "role": "robot_recipe_compatibility_or_legacy_task",
+      "sha256": "59aaefef11928fac8c0136a88317f3677e2517e0b5dac4cc8f5343093a069b26",
+      "robot_imports": [],
+      "robot_named_classes": []
+    },
+    {
+      "path": "legged_lab/envs/t4/vault_mimic/mdp/events.py",
+      "role": "robot_recipe_compatibility_or_legacy_task",
+      "sha256": "31ff9c669baa5b0ca876f4dc04229bbc079c9e081f5768ed1fcb252dfcf21b85",
+      "robot_imports": [],
+      "robot_named_classes": []
+    },
+    {
+      "path": "legged_lab/envs/t4/vault_mimic/mdp/motion_schema.py",
+      "role": "robot_recipe_compatibility_or_legacy_task",
+      "sha256": "c153dbf6f86f9898a06e4b6f3d9ea02f5141869013864c8eba5c5dbeec7413b0",
+      "robot_imports": [],
+      "robot_named_classes": []
+    },
+    {
+      "path": "legged_lab/envs/t4/vault_mimic/mdp/observations.py",
+      "role": "robot_recipe_compatibility_or_legacy_task",
+      "sha256": "4f02588ca2fe6ba1af7d2726ffb5b3a47c084bd38cf93c8b972d0fe13f5d421b",
+      "robot_imports": [],
+      "robot_named_classes": []
+    },
+    {
+      "path": "legged_lab/envs/t4/vault_mimic/mdp/rewards.py",
+      "role": "robot_recipe_compatibility_or_legacy_task",
+      "sha256": "c1dabf50a23a035e3f6445e937c00f7b93e0a9cf007a6572f33fe16e597b83e5",
+      "robot_imports": [],
+      "robot_named_classes": []
+    },
+    {
+      "path": "legged_lab/envs/t4/vault_mimic/mdp/terminations.py",
+      "role": "robot_recipe_compatibility_or_legacy_task",
+      "sha256": "6d2b138c078a5d3d165015829f18d062401e3c0b169884d094f2838f74c1deec",
+      "robot_imports": [],
+      "robot_named_classes": []
+    },
+    {
+      "path": "legged_lab/envs/t4/vault_mimic/rsl_rl_compat.py",
+      "role": "robot_recipe_compatibility_or_legacy_task",
+      "sha256": "5bffbdaca396c9b1c13f9ceebf95c5f7616f66e38b9c8409d16bee336a14a5c8",
+      "robot_imports": [],
+      "robot_named_classes": []
+    },
+    {
+      "path": "legged_lab/envs/t4/vault_mimic/vault_env_cfg.py",
+      "role": "robot_recipe_compatibility_or_legacy_task",
+      "sha256": "647b1d545ec8cea1e7407381571b8cb179ae49fc6c146e63646123b72ff74c59",
+      "robot_imports": [
+        "legged_lab.assets.t4.t4",
+        "legged_lab.assets.t4.t4.T4_CFG",
+        "legged_lab.assets.t4.vault_contract",
+        "legged_lab.assets.t4.vault_contract.T4_VAULT_ACTION_SCALE",
+        "legged_lab.assets.t4.vault_contract.T4_VAULT_ADAPTIVE_KERNEL_LAMBDA",
+        "legged_lab.assets.t4.vault_contract.T4_VAULT_ADAPTIVE_KERNEL_SIZE",
+        "legged_lab.assets.t4.vault_contract.T4_VAULT_ANCHOR_BODY_NAME",
+        "legged_lab.assets.t4.vault_contract.T4_VAULT_ANCHOR_ORI_TERMINATION_THRESHOLD",
+        "legged_lab.assets.t4.vault_contract.T4_VAULT_ANCHOR_TERMINATION_THRESHOLD",
+        "legged_lab.assets.t4.vault_contract.T4_VAULT_BOX_POS",
+        "legged_lab.assets.t4.vault_contract.T4_VAULT_BOX_ROT",
+        "legged_lab.assets.t4.vault_contract.T4_VAULT_BOX_SIZE",
+        "legged_lab.assets.t4.vault_contract.T4_VAULT_END_EFFECTOR_BODY_NAMES",
+        "legged_lab.assets.t4.vault_contract.T4_VAULT_FOOT_BODY_NAMES",
+        "legged_lab.assets.t4.vault_contract.T4_VAULT_FOOT_TERMINATION_THRESHOLD",
+        "legged_lab.assets.t4.vault_contract.T4_VAULT_MOTION_FILE",
+        "legged_lab.assets.t4.vault_contract.T4_VAULT_PLAY_JOINT_POSITION_RANGE",
+        "legged_lab.assets.t4.vault_contract.T4_VAULT_PLAY_POSE_RANGE",
+        "legged_lab.assets.t4.vault_contract.T4_VAULT_PLAY_SAMPLING_STRATEGY",
+        "legged_lab.assets.t4.vault_contract.T4_VAULT_PLAY_VELOCITY_RANGE",
+        "legged_lab.assets.t4.vault_contract.T4_VAULT_TRACKING_BODY_NAMES",
+        "legged_lab.assets.t4.vault_contract.T4_VAULT_WRIST_BODY_NAMES",
+        "legged_lab.assets.t4.vault_contract.T4_VAULT_WRIST_TERMINATION_THRESHOLD",
+        "legged_lab.envs.t4.vault_eval",
+        "legged_lab.envs.t4.vault_eval.canonical_vault_corridor_layout",
+        "legged_lab.envs.t4.vault_eval.wall_spawn_pose"
+      ],
+      "robot_named_classes": [
+        "T4VaultMimicEnvCfg",
+        "T4VaultMimicPlayEnvCfg",
+        "T4VaultMimicEvalEnvCfg"
+      ]
+    },
+    {
+      "path": "legged_lab/envs/t4/vault_skill/__init__.py",
+      "role": "robot_recipe_compatibility_or_legacy_task",
+      "sha256": "ed07c96c990d37108065359a39da856b0e53f613f1a9c49b56adb938e88ae910",
+      "robot_imports": [
+        "legged_lab.envs.t4.vault_skill.agents",
+        "legged_lab.envs.t4.vault_skill.agents.T4VaultSkillDistillRunnerCfg",
+        "legged_lab.envs.t4.vault_skill.skill_env_cfg",
+        "legged_lab.envs.t4.vault_skill.skill_env_cfg.T4VaultSkillEnvCfg"
+      ],
+      "robot_named_classes": []
+    },
+    {
+      "path": "legged_lab/envs/t4/vault_skill/agents.py",
+      "role": "robot_recipe_compatibility_or_legacy_task",
+      "sha256": "097e6b0aa7d403589b7240fec224da7c77ed2ad407c90a584cfb0d4eea04cd4d",
+      "robot_imports": [],
+      "robot_named_classes": [
+        "T4VaultSkillDistillRunnerCfg"
+      ]
+    },
+    {
+      "path": "legged_lab/envs/t4/vault_skill/mdp/__init__.py",
+      "role": "robot_recipe_compatibility_or_legacy_task",
+      "sha256": "87f31e3416b35d64297bde1deafaa0ce180eb6cbdf42935d16470fd5b4d988a7",
+      "robot_imports": [
+        "legged_lab.envs.t4.vault_skill.mdp.observations"
+      ],
+      "robot_named_classes": []
+    },
+    {
+      "path": "legged_lab/envs/t4/vault_skill/mdp/observations.py",
+      "role": "robot_recipe_compatibility_or_legacy_task",
+      "sha256": "a07ec87bddda6f38990123eda0394302205602dca4aff5e04065aa2e29c46046",
+      "robot_imports": [
+        "legged_lab.assets.t4.vault_contract",
+        "legged_lab.assets.t4.vault_contract.T4_VAULT_BOX_POS",
+        "legged_lab.assets.t4.vault_contract.T4_VAULT_BOX_SIZE",
+        "legged_lab.assets.t4.vault_skill_contract",
+        "legged_lab.assets.t4.vault_skill_contract.G2_PROPRIO_HISTORY_LENGTH",
+        "legged_lab.assets.t4.vault_skill_contract.G2_SKILL_LIN_VEL_X",
+        "legged_lab.assets.t4.vault_skill_contract.analytic_vault_height_scan"
+      ],
+      "robot_named_classes": []
+    },
+    {
+      "path": "legged_lab/envs/t4/vault_skill/skill_env_cfg.py",
+      "role": "robot_recipe_compatibility_or_legacy_task",
+      "sha256": "4d995a433fbf7a1744c26edfc83bfe2a73cb67fa4f49b86d7e76b961dc754861",
+      "robot_imports": [
+        "legged_lab.assets.t4.vault_skill_contract",
+        "legged_lab.assets.t4.vault_skill_contract.G2_ACTION_SCALE",
+        "legged_lab.envs.t4.vault_mimic.vault_env_cfg",
+        "legged_lab.envs.t4.vault_mimic.vault_env_cfg.ActionsCfg",
+        "legged_lab.envs.t4.vault_mimic.vault_env_cfg.CommandsCfg",
+        "legged_lab.envs.t4.vault_mimic.vault_env_cfg.EventCfg",
+        "legged_lab.envs.t4.vault_mimic.vault_env_cfg.RewardsCfg",
+        "legged_lab.envs.t4.vault_mimic.vault_env_cfg.T4VaultMimicEnvCfg",
+        "legged_lab.envs.t4.vault_mimic.vault_env_cfg.TerminationsCfg",
+        "legged_lab.envs.t4.vault_mimic.vault_env_cfg.VaultSceneCfg",
+        "legged_lab.envs.t4.vault_skill.mdp"
+      ],
+      "robot_named_classes": [
+        "T4VaultSkillEnvCfg"
+      ]
+    },
+    {
+      "path": "legged_lab/envs/tienkung/run_cfg.py",
+      "role": "robot_recipe_compatibility_or_legacy_task",
+      "sha256": "4540581c75ee1cf074e6e85dd306f7d294f3d44c646ff92bdbfe159358d385a4",
+      "robot_imports": [
+        "legged_lab.assets.tienkung2_lite",
+        "legged_lab.assets.tienkung2_lite.TIENKUNG2LITE_CFG"
+      ],
+      "robot_named_classes": [
+        "TienKungRunFlatEnvCfg",
+        "TienKungRunAgentCfg"
+      ]
+    },
+    {
+      "path": "legged_lab/envs/tienkung/run_with_sensor_cfg.py",
+      "role": "robot_recipe_compatibility_or_legacy_task",
+      "sha256": "63032b777fe50afbb303a3287b07a03ff683dcd58d34040cfadeaa07be30c76d",
+      "robot_imports": [
+        "legged_lab.assets.tienkung2_lite",
+        "legged_lab.assets.tienkung2_lite.TIENKUNG2LITE_CFG"
+      ],
+      "robot_named_classes": [
+        "TienKungRunWithSensorFlatEnvCfg",
+        "TienKungRunWithSensorAgentCfg"
+      ]
+    },
+    {
+      "path": "legged_lab/envs/tienkung/tienkung_env.py",
+      "role": "robot_recipe_compatibility_or_legacy_task",
+      "sha256": "bf0f79a05e83408f4102da4997721160bb4f36a6f59b04989d41bf89b70abdac",
+      "robot_imports": [
+        "legged_lab.envs.tienkung.run_cfg",
+        "legged_lab.envs.tienkung.run_cfg.TienKungRunFlatEnvCfg",
+        "legged_lab.envs.tienkung.run_with_sensor_cfg",
+        "legged_lab.envs.tienkung.run_with_sensor_cfg.TienKungRunWithSensorFlatEnvCfg",
+        "legged_lab.envs.tienkung.walk_cfg",
+        "legged_lab.envs.tienkung.walk_cfg.TienKungWalkFlatEnvCfg",
+        "legged_lab.envs.tienkung.walk_with_sensor_cfg",
+        "legged_lab.envs.tienkung.walk_with_sensor_cfg.TienKungWalkWithSensorFlatEnvCfg"
+      ],
+      "robot_named_classes": [
+        "TienKungEnv"
+      ]
+    },
+    {
+      "path": "legged_lab/envs/tienkung/walk_cfg.py",
+      "role": "robot_recipe_compatibility_or_legacy_task",
+      "sha256": "811c08fd50efad4f78c0eb3d7d8a5d40b7a119fe9e14904266bdb45db7605584",
+      "robot_imports": [
+        "legged_lab.assets.tienkung2_lite",
+        "legged_lab.assets.tienkung2_lite.TIENKUNG2LITE_CFG"
+      ],
+      "robot_named_classes": [
+        "TienKungWalkFlatEnvCfg",
+        "TienKungWalkAgentCfg"
+      ]
+    },
+    {
+      "path": "legged_lab/envs/tienkung/walk_with_sensor_cfg.py",
+      "role": "robot_recipe_compatibility_or_legacy_task",
+      "sha256": "2ce589e768a231ce376dda574b007bf6cf62a74140470dfd44342fd0897949f2",
+      "robot_imports": [
+        "legged_lab.assets.tienkung2_lite",
+        "legged_lab.assets.tienkung2_lite.TIENKUNG2LITE_CFG"
+      ],
+      "robot_named_classes": [
+        "TienKungWalkWithSensorFlatEnvCfg",
+        "TienKungWalkWithSensorAgentCfg"
+      ]
+    },
+    {
+      "path": "legged_lab/locomotion/__init__.py",
+      "role": "shared_algorithm",
+      "sha256": "091aac8829c2c0866e3af37858b4fe421e301ea2e4c552de2cbadf77918e7132",
+      "robot_imports": [],
+      "robot_named_classes": []
+    },
+    {
+      "path": "legged_lab/locomotion/amp_features.py",
+      "role": "shared_algorithm",
+      "sha256": "6a07d246ce60fee40cea87693aebfa23aae4b8fddf390a9e985ea7a95cb9f2cd",
+      "robot_imports": [],
+      "robot_named_classes": []
+    },
+    {
+      "path": "legged_lab/locomotion/config_binding.py",
+      "role": "shared_algorithm",
+      "sha256": "23293968ccca53e2730c8324f74a027893df3094f9f7a2f6340d6095e16ce0c1",
+      "robot_imports": [],
+      "robot_named_classes": []
+    },
+    {
+      "path": "legged_lab/locomotion/curriculum.py",
+      "role": "shared_algorithm",
+      "sha256": "6bb63b1098ab153ef3bbd8cc59def558ef8df64d431743d7c03eed5d5c803110",
+      "robot_imports": [],
+      "robot_named_classes": []
+    },
+    {
+      "path": "legged_lab/locomotion/depth_env.py",
+      "role": "shared_algorithm",
+      "sha256": "3c60da67ee61918a090973cef3cbadc69131965bd5838a5ffebe69c808bc0c6e",
+      "robot_imports": [],
+      "robot_named_classes": []
+    },
+    {
+      "path": "legged_lab/locomotion/env.py",
+      "role": "shared_algorithm",
+      "sha256": "4f09f2e01508b0465143aad817493289cf073f6fab5e0cf7ba69f33364e5d04a",
+      "robot_imports": [],
+      "robot_named_classes": []
+    },
+    {
+      "path": "legged_lab/locomotion/mdp/__init__.py",
+      "role": "shared_algorithm",
+      "sha256": "70f88dd88d04e825b2c1a68ac9d98f54218945c91b3f083b37f866fe0969c19b",
+      "robot_imports": [],
+      "robot_named_classes": []
+    },
+    {
+      "path": "legged_lab/locomotion/mdp/camera_extrinsic.py",
+      "role": "shared_algorithm",
+      "sha256": "f1e597164bf9bddb33fbb3bde7c4300d677a0099336324117f9569856b78cd76",
+      "robot_imports": [],
+      "robot_named_classes": []
+    },
+    {
+      "path": "legged_lab/locomotion/mdp/depth_noise.py",
+      "role": "shared_algorithm",
+      "sha256": "1057015b7abce211f0e3a05b6f77179a9ddfba67c72331487629698252285ee0",
+      "robot_imports": [],
+      "robot_named_classes": []
+    },
+    {
+      "path": "legged_lab/locomotion/mdp/sparse_signals.py",
+      "role": "shared_algorithm",
+      "sha256": "2d2ef1ec2bffb6e3bab6ff56aefe0ac887223d65745b774e0897004930eb7a72",
+      "robot_imports": [],
+      "robot_named_classes": []
+    },
+    {
+      "path": "legged_lab/locomotion/robot_spec.py",
+      "role": "shared_algorithm",
+      "sha256": "e86fd5dd4d91e85cf73d4cddcd52f67657ccae2def02dbf392bb5dbd2205ba3b",
+      "robot_imports": [],
+      "robot_named_classes": []
+    },
+    {
+      "path": "legged_lab/locomotion/schemas.py",
+      "role": "shared_algorithm",
+      "sha256": "a2a3f8c7c20c4a44bfb2e60ffb44d9f799cea8d614357e6dad925716b0eeffd7",
+      "robot_imports": [],
+      "robot_named_classes": []
+    },
+    {
+      "path": "legged_lab/locomotion/symmetry.py",
+      "role": "shared_algorithm",
+      "sha256": "4c31758eb79ba3152c4da5004a631e9d00f2999611af0fb7df646d597f7a6c59",
+      "robot_imports": [],
+      "robot_named_classes": []
+    },
+    {
+      "path": "legged_lab/locomotion/teacher_cfg.py",
+      "role": "shared_algorithm",
+      "sha256": "65f95b1afd8705f0943bf6d3f85415b1b7f73bdb5b0117c918ffb33688287fe5",
+      "robot_imports": [],
+      "robot_named_classes": []
+    },
+    {
+      "path": "legged_lab/locomotion/terrain_columns.py",
+      "role": "shared_algorithm",
+      "sha256": "a21d94128a79c17fd83f1523cb372ac3555adedb715b674bc8830f0a08e61a07",
+      "robot_imports": [],
+      "robot_named_classes": []
+    },
+    {
+      "path": "legged_lab/locomotion/validation.py",
+      "role": "shared_algorithm",
+      "sha256": "ed954624c63b1541d8b63abd32bfa4ce02db5b681d2660158078a72245cf15aa",
+      "robot_imports": [],
+      "robot_named_classes": []
+    },
+    {
+      "path": "legged_lab/mdp/__init__.py",
+      "role": "framework_sensor_terrain_or_mdp",
+      "sha256": "629dfd0bea027653f0d7d8338b9f4e3b3c2276a90f524050f2abe220ac7c6143",
+      "robot_imports": [],
+      "robot_named_classes": []
+    },
+    {
+      "path": "legged_lab/mdp/events.py",
+      "role": "framework_sensor_terrain_or_mdp",
+      "sha256": "59b590ddb6fe42e48e362f61aa9ccec3acc5ce794dfd4c9f1195a264885c87b4",
+      "robot_imports": [],
+      "robot_named_classes": []
+    },
+    {
+      "path": "legged_lab/mdp/rewards.py",
+      "role": "framework_sensor_terrain_or_mdp",
+      "sha256": "121db4dcf0ca657f0ce7bb631b8e8c15cdcfa2b4dcfe27600bd836b6a4fd7ee5",
+      "robot_imports": [
+        "legged_lab.envs.tienkung.tienkung_env",
+        "legged_lab.envs.tienkung.tienkung_env.TienKungEnv"
+      ],
+      "robot_named_classes": []
+    },
+    {
+      "path": "legged_lab/motion_tracking/__init__.py",
+      "role": "shared_algorithm",
+      "sha256": "50dcde865eeddf48a4dcd9c7de6178412af1b579023b6ae46b872b5931f2a652",
+      "robot_imports": [],
+      "robot_named_classes": []
+    },
+    {
+      "path": "legged_lab/motion_tracking/loader.py",
+      "role": "shared_algorithm",
+      "sha256": "8eabd9320fecd548e19641e2128246d8fcb3ab7665a0a5406dabbc738b654961",
+      "robot_imports": [],
+      "robot_named_classes": []
+    },
+    {
+      "path": "legged_lab/motion_tracking/mdp/__init__.py",
+      "role": "shared_algorithm",
+      "sha256": "6b85c794796a148469677e19309f771bb867bc9acd22d389cd9ef6e134db014d",
+      "robot_imports": [],
+      "robot_named_classes": []
+    },
+    {
+      "path": "legged_lab/motion_tracking/mdp/commands.py",
+      "role": "shared_algorithm",
+      "sha256": "36f0a79b21064a45b48ab5cdbc56af6fe1052a7536fa12641263cbe47fb77dea",
+      "robot_imports": [],
+      "robot_named_classes": []
+    },
+    {
+      "path": "legged_lab/motion_tracking/mdp/events.py",
+      "role": "shared_algorithm",
+      "sha256": "50ff6cb8757de3c6f98eab32c6e63551d72f0e01921b33cfe7dab2e632e9b894",
+      "robot_imports": [],
+      "robot_named_classes": []
+    },
+    {
+      "path": "legged_lab/motion_tracking/mdp/observations.py",
+      "role": "shared_algorithm",
+      "sha256": "57f8f42a04ab5d16318def8dee08fb4ea26e2f3e9c1d9de6365db221c000027d",
+      "robot_imports": [],
+      "robot_named_classes": []
+    },
+    {
+      "path": "legged_lab/motion_tracking/mdp/rewards.py",
+      "role": "shared_algorithm",
+      "sha256": "66a67aad7744f1a3af77c1b476d10cd887058f4f65b7815dd287c9c9039f38ae",
+      "robot_imports": [],
+      "robot_named_classes": []
+    },
+    {
+      "path": "legged_lab/motion_tracking/mdp/terminations.py",
+      "role": "shared_algorithm",
+      "sha256": "4427af117e63947f0dc7e9a1b4ea4742a548961025340ecdba10e7094c2dba6c",
+      "robot_imports": [],
+      "robot_named_classes": []
+    },
+    {
+      "path": "legged_lab/motion_tracking/schema.py",
+      "role": "shared_algorithm",
+      "sha256": "a0b8c658851f745da66e26e6abff8383ef990da339f6597d85df6d9a3d18e026",
+      "robot_imports": [],
+      "robot_named_classes": []
+    },
+    {
+      "path": "legged_lab/scripts/audit_t4_motions.py",
+      "role": "task_entrypoint",
+      "sha256": "6ca3317c9f49bfbb07142f2bd2f998f9004d80df4e6c5437f5db85f1bd1768be",
+      "robot_imports": [],
+      "robot_named_classes": []
+    },
+    {
+      "path": "legged_lab/scripts/download_g1_lafan_motions.py",
+      "role": "task_entrypoint",
+      "sha256": "47489bdb1f6d157d3905a215ed38fd0ea036b7f218ff9868191711fec5fcb97a",
+      "robot_imports": [
+        "legged_lab.assets.unitree_g1.schemas",
+        "legged_lab.assets.unitree_g1.schemas.AMP_HELD_OUT_MOTIONS",
+        "legged_lab.assets.unitree_g1.schemas.AMP_MOTION_CLASSES",
+        "legged_lab.assets.unitree_g1.schemas.AMP_MOTION_SOURCE_DIR",
+        "legged_lab.assets.unitree_g1.schemas.LAFAN1_SOURCE_DATASET"
+      ],
+      "robot_named_classes": []
+    },
+    {
+      "path": "legged_lab/scripts/eval_locomotion.py",
+      "role": "task_entrypoint",
+      "sha256": "38a69034e185274d9a49d8d8cd86381442bd33c0da6bcaa64a3fbaa9fd5be4a4",
+      "robot_imports": [],
+      "robot_named_classes": []
+    },
+    {
+      "path": "legged_lab/scripts/eval_t4_depth_plant_gap.py",
+      "role": "task_entrypoint",
+      "sha256": "d02c20828b487912ae29eec336e4535d99bd0de2723d624d5309c1f53fc7bed4",
+      "robot_imports": [],
+      "robot_named_classes": []
+    },
+    {
+      "path": "legged_lab/scripts/eval_t4_depth_student_sim2sim.py",
+      "role": "task_entrypoint",
+      "sha256": "539f0759e8171bd4a091dd67113301976f3d97a44c631c1c3067ea0afe7e6d26",
+      "robot_imports": [],
+      "robot_named_classes": []
+    },
+    {
+      "path": "legged_lab/scripts/eval_t4_hurdle.py",
+      "role": "task_entrypoint",
+      "sha256": "8613c1f8f55905732a7757f3adc3990d0093bf1291620b2d099da993323237d9",
+      "robot_imports": [],
+      "robot_named_classes": []
+    },
+    {
+      "path": "legged_lab/scripts/eval_t4_hurdle_mujoco.py",
+      "role": "task_entrypoint",
+      "sha256": "0e30346002583ab8f05c8bddc0fcf043d9a341f432a139c8d9c9055d859fae02",
+      "robot_imports": [],
+      "robot_named_classes": []
+    },
+    {
+      "path": "legged_lab/scripts/eval_t4_vault.py",
+      "role": "task_entrypoint",
+      "sha256": "767935ca1a0b1843dee3b854f35f5915ab018971ce20e5bf2144d2e5f46f977a",
+      "robot_imports": [
+        "legged_lab.assets.t4.vault_contract",
+        "legged_lab.assets.t4.vault_contract.T4_VAULT_ACTION_SCALE",
+        "legged_lab.assets.t4.vault_contract.T4_VAULT_MOTION_FILE",
+        "legged_lab.envs.t4.vault_eval",
+        "legged_lab.envs.t4.vault_eval.VaultBatchResult",
+        "legged_lab.envs.t4.vault_eval.build_evaluation_report",
+        "legged_lab.envs.t4.vault_eval.canonical_vault_corridor_layout",
+        "legged_lab.envs.t4.vault_eval.evaluate_vault_batch",
+        "legged_lab.envs.t4.vault_mimic"
+      ],
+      "robot_named_classes": []
+    },
+    {
+      "path": "legged_lab/scripts/generate_g1_amp_expert.py",
+      "role": "task_entrypoint",
+      "sha256": "af60d815843d28067d2a74c185e78a2b0f15a6552487afd3d8dbd9d1e3e8669b",
+      "robot_imports": [
+        "legged_lab.assets.unitree_g1.constants",
+        "legged_lab.assets.unitree_g1.constants.G1_29DOF_JOINT_NAMES",
+        "legged_lab.assets.unitree_g1.g1",
+        "legged_lab.assets.unitree_g1.g1.G1_29DOF_CFG",
+        "legged_lab.assets.unitree_g1.schemas",
+        "legged_lab.assets.unitree_g1.schemas.AMP_FRAME_DIM",
+        "legged_lab.assets.unitree_g1.schemas.AMP_HELD_OUT_MOTIONS",
+        "legged_lab.assets.unitree_g1.schemas.AMP_MOTION_CLASSES",
+        "legged_lab.assets.unitree_g1.schemas.AMP_SCHEMA_VERSION",
+        "legged_lab.assets.unitree_g1.schemas.LAFAN1_CSV_WIDTH",
+        "legged_lab.assets.unitree_g1.schemas.LAFAN1_SOURCE_DATASET",
+        "legged_lab.assets.unitree_g1.schemas.amp_motion_class",
+        "legged_lab.assets.unitree_g1.schemas.amp_motion_weight",
+        "legged_lab.envs.g1.amp_features",
+        "legged_lab.envs.g1.amp_features.G1AmpFeatureBuilder"
+      ],
+      "robot_named_classes": []
+    },
+    {
+      "path": "legged_lab/scripts/generate_t4_amp_expert.py",
+      "role": "task_entrypoint",
+      "sha256": "4ee61f3f8d50cdc37c1adccf8b48df239dcd70a88ef8e52da23a31cdf16a43ad",
+      "robot_imports": [
+        "legged_lab.assets.t4.constants",
+        "legged_lab.assets.t4.constants.T4_JOINT_NAMES",
+        "legged_lab.assets.t4.schemas",
+        "legged_lab.assets.t4.schemas.AMP_FRAME_DIM",
+        "legged_lab.assets.t4.schemas.AMP_HELD_OUT_MOTIONS",
+        "legged_lab.assets.t4.schemas.AMP_MOTION_CLASSES",
+        "legged_lab.assets.t4.schemas.AMP_SCHEMA_VERSION",
+        "legged_lab.assets.t4.schemas.amp_motion_class",
+        "legged_lab.assets.t4.schemas.amp_motion_weight",
+        "legged_lab.assets.t4.t4",
+        "legged_lab.assets.t4.t4.T4_CFG",
+        "legged_lab.envs.t4.amp_features",
+        "legged_lab.envs.t4.amp_features.T4AmpFeatureBuilder"
+      ],
+      "robot_named_classes": []
+    },
+    {
+      "path": "legged_lab/scripts/gmr_data_conversion.py",
+      "role": "task_entrypoint",
+      "sha256": "1da968cd1c136a06ccbe11ed08890731f0aedf35d351f0c722ca2fc07c4a8fbf",
+      "robot_imports": [],
+      "robot_named_classes": []
+    },
+    {
+      "path": "legged_lab/scripts/isaaclab_runtime_compat.py",
+      "role": "task_entrypoint",
+      "sha256": "f18893a7870979c2e7790c9bc20a4aa3745c702df05f929c54a59e4b9b8ac84d",
+      "robot_imports": [],
+      "robot_named_classes": []
+    },
+    {
+      "path": "legged_lab/scripts/play.py",
+      "role": "task_entrypoint",
+      "sha256": "a0b6db8235891009425fb4450f1470ae1f84ba4402e0fa28df6ad522dddbe8a5",
+      "robot_imports": [
+        "legged_lab.envs.t4.vault_mimic",
+        "legged_lab.envs.t4.vault_skill"
+      ],
+      "robot_named_classes": []
+    },
+    {
+      "path": "legged_lab/scripts/play_amp_animation.py",
+      "role": "task_entrypoint",
+      "sha256": "c7436951fa9256d35ad7a7b3a49445845415c73b334bcdd447686f13f97e1616",
+      "robot_imports": [],
+      "robot_named_classes": []
+    },
+    {
+      "path": "legged_lab/scripts/play_t4_sparse_teacher_mujoco.py",
+      "role": "task_entrypoint",
+      "sha256": "a6b3b48316ac14195275b961f0229dd15a75fa9fd061fe7f586788a5bc1522d0",
+      "robot_imports": [
+        "legged_lab.assets.t4.constants",
+        "legged_lab.assets.t4.constants.T4_JOINT_NAMES",
+        "legged_lab.assets.t4.mujoco_sim2sim",
+        "legged_lab.assets.t4.mujoco_sim2sim.apply_isaac_contact_friction",
+        "legged_lab.assets.t4.mujoco_sim2sim.apply_isaac_pd",
+        "legged_lab.assets.t4.mujoco_sim2sim.isaac_pd_gains",
+        "legged_lab.assets.t4.navigation",
+        "legged_lab.assets.t4.navigation.CourseNavigator",
+        "legged_lab.assets.t4.schemas",
+        "legged_lab.assets.t4.schemas.PROPRIO_FRAME_DIM",
+        "legged_lab.assets.t4.schemas.PROPRIO_HISTORY_LENGTH",
+        "legged_lab.assets.t4.schemas.TEACHER_ACTOR_OBS_DIM",
+        "legged_lab.assets.t4.schemas.TEACHER_PAPER_ACTOR_OBS_DIM",
+        "legged_lab.assets.t4.schemas.TEACHER_SCAN_CLIP",
+        "legged_lab.assets.t4.schemas.TEACHER_SCAN_DIM",
+        "legged_lab.assets.t4.schemas.TEACHER_SCAN_FORWARD_RANGE",
+        "legged_lab.assets.t4.schemas.TEACHER_SCAN_HEIGHT_OFFSET",
+        "legged_lab.assets.t4.schemas.TEACHER_SCAN_LATERAL_RANGE",
+        "legged_lab.assets.t4.schemas.TEACHER_SCAN_SHAPE",
+        "legged_lab.assets.t4.schemas.TEACHER_SPARSE_ACTOR_OBS_DIM",
+        "legged_lab.assets.t4.schemas.TEACHER_SPARSE_SCAN_HISTORY_LENGTH"
+      ],
+      "robot_named_classes": [
+        "T4SparseTeacherMujocoRunner"
+      ]
+    },
+    {
+      "path": "legged_lab/scripts/play_t4_teacher_viser.py",
+      "role": "task_entrypoint",
+      "sha256": "9ffc35b0d316657b0689e89fcc4ee139df23d628eee8bdbaa5e7b2c56232ffae",
+      "robot_imports": [
+        "legged_lab.assets.t4.constants",
+        "legged_lab.assets.t4.constants.T4_JOINT_NAMES",
+        "legged_lab.assets.t4.mujoco_sim2sim",
+        "legged_lab.assets.t4.mujoco_sim2sim.apply_isaac_contact_friction",
+        "legged_lab.assets.t4.mujoco_sim2sim.apply_isaac_pd",
+        "legged_lab.assets.t4.mujoco_sim2sim.isaac_pd_gains",
+        "legged_lab.assets.t4.schemas",
+        "legged_lab.assets.t4.schemas.PROPRIO_FRAME_DIM",
+        "legged_lab.assets.t4.schemas.PROPRIO_HISTORY_LENGTH",
+        "legged_lab.assets.t4.schemas.TEACHER_SCAN_CLIP",
+        "legged_lab.assets.t4.schemas.TEACHER_SCAN_DIM",
+        "legged_lab.assets.t4.schemas.TEACHER_SCAN_FORWARD_RANGE",
+        "legged_lab.assets.t4.schemas.TEACHER_SCAN_HEIGHT_OFFSET",
+        "legged_lab.assets.t4.schemas.TEACHER_SCAN_LATERAL_RANGE",
+        "legged_lab.assets.t4.schemas.TEACHER_SCAN_SHAPE"
+      ],
+      "robot_named_classes": [
+        "T4MujocoRunner"
+      ]
+    },
+    {
+      "path": "legged_lab/scripts/play_t4_vault_g1_mujoco.py",
+      "role": "task_entrypoint",
+      "sha256": "55a9815ee7eed5be007748809741373f56eeca5c180e003edd590851b455a3d0",
+      "robot_imports": [
+        "legged_lab.assets.t4.constants",
+        "legged_lab.assets.t4.constants.T4_JOINT_NAMES",
+        "legged_lab.assets.t4.mujoco_sim2sim",
+        "legged_lab.assets.t4.mujoco_sim2sim.apply_isaac_contact_friction",
+        "legged_lab.assets.t4.mujoco_sim2sim.apply_isaac_pd",
+        "legged_lab.assets.t4.mujoco_sim2sim.isaac_pd_gains",
+        "legged_lab.assets.t4.mujoco_sim2sim.rewrite_vault_mjcf",
+        "legged_lab.assets.t4.tracking_motion",
+        "legged_lab.assets.t4.tracking_motion.body_indices",
+        "legged_lab.assets.t4.tracking_motion.load_t4_tracking_motion",
+        "legged_lab.assets.t4.vault_contract",
+        "legged_lab.assets.t4.vault_contract.T4_VAULT_ACTION_SCALE",
+        "legged_lab.assets.t4.vault_contract.T4_VAULT_BOX_POS",
+        "legged_lab.assets.t4.vault_contract.T4_VAULT_BOX_SIZE",
+        "legged_lab.assets.t4.vault_contract.T4_VAULT_MOTION_FILE",
+        "legged_lab.assets.t4.vault_contract.T4_VAULT_WRIST_TERMINATION_THRESHOLD"
+      ],
+      "robot_named_classes": []
+    },
+    {
+      "path": "legged_lab/scripts/playback_t4_motions.py",
+      "role": "task_entrypoint",
+      "sha256": "ddd33624cddad5531685c49b5f0d6eb71c909a3291f452ca7922093eafe3724d",
+      "robot_imports": [
+        "legged_lab.assets.t4.constants",
+        "legged_lab.assets.t4.constants.T4_JOINT_NAMES",
+        "legged_lab.assets.t4.t4",
+        "legged_lab.assets.t4.t4.T4_CFG"
+      ],
+      "robot_named_classes": []
+    },
+    {
+      "path": "legged_lab/scripts/probe_locomotion_portability.py",
+      "role": "task_entrypoint",
+      "sha256": "85533c58fa242f9a3980553cbe046efc08a49089f3fcd48a6d1084575349a7c5",
+      "robot_imports": [],
+      "robot_named_classes": []
+    },
+    {
+      "path": "legged_lab/scripts/probe_t4_student_depth_render.py",
+      "role": "task_entrypoint",
+      "sha256": "4822e306c3e84adf618417d4eb19960f66e232ccc771db1177954bc4365fb857",
+      "robot_imports": [
+        "legged_lab.envs.t4.depth_student_env",
+        "legged_lab.envs.t4.depth_student_env.T4LocoSparseDepthStudentEnvCfg"
+      ],
+      "robot_named_classes": []
+    },
+    {
+      "path": "legged_lab/scripts/recurrent_policy_eval.py",
+      "role": "task_entrypoint",
+      "sha256": "436434602a647a47baca2add0036c3a3503f8cf59e4f1f0bc4c4e2f38917d029",
+      "robot_imports": [],
+      "robot_named_classes": []
+    },
+    {
+      "path": "legged_lab/scripts/render_t4_motions.py",
+      "role": "task_entrypoint",
+      "sha256": "5fca021d39f7ade06fe9a0d6e96ac0b195c2355a6980f8c59007f9560d090c88",
+      "robot_imports": [
+        "legged_lab.assets.t4.constants",
+        "legged_lab.assets.t4.constants.T4_JOINT_NAMES"
+      ],
+      "robot_named_classes": []
+    },
+    {
+      "path": "legged_lab/scripts/sim2sim.py",
+      "role": "task_entrypoint",
+      "sha256": "d833c3f947b1d1010ef35cfd14707e3b3c8d1da8999189a6528fa2aed51670fc",
+      "robot_imports": [],
+      "robot_named_classes": []
+    },
+    {
+      "path": "legged_lab/scripts/sim2sim_t4_depth_student.py",
+      "role": "task_entrypoint",
+      "sha256": "e25e51024387d4c1c563778fb7da3356a5f1f86180e2911b7a0b4a6085ef48b0",
+      "robot_imports": [
+        "legged_lab.assets.t4.constants",
+        "legged_lab.assets.t4.constants.T4_JOINT_NAMES",
+        "legged_lab.assets.t4.navigation",
+        "legged_lab.assets.t4.navigation.COMMAND_RANGES",
+        "legged_lab.assets.t4.navigation.CourseNavigator",
+        "legged_lab.assets.t4.navigation.HEADING_STIFFNESS",
+        "legged_lab.assets.t4.navigation.NAV_LOOKAHEAD",
+        "legged_lab.assets.t4.navigation.heading_velocity_command",
+        "legged_lab.assets.t4.navigation.polyline_lookahead",
+        "legged_lab.assets.t4.navigation.wrap_to_pi",
+        "legged_lab.assets.t4.schemas",
+        "legged_lab.assets.t4.schemas.DEPTH_CAMERA_PITCH_DEG",
+        "legged_lab.assets.t4.schemas.DEPTH_CAMERA_SITE_POS",
+        "legged_lab.assets.t4.schemas.DEPTH_CLIP_RANGE",
+        "legged_lab.assets.t4.schemas.DEPTH_HISTORY_LENGTH",
+        "legged_lab.assets.t4.schemas.DEPTH_INVALID_VALUE",
+        "legged_lab.assets.t4.schemas.DEPTH_POLICY_SIZE",
+        "legged_lab.assets.t4.schemas.DEPTH_UPDATE_DECIMATION",
+        "legged_lab.assets.t4.schemas.PROPRIO_FRAME_DIM",
+        "legged_lab.assets.t4.schemas.PROPRIO_HISTORY_LENGTH",
+        "legged_lab.assets.t4.schemas.STUDENT_ACTOR_OBS_DIM",
+        "legged_lab.assets.t4.schemas.STUDENT_DEPTH_HISTORY_LENGTH",
+        "legged_lab.assets.t4.schemas.STUDENT_PROPRIO_HISTORY_LENGTH",
+        "legged_lab.assets.t4.schemas.TEACHER_ACTOR_OBS_DIM",
+        "legged_lab.assets.t4.schemas.TEACHER_SPARSE_ACTOR_OBS_DIM",
+        "legged_lab.assets.t4.schemas.depth_camera_mujoco_xyaxes",
+        "legged_lab.assets.t4.schemas.depth_camera_ros_quat_wxyz",
+        "legged_lab.assets.t4.schemas.sparse_teacher_latest_scan_range"
+      ],
+      "robot_named_classes": []
+    },
+    {
+      "path": "legged_lab/scripts/smoke_t4_asset.py",
+      "role": "task_entrypoint",
+      "sha256": "569f3255752185d21374c20d77f2448561fb9908adcef6de8fe174a5d888b9e3",
+      "robot_imports": [
+        "legged_lab.assets.t4.constants",
+        "legged_lab.assets.t4.constants.T4_JOINT_NAMES",
+        "legged_lab.assets.t4.t4",
+        "legged_lab.assets.t4.t4.T4_CFG"
+      ],
+      "robot_named_classes": []
+    },
+    {
+      "path": "legged_lab/scripts/smoke_t4_vault_task.py",
+      "role": "task_entrypoint",
+      "sha256": "8c8b8144885f44f00c44b5b289416976faec43632c9cfe8214b73d4e81a320d6",
+      "robot_imports": [
+        "legged_lab.envs.t4.vault_mimic",
+        "legged_lab.envs.t4.vault_mimic.vault_env_cfg",
+        "legged_lab.envs.t4.vault_mimic.vault_env_cfg.T4VaultMimicEnvCfg"
+      ],
+      "robot_named_classes": []
+    },
+    {
+      "path": "legged_lab/scripts/t4_csv_motion_conversion.py",
+      "role": "task_entrypoint",
+      "sha256": "2c6f2bd5fdb8ed8447f61f20c5f07f506a0a020f7d6677f37e9494b5e1521457",
+      "robot_imports": [
+        "legged_lab.assets.t4.constants",
+        "legged_lab.assets.t4.constants.T4_JOINT_NAMES"
+      ],
+      "robot_named_classes": []
+    },
+    {
+      "path": "legged_lab/scripts/train.py",
+      "role": "task_entrypoint",
+      "sha256": "23c28c32f21430b95541fd2364e39028657f63bb5abaf8a63925ea285abc8aa0",
+      "robot_imports": [],
+      "robot_named_classes": []
+    },
+    {
+      "path": "legged_lab/scripts/train_t4_depth_student.py",
+      "role": "task_entrypoint",
+      "sha256": "93c18c585de5ed591676332c897f2fa1dee0903991e51cbfc2cbe215c5a8b8de",
+      "robot_imports": [
+        "legged_lab.envs.t4.depth_student_cfg",
+        "legged_lab.envs.t4.depth_student_cfg.T4DepthStudentAgentCfg",
+        "legged_lab.envs.t4.depth_student_env",
+        "legged_lab.envs.t4.depth_student_env.T4LocoDepthStudentEnvCfg"
+      ],
+      "robot_named_classes": []
+    },
+    {
+      "path": "legged_lab/scripts/train_t4_depth_student_ft.py",
+      "role": "task_entrypoint",
+      "sha256": "3ec39d617d9eb59b652f4ecb1788ecb95b32e1f21be7cccc4e4e87b1f62eea9a",
+      "robot_imports": [
+        "legged_lab.envs.t4.depth_student_cfg",
+        "legged_lab.envs.t4.depth_student_cfg.T4DepthStudentFtAgentCfg",
+        "legged_lab.envs.t4.depth_student_env",
+        "legged_lab.envs.t4.depth_student_env.T4LocoDepthStudentFtEnvCfg"
+      ],
+      "robot_named_classes": []
+    },
+    {
+      "path": "legged_lab/scripts/train_t4_sparse_depth_student.py",
+      "role": "task_entrypoint",
+      "sha256": "3549a03d62645650a22b8e1a0af20f8803dd3ce9a8687b625ff0a260070d0326",
+      "robot_imports": [
+        "legged_lab.assets.t4.student_lineage",
+        "legged_lab.assets.t4.student_lineage.load_student_warmstart_checkpoint",
+        "legged_lab.assets.t4.student_lineage.require_json_gate",
+        "legged_lab.assets.t4.student_lineage.require_sparse_teacher_checkpoint",
+        "legged_lab.envs.t4.depth_student_cfg",
+        "legged_lab.envs.t4.depth_student_cfg.T4SparseDepthStudentReprFirstAgentCfg",
+        "legged_lab.envs.t4.depth_student_env",
+        "legged_lab.envs.t4.depth_student_env.T4LocoSparseDepthStudentReprFirstEnvCfg"
+      ],
+      "robot_named_classes": []
+    },
+    {
+      "path": "legged_lab/scripts/train_t4_sparse_depth_student_ft.py",
+      "role": "task_entrypoint",
+      "sha256": "c1ebd44bc44dfee66125644f8bbe025f5871c6df9d356f53c41be228cba4761f",
+      "robot_imports": [
+        "legged_lab.assets.t4.student_lineage",
+        "legged_lab.assets.t4.student_lineage.load_student_continuation_checkpoint",
+        "legged_lab.assets.t4.student_lineage.require_json_gate",
+        "legged_lab.assets.t4.student_lineage.require_sparse_teacher_checkpoint",
+        "legged_lab.envs.t4.depth_student_cfg",
+        "legged_lab.envs.t4.depth_student_cfg.T4SparseDepthStudentDeployFtAgentCfg",
+        "legged_lab.envs.t4.depth_student_cfg.T4SparseDepthStudentFtAgentCfg",
+        "legged_lab.envs.t4.depth_student_cfg.T4SparseDepthStudentPlantFtAgentCfg",
+        "legged_lab.envs.t4.depth_student_cfg.T4SparseDepthStudentResidualFtAgentCfg",
+        "legged_lab.envs.t4.depth_student_cfg.T4SparseDepthStudentTargetedFtAgentCfg",
+        "legged_lab.envs.t4.depth_student_env",
+        "legged_lab.envs.t4.depth_student_env.T4LocoSparseDepthStudentFtEnvCfg",
+        "legged_lab.envs.t4.depth_student_env.T4LocoSparseDepthStudentPlantFtEnvCfg",
+        "legged_lab.envs.t4.depth_student_env.T4LocoSparseDepthStudentResidualFtEnvCfg",
+        "legged_lab.envs.t4.depth_student_env.T4LocoSparseDepthStudentTargetedFtEnvCfg"
+      ],
+      "robot_named_classes": []
+    },
+    {
+      "path": "legged_lab/scripts/train_t4_vault_mimic.py",
+      "role": "task_entrypoint",
+      "sha256": "cf010b7601b5539ced1930081cceed8456ed0fa77fa1710221e71f6c45f6e5ea",
+      "robot_imports": [
+        "legged_lab.envs.t4.vault_mimic"
+      ],
+      "robot_named_classes": []
+    },
+    {
+      "path": "legged_lab/scripts/train_t4_vault_skill.py",
+      "role": "task_entrypoint",
+      "sha256": "ce5562e222d0d07f48e7c56eaca7b57d17947666900e206f1f8e3108fbb037e6",
+      "robot_imports": [
+        "legged_lab.envs.t4.vault_skill"
+      ],
+      "robot_named_classes": []
+    },
+    {
+      "path": "legged_lab/sensors/camera/__init__.py",
+      "role": "framework_sensor_terrain_or_mdp",
+      "sha256": "6ed070b9dbe714092febb919841eda6d9685e9a0f2970f4699bbad2b7edd955f",
+      "robot_imports": [],
+      "robot_named_classes": []
+    },
+    {
+      "path": "legged_lab/sensors/camera/camera.py",
+      "role": "framework_sensor_terrain_or_mdp",
+      "sha256": "15217781cd590cf83d6c426c6ee01a5f75ac5f9ed581dd6a373483b5d301de74",
+      "robot_imports": [],
+      "robot_named_classes": []
+    },
+    {
+      "path": "legged_lab/sensors/camera/camera_cfg.py",
+      "role": "framework_sensor_terrain_or_mdp",
+      "sha256": "a3a425ca724fe79086e904451b0ac0b6067fe102c3425094e7552ee31bd98b70",
+      "robot_imports": [],
+      "robot_named_classes": []
+    },
+    {
+      "path": "legged_lab/sensors/camera/camera_cfgs/__init__.py",
+      "role": "framework_sensor_terrain_or_mdp",
+      "sha256": "0117b05d3b6c241fae3a5ce855aa8b79fd6f82f4ed8a9a11b017e004068094a4",
+      "robot_imports": [],
+      "robot_named_classes": []
+    },
+    {
+      "path": "legged_lab/sensors/camera/camera_cfgs/d455_depth_config.py",
+      "role": "framework_sensor_terrain_or_mdp",
+      "sha256": "a36327c8fde3565569350c05d0e3c22aec9650787bb0787a868cb5f63073f2c4",
+      "robot_imports": [],
+      "robot_named_classes": []
+    },
+    {
+      "path": "legged_lab/sensors/camera/camera_cfgs/luxonis_oak_d_config.py",
+      "role": "framework_sensor_terrain_or_mdp",
+      "sha256": "8d5de47797927f45e69d17e7dde10c33c1cabbdb155a6e6535d9d22f7c4b9fb5",
+      "robot_imports": [],
+      "robot_named_classes": []
+    },
+    {
+      "path": "legged_lab/sensors/camera/tiled_camera.py",
+      "role": "framework_sensor_terrain_or_mdp",
+      "sha256": "3df1d7e8eb6c05562571b0fb773dfcc5c7fcb4d9a76ce35e0f9db27ec0ff3c84",
+      "robot_imports": [],
+      "robot_named_classes": []
+    },
+    {
+      "path": "legged_lab/sensors/camera/tiled_camera_cfg.py",
+      "role": "framework_sensor_terrain_or_mdp",
+      "sha256": "aaca93593576fe64b088ffa8b16fc22d0c34440a209b50ee99cd9e33bd02fa6b",
+      "robot_imports": [],
+      "robot_named_classes": []
+    },
+    {
+      "path": "legged_lab/sensors/lidar/__init__.py",
+      "role": "framework_sensor_terrain_or_mdp",
+      "sha256": "9758cc8eb9de23f3373c07d9cd909eb2cee4c8f697eb9e0765380f9c141ed834",
+      "robot_imports": [],
+      "robot_named_classes": []
+    },
+    {
+      "path": "legged_lab/sensors/lidar/lidat_cfg.py",
+      "role": "framework_sensor_terrain_or_mdp",
+      "sha256": "8a8daf2162169b80e68c64f629ebc0366a42ff388a8f48583550c65cd6460cef",
+      "robot_imports": [],
+      "robot_named_classes": []
+    },
+    {
+      "path": "legged_lab/terrains/__init__.py",
+      "role": "framework_sensor_terrain_or_mdp",
+      "sha256": "2625b32fdd70dd532210033265cf5cc7ba977b44b417625958e9f7107404e0f1",
+      "robot_imports": [],
+      "robot_named_classes": []
+    },
+    {
+      "path": "legged_lab/terrains/hurdle_layout.py",
+      "role": "framework_sensor_terrain_or_mdp",
+      "sha256": "01c7376609ea10de18c497e45abf9e706c0c1c10c209fce02a5cb85378c78fc7",
+      "robot_imports": [],
+      "robot_named_classes": []
+    },
+    {
+      "path": "legged_lab/terrains/ray_caster.py",
+      "role": "framework_sensor_terrain_or_mdp",
+      "sha256": "1248d81dac4339ba367a6e8656960ea6c4afe53d77726a2787e22cf01b8a08f2",
+      "robot_imports": [],
+      "robot_named_classes": []
+    },
+    {
+      "path": "legged_lab/terrains/ray_caster_cfg.py",
+      "role": "framework_sensor_terrain_or_mdp",
+      "sha256": "d99fe3845589822f94d45506a8dae609d879e84fc480ade53a76030336053307",
+      "robot_imports": [],
+      "robot_named_classes": []
+    },
+    {
+      "path": "legged_lab/terrains/stepping_stone_layout.py",
+      "role": "framework_sensor_terrain_or_mdp",
+      "sha256": "054506f74343173da0e23c3298da21cffde7ea102a21dd10471eb2bc19dcca00",
+      "robot_imports": [],
+      "robot_named_classes": []
+    },
+    {
+      "path": "legged_lab/terrains/terrain_generator_cfg.py",
+      "role": "framework_sensor_terrain_or_mdp",
+      "sha256": "53e35f3f84a58af383765ea5db3e84b2aed8aadb45ebb9d9e782a8cf003becfe",
+      "robot_imports": [],
+      "robot_named_classes": []
+    },
+    {
+      "path": "legged_lab/utils/__init__.py",
+      "role": "framework_sensor_terrain_or_mdp",
+      "sha256": "9bf0d74ec74cb3e3074e6e6b4f8921409cff5a55834de84a6018027574369815",
+      "robot_imports": [],
+      "robot_named_classes": []
+    },
+    {
+      "path": "legged_lab/utils/action_scale.py",
+      "role": "framework_sensor_terrain_or_mdp",
+      "sha256": "3b668a52e5c034cfaae7a14e37dcab412e2a51456ce18916411b432325e3c3ad",
+      "robot_imports": [],
+      "robot_named_classes": []
+    },
+    {
+      "path": "legged_lab/utils/cli_args.py",
+      "role": "framework_sensor_terrain_or_mdp",
+      "sha256": "804b50fab58042f5b30c3617828d6ce919bfbe60acfc66e541c909a2bbab238e",
+      "robot_imports": [],
+      "robot_named_classes": []
+    },
+    {
+      "path": "legged_lab/utils/env_utils/__init__.py",
+      "role": "framework_sensor_terrain_or_mdp",
+      "sha256": "f7f867437ee744934cb59dbac1fb90547d39eee0d53abdd9dd150d370333e5c0",
+      "robot_imports": [],
+      "robot_named_classes": []
+    },
+    {
+      "path": "legged_lab/utils/env_utils/scene.py",
+      "role": "framework_sensor_terrain_or_mdp",
+      "sha256": "ac574240254ff7b3c1c7a35061256817cd12cdac496c88ee8207cff03535f981",
+      "robot_imports": [],
+      "robot_named_classes": []
+    },
+    {
+      "path": "legged_lab/utils/keyboard.py",
+      "role": "framework_sensor_terrain_or_mdp",
+      "sha256": "2ef32d047ef254e0648358bdf8de3abf4903f5dbe76d9c3996d2e5f68af2e938",
+      "robot_imports": [],
+      "robot_named_classes": []
+    },
+    {
+      "path": "legged_lab/utils/rsl_rl_compat.py",
+      "role": "shared_algorithm",
+      "sha256": "3b0ffd3c2f9e530e8001b62fe37ed70640ba65e247fca9105c44022daece0d2c",
+      "robot_imports": [],
+      "robot_named_classes": []
+    },
+    {
+      "path": "legged_lab/utils/task_registry.py",
+      "role": "framework_sensor_terrain_or_mdp",
+      "sha256": "d3f4d70b8d307ea29d0aec5563b9659ff789480c85421cbec506701e56c0ace3",
+      "robot_imports": [],
+      "robot_named_classes": []
+    },
+    {
+      "path": "rsl_rl/rsl_rl/__init__.py",
+      "role": "shared_algorithm",
+      "sha256": "dbe9ce32085757751f7dc5bc2c5a61befc2cc6db3fd0f49fe74268cfc4b28acc",
+      "robot_imports": [],
+      "robot_named_classes": []
+    },
+    {
+      "path": "rsl_rl/rsl_rl/algorithms/__init__.py",
+      "role": "shared_algorithm",
+      "sha256": "388f745159e39015c89b431c56bac76984e1dd8850f662899584d27cf299c84e",
+      "robot_imports": [],
+      "robot_named_classes": []
+    },
+    {
+      "path": "rsl_rl/rsl_rl/algorithms/amp_ppo.py",
+      "role": "shared_algorithm",
+      "sha256": "13cab93c3093c80e78e03e8312c3a1363622dbfa949ba4f56dc25c8cbaa3fb08",
+      "robot_imports": [],
+      "robot_named_classes": []
+    },
+    {
+      "path": "rsl_rl/rsl_rl/algorithms/distillation.py",
+      "role": "shared_algorithm",
+      "sha256": "a9a81088e99ea73f94cbc9ef39d13e3bead640de3eadfd2e6eddbe0a3b449a89",
+      "robot_imports": [],
+      "robot_named_classes": []
+    },
+    {
+      "path": "rsl_rl/rsl_rl/algorithms/ppo.py",
+      "role": "shared_algorithm",
+      "sha256": "ded14ce57f41f091b8111d92a236606aa5d1fb4a0d06d82308f0d058a8100586",
+      "robot_imports": [],
+      "robot_named_classes": []
+    },
+    {
+      "path": "rsl_rl/rsl_rl/algorithms/repr_first_switch.py",
+      "role": "shared_algorithm",
+      "sha256": "159b94519375a6c111de824f106cdaa40a233b53c79bedc2c741502d313605ee",
+      "robot_imports": [],
+      "robot_named_classes": []
+    },
+    {
+      "path": "rsl_rl/rsl_rl/algorithms/safe_recurrent_distillation.py",
+      "role": "shared_algorithm",
+      "sha256": "f46a5fe74192d650ae5a766927e3d0555639ad94ee0802954daa177366ff2219",
+      "robot_imports": [],
+      "robot_named_classes": []
+    },
+    {
+      "path": "rsl_rl/rsl_rl/env/__init__.py",
+      "role": "shared_algorithm",
+      "sha256": "6d892c205aa0c61573c57047e1caea186d38fa75eed28e2dabbd6fa6818c2a12",
+      "robot_imports": [],
+      "robot_named_classes": []
+    },
+    {
+      "path": "rsl_rl/rsl_rl/env/vec_env.py",
+      "role": "shared_algorithm",
+      "sha256": "87861ee3c030fee4bddd35150474de90a91d45eb767c4aaac0760db2d1713b00",
+      "robot_imports": [],
+      "robot_named_classes": []
+    },
+    {
+      "path": "rsl_rl/rsl_rl/modules/__init__.py",
+      "role": "shared_algorithm",
+      "sha256": "28b3baf84f0bf19c5db84c6e0800e3f8f5eccdea6fdeaae38aea022411676c9d",
+      "robot_imports": [],
+      "robot_named_classes": []
+    },
+    {
+      "path": "rsl_rl/rsl_rl/modules/actor_critic.py",
+      "role": "shared_algorithm",
+      "sha256": "2a1a97bcf074e68d9f3ed212149605623adf1c7a82c091bdb644de5b9759890a",
+      "robot_imports": [],
+      "robot_named_classes": []
+    },
+    {
+      "path": "rsl_rl/rsl_rl/modules/actor_critic_recurrent.py",
+      "role": "shared_algorithm",
+      "sha256": "6ffe0dd50d39253bcde8d25eab2ca4e7a581e9059a72cdee98e65c0f019f70c6",
+      "robot_imports": [],
+      "robot_named_classes": []
+    },
+    {
+      "path": "rsl_rl/rsl_rl/modules/depth_student_teacher.py",
+      "role": "shared_algorithm",
+      "sha256": "ee9d67c49b5e6de8028caf5eab3164ccb5b503086a6f30e8c9e5ae965485df8e",
+      "robot_imports": [],
+      "robot_named_classes": []
+    },
+    {
+      "path": "rsl_rl/rsl_rl/modules/discriminator.py",
+      "role": "shared_algorithm",
+      "sha256": "847495ed11c343f5091f4dc63a5e2456c86a94976afcd5cbb9234bd725b27e37",
+      "robot_imports": [],
+      "robot_named_classes": []
+    },
+    {
+      "path": "rsl_rl/rsl_rl/modules/normalizer.py",
+      "role": "shared_algorithm",
+      "sha256": "e6d61d3d260958f926917d1f37ec5ba40f51470f6410437b624551928e37473f",
+      "robot_imports": [],
+      "robot_named_classes": []
+    },
+    {
+      "path": "rsl_rl/rsl_rl/modules/rnd.py",
+      "role": "shared_algorithm",
+      "sha256": "a5d4418eeace26236fab89beda59fc5c91c583f2d2650c477c550d0aee35fa59",
+      "robot_imports": [],
+      "robot_named_classes": []
+    },
+    {
+      "path": "rsl_rl/rsl_rl/modules/student_teacher.py",
+      "role": "shared_algorithm",
+      "sha256": "95215d96b60f6c4fc8d67348924defc66d4da6770d7676790ed83484bb7b777c",
+      "robot_imports": [],
+      "robot_named_classes": []
+    },
+    {
+      "path": "rsl_rl/rsl_rl/modules/student_teacher_recurrent.py",
+      "role": "shared_algorithm",
+      "sha256": "041175f097464ac9a2958ca026a1ab29ec7f742f12669fc0107b44b6693143f9",
+      "robot_imports": [],
+      "robot_named_classes": []
+    },
+    {
+      "path": "rsl_rl/rsl_rl/networks/__init__.py",
+      "role": "shared_algorithm",
+      "sha256": "59185b8451e4412a26042400cf2d50a3780877418b540239f8c135e2563759a7",
+      "robot_imports": [],
+      "robot_named_classes": []
+    },
+    {
+      "path": "rsl_rl/rsl_rl/networks/memory.py",
+      "role": "shared_algorithm",
+      "sha256": "f87931aefe1ddfc8fdf394b3c558a58340844cbe3ba364d5b18f2d1d3a96c895",
+      "robot_imports": [],
+      "robot_named_classes": []
+    },
+    {
+      "path": "rsl_rl/rsl_rl/runners/__init__.py",
+      "role": "shared_algorithm",
+      "sha256": "d4fb77c2cf1583c75fc15111d49fc9d759a5b1811b45bd977f91c2435fc45fe8",
+      "robot_imports": [],
+      "robot_named_classes": []
+    },
+    {
+      "path": "rsl_rl/rsl_rl/runners/amp_on_policy_runner.py",
+      "role": "shared_algorithm",
+      "sha256": "341e87972a2353f97aa3367a81d1916bd545c7fcd808b173e564eae603d1ec06",
+      "robot_imports": [],
+      "robot_named_classes": []
+    },
+    {
+      "path": "rsl_rl/rsl_rl/runners/on_policy_runner.py",
+      "role": "shared_algorithm",
+      "sha256": "c72bdcba3a1487c9c24b0711ef2bda161b3c2a0259cef50b4e6fec8eab396d92",
+      "robot_imports": [],
+      "robot_named_classes": []
+    },
+    {
+      "path": "rsl_rl/rsl_rl/storage/__init__.py",
+      "role": "shared_algorithm",
+      "sha256": "bfa2aa03bef40899b246abe77a693d049440922c126699c09bd7aa7b7ec4925e",
+      "robot_imports": [],
+      "robot_named_classes": []
+    },
+    {
+      "path": "rsl_rl/rsl_rl/storage/replay_buffer.py",
+      "role": "shared_algorithm",
+      "sha256": "f23623b3c6fbe02cab01fe754bf281c3b76f5acb4d2cc5dca63c0f0b63de8fd7",
+      "robot_imports": [],
+      "robot_named_classes": []
+    },
+    {
+      "path": "rsl_rl/rsl_rl/storage/rollout_storage.py",
+      "role": "shared_algorithm",
+      "sha256": "9ad1029a00423fbb51d1a68589a45afe60abdf6697013379381e452074556cf9",
+      "robot_imports": [],
+      "robot_named_classes": []
+    },
+    {
+      "path": "rsl_rl/rsl_rl/utils/__init__.py",
+      "role": "shared_algorithm",
+      "sha256": "c9933100b072ba627670a702298d9297b16982764daf48bb407a631cdbfecdc1",
+      "robot_imports": [],
+      "robot_named_classes": []
+    },
+    {
+      "path": "rsl_rl/rsl_rl/utils/distributed_logs.py",
+      "role": "shared_algorithm",
+      "sha256": "28674d8b555185eef2fa9281ddf08aeae8468cbc0f7d187eaa48d4a93a45cd3a",
+      "robot_imports": [],
+      "robot_named_classes": []
+    },
+    {
+      "path": "rsl_rl/rsl_rl/utils/dual_amp.py",
+      "role": "shared_algorithm",
+      "sha256": "55f672750d6892dbc71dd749ae5e2c7bbb7159800f0fea160ab0410e5b2df649",
+      "robot_imports": [],
+      "robot_named_classes": []
+    },
+    {
+      "path": "rsl_rl/rsl_rl/utils/motion_loader.py",
+      "role": "shared_algorithm",
+      "sha256": "8f8afee2e8644af1d27d4578612ff820d7a1db5c605a9e2b81205505359c2122",
+      "robot_imports": [],
+      "robot_named_classes": []
+    },
+    {
+      "path": "rsl_rl/rsl_rl/utils/motion_loader_for_display.py",
+      "role": "shared_algorithm",
+      "sha256": "ec341c7c07645d9333b8855a6de76c19549ea7f7cc29889694d4a910c25c8998",
+      "robot_imports": [],
+      "robot_named_classes": []
+    },
+    {
+      "path": "rsl_rl/rsl_rl/utils/multi_expert.py",
+      "role": "shared_algorithm",
+      "sha256": "fe79094901d8f984ea0ae39577a7e0fb220942ddec4a97ec79ba6b5eb67742e3",
+      "robot_imports": [],
+      "robot_named_classes": []
+    },
+    {
+      "path": "rsl_rl/rsl_rl/utils/neptune_utils.py",
+      "role": "shared_algorithm",
+      "sha256": "4d57144f9402a4dfedfbe71939b49b261bb66ec62ce6ada6a985a06709a8a9d0",
+      "robot_imports": [],
+      "robot_named_classes": []
+    },
+    {
+      "path": "rsl_rl/rsl_rl/utils/utils.py",
+      "role": "shared_algorithm",
+      "sha256": "b4bf9225f9178b0c34aa9b567f66b5947b5b57634e96e832840f9e224b643569",
+      "robot_imports": [],
+      "robot_named_classes": []
+    },
+    {
+      "path": "rsl_rl/rsl_rl/utils/wandb_utils.py",
+      "role": "shared_algorithm",
+      "sha256": "8824ca7437b4104ba168e7c0e8d052ddc4e636fb77203216f8cf561345286763",
+      "robot_imports": [],
+      "robot_named_classes": []
+    },
+    {
+      "path": "rsl_rl/setup.py",
+      "role": "development_tool",
+      "sha256": "b6288f219d6dd109d0f72af302845573f3f124fc9b3c419f7c471591bc3243f5",
+      "robot_imports": [],
+      "robot_named_classes": []
+    },
+    {
+      "path": "scripts/audit_robot_boundaries.py",
+      "role": "development_tool",
+      "sha256": "7c90dc7be3cad2b18563f7d2014bdbf06f879092787a0e2935a4ee08c4e0d3ad",
+      "robot_imports": [],
+      "robot_named_classes": []
+    },
+    {
+      "path": "setup.py",
+      "role": "development_tool",
+      "sha256": "549841542b7cec026e0e54cc13ed3e6fc99e256dec5165f284605802d70c2f58",
+      "robot_imports": [],
+      "robot_named_classes": []
+    },
+    {
+      "path": "tests/test_amp_curriculum_transition.py",
+      "role": "test",
+      "sha256": "dc52a3f0e6173725d954edf3d645a6a4cd6fc85b3c49bb6ef3d2d7a0af47f72a",
+      "robot_imports": [],
+      "robot_named_classes": []
+    },
+    {
+      "path": "tests/test_distributed_log_reduce.py",
+      "role": "test",
+      "sha256": "e4dce4233ff550bb158c17908e808d9cbdca5829656f26efe46cd21c4f4715b8",
+      "robot_imports": [],
+      "robot_named_classes": []
+    },
+    {
+      "path": "tests/test_dual_amp_switch.py",
+      "role": "test",
+      "sha256": "2d844962f858a2c72a5123d5dabc4246bd79c35f22c90056558a0ed7858afebd",
+      "robot_imports": [
+        "legged_lab.assets.t4.vault_contract",
+        "legged_lab.assets.t4.vault_contract.T4_VAULT_BOX_POS",
+        "legged_lab.assets.t4.vault_contract.T4_VAULT_BOX_SIZE"
+      ],
+      "robot_named_classes": []
+    },
+    {
+      "path": "tests/test_g1_asset_contract.py",
+      "role": "test",
+      "sha256": "4ba1b868e54a0928e2ac203331ced80c012563e172302257469597c06aec5418",
+      "robot_imports": [
+        "legged_lab.assets.t4",
+        "legged_lab.assets.t4.schemas",
+        "legged_lab.assets.unitree_g1",
+        "legged_lab.assets.unitree_g1.constants",
+        "legged_lab.assets.unitree_g1.constants.G1_29DOF_JOINT_NAMES",
+        "legged_lab.assets.unitree_g1.constants.G1_STANDING_JOINT_POS",
+        "legged_lab.assets.unitree_g1.constants.G1_STANDING_PELVIS_Z",
+        "legged_lab.assets.unitree_g1.constants.NUM_G1_29DOF_JOINTS",
+        "legged_lab.assets.unitree_g1.locomotion",
+        "legged_lab.assets.unitree_g1.locomotion.G1_LOCOMOTION",
+        "legged_lab.assets.unitree_g1.schemas",
+        "legged_lab.assets.unitree_g1.schemas.AMP_MOTION_SOURCE_DIR",
+        "legged_lab.assets.unitree_g1.schemas.LAFAN1_CSV_WIDTH",
+        "legged_lab.assets.unitree_g1.schemas.amp_expert_files",
+        "legged_lab.assets.unitree_g1.sync_urdf_collision_from_mjcf",
+        "legged_lab.assets.unitree_g1.sync_urdf_collision_from_mjcf.load_mjcf_collisions"
+      ],
+      "robot_named_classes": []
+    },
+    {
+      "path": "tests/test_g1_collapse_reset_numerics.py",
+      "role": "test",
+      "sha256": "a51194bb3eb489b28b1951aea1cc68e497a837a7ddc5873b23075d4c328d5f44",
+      "robot_imports": [
+        "legged_lab.assets.unitree_g1.constants",
+        "legged_lab.assets.unitree_g1.constants.G1_STANDING_JOINT_POS",
+        "legged_lab.assets.unitree_g1.constants.G1_STANDING_PELVIS_Z"
+      ],
+      "robot_named_classes": []
+    },
+    {
+      "path": "tests/test_locomotion_portability.py",
+      "role": "test",
+      "sha256": "6de104050c4a57896433b47df46121d12ced279e128105c6a37de99768a78504",
+      "robot_imports": [
+        "legged_lab.assets.t4.constants",
+        "legged_lab.assets.t4.constants.T4_JOINT_NAMES"
+      ],
+      "robot_named_classes": []
+    },
+    {
+      "path": "tests/test_multi_expert_dagger.py",
+      "role": "test",
+      "sha256": "b6bc17eaa78c97d43cfeb0b2fbe0cd5dffb0e3d860eacf0f4b4ada5db576aef4",
+      "robot_imports": [],
+      "robot_named_classes": []
+    },
+    {
+      "path": "tests/test_repr_first_switch.py",
+      "role": "test",
+      "sha256": "0b1b58b1ed307ae50ba303d14fb75b2e608521a92a085f11899e515f5bde78ca",
+      "robot_imports": [],
+      "robot_named_classes": []
+    },
+    {
+      "path": "tests/test_robot_boundary_audit.py",
+      "role": "test",
+      "sha256": "ab9d18a6101fef168c8a25a8b988d04b6ca55e4af6fae23d5b9cd82059304e99",
+      "robot_imports": [],
+      "robot_named_classes": []
+    },
+    {
+      "path": "tests/test_robot_neutral_depth_env.py",
+      "role": "test",
+      "sha256": "b747f3b8802f24dba512958b0acb349152bb136a10d8b1c09550b233202a6322",
+      "robot_imports": [],
+      "robot_named_classes": []
+    },
+    {
+      "path": "tests/test_robot_neutral_locomotion.py",
+      "role": "test",
+      "sha256": "363e80136c19a5e5547059eaa8664ba67a83d3d491faceded116dd30a4e22977",
+      "robot_imports": [
+        "legged_lab.assets.t4.locomotion",
+        "legged_lab.assets.t4.locomotion.T4_LOCOMOTION",
+        "legged_lab.assets.unitree_g1.locomotion",
+        "legged_lab.assets.unitree_g1.locomotion.G1_LOCOMOTION"
+      ],
+      "robot_named_classes": []
+    },
+    {
+      "path": "tests/test_robot_neutral_tracking.py",
+      "role": "test",
+      "sha256": "534cb02df98979e9df5acb96957137f4193e89ad1bf8dcf8afbeeb52ca441382",
+      "robot_imports": [],
+      "robot_named_classes": []
+    },
+    {
+      "path": "tests/test_rsl_rl_filter_init_kwargs.py",
+      "role": "test",
+      "sha256": "81707ff8126f9dbe1fb6c5724a9015686b8ad833aff30f828e005ed642b3efb5",
+      "robot_imports": [],
+      "robot_named_classes": []
+    },
+    {
+      "path": "tests/test_safe_recurrent_distillation.py",
+      "role": "test",
+      "sha256": "ce01830f9cc2f5112aebdbb17477997a054309cf82d36bc6f6d720d8f211163f",
+      "robot_imports": [
+        "legged_lab.envs.t4.depth_student_cfg",
+        "legged_lab.envs.t4.depth_student_cfg.T4SparseDepthStudentAgentCfg",
+        "legged_lab.envs.t4.depth_student_cfg.T4SparseDepthStudentDaggerAlgCfg",
+        "legged_lab.envs.t4.depth_student_cfg.T4SparseDepthStudentDeployFtAgentCfg",
+        "legged_lab.envs.t4.depth_student_cfg.T4SparseDepthStudentFinalMainAlgCfg",
+        "legged_lab.envs.t4.depth_student_cfg.T4SparseDepthStudentFtAgentCfg",
+        "legged_lab.envs.t4.depth_student_cfg.T4SparseDepthStudentJointAlgCfg",
+        "legged_lab.envs.t4.depth_student_cfg.T4SparseDepthStudentPlantFtAgentCfg",
+        "legged_lab.envs.t4.depth_student_cfg.T4SparseDepthStudentPlantFtAlgCfg",
+        "legged_lab.envs.t4.depth_student_cfg.T4SparseDepthStudentReprFirstAgentCfg",
+        "legged_lab.envs.t4.depth_student_cfg.T4SparseDepthStudentResidualFtAgentCfg",
+        "legged_lab.envs.t4.depth_student_cfg.T4SparseDepthStudentResidualFtAlgCfg",
+        "legged_lab.envs.t4.depth_student_cfg.T4SparseDepthStudentTargetedFtAgentCfg",
+        "legged_lab.envs.t4.depth_student_cfg.T4SparseDepthStudentTargetedFtAlgCfg",
+        "legged_lab.envs.t4.depth_student_env",
+        "legged_lab.envs.t4.depth_student_env.T4LocoSparseDepthStudentEnvCfg",
+        "legged_lab.envs.t4.depth_student_env.T4LocoSparseDepthStudentPlantFtEnvCfg",
+        "legged_lab.envs.t4.depth_student_env.T4LocoSparseDepthStudentReprFirstEnvCfg",
+        "legged_lab.envs.t4.depth_student_env.T4LocoSparseDepthStudentResidualFtEnvCfg",
+        "legged_lab.envs.t4.depth_student_env.T4LocoSparseDepthStudentTargetedFtEnvCfg"
+      ],
+      "robot_named_classes": []
+    },
+    {
+      "path": "tests/test_sim2sim_t4_depth_student.py",
+      "role": "test",
+      "sha256": "318db32fc925939782a7107ecf994cbb6200e68d7253ce7dc1565ee56a4732aa",
+      "robot_imports": [
+        "legged_lab.assets.t4",
+        "legged_lab.assets.t4.navigation",
+        "legged_lab.assets.t4.navigation.CourseNavigator",
+        "legged_lab.assets.t4.schemas"
+      ],
+      "robot_named_classes": []
+    },
+    {
+      "path": "tests/test_sim2sim_t4_depth_student_runtime_contract.py",
+      "role": "test",
+      "sha256": "753c5e65b1ccffc823a93f46455e46c8c748b8a8730bcf330a6f70bf94ad2fb0",
+      "robot_imports": [
+        "legged_lab.assets.t4.constants",
+        "legged_lab.assets.t4.constants.T4_JOINT_NAMES"
+      ],
+      "robot_named_classes": []
+    },
+    {
+      "path": "tests/test_t4_asset_migration.py",
+      "role": "test",
+      "sha256": "55df035e2df4ef45ee54c566817e50cc7efc65f6f607c704e500cae15a12396c",
+      "robot_imports": [
+        "legged_lab.assets.t4",
+        "legged_lab.assets.t4.tracking_motion",
+        "legged_lab.assets.t4.tracking_motion.body_indices",
+        "legged_lab.assets.t4.tracking_motion.load_t4_tracking_motion",
+        "legged_lab.assets.t4.vault_contract"
+      ],
+      "robot_named_classes": []
+    },
+    {
+      "path": "tests/test_t4_hurdle_contracts.py",
+      "role": "test",
+      "sha256": "00973b2b1b139372dd74ff572e0081fd9c7951fd38e6e48012e0a4e20afd0988",
+      "robot_imports": [],
+      "robot_named_classes": []
+    },
+    {
+      "path": "tests/test_t4_mujoco_sim2sim_contract.py",
+      "role": "test",
+      "sha256": "5ffd6c0cc4a87ecb3dc4a07f625286d4344f7cdc244847517e03b8bb62283298",
+      "robot_imports": [
+        "legged_lab.assets.t4.constants",
+        "legged_lab.assets.t4.constants.T4_JOINT_NAMES",
+        "legged_lab.assets.t4.mujoco_sim2sim",
+        "legged_lab.assets.t4.mujoco_sim2sim.ISAAC_FOOT_BOXES",
+        "legged_lab.assets.t4.mujoco_sim2sim.ISAAC_FRICTION",
+        "legged_lab.assets.t4.mujoco_sim2sim.apply_isaac_contact_friction",
+        "legged_lab.assets.t4.mujoco_sim2sim.apply_isaac_pd",
+        "legged_lab.assets.t4.mujoco_sim2sim.isaac_pd_gains",
+        "legged_lab.assets.t4.mujoco_sim2sim.rewrite_vault_mjcf",
+        "legged_lab.assets.t4.vault_contract",
+        "legged_lab.assets.t4.vault_contract.T4_VAULT_BOX_POS",
+        "legged_lab.assets.t4.vault_contract.T4_VAULT_BOX_SIZE"
+      ],
+      "robot_named_classes": []
+    },
+    {
+      "path": "tests/test_t4_observation_contracts.py",
+      "role": "test",
+      "sha256": "10f32fb512d78b50e2fff87268d851b591bb8045389fe3991df648294f75afdc",
+      "robot_imports": [
+        "legged_lab.assets.t4",
+        "legged_lab.assets.t4.constants",
+        "legged_lab.assets.t4.constants.T4_JOINT_NAMES",
+        "legged_lab.assets.t4.constants.T4_NOMINAL_FEET_Y_DISTANCE",
+        "legged_lab.assets.t4.schemas"
+      ],
+      "robot_named_classes": []
+    },
+    {
+      "path": "tests/test_t4_sparse_command_contract.py",
+      "role": "test",
+      "sha256": "a239b7569974b33fc1fb38610ae5deaa76848cf97b71efff0ce99082dfc58288",
+      "robot_imports": [],
+      "robot_named_classes": []
+    },
+    {
+      "path": "tests/test_t4_sparse_depth_student_gru_contract.py",
+      "role": "test",
+      "sha256": "a599f1778789131441ac7c1863a970b614c1e4edd523b63c7503dcdd1a0ff4b9",
+      "robot_imports": [
+        "legged_lab.assets.t4",
+        "legged_lab.assets.t4.schemas",
+        "legged_lab.assets.t4.student_lineage",
+        "legged_lab.assets.t4.student_lineage.StudentLineageError",
+        "legged_lab.assets.t4.student_lineage.load_student_continuation_checkpoint",
+        "legged_lab.assets.t4.student_lineage.load_student_warmstart_checkpoint",
+        "legged_lab.assets.t4.student_lineage.require_json_gate",
+        "legged_lab.assets.t4.student_lineage.require_sparse_teacher_checkpoint"
+      ],
+      "robot_named_classes": []
+    },
+    {
+      "path": "tests/test_t4_sparse_evaluator_contract.py",
+      "role": "test",
+      "sha256": "a332d418a03553d9b916e3451e9f65863b3a8a09c71c8a1fd7057a95d1650f64",
+      "robot_imports": [
+        "legged_lab.assets.t4.constants",
+        "legged_lab.assets.t4.constants.T4_NOMINAL_FEET_Y_DISTANCE",
+        "legged_lab.assets.t4.locomotion",
+        "legged_lab.assets.t4.locomotion.T4_LOCOMOTION"
+      ],
+      "robot_named_classes": []
+    },
+    {
+      "path": "tests/test_t4_sparse_monitor_contract.py",
+      "role": "test",
+      "sha256": "39be4387d088dbaf70af329bb68ab3d9c76733df20c7c6e60f1d9dfb27a448fb",
+      "robot_imports": [],
+      "robot_named_classes": []
+    },
+    {
+      "path": "tests/test_t4_sparse_reward_contracts.py",
+      "role": "test",
+      "sha256": "8cb347affd66448b31db30073b9e82aa18907e9cd590b6e111845b9023d9a6a1",
+      "robot_imports": [
+        "legged_lab.assets.t4",
+        "legged_lab.assets.t4.locomotion",
+        "legged_lab.assets.t4.locomotion.T4_LOCOMOTION",
+        "legged_lab.assets.t4.schemas"
+      ],
+      "robot_named_classes": []
+    },
+    {
+      "path": "tests/test_t4_sparse_teacher_mujoco.py",
+      "role": "test",
+      "sha256": "990f71da2991bbe37c5ae86f434f2560e8feee1423ff659c3c6c59c51b1ec69d",
+      "robot_imports": [
+        "legged_lab.assets.t4.navigation",
+        "legged_lab.assets.t4.navigation.CourseNavigator"
+      ],
+      "robot_named_classes": []
+    },
+    {
+      "path": "tests/test_t4_stepping_stone_contracts.py",
+      "role": "test",
+      "sha256": "0cd67b80e01cddd25d312ab64a417f6ef463abb7ef41aee028e370d50af5a2e6",
+      "robot_imports": [],
+      "robot_named_classes": []
+    },
+    {
+      "path": "tests/test_t4_terrain_column_map.py",
+      "role": "test",
+      "sha256": "5410def36421472c9007214ab53efbcd7be71a4dfac1020cc1d88454574f4d17",
+      "robot_imports": [],
+      "robot_named_classes": []
+    },
+    {
+      "path": "tests/test_t4_terrain_curriculum.py",
+      "role": "test",
+      "sha256": "7123ac69e195605daac9dee3c22a8712612616b432ab89c779529ed75f25912f",
+      "robot_imports": [],
+      "robot_named_classes": []
+    },
+    {
+      "path": "tests/test_t4_vault_evaluator_contract.py",
+      "role": "test",
+      "sha256": "62b510e83aa1648a809477f08ba887d4bec0e0e14359654e1f2892fd85b852f3",
+      "robot_imports": [
+        "legged_lab.assets.t4",
+        "legged_lab.assets.t4.tracking_motion",
+        "legged_lab.assets.t4.tracking_motion.body_indices",
+        "legged_lab.assets.t4.tracking_motion.load_t4_tracking_motion",
+        "legged_lab.assets.t4.vault_contract"
+      ],
+      "robot_named_classes": []
+    },
+    {
+      "path": "tests/test_t4_vault_rsl_rl_compat.py",
+      "role": "test",
+      "sha256": "c99026d32354875ec31324fd63affc4312dd685e73b37444ce3874fb7eac0fe4",
+      "robot_imports": [],
+      "robot_named_classes": []
+    },
+    {
+      "path": "tests/test_t4_vault_skill_contracts.py",
+      "role": "test",
+      "sha256": "c35fdbc496feadb6b1623daef78e67809c444eaa4bcb3ee45d8a0846360b3e7d",
+      "robot_imports": [
+        "legged_lab.assets.t4",
+        "legged_lab.assets.t4.schemas",
+        "legged_lab.assets.t4.schemas.TEACHER_ACTOR_OBS_DIM",
+        "legged_lab.assets.t4.vault_skill_contract"
+      ],
+      "robot_named_classes": []
+    },
+    {
+      "path": "tests/test_t4_zl_depth_navigation_contract.py",
+      "role": "test",
+      "sha256": "a6c3c1c166ead104171f958c7c9ee4835619f8e006a56b9ceaf2580f9c009383",
+      "robot_imports": [],
+      "robot_named_classes": []
+    }
+  ],
+  "violations": []
+}

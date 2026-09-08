@@ -52,7 +52,7 @@ from legged_lab.envs.t4.vault_eval import (  # noqa: E402
     canonical_vault_corridor_layout,
     evaluate_vault_batch,
 )
-from legged_lab.envs.t4.vault_mimic.rsl_rl_compat import RslRlVecEnvWrapper  # noqa: E402
+from legged_lab.utils.rsl_rl_compat import RslRlVecEnvWrapper  # noqa: E402
 from rsl_rl.runners import OnPolicyRunner  # noqa: E402
 
 patch_missing_physx_material_attributes()

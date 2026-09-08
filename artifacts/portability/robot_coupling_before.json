@@ -1,0 +1,712 @@
+[
+  {
+    "path": "legged_lab/envs/__init__.py",
+    "robot_imports": [
+      "from legged_lab.envs.t4.depth_student_cfg import T4SparseDepthStudentAgentCfg",
+      "from legged_lab.envs.t4.depth_student_env import T4LocoSparseDepthDistillEnv, T4LocoSparseDepthStudentEnvCfg",
+      "from legged_lab.envs.t4.t4_env import T4LocoEnv",
+      "from legged_lab.envs.t4.teacher_cfg import T4LocoSparseTeacherAgentCfg, T4LocoSparseTeacherEnvCfg, T4LocoTeacherAgentCfg, T4LocoTeacherEnvCfg",
+      "from legged_lab.envs.g1.teacher_cfg import G1LocoTeacherAgentCfg, G1LocoTeacherEnvCfg"
+    ],
+    "robot_named_classes": []
+  },
+  {
+    "path": "legged_lab/scripts/download_g1_lafan_motions.py",
+    "robot_imports": [
+      "from legged_lab.assets.unitree_g1.schemas import AMP_HELD_OUT_MOTIONS, AMP_MOTION_CLASSES, AMP_MOTION_SOURCE_DIR, LAFAN1_SOURCE_DATASET"
+    ],
+    "robot_named_classes": []
+  },
+  {
+    "path": "legged_lab/scripts/eval_t4_depth_plant_gap.py",
+    "robot_imports": [
+      "import legged_lab.scripts.sim2sim_t4_depth_student as sim2sim"
+    ],
+    "robot_named_classes": []
+  },
+  {
+    "path": "legged_lab/scripts/eval_t4_depth_student_sim2sim.py",
+    "robot_imports": [
+      "from legged_lab.scripts.sim2sim_t4_depth_student import STEP_DT, CourseNavigator, DepthStudentSim, course_waypoints_from_model, root_yaw_wxyz"
+    ],
+    "robot_named_classes": []
+  },
+  {
+    "path": "legged_lab/scripts/eval_t4_hurdle.py",
+    "robot_imports": [
+      "from legged_lab.assets.t4.schemas import TEACHER_SCAN_DIM, TEACHER_SCAN_INVALID_VALUE",
+      "from legged_lab.terrains.stepping_stone_layout import T4_STONE_PLATFORM_WIDTH, resolve_pinned_sparse_spawn"
+    ],
+    "robot_named_classes": []
+  },
+  {
+    "path": "legged_lab/scripts/eval_t4_hurdle_mujoco.py",
+    "robot_imports": [
+      "from legged_lab.scripts.play_t4_teacher_viser import T4MujocoRunner, record_video"
+    ],
+    "robot_named_classes": []
+  },
+  {
+    "path": "legged_lab/scripts/eval_t4_vault.py",
+    "robot_imports": [
+      "import legged_lab.envs.t4.vault_mimic",
+      "from legged_lab.assets.t4.vault_contract import T4_VAULT_ACTION_SCALE, T4_VAULT_MOTION_FILE",
+      "from legged_lab.envs.t4.vault_eval import VaultBatchResult, build_evaluation_report, canonical_vault_corridor_layout, evaluate_vault_batch",
+      "from legged_lab.envs.t4.vault_mimic.rsl_rl_compat import RslRlVecEnvWrapper"
+    ],
+    "robot_named_classes": []
+  },
+  {
+    "path": "legged_lab/scripts/generate_g1_amp_expert.py",
+    "robot_imports": [
+      "from legged_lab.assets.unitree_g1.constants import G1_29DOF_JOINT_NAMES",
+      "from legged_lab.assets.unitree_g1.g1 import G1_29DOF_CFG",
+      "from legged_lab.assets.unitree_g1.schemas import AMP_FRAME_DIM, AMP_HELD_OUT_MOTIONS, AMP_MOTION_CLASSES, AMP_SCHEMA_VERSION, LAFAN1_CSV_WIDTH, LAFAN1_SOURCE_DATASET, amp_motion_class, amp_motion_weight",
+      "from legged_lab.envs.g1.amp_features import G1AmpFeatureBuilder"
+    ],
+    "robot_named_classes": []
+  },
+  {
+    "path": "legged_lab/scripts/generate_t4_amp_expert.py",
+    "robot_imports": [
+      "from legged_lab.assets.t4.constants import T4_JOINT_NAMES",
+      "from legged_lab.assets.t4.schemas import AMP_FRAME_DIM, AMP_HELD_OUT_MOTIONS, AMP_MOTION_CLASSES, AMP_SCHEMA_VERSION, amp_motion_class, amp_motion_weight",
+      "from legged_lab.assets.t4.t4 import T4_CFG",
+      "from legged_lab.envs.t4.amp_features import T4AmpFeatureBuilder"
+    ],
+    "robot_named_classes": []
+  },
+  {
+    "path": "legged_lab/scripts/play.py",
+    "robot_imports": [
+      "import legged_lab.envs.t4.vault_mimic",
+      "import legged_lab.envs.t4.vault_skill",
+      "from legged_lab.envs.t4.vault_mimic.rsl_rl_compat import RslRlVecEnvWrapper"
+    ],
+    "robot_named_classes": []
+  },
+  {
+    "path": "legged_lab/scripts/playback_t4_motions.py",
+    "robot_imports": [
+      "from legged_lab.assets.t4.constants import T4_JOINT_NAMES",
+      "from legged_lab.assets.t4.t4 import T4_CFG"
+    ],
+    "robot_named_classes": []
+  },
+  {
+    "path": "legged_lab/scripts/play_t4_sparse_teacher_mujoco.py",
+    "robot_imports": [
+      "from legged_lab.assets.t4.constants import T4_JOINT_NAMES",
+      "from legged_lab.assets.t4.mujoco_sim2sim import apply_isaac_contact_friction, apply_isaac_pd, isaac_pd_gains",
+      "from legged_lab.assets.t4.navigation import CourseNavigator",
+      "from legged_lab.assets.t4.schemas import PROPRIO_FRAME_DIM, PROPRIO_HISTORY_LENGTH, TEACHER_ACTOR_OBS_DIM, TEACHER_PAPER_ACTOR_OBS_DIM, TEACHER_SCAN_CLIP, TEACHER_SCAN_DIM, TEACHER_SCAN_FORWARD_RANGE, TEACHER_SCAN_HEIGHT_OFFSET, TEACHER_SCAN_LATERAL_RANGE, TEACHER_SCAN_SHAPE, TEACHER_SPARSE_ACTOR_OBS_DIM, TEACHER_SPARSE_SCAN_HISTORY_LENGTH",
+      "from legged_lab.scripts.play_t4_teacher_viser import ACTION_SCALE, ASSET_DIR, CLIP_ACTIONS, CLIP_OBS, DECIMATION, GAIT_CYCLE, INIT_ROOT_Z, MJCF_PATH, PHASE_OFFSET, PHASE_RATIO, PHYSICS_DT, STANDING_COMMAND_THRESHOLD, T4_STANDING_JOINT_POS, _root_yaw_wxyz, quat_rotate_inverse_wxyz",
+      "from legged_lab.scripts.sim2sim_t4_depth_student import build_loco_course"
+    ],
+    "robot_named_classes": [
+      "T4SparseTeacherMujocoRunner"
+    ]
+  },
+  {
+    "path": "legged_lab/scripts/play_t4_teacher_viser.py",
+    "robot_imports": [
+      "from legged_lab.assets.t4.constants import T4_JOINT_NAMES",
+      "from legged_lab.assets.t4.mujoco_sim2sim import apply_isaac_contact_friction, apply_isaac_pd, isaac_pd_gains",
+      "from legged_lab.assets.t4.schemas import PROPRIO_FRAME_DIM, PROPRIO_HISTORY_LENGTH, TEACHER_SCAN_CLIP, TEACHER_SCAN_DIM, TEACHER_SCAN_HEIGHT_OFFSET, TEACHER_SCAN_FORWARD_RANGE, TEACHER_SCAN_LATERAL_RANGE, TEACHER_SCAN_SHAPE",
+      "from legged_lab.scripts.sim2sim_t4_depth_student import CourseNavigator, build_model_xml, course_waypoints_from_model"
+    ],
+    "robot_named_classes": [
+      "T4MujocoRunner"
+    ]
+  },
+  {
+    "path": "legged_lab/scripts/play_t4_vault_g1_mujoco.py",
+    "robot_imports": [
+      "from legged_lab.assets.t4.constants import T4_JOINT_NAMES",
+      "from legged_lab.assets.t4.mujoco_sim2sim import apply_isaac_contact_friction, apply_isaac_pd, isaac_pd_gains, rewrite_vault_mjcf",
+      "from legged_lab.assets.t4.tracking_motion import body_indices, load_t4_tracking_motion",
+      "from legged_lab.assets.t4.vault_contract import T4_VAULT_ACTION_SCALE, T4_VAULT_BOX_POS, T4_VAULT_BOX_SIZE, T4_VAULT_MOTION_FILE, T4_VAULT_WRIST_TERMINATION_THRESHOLD"
+    ],
+    "robot_named_classes": []
+  },
+  {
+    "path": "legged_lab/scripts/probe_t4_student_depth_render.py",
+    "robot_imports": [
+      "from legged_lab.envs.t4.depth_student_env import T4LocoSparseDepthDistillEnv, T4LocoSparseDepthStudentEnvCfg"
+    ],
+    "robot_named_classes": []
+  },
+  {
+    "path": "legged_lab/scripts/render_t4_motions.py",
+    "robot_imports": [
+      "from legged_lab.assets.t4.constants import T4_JOINT_NAMES"
+    ],
+    "robot_named_classes": []
+  },
+  {
+    "path": "legged_lab/scripts/sim2sim_t4_depth_student.py",
+    "robot_imports": [
+      "from legged_lab.assets.t4.constants import T4_JOINT_NAMES",
+      "from legged_lab.assets.t4.navigation import COMMAND_RANGES, HEADING_STIFFNESS, NAV_LOOKAHEAD, CourseNavigator, heading_velocity_command, polyline_lookahead, wrap_to_pi",
+      "from legged_lab.assets.t4.schemas import DEPTH_CAMERA_PITCH_DEG, DEPTH_CAMERA_SITE_POS, DEPTH_CLIP_RANGE, DEPTH_HISTORY_LENGTH, DEPTH_INVALID_VALUE, DEPTH_POLICY_SIZE, DEPTH_UPDATE_DECIMATION, PROPRIO_FRAME_DIM, PROPRIO_HISTORY_LENGTH, STUDENT_ACTOR_OBS_DIM, STUDENT_DEPTH_HISTORY_LENGTH, STUDENT_PROPRIO_HISTORY_LENGTH, TEACHER_ACTOR_OBS_DIM, TEACHER_SPARSE_ACTOR_OBS_DIM, depth_camera_mujoco_xyaxes, depth_camera_ros_quat_wxyz, sparse_teacher_latest_scan_range",
+      "from legged_lab.scripts.play_t4_sparse_teacher_mujoco import _LAYOUT, _geom_xml"
+    ],
+    "robot_named_classes": []
+  },
+  {
+    "path": "legged_lab/scripts/smoke_t4_asset.py",
+    "robot_imports": [
+      "from legged_lab.assets.t4.constants import T4_JOINT_NAMES",
+      "from legged_lab.assets.t4.t4 import T4_CFG"
+    ],
+    "robot_named_classes": []
+  },
+  {
+    "path": "legged_lab/scripts/smoke_t4_vault_task.py",
+    "robot_imports": [
+      "import legged_lab.envs.t4.vault_mimic",
+      "from legged_lab.envs.t4.vault_mimic.vault_env_cfg import T4VaultMimicEnvCfg"
+    ],
+    "robot_named_classes": []
+  },
+  {
+    "path": "legged_lab/scripts/t4_csv_motion_conversion.py",
+    "robot_imports": [
+      "from legged_lab.assets.t4.constants import T4_JOINT_NAMES"
+    ],
+    "robot_named_classes": []
+  },
+  {
+    "path": "legged_lab/scripts/train_t4_depth_student.py",
+    "robot_imports": [
+      "import legged_lab.envs.t4.depth_student_env",
+      "from legged_lab.envs.t4.depth_student_cfg import T4DepthStudentAgentCfg",
+      "from legged_lab.envs.t4.depth_student_env import T4LocoDepthDistillEnv, T4LocoDepthStudentEnvCfg"
+    ],
+    "robot_named_classes": []
+  },
+  {
+    "path": "legged_lab/scripts/train_t4_depth_student_ft.py",
+    "robot_imports": [
+      "from legged_lab.envs.t4.depth_student_cfg import T4DepthStudentFtAgentCfg",
+      "from legged_lab.envs.t4.depth_student_env import T4LocoDepthDistillEnv, T4LocoDepthStudentFtEnvCfg"
+    ],
+    "robot_named_classes": []
+  },
+  {
+    "path": "legged_lab/scripts/train_t4_sparse_depth_student.py",
+    "robot_imports": [
+      "from legged_lab.assets.t4.student_lineage import load_student_warmstart_checkpoint, require_json_gate, require_sparse_teacher_checkpoint",
+      "from legged_lab.envs.t4.depth_student_cfg import T4SparseDepthStudentReprFirstAgentCfg",
+      "from legged_lab.envs.t4.depth_student_env import T4LocoSparseDepthDistillEnv, T4LocoSparseDepthStudentReprFirstEnvCfg"
+    ],
+    "robot_named_classes": []
+  },
+  {
+    "path": "legged_lab/scripts/train_t4_sparse_depth_student_ft.py",
+    "robot_imports": [
+      "from legged_lab.assets.t4.student_lineage import load_student_continuation_checkpoint, require_json_gate, require_sparse_teacher_checkpoint",
+      "from legged_lab.envs.t4.depth_student_cfg import T4SparseDepthStudentDeployFtAgentCfg, T4SparseDepthStudentFtAgentCfg, T4SparseDepthStudentPlantFtAgentCfg, T4SparseDepthStudentResidualFtAgentCfg, T4SparseDepthStudentTargetedFtAgentCfg",
+      "from legged_lab.envs.t4.depth_student_env import T4LocoSparseDepthDistillEnv, T4LocoSparseDepthStudentFtEnvCfg, T4LocoSparseDepthStudentPlantFtEnvCfg, T4LocoSparseDepthStudentResidualFtEnvCfg, T4LocoSparseDepthStudentTargetedFtEnvCfg"
+    ],
+    "robot_named_classes": []
+  },
+  {
+    "path": "legged_lab/scripts/train_t4_vault_mimic.py",
+    "robot_imports": [
+      "import legged_lab.envs.t4.vault_mimic",
+      "from legged_lab.envs.t4.vault_mimic.rsl_rl_compat import RslRlVecEnvWrapper"
+    ],
+    "robot_named_classes": []
+  },
+  {
+    "path": "legged_lab/scripts/train_t4_vault_skill.py",
+    "robot_imports": [
+      "import legged_lab.envs.t4.vault_skill",
+      "from legged_lab.envs.t4.vault_mimic.rsl_rl_compat import RslRlVecEnvWrapper"
+    ],
+    "robot_named_classes": []
+  },
+  {
+    "path": "legged_lab/terrains/terrain_generator_cfg.py",
+    "robot_imports": [
+      "from .hurdle_layout import T4_HURDLE_BAR_HEIGHT_RANGE, T4_HURDLE_BAR_THICKNESS, T4_HURDLE_BORDER_WIDTH, T4_HURDLE_PLATFORM_WIDTH, T4_HURDLE_SPACING_RANGE, hurdle_bar_height, hurdle_ring_half_widths",
+      "from .stepping_stone_layout import T4_FOOTHOLD_PITCH_RANGE, T4_HOLE_DEPTH, T4_PILLAR_DIAMETER_RANGE, T4_PILLAR_HEIGHT_RANGE, T4_PILLAR_PITCH_RANGE, T4_STONE_BORDER_WIDTH, T4_SPARSE_RIM_WIDTH, T4_SPARSE_TERRAIN_PROPORTIONS, T4_STONE_HEIGHT_JITTER_RANGE, T4_STONE_HEIGHT_RANGE, T4_STONE_PLATFORM_WIDTH, T4_STONE_WIDTH_RANGE, foothold_centers, foothold_pitch, pillar_diameter, pillar_height, rim_slab_centers_and_sizes, stone_height, stone_height_jitter, stone_width, targeted_layout_seed"
+    ],
+    "robot_named_classes": []
+  },
+  {
+    "path": "legged_lab/assets/t4/mujoco_sim2sim.py",
+    "robot_imports": [
+      "from legged_lab.assets.t4.constants import T4_JOINT_NAMES"
+    ],
+    "robot_named_classes": []
+  },
+  {
+    "path": "legged_lab/assets/t4/schemas.py",
+    "robot_imports": [
+      "from legged_lab.assets.t4.constants import T4_JOINT_NAMES"
+    ],
+    "robot_named_classes": []
+  },
+  {
+    "path": "legged_lab/assets/t4/student_lineage.py",
+    "robot_imports": [
+      "from legged_lab.assets.t4.schemas import TEACHER_ACTOR_OBS_DIM, TEACHER_SPARSE_ACTOR_OBS_DIM"
+    ],
+    "robot_named_classes": []
+  },
+  {
+    "path": "legged_lab/assets/t4/t4.py",
+    "robot_imports": [
+      "from .constants import T4_JOINT_NAMES"
+    ],
+    "robot_named_classes": []
+  },
+  {
+    "path": "legged_lab/assets/t4/tracking_motion.py",
+    "robot_imports": [
+      "from legged_lab.assets.t4.constants import T4_JOINT_NAMES"
+    ],
+    "robot_named_classes": []
+  },
+  {
+    "path": "legged_lab/assets/t4/vault_skill_contract.py",
+    "robot_imports": [
+      "from legged_lab.assets.t4.schemas import PROPRIO_FIELDS, PROPRIO_FRAME_DIM, PROPRIO_HISTORY_LENGTH, TEACHER_ACTOR_OBS_DIM, TEACHER_SCAN_BODY, TEACHER_SCAN_CLIP, TEACHER_SCAN_DIM, TEACHER_SCAN_HEIGHT_OFFSET, TEACHER_SCAN_INVALID_VALUE, TEACHER_SCAN_OFFSET, TEACHER_SCAN_RESOLUTION, TEACHER_SCAN_SIZE",
+      "from legged_lab.assets.t4.vault_contract import T4_VAULT_ACTION_SCALE, T4_VAULT_BOX_POS, T4_VAULT_BOX_SIZE"
+    ],
+    "robot_named_classes": []
+  },
+  {
+    "path": "legged_lab/assets/t4/__init__.py",
+    "robot_imports": [
+      "from .constants import T4_JOINT_NAMES, T4_NOMINAL_FEET_Y_DISTANCE"
+    ],
+    "robot_named_classes": []
+  },
+  {
+    "path": "legged_lab/assets/unitree_g1/g1.py",
+    "robot_imports": [
+      "from .constants import G1_STANDING_JOINT_POS, G1_STANDING_PELVIS_Z"
+    ],
+    "robot_named_classes": []
+  },
+  {
+    "path": "legged_lab/assets/unitree_g1/schemas.py",
+    "robot_imports": [
+      "from legged_lab.assets.unitree_g1.constants import G1_29DOF_JOINT_NAMES, NUM_G1_29DOF_JOINTS"
+    ],
+    "robot_named_classes": []
+  },
+  {
+    "path": "legged_lab/assets/unitree_g1/__init__.py",
+    "robot_imports": [
+      "from .constants import G1_29DOF_JOINT_NAMES, G1_NOMINAL_FEET_Y_DISTANCE, NUM_G1_29DOF_JOINTS"
+    ],
+    "robot_named_classes": []
+  },
+  {
+    "path": "legged_lab/envs/g1/amp_features.py",
+    "robot_imports": [
+      "from legged_lab.assets.unitree_g1.constants import G1_29DOF_JOINT_NAMES, NUM_G1_29DOF_JOINTS",
+      "from legged_lab.assets.unitree_g1.schemas import AMP_FOOT_BODIES, AMP_FOOT_SITE_OFFSET, AMP_FRAME_DIM, AMP_HAND_BODIES, AMP_HAND_SITE_OFFSET",
+      "from legged_lab.envs.t4.amp_features import site_pos_in_root_frame"
+    ],
+    "robot_named_classes": [
+      "G1AmpFeatureBuilder"
+    ]
+  },
+  {
+    "path": "legged_lab/envs/g1/symmetry.py",
+    "robot_imports": [
+      "from legged_lab.assets.t4.schemas import FOOT_SCAN_BOTH_DIM, PROPRIO_HISTORY_LENGTH, TEACHER_SCAN_DIM, TEACHER_SCAN_SHAPE, TEACHER_SPARSE_CONTACT_DIM, TEACHER_SPARSE_IMMUNITY_DIM, TEACHER_SPARSE_SCAN_HISTORY_LENGTH",
+      "from legged_lab.assets.unitree_g1.constants import G1_29DOF_JOINT_NAMES, NUM_G1_29DOF_JOINTS",
+      "from legged_lab.assets.t4.schemas import FOOT_SCAN_DIM, FOOT_SCAN_SHAPE"
+    ],
+    "robot_named_classes": []
+  },
+  {
+    "path": "legged_lab/envs/g1/teacher_cfg.py",
+    "robot_imports": [
+      "from legged_lab.assets.unitree_g1.constants import G1_29DOF_JOINT_NAMES, G1_NOMINAL_FEET_Y_DISTANCE, NUM_G1_29DOF_JOINTS",
+      "from legged_lab.assets.unitree_g1.g1 import G1_29DOF_CFG",
+      "from legged_lab.assets.unitree_g1.schemas import AMP_FORMAL_EXPERT_DIR as G1_AMP_EXPERT_DIR",
+      "from legged_lab.assets.unitree_g1.schemas import AMP_FRAME_DIM as G1_AMP_FRAME_DIM",
+      "from legged_lab.assets.unitree_g1.schemas import amp_expert_files as g1_amp_expert_files",
+      "from legged_lab.envs.t4.teacher_cfg import T4LocoSparseTeacherAgentCfg, T4LocoSparseTeacherEnvCfg, T4SparseTeacherRewardCfg"
+    ],
+    "robot_named_classes": [
+      "G1SparseTeacherRewardCfg",
+      "G1LocoTeacherEnvCfg",
+      "G1LocoTeacherAgentCfg"
+    ]
+  },
+  {
+    "path": "legged_lab/envs/t4/amp_features.py",
+    "robot_imports": [
+      "from legged_lab.assets.t4.constants import T4_JOINT_NAMES",
+      "from legged_lab.assets.t4.schemas import AMP_FOOT_BODIES, AMP_FOOT_SITE_OFFSET, AMP_FRAME_DIM, AMP_HAND_BODIES, AMP_HAND_SITE_OFFSET, NUM_T4_JOINTS"
+    ],
+    "robot_named_classes": [
+      "T4AmpFeatureBuilder"
+    ]
+  },
+  {
+    "path": "legged_lab/envs/t4/depth_student_cfg.py",
+    "robot_imports": [
+      "from legged_lab.assets.t4.schemas import DEPTH_HISTORY_LENGTH, DEPTH_POLICY_SIZE, PROPRIO_FRAME_DIM, PROPRIO_HISTORY_LENGTH, STUDENT_DEPTH_HISTORY_LENGTH, STUDENT_PROPRIO_HISTORY_LENGTH, TEACHER_SCAN_DIM, sparse_teacher_latest_scan_range"
+    ],
+    "robot_named_classes": [
+      "T4DepthStudentPolicyCfg",
+      "T4DepthDistillationAlgCfg",
+      "T4DepthStudentAgentCfg",
+      "T4DepthStudentFtAlgCfg",
+      "T4DepthStudentFtAgentCfg",
+      "T4SparseDepthStudentPolicyCfg",
+      "T4SparseDepthStudentDaggerAlgCfg",
+      "T4SparseDepthStudentFinalMainAlgCfg",
+      "T4SparseDepthStudentAgentCfg",
+      "T4SparseDepthStudentReprFirstAlgCfg",
+      "T4SparseDepthStudentReprFirstAgentCfg",
+      "T4SparseDepthStudentJointAlgCfg",
+      "T4SparseDepthStudentDeployFtAlgCfg",
+      "T4SparseDepthStudentTargetedFtAlgCfg",
+      "T4SparseDepthStudentFtAgentCfg",
+      "T4SparseDepthStudentDeployFtAgentCfg",
+      "T4SparseDepthStudentTargetedFtAgentCfg",
+      "T4SparseDepthStudentResidualFtAlgCfg",
+      "T4SparseDepthStudentResidualFtAgentCfg",
+      "T4SparseDepthStudentPlantFtAlgCfg",
+      "T4SparseDepthStudentPlantFtAgentCfg"
+    ]
+  },
+  {
+    "path": "legged_lab/envs/t4/depth_student_env.py",
+    "robot_imports": [
+      "from legged_lab.assets.t4.schemas import DEPTH_CAMERA_SITE_POS, DEPTH_CLIP_RANGE, DEPTH_HISTORY_LENGTH, DEPTH_INVALID_VALUE, DEPTH_POLICY_SIZE, DEPTH_UPDATE_DECIMATION, PROPRIO_FRAME_DIM, STAGE_E_STUDENT_ACTOR_OBS_DIM, STUDENT_ACTOR_OBS_DIM, STUDENT_DEPTH_HISTORY_LENGTH, TEACHER_ACTOR_OBS_DIM, TEACHER_SPARSE_ACTOR_OBS_DIM, depth_camera_ros_quat_wxyz",
+      "from legged_lab.envs.t4.mdp.camera_extrinsic import LIGHTLP_CAMERA_ORI_JITTER_RAD, LIGHTLP_CAMERA_POS_JITTER_M, apply_camera_local_offset, capture_nominal_camera_pose, compose_camera_offset",
+      "from legged_lab.envs.t4.mdp.depth_noise import LIGHTLP_DEPTH_BLOCK_COUNT, LIGHTLP_DEPTH_BLOCK_REFRESH, LIGHTLP_DEPTH_DELAY_STEPS, LIGHTLP_DEPTH_HOLD_STEPS, LIGHTLP_DEPTH_SCALE_JITTER, apply_metric_depth_noise, apply_depth_boundary_corruption, apply_normalized_block_dropout, depth_refresh_plan, edge_biased_block_rows, scaled_block_hw, stamp_rectangular_blocks",
+      "from legged_lab.envs.t4.t4_env import T4LocoEnv",
+      "from legged_lab.envs.t4.teacher_cfg import T4LocoSparseTeacherEnvCfg, T4LocoTeacherEnvCfg, T4SparseTeacherRewardCfg",
+      "from legged_lab.terrains import T4_STAGE_E_SPARSE_TERRAINS_CFG"
+    ],
+    "robot_named_classes": [
+      "T4LocoDepthStudentEnvCfg",
+      "T4LocoDepthStudentFtEnvCfg",
+      "T4LocoSparseDepthStudentEnvCfg",
+      "T4LocoSparseDepthStudentReprFirstEnvCfg",
+      "T4LocoSparseDepthStudentFtEnvCfg",
+      "T4LocoSparseDepthStudentResidualFtEnvCfg",
+      "T4TargetedFtEventCfg",
+      "T4LocoSparseDepthStudentTargetedFtEnvCfg",
+      "T4LocoSparseDepthStudentPlantFtEnvCfg",
+      "T4LocoDepthDistillEnv",
+      "T4LocoSparseDepthDistillEnv"
+    ]
+  },
+  {
+    "path": "legged_lab/envs/t4/symmetry.py",
+    "robot_imports": [
+      "from legged_lab.assets.t4.constants import T4_JOINT_NAMES",
+      "from legged_lab.assets.t4.schemas import CRITIC_EXTRA_FIELDS, CRITIC_FRAME_DIM, FOOT_SCAN_BOTH_DIM, FOOT_SCAN_DIM, FOOT_SCAN_SHAPE, PROPRIO_FIELDS, PROPRIO_FRAME_DIM, TEACHER_PAPER_ACTOR_OBS_DIM, TEACHER_PAPER_CONTACT_DIM, TEACHER_SCAN_DIM, TEACHER_SCAN_SHAPE, TEACHER_SPARSE_ACTOR_OBS_DIM, TEACHER_SPARSE_CONTACT_DIM, TEACHER_SPARSE_CRITIC_OBS_DIM, TEACHER_SPARSE_IMMUNITY_DIM, TEACHER_SPARSE_SCAN_HISTORY_LENGTH"
+    ],
+    "robot_named_classes": []
+  },
+  {
+    "path": "legged_lab/envs/t4/t4_env.py",
+    "robot_imports": [
+      "from legged_lab.assets.t4.constants import T4_JOINT_NAMES",
+      "from legged_lab.assets.t4.schemas import FOOT_SCAN_BOTH_DIM, FOOT_SCAN_DIM, NUM_T4_JOINTS, PROPRIO_FRAME_DIM, TEACHER_PAPER_CONTACT_DIM, TEACHER_SCAN_CLIP, TEACHER_SCAN_DIM, TEACHER_SCAN_INVALID_VALUE, TEACHER_SPARSE_CONTACT_DIM, TEACHER_SPARSE_SCAN_HISTORY_LENGTH, assert_no_privilege_leakage, proprio_field_slice",
+      "from legged_lab.envs.t4.amp_features import T4AmpFeatureBuilder",
+      "from legged_lab.envs.t4.curriculum import LIGHTLP_TRACKING_WELL_THRESHOLD, STANDING_COMMAND_THRESHOLD, gait_tracking_scale, lightlp_terrain_level_moves, terrain_level_moves",
+      "from legged_lab.envs.t4.mdp.sparse_signals import LIGHTLP_IMMUNITY_FRAC, LIGHTLP_IMMUNITY_PERIOD, LOG_COUNT_SUFFIX, SPARSE_FOOTHOLD_GENTLE_YAW_RANGE, SPARSE_FOOTHOLD_STRAIGHT_YAW_PROB, SPARSE_FOOTHOLD_VX_RANGE, collapsed_pelvis_above_feet_mask, impact_immunity_from_draws, lightlp_sparse_promotion_guard, lightlp_timeout_and_reset, mask_recent_push_accel, monitor_outcome_flags, random_level_reset_high, random_level_reset_low, random_level_reset_mask, sample_sparse_foothold_velocity, mask_sparse_curriculum_demote, sparse_curriculum_moves, sparse_pit_fall_mask, terrain_aware_commands_enabled, tilt_from_upright_rad",
+      "from legged_lab.envs.t4.terrain_columns import HURDLE_TERRAIN_NAMES, SPARSE_FOOTHOLD_NAMES, assign_curriculum_columns, columns_named, name_to_columns, unique_names",
+      "from legged_lab.envs.t4.teacher_cfg import T4LocoTeacherEnvCfg",
+      "from legged_lab.terrains.stepping_stone_layout import T4_FOOT_SCAN_RESOLUTION, T4_FOOT_SCAN_SIZE, T4_FOOTHOLD_PITCH_RANGE, T4_PILLAR_DIAMETER_RANGE, T4_PILLAR_PITCH_RANGE, T4_STONE_BORDER_WIDTH, T4_SPARSE_RIM_WIDTH, T4_STONE_PLATFORM_WIDTH, T4_STONE_TILE_SIZE, T4_STONE_WIDTH_RANGE, foot_scan_local_offsets",
+      "from legged_lab.assets.unitree_g1.constants import G1_29DOF_JOINT_NAMES",
+      "from legged_lab.envs.g1.amp_features import G1AmpFeatureBuilder"
+    ],
+    "robot_named_classes": [
+      "T4LocoEnv"
+    ]
+  },
+  {
+    "path": "legged_lab/envs/t4/teacher_cfg.py",
+    "robot_imports": [
+      "from legged_lab.assets.t4.constants import T4_JOINT_NAMES, T4_NOMINAL_FEET_Y_DISTANCE",
+      "from legged_lab.assets.t4.schemas import AMP_FORMAL_EXPERT_DIR, AMP_FRAME_DIM, FOOT_SCAN_RESOLUTION, FOOT_SCAN_SIZE, NUM_T4_JOINTS, PROPRIO_HISTORY_LENGTH, TEACHER_SCAN_BODY, TEACHER_SCAN_HEIGHT_OFFSET, TEACHER_SCAN_OFFSET, TEACHER_SCAN_RESOLUTION, TEACHER_SCAN_SIZE, TEACHER_SPARSE_SCAN_HISTORY_LENGTH, amp_expert_files",
+      "from legged_lab.assets.t4.t4 import T4_CFG",
+      "from legged_lab.terrains import T4_STAGE_E_SPARSE_TERRAINS_CFG, T4_STAGE_E_TERRAINS_CFG"
+    ],
+    "robot_named_classes": [
+      "T4GaitCfg",
+      "T4AmpTerrainScheduleCfg",
+      "T4TeacherRewardCfg",
+      "T4LocoTeacherEnvCfg",
+      "T4LocoTeacherAgentCfg",
+      "T4SparseTeacherRewardCfg",
+      "T4LocoSparseTeacherEnvCfg",
+      "T4LocoSparseTeacherAgentCfg"
+    ]
+  },
+  {
+    "path": "legged_lab/envs/t4/vault_eval.py",
+    "robot_imports": [
+      "from legged_lab.assets.t4.vault_contract import T4_VAULT_ACTION_SCALE, T4_VAULT_BOX_POS, T4_VAULT_BOX_ROT, T4_VAULT_BOX_SIZE"
+    ],
+    "robot_named_classes": []
+  },
+  {
+    "path": "legged_lab/envs/t4/vault_mimic/agents.py",
+    "robot_imports": [],
+    "robot_named_classes": [
+      "T4VaultMimicPPORunnerCfg"
+    ]
+  },
+  {
+    "path": "legged_lab/envs/t4/vault_mimic/vault_env_cfg.py",
+    "robot_imports": [
+      "import legged_lab.envs.t4.vault_mimic.mdp as mdp",
+      "from legged_lab.assets.t4.t4 import T4_CFG",
+      "from legged_lab.assets.t4.vault_contract import T4_VAULT_ACTION_SCALE, T4_VAULT_ADAPTIVE_KERNEL_LAMBDA, T4_VAULT_ADAPTIVE_KERNEL_SIZE, T4_VAULT_ANCHOR_BODY_NAME, T4_VAULT_ANCHOR_ORI_TERMINATION_THRESHOLD, T4_VAULT_ANCHOR_TERMINATION_THRESHOLD, T4_VAULT_BOX_POS, T4_VAULT_BOX_ROT, T4_VAULT_BOX_SIZE, T4_VAULT_END_EFFECTOR_BODY_NAMES, T4_VAULT_FOOT_BODY_NAMES, T4_VAULT_FOOT_TERMINATION_THRESHOLD, T4_VAULT_MOTION_FILE, T4_VAULT_PLAY_JOINT_POSITION_RANGE, T4_VAULT_PLAY_POSE_RANGE, T4_VAULT_PLAY_SAMPLING_STRATEGY, T4_VAULT_PLAY_VELOCITY_RANGE, T4_VAULT_TRACKING_BODY_NAMES, T4_VAULT_WRIST_BODY_NAMES, T4_VAULT_WRIST_TERMINATION_THRESHOLD",
+      "from legged_lab.envs.t4.vault_eval import canonical_vault_corridor_layout, wall_spawn_pose"
+    ],
+    "robot_named_classes": [
+      "T4VaultMimicEnvCfg",
+      "T4VaultMimicPlayEnvCfg",
+      "T4VaultMimicEvalEnvCfg"
+    ]
+  },
+  {
+    "path": "legged_lab/envs/t4/vault_mimic/__init__.py",
+    "robot_imports": [
+      "from .agents import T4VaultMimicPPORunnerCfg",
+      "from .vault_env_cfg import T4VaultMimicEnvCfg, T4VaultMimicEvalEnvCfg, T4VaultMimicPlayEnvCfg"
+    ],
+    "robot_named_classes": []
+  },
+  {
+    "path": "legged_lab/envs/t4/vault_skill/agents.py",
+    "robot_imports": [],
+    "robot_named_classes": [
+      "T4VaultSkillDistillRunnerCfg"
+    ]
+  },
+  {
+    "path": "legged_lab/envs/t4/vault_skill/skill_env_cfg.py",
+    "robot_imports": [
+      "import legged_lab.envs.t4.vault_mimic.mdp as g1_mdp",
+      "import legged_lab.envs.t4.vault_skill.mdp as mdp",
+      "from legged_lab.assets.t4.vault_skill_contract import G2_ACTION_SCALE",
+      "from legged_lab.envs.t4.vault_mimic.vault_env_cfg import ActionsCfg, CommandsCfg, EventCfg, RewardsCfg, T4VaultMimicEnvCfg, TerminationsCfg, VaultSceneCfg"
+    ],
+    "robot_named_classes": [
+      "T4VaultSkillEnvCfg"
+    ]
+  },
+  {
+    "path": "legged_lab/envs/t4/vault_skill/__init__.py",
+    "robot_imports": [
+      "from .agents import T4VaultSkillDistillRunnerCfg",
+      "from .skill_env_cfg import T4VaultSkillEnvCfg"
+    ],
+    "robot_named_classes": []
+  },
+  {
+    "path": "legged_lab/envs/t4/vault_mimic/mdp/commands.py",
+    "robot_imports": [
+      "from legged_lab.envs.t4.vault_mimic.mdp.motion_schema import reorder_named_axis"
+    ],
+    "robot_named_classes": []
+  },
+  {
+    "path": "legged_lab/envs/t4/vault_mimic/mdp/observations.py",
+    "robot_imports": [
+      "from legged_lab.envs.t4.vault_mimic.mdp.commands import MotionCommand"
+    ],
+    "robot_named_classes": []
+  },
+  {
+    "path": "legged_lab/envs/t4/vault_mimic/mdp/rewards.py",
+    "robot_imports": [
+      "from legged_lab.envs.t4.vault_mimic.mdp.commands import MotionCommand"
+    ],
+    "robot_named_classes": []
+  },
+  {
+    "path": "legged_lab/envs/t4/vault_mimic/mdp/terminations.py",
+    "robot_imports": [
+      "from legged_lab.envs.t4.vault_mimic.mdp.commands import MotionCommand",
+      "from legged_lab.envs.t4.vault_mimic.mdp.rewards import _get_body_indexes"
+    ],
+    "robot_named_classes": []
+  },
+  {
+    "path": "legged_lab/envs/t4/vault_skill/mdp/observations.py",
+    "robot_imports": [
+      "from legged_lab.assets.t4.vault_contract import T4_VAULT_BOX_POS, T4_VAULT_BOX_SIZE",
+      "from legged_lab.assets.t4.vault_skill_contract import G2_PROPRIO_HISTORY_LENGTH, G2_SKILL_LIN_VEL_X, analytic_vault_height_scan"
+    ],
+    "robot_named_classes": []
+  },
+  {
+    "path": "legged_lab/envs/t4/vault_skill/mdp/__init__.py",
+    "robot_imports": [
+      "from legged_lab.envs.t4.vault_mimic.mdp.commands import *",
+      "from legged_lab.envs.t4.vault_mimic.mdp.events import *",
+      "from legged_lab.envs.t4.vault_mimic.mdp.rewards import *",
+      "from legged_lab.envs.t4.vault_mimic.mdp.terminations import *"
+    ],
+    "robot_named_classes": []
+  },
+  {
+    "path": "tests/test_dual_amp_switch.py",
+    "robot_imports": [
+      "from legged_lab.assets.t4.vault_contract import T4_VAULT_BOX_POS, T4_VAULT_BOX_SIZE"
+    ],
+    "robot_named_classes": []
+  },
+  {
+    "path": "tests/test_g1_asset_contract.py",
+    "robot_imports": [
+      "from legged_lab.assets.unitree_g1.constants import G1_29DOF_JOINT_NAMES, G1_STANDING_JOINT_POS, G1_STANDING_PELVIS_Z, NUM_G1_29DOF_JOINTS",
+      "from legged_lab.assets.t4 import schemas as t4_schemas",
+      "from legged_lab.assets.unitree_g1 import schemas as g1_schemas",
+      "from legged_lab.assets.unitree_g1.schemas import AMP_MOTION_SOURCE_DIR, LAFAN1_CSV_WIDTH, amp_expert_files",
+      "from legged_lab.assets.unitree_g1.sync_urdf_collision_from_mjcf import load_mjcf_collisions"
+    ],
+    "robot_named_classes": []
+  },
+  {
+    "path": "tests/test_g1_collapse_reset_numerics.py",
+    "robot_imports": [
+      "from legged_lab.assets.unitree_g1.constants import G1_STANDING_JOINT_POS, G1_STANDING_PELVIS_Z",
+      "from tests.test_g1_asset_contract import _urdf_fk_and_collisions",
+      "from tests.test_g1_asset_contract import _T_from_xyz_rpy, _compose, _axis_matrix, _rpy_matrix"
+    ],
+    "robot_named_classes": []
+  },
+  {
+    "path": "tests/test_locomotion_portability.py",
+    "robot_imports": [
+      "from legged_lab.assets.t4.constants import T4_JOINT_NAMES"
+    ],
+    "robot_named_classes": []
+  },
+  {
+    "path": "tests/test_safe_recurrent_distillation.py",
+    "robot_imports": [
+      "from legged_lab.envs.t4.depth_student_cfg import T4SparseDepthStudentDeployFtAgentCfg, T4SparseDepthStudentAgentCfg, T4SparseDepthStudentDaggerAlgCfg, T4SparseDepthStudentFinalMainAlgCfg, T4SparseDepthStudentFtAgentCfg, T4SparseDepthStudentJointAlgCfg, T4SparseDepthStudentReprFirstAgentCfg, T4SparseDepthStudentResidualFtAgentCfg, T4SparseDepthStudentResidualFtAlgCfg, T4SparseDepthStudentPlantFtAgentCfg, T4SparseDepthStudentPlantFtAlgCfg, T4SparseDepthStudentTargetedFtAgentCfg, T4SparseDepthStudentTargetedFtAlgCfg",
+      "from legged_lab.envs.t4.depth_student_env import T4LocoSparseDepthStudentEnvCfg, T4LocoSparseDepthStudentPlantFtEnvCfg, T4LocoSparseDepthStudentReprFirstEnvCfg, T4LocoSparseDepthStudentResidualFtEnvCfg, T4LocoSparseDepthStudentTargetedFtEnvCfg"
+    ],
+    "robot_named_classes": []
+  },
+  {
+    "path": "tests/test_sim2sim_t4_depth_student.py",
+    "robot_imports": [
+      "from legged_lab.assets.t4 import schemas",
+      "from legged_lab.assets.t4.navigation import CourseNavigator as SharedCourseNavigator",
+      "from legged_lab.scripts.sim2sim_t4_depth_student import COMMAND_RANGES, D455_ROS_ROT_WXYZ, DEPTH_CAM_POS, DEPTH_CAM_XYAXES, DEPTH_FOVY, DEPTH_HFOV_DEG, HEADING_STIFFNESS, LOCO_GOAL_XY, LOCO_STAIR2_RISE, LOCO_STAIR2_STEPS, LOCO_STAIR_RISE, LOCO_STAIR_STEPS, CourseNavigator, build_model_xml, build_stair_probe_course, camera_look_axes, classify_sensor_depth, course_waypoints_from_model, heading_velocity_command, polyline_lookahead, render_standing_sensor_depth, depth_vertical_fov_deg, resolve_control_mode, resolve_course, ros_offset_to_mujoco_xyaxes, wrap_to_pi",
+      "from legged_lab.scripts.play_t4_sparse_teacher_mujoco import _LAYOUT as layout",
+      "from legged_lab.scripts.play_t4_sparse_teacher_mujoco import _LAYOUT as layout",
+      "from legged_lab.scripts.play_t4_sparse_teacher_mujoco import _LAYOUT as layout",
+      "from legged_lab.scripts.sim2sim_t4_depth_student import DEPTH_TERRAIN_GEOM_GROUP, apply_terrain_only_depth_groups, depth_source_size_for_student, terrain_only_depth_option",
+      "from legged_lab.scripts.sim2sim_t4_depth_student import robot_and_terrain_depth_option",
+      "from legged_lab.scripts.sim2sim_t4_depth_student import DEPTH_TERRAIN_GEOM_GROUP, enable_sparse_terrain_in_mjv_option",
+      "from legged_lab.scripts import sim2sim_t4_depth_student as sim2sim",
+      "from legged_lab.scripts.sim2sim_t4_depth_student import SPAWN_Z, apply_terrain_only_depth_groups, terrain_only_depth_option"
+    ],
+    "robot_named_classes": []
+  },
+  {
+    "path": "tests/test_sim2sim_t4_depth_student_runtime_contract.py",
+    "robot_imports": [
+      "from legged_lab.assets.t4.constants import T4_JOINT_NAMES",
+      "from legged_lab.scripts.sim2sim_t4_depth_student import DepthStudentSim, body_velocities_world, build_model_xml, pd_group"
+    ],
+    "robot_named_classes": []
+  },
+  {
+    "path": "tests/test_t4_asset_migration.py",
+    "robot_imports": [
+      "from legged_lab.assets.t4 import vault_contract",
+      "from legged_lab.assets.t4.tracking_motion import body_indices, load_t4_tracking_motion"
+    ],
+    "robot_named_classes": []
+  },
+  {
+    "path": "tests/test_t4_mujoco_sim2sim_contract.py",
+    "robot_imports": [
+      "from legged_lab.assets.t4.constants import T4_JOINT_NAMES",
+      "from legged_lab.assets.t4.mujoco_sim2sim import ISAAC_FOOT_BOXES, ISAAC_FRICTION, apply_isaac_contact_friction, apply_isaac_pd, isaac_pd_gains, rewrite_vault_mjcf",
+      "from legged_lab.assets.t4.vault_contract import T4_VAULT_BOX_POS, T4_VAULT_BOX_SIZE",
+      "from legged_lab.scripts import eval_t4_depth_plant_gap as gap_eval",
+      "from legged_lab.scripts import sim2sim_t4_depth_student as sim2sim",
+      "from legged_lab.scripts import eval_t4_depth_plant_gap as gap_eval"
+    ],
+    "robot_named_classes": []
+  },
+  {
+    "path": "tests/test_t4_observation_contracts.py",
+    "robot_imports": [
+      "from legged_lab.assets.t4 import schemas",
+      "from legged_lab.assets.t4.constants import T4_JOINT_NAMES, T4_NOMINAL_FEET_Y_DISTANCE"
+    ],
+    "robot_named_classes": []
+  },
+  {
+    "path": "tests/test_t4_sparse_depth_student_gru_contract.py",
+    "robot_imports": [
+      "from legged_lab.assets.t4 import schemas",
+      "from legged_lab.assets.t4.student_lineage import StudentLineageError, load_student_continuation_checkpoint, load_student_warmstart_checkpoint, require_json_gate, require_sparse_teacher_checkpoint"
+    ],
+    "robot_named_classes": []
+  },
+  {
+    "path": "tests/test_t4_sparse_evaluator_contract.py",
+    "robot_imports": [
+      "from legged_lab.assets.t4.constants import T4_NOMINAL_FEET_Y_DISTANCE"
+    ],
+    "robot_named_classes": []
+  },
+  {
+    "path": "tests/test_t4_sparse_reward_contracts.py",
+    "robot_imports": [
+      "from legged_lab.assets.t4 import schemas"
+    ],
+    "robot_named_classes": []
+  },
+  {
+    "path": "tests/test_t4_sparse_teacher_mujoco.py",
+    "robot_imports": [
+      "from legged_lab.assets.t4.navigation import CourseNavigator"
+    ],
+    "robot_named_classes": []
+  },
+  {
+    "path": "tests/test_t4_vault_evaluator_contract.py",
+    "robot_imports": [
+      "from legged_lab.assets.t4 import vault_contract",
+      "from legged_lab.assets.t4.tracking_motion import body_indices, load_t4_tracking_motion"
+    ],
+    "robot_named_classes": []
+  },
+  {
+    "path": "tests/test_t4_vault_skill_contracts.py",
+    "robot_imports": [
+      "from legged_lab.assets.t4 import vault_skill_contract as contract",
+      "from legged_lab.assets.t4.schemas import TEACHER_ACTOR_OBS_DIM"
+    ],
+    "robot_named_classes": []
+  },
+  {
+    "path": "tests/test_t4_zl_depth_navigation_contract.py",
+    "robot_imports": [
+      "from zl_deploy.scripts.t4_depth_course_acceptance import is_settled_ready_sample, is_stable_platform_sample",
+      "from zl_deploy.scripts.prepare_t4_depth_sim_xml import JOINT_DAMPING, prepare",
+      "from zl_deploy.scripts.prepare_t4_depth_sim_binary import EXPECTED_MAX_SPEEDS, PARITY_MAX_SPEEDS, _packed, prepare"
+    ],
+    "robot_named_classes": []
+  }
+]

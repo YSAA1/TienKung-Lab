@@ -1,0 +1,20 @@
+[
+  {
+    "pid": 479835,
+    "session": "g1-reset-control",
+    "command": "/home/nubot/isaac-sim-standalone-5.1.0-linux-x86_64/kit/python/bin/python3 /home/nubot/phn_ws/t4_train/TienKung-Lab-g1-unitree-v6-20260907/artifacts/diagnostics/g1_reset_ablation/train.py --group control --output /home/nubot/phn_ws/t4_train/TienKung-Lab-g1-unitree-v6-20260907/artifacts/portability/reset_xy_ablation_20260907/control --start-file /home/nubot/phn_ws/t4_train/TienKung-Lab-g1-unitree-v6-20260907/artifacts/portability/reset_xy_ablation_20260907/start.allowed --headless ",
+    "checkpoints": [
+      "model_0.pt",
+      "model_1000.pt",
+      "model_1500.pt",
+      "model_2000.pt",
+      "model_500.pt"
+    ]
+  },
+  {
+    "pid": 520910,
+    "session": "g1-amp-full17",
+    "command": "/home/nubot/isaac-sim-standalone-5.1.0-linux-x86_64/kit/python/bin/python3 /home/nubot/phn_ws/t4_train/TienKung-Lab-g1-unitree-v6-20260907/artifacts/diagnostics/g1_full17_ablation/train.py --group full17 --output /home/nubot/phn_ws/t4_train/TienKung-Lab-g1-unitree-v6-20260907/artifacts/portability/rob2rob_full17_ablation_20260907/full17 --start-file /home/nubot/phn_ws/t4_train/TienKung-Lab-g1-unitree-v6-20260907/artifacts/portability/rob2rob_full17_ablation_20260907/start.allowed --headless ",
+    "checkpoints": []
+  }
+]

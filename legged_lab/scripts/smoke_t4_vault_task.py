@@ -5,6 +5,7 @@ Asserts the frozen G1 observation contract (policy 150-D, critic 276-D,
 steps the env with zero actions to prove the MDP wiring is finite.
 """
 
+import argparse
 import json
 from pathlib import Path
 
@@ -16,6 +17,9 @@ from legged_lab.scripts.isaaclab_runtime_compat import (
 )
 
 patch_physx_backward_compatibility_setting(AppLauncher)
+parser = argparse.ArgumentParser(description=__doc__)
+parser.add_argument("--output", type=Path, default=Path("/tmp/t4_vault_smoke_result.json"))
+args = parser.parse_args()
 app = AppLauncher(headless=True).app
 
 import torch  # noqa: E402
@@ -26,6 +30,7 @@ import legged_lab.envs.t4.vault_mimic  # noqa: F401, E402
 from legged_lab.envs.t4.vault_mimic.vault_env_cfg import (  # noqa: E402
     T4VaultMimicEnvCfg,
 )
+from legged_lab.utils.rsl_rl_compat import RslRlVecEnvWrapper  # noqa: E402
 
 patch_missing_physx_material_attributes()
 
@@ -83,7 +88,18 @@ def main() -> None:
         assert torch.isfinite(rewards).all(), "non-finite rewards"
 
     command = env.command_manager.get_term("motion")
+    wrapper = RslRlVecEnvWrapper(env)
+    wrapped_obs, extras = wrapper.get_observations()
+    assert wrapped_obs.shape == policy_obs.shape
+    assert extras["observations"]["critic"].shape == critic_obs.shape
+    wrapped_obs, wrapped_rewards, wrapped_dones, _ = wrapper.step(
+        torch.zeros(env.num_envs, action_dim, device=env.device)
+    )
+    assert torch.isfinite(wrapped_obs).all() and torch.isfinite(wrapped_rewards).all()
+    assert wrapped_dones.shape == (env.num_envs,)
     result = {
+        "motion_command_class": f"{type(command).__module__}.{type(command).__name__}",
+        "rl_wrapper_class": f"{type(wrapper).__module__}.{type(wrapper).__name__}",
         "policy_obs_dim": int(policy_obs.shape[1]),
         "critic_obs_dim": int(critic_obs.shape[1]),
         "action_dim": int(action_dim),
@@ -96,7 +112,8 @@ def main() -> None:
         "error_anchor_pos_mean": float(command.metrics["error_anchor_pos"].mean()),
         "ok": True,
     }
-    Path("/tmp/t4_vault_smoke_result.json").write_text(json.dumps(result, indent=2) + "\n")
+    args.output.parent.mkdir(parents=True, exist_ok=True)
+    args.output.write_text(json.dumps(result, indent=2) + "\n")
     print(f"T4_VAULT_SMOKE {json.dumps(result)}", flush=True)
 
 

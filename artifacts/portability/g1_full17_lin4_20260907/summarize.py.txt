@@ -1,0 +1,10 @@
+import json
+from pathlib import Path
+p=Path('/home/nubot/phn_ws/t4_train/TienKung-Lab-g1-unitree-v6-20260907/artifacts/portability/g1_full17_lin4_20260907/comparison.json')
+r=json.loads(p.read_text());s={'window':[2400,2600],'samples_per_update':98304,'t4_sample_evidence':'historical train.log iteration 0 total_timesteps=98304; iteration 1=196608','metrics':{}}
+for k in ['full17','t4']:
+ s['metrics'][k]={}
+ for tag,vs in r['runs'][k]['scalars'].items():
+  vals=[v[2] for v in vs if 2400<=v[1]<=2600]
+  s['metrics'][k][tag]={'mean':sum(vals)/len(vals),'n':len(vals)} if vals else None
+p.with_name('matched_window.json').write_text(json.dumps(s,indent=2));print(json.dumps(s))

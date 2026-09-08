@@ -1,0 +1,10 @@
+{
+  "accepted_for_data_ablation": true,
+  "review": "Reviewed 12 evenly spaced frames across the complete 9.6 second recording and both selected clip snapshots; continuous forward stepping and jogging, no standing/dance segments, no bent-waist hands-on-hips walk. Kinematic video only.",
+  "video_sha256": "27bc787e377d83c5ed9a2724baa072746b7be205c121a2d3949a70a323440a02",
+  "limitations": [
+    "Two clips totaling 9.57 seconds / 10 full stride cycles.",
+    "Retargeting kinematics and actual Isaac features verified; dynamics and policy learning remain to be tested."
+  ],
+  "rejected_candidates": "Raw G1 walk4 includes stylized bent-waist hands-on-hips motions. Other raw and public AMP candidate clips retained only as diagnostics."
+}

@@ -1,0 +1,361 @@
+{
+  "time": "2026-09-08T10:19:15.691254+08:00",
+  "groups": {
+    "A": {
+      "session_alive": true,
+      "run": "/home/nubot/phn_ws/t4_train/TienKung-Lab-g1-progress-ab-20260908/logs/g1_progress_A/2026-09-08_10-16-38_g1_progress_A",
+      "checkpoints": [
+        "model_0.pt"
+      ],
+      "metrics": {
+        "Progress/all/moving/command_completion": {
+          "step": 37,
+          "last": 0.32952505350112915
+        },
+        "Progress/all/moving/command_progress_m": {
+          "step": 37,
+          "last": 0.36380505561828613
+        },
+        "Progress/all/moving/command_speed_mps": {
+          "step": 37,
+          "last": 1.0793328285217285
+        },
+        "Progress/all/moving/directed_speed_mps": {
+          "step": 37,
+          "last": 0.3481783866882324
+        },
+        "Progress/all/moving/max_spawn_displacement_m": {
+          "step": 37,
+          "last": 0.6337499022483826
+        },
+        "Progress/all/moving/net_displacement_m": {
+          "step": 37,
+          "last": 0.6324212551116943
+        },
+        "Progress/all/moving/net_path_ratio": {
+          "step": 37,
+          "last": 0.9165267944335938
+        },
+        "Progress/all/moving/path_length_m": {
+          "step": 37,
+          "last": 0.6925003528594971
+        },
+        "Progress/all/moving/window_net_speed_mps": {
+          "step": 37,
+          "last": 0.47379031777381897
+        },
+        "Progress/all/standing/command_completion": {
+          "step": 37,
+          "last": 0.0
+        },
+        "Progress/all/standing/command_progress_m": {
+          "step": 37,
+          "last": 0.0
+        },
+        "Progress/all/standing/command_speed_mps": {
+          "step": 37,
+          "last": 0.0
+        },
+        "Progress/all/standing/directed_speed_mps": {
+          "step": 37,
+          "last": 0.0
+        },
+        "Progress/all/standing/max_spawn_displacement_m": {
+          "step": 37,
+          "last": 0.6134171485900879
+        },
+        "Progress/all/standing/net_displacement_m": {
+          "step": 37,
+          "last": 0.6133116483688354
+        },
+        "Progress/all/standing/net_path_ratio": {
+          "step": 37,
+          "last": 0.9158182740211487
+        },
+        "Progress/all/standing/path_length_m": {
+          "step": 37,
+          "last": 0.6697726249694824
+        },
+        "Progress/all/standing/window_net_speed_mps": {
+          "step": 37,
+          "last": 0.45153722167015076
+        },
+        "RewardMix/all/moving/style_per_step": {
+          "step": 37,
+          "last": 0.0008400786900892854
+        },
+        "RewardMix/all/moving/task_per_step": {
+          "step": 37,
+          "last": -0.08876312524080276
+        },
+        "RewardMix/all/standing/style_per_step": {
+          "step": 37,
+          "last": 0.0016812075627967715
+        },
+        "RewardMix/all/standing/task_per_step": {
+          "step": 37,
+          "last": -0.11449390649795532
+        },
+        "Loss/value_function": {
+          "step": 37,
+          "last": 0.27866244316101074
+        },
+        "Loss/surrogate": {
+          "step": 37,
+          "last": -0.010527409613132477
+        },
+        "Loss/entropy": {
+          "step": 37,
+          "last": 37.42759323120117
+        },
+        "Loss/amp": {
+          "step": 37,
+          "last": 0.0010202929843217134
+        },
+        "Loss/amp_grad_pen": {
+          "step": 37,
+          "last": 0.0009857210097834468
+        },
+        "Loss/amp_policy_pred": {
+          "step": 37,
+          "last": -0.9947287440299988
+        },
+        "Loss/amp_expert_pred": {
+          "step": 37,
+          "last": 0.995428740978241
+        },
+        "Loss/symmetry": {
+          "step": 37,
+          "last": 0.0013727032346650958
+        },
+        "Loss/learning_rate": {
+          "step": 37,
+          "last": 0.0003844335733447224
+        },
+        "Policy/mean_noise_std": {
+          "step": 37,
+          "last": 0.8790033459663391
+        },
+        "Perf/total_fps": {
+          "step": 37,
+          "last": 25173.0
+        },
+        "Perf/collection time": {
+          "step": 37,
+          "last": 3.318509101867676
+        },
+        "Perf/learning_time": {
+          "step": 37,
+          "last": 0.5864763259887695
+        },
+        "Train/mean_episode_length": {
+          "step": 37,
+          "last": 52.0
+        }
+      },
+      "all_recent_scalars_finite": true,
+      "progress_tag_count": 234,
+      "reward_mix_tag_count": 12,
+      "contract": {
+        "speed_scale": "1.0",
+        "promotion": "path_length",
+        "monitor": "true",
+        "num_envs": "2048",
+        "resume": "false",
+        "max_iterations": "30000",
+        "steps_per_env": "24",
+        "seed": "42",
+        "save_interval": "500",
+        "experts": 17,
+        "lin_weight": "2.0"
+      }
+    },
+    "B": {
+      "session_alive": true,
+      "run": "/home/nubot/phn_ws/t4_train/TienKung-Lab-g1-progress-ab-20260908/logs/g1_progress_B/2026-09-08_10-18-18_g1_progress_B",
+      "checkpoints": [
+        "model_0.pt"
+      ],
+      "metrics": {
+        "Progress/all/moving/command_completion": {
+          "step": 13,
+          "last": 0.21759331226348877
+        },
+        "Progress/all/moving/command_progress_m": {
+          "step": 13,
+          "last": 0.2718607783317566
+        },
+        "Progress/all/moving/command_speed_mps": {
+          "step": 13,
+          "last": 1.085708737373352
+        },
+        "Progress/all/moving/directed_speed_mps": {
+          "step": 13,
+          "last": 0.24638982117176056
+        },
+        "Progress/all/moving/max_spawn_displacement_m": {
+          "step": 13,
+          "last": 0.5476387739181519
+        },
+        "Progress/all/moving/net_displacement_m": {
+          "step": 13,
+          "last": 0.5458469390869141
+        },
+        "Progress/all/moving/net_path_ratio": {
+          "step": 13,
+          "last": 0.8573071360588074
+        },
+        "Progress/all/moving/path_length_m": {
+          "step": 13,
+          "last": 0.6394258737564087
+        },
+        "Progress/all/moving/window_net_speed_mps": {
+          "step": 13,
+          "last": 0.36551421880722046
+        },
+        "Progress/all/standing/command_completion": {
+          "step": 13,
+          "last": 0.0
+        },
+        "Progress/all/standing/command_progress_m": {
+          "step": 13,
+          "last": 0.0
+        },
+        "Progress/all/standing/command_speed_mps": {
+          "step": 13,
+          "last": 0.0
+        },
+        "Progress/all/standing/directed_speed_mps": {
+          "step": 13,
+          "last": 0.0
+        },
+        "Progress/all/standing/max_spawn_displacement_m": {
+          "step": 13,
+          "last": 0.6242128014564514
+        },
+        "Progress/all/standing/net_displacement_m": {
+          "step": 13,
+          "last": 0.6241479516029358
+        },
+        "Progress/all/standing/net_path_ratio": {
+          "step": 13,
+          "last": 0.8708321452140808
+        },
+        "Progress/all/standing/path_length_m": {
+          "step": 13,
+          "last": 0.7150611877441406
+        },
+        "Progress/all/standing/window_net_speed_mps": {
+          "step": 13,
+          "last": 0.39535775780677795
+        },
+        "RewardMix/all/moving/style_per_step": {
+          "step": 13,
+          "last": 0.0023028117138892412
+        },
+        "RewardMix/all/moving/task_per_step": {
+          "step": 13,
+          "last": -0.11590049415826797
+        },
+        "RewardMix/all/standing/style_per_step": {
+          "step": 13,
+          "last": 0.004147201310843229
+        },
+        "RewardMix/all/standing/task_per_step": {
+          "step": 13,
+          "last": -0.1371571272611618
+        },
+        "Loss/value_function": {
+          "step": 13,
+          "last": 0.40380117297172546
+        },
+        "Loss/surrogate": {
+          "step": 13,
+          "last": -0.003282504389062524
+        },
+        "Loss/entropy": {
+          "step": 13,
+          "last": 40.26201629638672
+        },
+        "Loss/amp": {
+          "step": 13,
+          "last": 0.0066506098955869675
+        },
+        "Loss/amp_grad_pen": {
+          "step": 13,
+          "last": 0.015022709965705872
+        },
+        "Loss/amp_policy_pred": {
+          "step": 13,
+          "last": -0.9810853004455566
+        },
+        "Loss/amp_expert_pred": {
+          "step": 13,
+          "last": 0.9700679183006287
+        },
+        "Loss/symmetry": {
+          "step": 13,
+          "last": 0.0017959104152396321
+        },
+        "Loss/learning_rate": {
+          "step": 13,
+          "last": 9.999999747378752e-06
+        },
+        "Policy/mean_noise_std": {
+          "step": 13,
+          "last": 0.9693592190742493
+        },
+        "Perf/total_fps": {
+          "step": 13,
+          "last": 26921.0
+        },
+        "Perf/collection time": {
+          "step": 13,
+          "last": 3.2337441444396973
+        },
+        "Perf/learning_time": {
+          "step": 13,
+          "last": 0.4177432060241699
+        },
+        "Train/mean_episode_length": {
+          "step": 13,
+          "last": 59.66999816894531
+        }
+      },
+      "all_recent_scalars_finite": true,
+      "progress_tag_count": 234,
+      "reward_mix_tag_count": 12,
+      "contract": {
+        "speed_scale": "1.0",
+        "promotion": "max_radial",
+        "monitor": "true",
+        "num_envs": "2048",
+        "resume": "false",
+        "max_iterations": "30000",
+        "steps_per_env": "24",
+        "seed": "42",
+        "save_interval": "500",
+        "experts": 17,
+        "lin_weight": "2.0"
+      }
+    }
+  },
+  "config_differences": [
+    {
+      "key": "agent.experiment_name",
+      "A": "g1_progress_A",
+      "B": "g1_progress_B"
+    },
+    {
+      "key": "agent.run_name",
+      "A": "g1_progress_A",
+      "B": "g1_progress_B"
+    },
+    {
+      "key": "env.lightlp_promotion_distance",
+      "A": "path_length",
+      "B": "max_radial"
+    }
+  ],
+  "gpu_processes": "GPU-a29f1f68-af1a-73f1-1877-008a6793fd95, 1107855, 408 MiB\nGPU-a29f1f68-af1a-73f1-1877-008a6793fd95, 1107854, 8280 MiB\nGPU-75ba5f3b-b50f-26cb-3493-2dd1cf36984c, 1109814, 577 MiB\nGPU-75ba5f3b-b50f-26cb-3493-2dd1cf36984c, 1109813, 7970 MiB\nGPU-b2434cbe-4058-969d-d482-13f6718d33de, 1107855, 8036 MiB\nGPU-b2434cbe-4058-969d-d482-13f6718d33de, 1107854, 448 MiB\nGPU-d577411e-b527-1992-ff7d-41e7a9b86015, 1109814, 7994 MiB\nGPU-d577411e-b527-1992-ff7d-41e7a9b86015, 1109813, 450 MiB\n"
+}

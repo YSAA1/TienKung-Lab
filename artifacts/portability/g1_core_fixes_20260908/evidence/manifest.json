@@ -1,0 +1,50 @@
+{
+  "record_type": "Pre-fix evidence retained for the user-requested repair plan; no implementation or new training",
+  "source_commit": "0b40981",
+  "files": {
+    "runtime_import_audit.json": {
+      "sha256": "c17c84c93906a29b192ede9d8f4b3b1461379f5836b7d640377f76fd6b62c330",
+      "bytes": 256423
+    },
+    "learning_probe.json": {
+      "sha256": "f1977c20723c432bdc36a3e60402c115f2c3020760b3dbb20241275f4d42effc",
+      "bytes": 4427
+    },
+    "mdp_probe.json": {
+      "sha256": "d58eee1360cfd87229160381ecc7f9da7d8aefa30ffb916c2bc84a20cd084556",
+      "bytes": 2093
+    },
+    "server_results.tar.gz": {
+      "sha256": "165c82df6a8181327cb351647edc080a517b9ff34c06e772f17a0ac6161b6715",
+      "bytes": 179622
+    },
+    "reset_cache_results.tar.gz": {
+      "sha256": "8629614d53a376cf56e5cb2f53b2624e68a37e327a97e48d88aaf49cc0a8f7b9",
+      "bytes": 26532
+    },
+    "learning_probe.py.txt": {
+      "sha256": "e31b9bce15af367cfa902ade8ae4bd7454adbf6b497eefe5d83ef5abaeeb6c60",
+      "bytes": 7390
+    },
+    "mdp_probe.py.txt": {
+      "sha256": "43e63ba532e20ede461292d6688a494ed471275123d840d2f05711961b21529f",
+      "bytes": 3943
+    },
+    "g1_mixed.json": {
+      "sha256": "03cf50fc9975ad84995b85cca6986fae8164e82947c71c17c7967ba4ec31acf0",
+      "bytes": 197599
+    },
+    "t4_mixed.json": {
+      "sha256": "9d086297182be286665b7ed95ab97bb6ea6a629c5f5c87298cff461d8e85975e",
+      "bytes": 165364
+    },
+    "g1_flat.json": {
+      "sha256": "a205a118f5af2ca29dbd78e6af5b6e7f7b979edac9727673f4ad3c51496c5d73",
+      "bytes": 199154
+    },
+    "reset_cache.json": {
+      "sha256": "977375a11936828a18e521c351be6bd14a963471cf5a51a3aa8de4c7c482d574",
+      "bytes": 109262
+    }
+  }
+}

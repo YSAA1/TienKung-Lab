@@ -1,0 +1,87 @@
+{
+  "run": "/home/nubot/phn_ws/t4_train/TienKung-Lab-g1-amp-fix-20260907/logs/g1_loco_teacher_sparse/2026-09-07_10-08-58_g1_lightlp_teacher_v3",
+  "verified_at": 1788747385.6479084,
+  "iteration": 136,
+  "source_commit": "d1f7f5256ffb1e9db6399dc6c8a001bf6b8eab83",
+  "max_iterations": 30000,
+  "resume": false,
+  "action_scale": 0.5,
+  "metrics": {
+    "Curriculum/random_level_after_mean": {
+      "step": 136,
+      "last": 4.5107526779174805
+    },
+    "Curriculum/random_level_before_mean": {
+      "step": 136,
+      "last": 1.294504165649414
+    },
+    "Curriculum/random_level_reset_frac": {
+      "step": 136,
+      "last": 0.10321864485740662
+    },
+    "Curriculum/terrain_levels": {
+      "step": 136,
+      "last": 1.602630615234375
+    },
+    "Terrain/random_rough/episodes": {
+      "step": 136,
+      "last": 69526.6640625
+    },
+    "Terrain/random_rough/progress_m": {
+      "step": 136,
+      "last": 0.40716609358787537
+    },
+    "Terrain/random_rough/reach_2m_rate": {
+      "step": 136,
+      "last": 0.0
+    },
+    "Terrain/random_rough/reach_4m_rate": {
+      "step": 136,
+      "last": 0.0
+    },
+    "Loss/value_function": {
+      "step": 136,
+      "last": 0.014345391653478146
+    },
+    "Loss/surrogate": {
+      "step": 136,
+      "last": 0.004252610262483358
+    },
+    "Loss/entropy": {
+      "step": 136,
+      "last": 30.284767150878906
+    },
+    "Loss/amp": {
+      "step": 136,
+      "last": 0.0007775356061756611
+    },
+    "Loss/amp_grad_pen": {
+      "step": 136,
+      "last": 0.0018066969932988286
+    },
+    "Loss/amp_policy_pred": {
+      "step": 136,
+      "last": -0.9945749640464783
+    },
+    "Loss/amp_expert_pred": {
+      "step": 136,
+      "last": 0.9950116276741028
+    },
+    "Loss/symmetry": {
+      "step": 136,
+      "last": 0.0008144230814650655
+    },
+    "Loss/learning_rate": {
+      "step": 136,
+      "last": 0.00017085937724914402
+    },
+    "Policy/mean_noise_std": {
+      "step": 136,
+      "last": 0.6948318481445312
+    }
+  },
+  "checkpoint_zero": true,
+  "tensorboard": "http://100.100.188.39:8032/#scalars",
+  "session": "g1-teacher-v3",
+  "learning_capability_proven": false
+}

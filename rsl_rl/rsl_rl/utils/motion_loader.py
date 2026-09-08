@@ -58,6 +58,8 @@ class AMPLoader:
             raise ValueError("AMPLoader requires at least one motion file")
 
         self.device = device
+        if not np.isfinite(time_between_frames) or time_between_frames <= 0:
+            raise ValueError("AMP transition duration must be positive and finite")
         self.time_between_frames = time_between_frames
         self.frame_dim = int(frame_dim)
         self.expected_joint_order = list(expected_joint_order) if expected_joint_order is not None else None
@@ -81,6 +83,8 @@ class AMPLoader:
             self.trajectory_weights.append(motion_weight)
             self.trajectory_frame_durations.append(frame_duration)
             traj_len = (frames.shape[0] - 1) * frame_duration
+            if traj_len < self.time_between_frames:
+                raise ValueError(f"{motion_file} is too short for an AMP transition ({traj_len}s)")
             self.trajectory_lens.append(traj_len)
             self.trajectory_num_frames.append(float(frames.shape[0]))
             print(f"Loaded {traj_len:.3f}s AMP motion from {motion_file} (weight {motion_weight:.4f}).")
@@ -155,16 +159,11 @@ class AMPLoader:
 
     def traj_time_sample(self, traj_idx):
         """Sample random time for traj."""
-        subst = self.time_between_frames + self.trajectory_frame_durations[traj_idx]
-        return max(0, (self.trajectory_lens[traj_idx] * np.random.uniform() - subst))
+        return (self.trajectory_lens[traj_idx] - self.time_between_frames) * np.random.uniform()
 
     def traj_time_sample_batch(self, traj_idxs):
-        """Sample random time for multiple trajectories."""
-        subst = self.time_between_frames + self.trajectory_frame_durations[traj_idxs]
-
-        time_samples = self.trajectory_lens[traj_idxs] * np.random.uniform(size=len(traj_idxs)) - subst
-
-        return np.maximum(np.zeros_like(time_samples), time_samples)
+        """Uniform valid starts, with no extra probability mass at time zero."""
+        return (self.trajectory_lens[traj_idxs] - self.time_between_frames) * np.random.uniform(size=len(traj_idxs))
 
     def slerp(self, frame1, frame2, blend):
         return (1.0 - blend) * frame1 + blend * frame2
@@ -174,55 +173,34 @@ class AMPLoader:
         return self.trajectories_full[traj_idx]
 
     def get_frame_at_time(self, traj_idx, time):
-        """Returns frame for the given trajectory at the specified time."""
-        p = float(time) / self.trajectory_lens[traj_idx]
-        n = self.trajectories[traj_idx].shape[0]
-        idx_low, idx_high = int(np.floor(p * n)), int(np.ceil(p * n))
-        frame_start = self.trajectories[traj_idx][idx_low]
-        frame_end = self.trajectories[traj_idx][idx_high]
-        blend = p * n - idx_low
-
-        return self.slerp(frame_start, frame_end, blend)
+        return self.get_full_frame_at_time(traj_idx, time)
 
     def get_frame_at_time_batch(self, traj_idxs, times):
-        """Returns frame for the given trajectory at the specified time."""
-        p = times / self.trajectory_lens[traj_idxs]
-        n = self.trajectory_num_frames[traj_idxs]
-        idx_low, idx_high = np.floor(p * n).astype(np.int64), np.ceil(p * n).astype(np.int64)
-        all_frame_starts = torch.zeros(len(traj_idxs), self.observation_dim, device=self.device)
-        all_frame_ends = torch.zeros(len(traj_idxs), self.observation_dim, device=self.device)
-        for traj_idx in set(traj_idxs):
-            trajectory = self.trajectories[traj_idx]
-            traj_mask = traj_idxs == traj_idx
-            all_frame_starts[traj_mask] = trajectory[idx_low[traj_mask]]
-            all_frame_ends[traj_mask] = trajectory[idx_high[traj_mask]]
-        blend = torch.tensor(p * n - idx_low, device=self.device, dtype=torch.float32).unsqueeze(-1)
-        return self.slerp(all_frame_starts, all_frame_ends, blend)
+        return self.get_full_frame_at_time_batch(traj_idxs, times)
 
     def get_full_frame_at_time(self, traj_idx, time):
-        """Returns full frame for the given trajectory at the specified time."""
-        p = float(time) / self.trajectory_lens[traj_idx]
-        n = self.trajectories_full[traj_idx].shape[0]
-        idx_low, idx_high = int(np.floor(p * n)), int(np.ceil(p * n))
-        frame_start = self.trajectories_full[traj_idx][idx_low]
-        frame_end = self.trajectories_full[traj_idx][idx_high]
-        blend = p * n - idx_low
-        return self.slerp(frame_start, frame_end, blend)
+        return self.get_full_frame_at_time_batch(np.array([traj_idx]), np.array([time]))[0]
 
     def get_full_frame_at_time_batch(self, traj_idxs, times):
-        p = times / self.trajectory_lens[traj_idxs]
-        n = self.trajectory_num_frames[traj_idxs]
-        idx_low, idx_high = np.floor(p * n).astype(np.int64), np.ceil(p * n).astype(np.int64)
-        all_frame_amp_starts = torch.zeros(len(traj_idxs), self.frame_dim, device=self.device)
-        all_frame_amp_ends = torch.zeros(len(traj_idxs), self.frame_dim, device=self.device)
-        for traj_idx in set(traj_idxs):
-            trajectory = self.trajectories_full[traj_idx]
-            traj_mask = traj_idxs == traj_idx
-            all_frame_amp_starts[traj_mask] = trajectory[idx_low[traj_mask]]
-            all_frame_amp_ends[traj_mask] = trajectory[idx_high[traj_mask]]
-        blend = torch.tensor(p * n - idx_low, device=self.device, dtype=torch.float32).unsqueeze(-1)
-
-        return self.slerp(all_frame_amp_starts, all_frame_amp_ends, blend)
+        """Linear interpolation at t/frame_dt; endpoint roundoff is clipped."""
+        traj_idxs = np.asarray(traj_idxs, dtype=np.int64)
+        times = np.asarray(times, dtype=np.float64)
+        lengths = self.trajectory_lens[traj_idxs]
+        if not np.isfinite(times).all() or np.any(times < -1e-9) or np.any(times > lengths + 1e-9):
+            raise ValueError("AMP frame time is outside the clip")
+        position = np.clip(
+            times / self.trajectory_frame_durations[traj_idxs], 0, self.trajectory_num_frames[traj_idxs] - 1
+        )
+        low = np.floor(position).astype(np.int64)
+        high = np.minimum(low + 1, self.trajectory_num_frames[traj_idxs].astype(np.int64) - 1)
+        starts = torch.zeros(len(traj_idxs), self.frame_dim, device=self.device)
+        ends = torch.zeros_like(starts)
+        for traj_idx in np.unique(traj_idxs):
+            mask = traj_idxs == traj_idx
+            starts[mask] = self.trajectories_full[traj_idx][low[mask]]
+            ends[mask] = self.trajectories_full[traj_idx][high[mask]]
+        blend = torch.as_tensor(position - low, device=self.device, dtype=starts.dtype).unsqueeze(-1)
+        return self.slerp(starts, ends, blend)
 
     def get_frame(self):
         """Returns random frame."""

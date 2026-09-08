@@ -1,0 +1,212 @@
+FFFFFFFF                                                                 [100%]
+================================== FAILURES ===================================
+__ test_timeout_uses_terminal_value_and_failure_overlap_is_not_bootstrapped ___
+
+    def test_timeout_uses_terminal_value_and_failure_overlap_is_not_bootstrapped():
+        alg = make_alg()
+        obs = torch.ones(2, 2)
+        alg.act(obs, obs, obs)
+        alg.transition.values.fill_(10)
+        infos = {"time_outs": torch.tensor([True, True]), "bootstrap_mask": torch.tensor([True, False]),
+                 "terminal_values": torch.tensor([2.0])}
+        alg.process_env_step(torch.ones(2), torch.ones(2, dtype=torch.bool), infos, obs)
+>       torch.testing.assert_close(alg.storage.rewards[0, :, 0], torch.tensor([2.98, 1.0]))
+E       AssertionError: Tensor-likes are not close!
+E       
+E       Mismatched elements: 2 / 2 (100.0%)
+E       Greatest absolute difference: 9.899999618530273 at index (1,) (up to 1e-05 allowed)
+E       Greatest relative difference: 9.899999618530273 at index (1,) (up to 1.3e-06 allowed)
+
+tests\test_core_transition_fixes.py:47: AssertionError
+---------------------------- Captured stdout call -----------------------------
+Actor MLP: Sequential(
+  (0): Linear(in_features=2, out_features=4, bias=True)
+  (1): ELU(alpha=1.0)
+  (2): Linear(in_features=4, out_features=2, bias=True)
+)
+Critic MLP: Sequential(
+  (0): Linear(in_features=2, out_features=4, bias=True)
+  (1): ELU(alpha=1.0)
+  (2): Linear(in_features=4, out_features=1, bias=True)
+)
+_______ test_floor_initialization_load_and_optimizer_projection[scalar] _______
+
+kind = 'scalar'
+
+    @pytest.mark.parametrize("kind", ["scalar", "log"])
+    def test_floor_initialization_load_and_optimizer_projection(kind):
+        alg = make_alg(kind, 0.01, torch.tensor([0.05, 0.05]))
+        policy = alg.policy
+        for operation in ("initial", "load", "update"):
+            if operation == "load":
+                state = policy.state_dict()
+                state["std" if kind == "scalar" else "log_std"].fill_(0.01 if kind == "scalar" else math.log(0.01))
+                policy.load_state_dict(state)
+            elif operation == "update":
+                parameter = policy.std if kind == "scalar" else policy.log_std
+                with torch.no_grad():
+                    parameter.fill_(-10)
+                alg.enforce_min_std()
+            policy.update_distribution(torch.zeros(2, 2))
+>           torch.testing.assert_close(policy.action_std, torch.full((2, 2), 0.05))
+E           AssertionError: Tensor-likes are not close!
+E           
+E           Mismatched elements: 4 / 4 (100.0%)
+E           Greatest absolute difference: 0.03999999910593033 at index (0, 0) (up to 1e-05 allowed)
+E           Greatest relative difference: 0.7999999523162842 at index (0, 0) (up to 1.3e-06 allowed)
+
+tests\test_core_transition_fixes.py:65: AssertionError
+---------------------------- Captured stdout call -----------------------------
+Actor MLP: Sequential(
+  (0): Linear(in_features=2, out_features=4, bias=True)
+  (1): ELU(alpha=1.0)
+  (2): Linear(in_features=4, out_features=2, bias=True)
+)
+Critic MLP: Sequential(
+  (0): Linear(in_features=2, out_features=4, bias=True)
+  (1): ELU(alpha=1.0)
+  (2): Linear(in_features=4, out_features=1, bias=True)
+)
+________ test_floor_initialization_load_and_optimizer_projection[log] _________
+
+kind = 'log'
+
+    @pytest.mark.parametrize("kind", ["scalar", "log"])
+    def test_floor_initialization_load_and_optimizer_projection(kind):
+        alg = make_alg(kind, 0.01, torch.tensor([0.05, 0.05]))
+        policy = alg.policy
+        for operation in ("initial", "load", "update"):
+            if operation == "load":
+                state = policy.state_dict()
+                state["std" if kind == "scalar" else "log_std"].fill_(0.01 if kind == "scalar" else math.log(0.01))
+                policy.load_state_dict(state)
+            elif operation == "update":
+                parameter = policy.std if kind == "scalar" else policy.log_std
+                with torch.no_grad():
+                    parameter.fill_(-10)
+                alg.enforce_min_std()
+            policy.update_distribution(torch.zeros(2, 2))
+>           torch.testing.assert_close(policy.action_std, torch.full((2, 2), 0.05))
+E           AssertionError: Tensor-likes are not close!
+E           
+E           Mismatched elements: 4 / 4 (100.0%)
+E           Greatest absolute difference: 0.03999999910593033 at index (0, 0) (up to 1e-05 allowed)
+E           Greatest relative difference: 0.7999999523162842 at index (0, 0) (up to 1.3e-06 allowed)
+
+tests\test_core_transition_fixes.py:65: AssertionError
+---------------------------- Captured stdout call -----------------------------
+Actor MLP: Sequential(
+  (0): Linear(in_features=2, out_features=4, bias=True)
+  (1): ELU(alpha=1.0)
+  (2): Linear(in_features=4, out_features=2, bias=True)
+)
+Critic MLP: Sequential(
+  (0): Linear(in_features=2, out_features=4, bias=True)
+  (1): ELU(alpha=1.0)
+  (2): Linear(in_features=4, out_features=1, bias=True)
+)
+____________ test_heading_ignores_standing_and_nonheading_targets _____________
+
+    def test_heading_ignores_standing_and_nonheading_targets():
+        fn = production_method("legged_lab/mdp/rewards.py", "heading_error", math_utils=NS(wrap_to_pi=lambda x: torch.atan2(x.sin(), x.cos())))
+        command = NS(heading_target=torch.tensor([0., math.pi, math.pi, 1.]),
+                     is_heading_env=torch.tensor([True, True, False, True]),
+                     is_standing_env=torch.tensor([True, True, False, False]))
+        env = NS(num_envs=4, device="cpu", command_generator=command, scene={"robot": NS(data=NS(heading_w=torch.zeros(4)))})
+>       torch.testing.assert_close(fn(env), torch.tensor([0., 0., 0., 1.]))
+E       AssertionError: Tensor-likes are not close!
+E       
+E       Mismatched elements: 2 / 4 (50.0%)
+E       Greatest absolute difference: 3.141592502593994 at index (1,) (up to 1e-05 allowed)
+E       Greatest relative difference: inf at index (1,) (up to 1.3e-06 allowed)
+
+tests\test_core_transition_fixes.py:74: AssertionError
+______________ test_loader_frame_time_and_endpoint_scalar_batch _______________
+
+tmp_path = WindowsPath('D:/TienKung-Lab-g1-portability-20260906/artifacts/pytest-core-red-003/test_loader_frame_time_and_end0')
+
+    def test_loader_frame_time_and_endpoint_scalar_batch(tmp_path):
+        data = loader(tmp_path)
+        for time, expected in ((0., 0.), (0.1, 1.), (0.15, 1.5), (0.3, 3.)):
+            for fn in (data.get_frame_at_time, data.get_full_frame_at_time):
+>               torch.testing.assert_close(fn(0, time), torch.tensor([expected]))
+E               AssertionError: Tensor-likes are not close!
+E               
+E               Mismatched elements: 1 / 1 (100.0%)
+E               Greatest absolute difference: 0.3333333730697632 at index (0,) (up to 1e-05 allowed)
+E               Greatest relative difference: 0.3333333730697632 at index (0,) (up to 1.3e-06 allowed)
+
+tests\test_core_transition_fixes.py:87: AssertionError
+---------------------------- Captured stdout call -----------------------------
+Loaded 0.300s AMP motion from D:\TienKung-Lab-g1-portability-20260906\artifacts\pytest-core-red-003\test_loader_frame_time_and_end0\linear.json (weight 1.0000).
+_________________ test_loader_uniform_start_without_zero_atom _________________
+
+tmp_path = WindowsPath('D:/TienKung-Lab-g1-portability-20260906/artifacts/pytest-core-red-003/test_loader_uniform_start_with0')
+
+    def test_loader_uniform_start_without_zero_atom(tmp_path):
+        data = loader(tmp_path)
+        np.random.seed(42)
+        times = data.traj_time_sample_batch(np.zeros(10000, dtype=int))
+>       assert times.min() > 0 and times.max() <= 0.1 + 1e-12
+E       assert (np.float64(0.0) > 0)
+E        +  where np.float64(0.0) = <built-in method min of numpy.ndarray object at 0x0000025E26E3B9F0>()
+E        +    where <built-in method min of numpy.ndarray object at 0x0000025E26E3B9F0> = array([0., 0., 0., ..., 0., 0., 0.], shape=(10000,)).min
+
+tests\test_core_transition_fixes.py:96: AssertionError
+---------------------------- Captured stdout call -----------------------------
+Loaded 0.300s AMP motion from D:\TienKung-Lab-g1-portability-20260906\artifacts\pytest-core-red-003\test_loader_uniform_start_with0\linear.json (weight 1.0000).
+_____________________ test_loader_rejects_too_short_clip ______________________
+
+tmp_path = WindowsPath('D:/TienKung-Lab-g1-portability-20260906/artifacts/pytest-core-red-003/test_loader_rejects_too_short_0')
+
+    def test_loader_rejects_too_short_clip(tmp_path):
+>       with pytest.raises(ValueError, match="transition"):
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       Failed: DID NOT RAISE ValueError
+
+tests\test_core_transition_fixes.py:103: Failed
+---------------------------- Captured stdout call -----------------------------
+Loaded 0.300s AMP motion from D:\TienKung-Lab-g1-portability-20260906\artifacts\pytest-core-red-003\test_loader_rejects_too_short_0\linear.json (weight 1.0000).
+__ test_reset_seeds_physical_velocity_after_forward_and_preserves_other_envs __
+
+    def test_reset_seeds_physical_velocity_after_forward_and_preserves_other_envs():
+        reset = production_method("legged_lab/locomotion/env.py", "reset", "LocomotionEnv")
+        ids = torch.tensor([0, 2])
+        physical = torch.zeros(3, 2, 6)
+        physical[2, :, :3] = 0.4
+        noop = lambda *args, **kwargs: None
+        buffer = NS(reset=noop)
+        env = NS(num_envs=3, step_dt=0.02, sim_step_counter=10, feet_body_ids=[0, 1], progress_monitor=None,
+                 cfg=NS(scene=NS(terrain_generator=None), sim=NS(decimation=4)), extras={},
+                 scene=NS(reset=noop, write_data_to_sim=noop), event_manager=NS(available_modes=[]),
+                 reward_manager=NS(reset=lambda _: {}), command_generator=NS(reset=noop),
+                 command_provenance_log=lambda: {}, _resample_terrain_aware_commands=noop,
+                 _enforce_terrain_aware_commands=noop, actor_obs_buffer=buffer, critic_obs_buffer=buffer,
+                 scan_obs_buffer=buffer, action_buffer=buffer,
+                 robot=NS(data=NS(body_lin_vel_w=torch.full((3, 2, 3), 9.), root_pos_w=torch.zeros(3, 3)),
+                          root_physx_view=NS(get_link_velocities=lambda: physical)),
+                 sim=NS(forward=noop), prev_step_root_pos_w=torch.zeros(3, 3))
+        for name in ("collapse_low_steps", "avg_feet_force_per_step", "avg_feet_speed_per_step", "foot_accel_ema",
+                     "episode_length_buf", "episode_max_radial_dist", "episode_path_length", "episode_tracking_sum",
+                     "episode_tracking_steps", "gait_time", "time_out_buf"):
+            setattr(env, name, torch.ones(3))
+        env.prev_foot_lin_vel_w = torch.full((3, 2, 3), 9.)
+        reset(env, ids)
+>       torch.testing.assert_close(env.prev_foot_lin_vel_w[ids], physical[ids, :, :3])
+E       AssertionError: Tensor-likes are not close!
+E       
+E       Mismatched elements: 12 / 12 (100.0%)
+E       Greatest absolute difference: 9.0 at index (0, 0, 0) (up to 1e-05 allowed)
+E       Greatest relative difference: inf at index (0, 0, 0) (up to 1.3e-06 allowed)
+
+tests\test_core_transition_fixes.py:130: AssertionError
+=========================== short test summary info ===========================
+FAILED tests/test_core_transition_fixes.py::test_timeout_uses_terminal_value_and_failure_overlap_is_not_bootstrapped
+FAILED tests/test_core_transition_fixes.py::test_floor_initialization_load_and_optimizer_projection[scalar]
+FAILED tests/test_core_transition_fixes.py::test_floor_initialization_load_and_optimizer_projection[log]
+FAILED tests/test_core_transition_fixes.py::test_heading_ignores_standing_and_nonheading_targets
+FAILED tests/test_core_transition_fixes.py::test_loader_frame_time_and_endpoint_scalar_batch
+FAILED tests/test_core_transition_fixes.py::test_loader_uniform_start_without_zero_atom
+FAILED tests/test_core_transition_fixes.py::test_loader_rejects_too_short_clip
+FAILED tests/test_core_transition_fixes.py::test_reset_seeds_physical_velocity_after_forward_and_preserves_other_envs
+8 failed in 2.60s

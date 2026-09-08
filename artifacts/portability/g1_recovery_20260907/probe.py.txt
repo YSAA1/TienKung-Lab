@@ -1,0 +1,144 @@
+import argparse
+import json
+import os
+import threading
+from pathlib import Path
+
+from isaaclab.app import AppLauncher
+from legged_lab.scripts.isaaclab_runtime_compat import patch_missing_physx_material_attributes, patch_physx_backward_compatibility_setting
+
+parser = argparse.ArgumentParser()
+parser.add_argument('--checkpoint', required=True)
+parser.add_argument('--task', default='g1_loco_teacher')
+parser.add_argument('--sampled', action='store_true')
+parser.add_argument('--legacy', action='store_true')
+parser.add_argument('--output', required=True)
+AppLauncher.add_app_launcher_args(parser)
+patch_physx_backward_compatibility_setting(AppLauncher)
+args = parser.parse_args()
+app = AppLauncher(args).app
+
+import torch
+from legged_lab.envs import *
+from legged_lab.utils import task_registry
+from rsl_rl.runners import AmpOnPolicyRunner
+
+@torch.inference_mode()
+def main():
+    patch_missing_physx_material_attributes()
+    torch.manual_seed(42)
+    cfg, ac = task_registry.get_cfgs(args.task)
+    cfg.device = cfg.sim.device = args.device
+    cfg.scene.num_envs = 32
+    cfg.scene.seed = 42
+    if args.legacy:
+        cfg.collapse_reset_grace_s = 0.0
+        cfg.collapse_reset_respects_impact_immunity = False
+    env = task_registry.get_task_class(args.task)(cfg, True)
+    original_check = env._check_reset_lightlp
+    recovery_rows = []
+    def recorded_check():
+        result = original_check()
+        foot_z = env.robot.data.body_pos_w[:, env.feet_body_ids, 2].min(dim=1).values
+        recovery_rows.append({'clearance':(env.robot.data.root_pos_w[:,2]-foot_z).tolist(),'tilt':env.last_tilt_rad.tolist(),'immunity':env.impact_immunity.tolist(),'steps':env.collapse_low_steps.tolist(),'collapsed':env.reset_reason_masks['collapsed'].tolist(),'done':result[0].tolist()})
+        return result
+    env._check_reset_lightlp = recorded_check
+    robot = env.robot
+    ids = torch.arange(32, device=env.device)
+    ac.amp_num_preload_transitions = 1000
+    import yaml
+    saved_agent=yaml.load((Path(args.checkpoint).parent/'params/agent.yaml').read_text(),Loader=yaml.BaseLoader)
+    ac.amp_motion_files=saved_agent['amp_motion_files']
+    runner = AmpOnPolicyRunner(env, ac.to_dict(), log_dir=None, device=env.device)
+    runner.load(args.checkpoint, load_optimizer=False)
+    policy = runner.get_inference_policy(env.device)
+    env.collapse_low_steps.fill_(7)
+    env.reset(ids[:2])
+    assert bool((env.collapse_low_steps[:2] == 0).all())
+    assert bool((env.collapse_low_steps[2:] == 7).all())
+    env.reset(ids)
+    assert bool((env.collapse_low_steps == 0).all())
+
+    import numpy as np
+    def stats(x):
+        x=x.detach().float().flatten()
+        return {'mean':float(x.mean()),'p10':float(x.quantile(.1)),'p50':float(x.median()),'p90':float(x.quantile(.9))}
+    disc=runner.alg.discriminator
+    norm=runner.alg.amp_normalizer
+    loader=runner.alg.amp_data
+    n=env.num_actions
+    out={'task':args.task,'sampled':args.sampled,'checkpoint':args.checkpoint,'dt':env.step_dt,'expert':{},'normalizer':{'mean':np.asarray(norm.mean).tolist(),'std':np.sqrt(norm.var).tolist(),'count':float(norm.count)},'reward_selectors':{}}
+    for name,term in zip(env.reward_manager._term_names,env.reward_manager._term_cfgs):
+        selected={}
+        for key,v in term.params.items():
+            if hasattr(v,'joint_ids'):
+                selected[key]={'joint_names':v.joint_names,'joint_ids':str(v.joint_ids),'body_names':v.body_names,'body_ids':str(v.body_ids)}
+        out['reward_selectors'][name]={'weight':term.weight,'selected':selected}
+    def score(a,b):
+        mixed,d=disc.predict_amp_reward(a,b,torch.zeros(len(a),device=env.device),normalizer=norm)
+        return {'D':stats(d),'mixed_style_no_gate':stats(mixed)}
+    qdefault=robot.data.default_joint_pos[0,env.policy_joint_ids]
+    limits=robot.data.soft_joint_pos_limits[0,env.policy_joint_ids]
+    out['joint_names']=[robot.joint_names[i] for i in env.policy_joint_ids]
+    out['default_q']=qdefault.tolist()
+    for name,frames,dt in zip(loader.trajectory_names,loader.trajectories,loader.trajectory_frame_durations):
+        frames=frames.to(env.device)
+        vel=frames[:,n:2*n]
+        freeze=frames.clone();freeze[:,n:2*n]=0
+        # Frozen expert pose is a diagnostic feature counterfactual, not a dynamically feasible rollout.
+        out['expert'][name]={'frames':len(frames),'dt':float(dt),'q_mean':frames[:,:n].mean(0).tolist(),'q_std':frames[:,:n].std(0).tolist(),'dq_rms':stats(torch.sqrt((vel**2).mean(1))),'joint_limit_violation_fraction':float(((frames[:,:n]<limits[:,0])|(frames[:,:n]>limits[:,1])).float().mean()),'default_deviation_per_joint':(frames[:,:n]-qdefault).abs().mean(0).tolist(),'actual_pair':score(frames[:-1],frames[1:]),'frozen_pose':score(freeze,freeze)}
+    sampled=next(loader.feed_forward_generator(1,4096))
+    out['expert_interpolated_20ms']=score(*sampled)
+    obs,_=env.get_observations()
+    amp=env.get_amp_obs_for_expert_trans().clone()
+    accum={};amp_rows=[];next_rows=[]
+    init=robot.data.root_pos_w.clone();active=torch.ones(32,dtype=torch.bool,device=env.device)
+    out['first_terminations'] = []
+    out['terrain_columns'] = env.terrain_column_names
+    for step in range(1000):
+        action=policy(obs)
+        if args.sampled:
+            action=action+torch.randn_like(action)*runner.alg.policy.std
+        scale=env.amp_reward_coef_scale().clone()
+        old_levels = env.scene.terrain.terrain_levels.clone()
+        old_types = env.scene.terrain.terrain_types.clone()
+        old_origins = env.scene.env_origins.clone()
+        old_cmd = env.command_generator.command.clone()
+        obs,taskreward,done,info=env.step(action)
+        nextamp=env.get_amp_obs_for_expert_trans().clone()
+        valid=active & ~done
+        if step>=50 and valid.any():
+            total,d=disc.predict_amp_reward(amp,nextamp,taskreward,normalizer=norm,coef_scale=scale)
+            vals={'task':taskreward,'mixed_task':.7*taskreward,'mixed_style':total-.7*taskreward,'mixed_total':total,'D':d[:,0],'vx':env._planar_vel_yaw()[:,0],'progress':robot.data.root_pos_w[:,0]-init[:,0],'noise_std':torch.ones(32,device=env.device)*runner.alg.policy.std.mean(),'joint_velocity_rms':robot.data.joint_vel.square().mean(1).sqrt(),'torque_saturation':(robot.data.applied_torque.abs()>=.95*robot.data.joint_effort_limits).float().mean(1)}
+            for i,name in enumerate(env.reward_manager._term_names):
+                vals['term/'+name]=env.reward_manager._step_reward[:,i]*env.step_dt
+            for key,val in vals.items():accum.setdefault(key,[]).append(val[valid].clone())
+            amp_rows.append(amp[valid]);next_rows.append(nextamp[valid])
+        newly_done = active & done
+        for eid in newly_done.nonzero().flatten().tolist():
+            out['first_terminations'].append({'env':eid,'step':step+1,'terrain':env.terrain_column_names[int(old_types[eid])],'level':int(old_levels[eid]),'command':old_cmd[eid].tolist(),'root_above_origin':float(env.terminal_root_pos_w[eid,2]-old_origins[eid,2]),'clearance':float(env.terminal_root_pos_w[eid,2]-env.terminal_feet_pos_w[eid,:,2].min()),'foot_z_above_origin':(env.terminal_feet_pos_w[eid,:,2]-old_origins[eid,2]).tolist(),'tilt':float(env.terminal_tilt_rad[eid]),'accel':float(env.terminal_root_accel_mps2[eid]),'reasons':[k for k,v in env.reset_reason_masks.items() if bool(v[eid])]})
+        active &= ~done; amp=nextamp
+        if not active.any(): break
+    out['rollout']={k:stats(torch.cat(v)) for k,v in accum.items()}
+    out['survived_6s']=int(active.sum())
+    out['first_episode_valid_samples_after_1s']=len(torch.cat(accum['task'])) if accum else 0
+    if amp_rows:
+        states=torch.cat(amp_rows);nextstates=torch.cat(next_rows)
+        out['policy_transition']=score(states,nextstates)
+        torch.save({'state':states.cpu(),'next_state':nextstates.cpu()},str(Path(args.output).with_suffix('.pt')))
+    out['recovery_rows'] = recovery_rows
+    out['contract'] = {'grace_s':cfg.collapse_reset_grace_s,'respects_immunity':cfg.collapse_reset_respects_impact_immunity,'required_steps':env.collapse_required_steps,'reset_counter_check':True}
+    Path(args.output).write_text(json.dumps(out,indent=2))
+    print('AMP_PROBE',json.dumps({k:v for k,v in out.items() if k not in ('normalizer','expert','reward_selectors','recovery_rows')}),flush=True)
+if __name__ == '__main__':
+    code=0
+    try:
+        main()
+    except BaseException:
+        import traceback
+        traceback.print_exc()
+        code=1
+    finally:
+        threading.Timer(15,os._exit,args=(code,)).start()
+        app.close()
+        os._exit(code)

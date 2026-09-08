@@ -37,7 +37,7 @@ from isaaclab.utils.io import dump_yaml  # noqa: E402
 from isaaclab_tasks.utils import get_checkpoint_path  # noqa: E402
 
 import legged_lab.envs.t4.vault_mimic  # noqa: F401, E402  (gym task registration)
-from legged_lab.envs.t4.vault_mimic.rsl_rl_compat import (  # noqa: E402
+from legged_lab.utils.rsl_rl_compat import (  # noqa: E402
     RslRlVecEnvWrapper,
 )
 from legged_lab.utils.cli_args import update_rsl_rl_cfg  # noqa: E402

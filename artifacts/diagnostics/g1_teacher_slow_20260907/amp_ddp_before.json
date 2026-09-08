@@ -1,0 +1,8 @@
+{
+  "world_size": 2,
+  "policy_difference_after_broadcast": 0.0,
+  "discriminator_difference_after_broadcast": 0.6052441596984863,
+  "normalizer_difference_after_broadcast": 1.0,
+  "policy_gradient_difference_after_reduce": 0.0,
+  "discriminator_gradient_difference_after_reduce": 1.0
+}

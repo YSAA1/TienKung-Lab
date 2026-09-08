@@ -141,6 +141,9 @@ def test_lightlp_termination_helpers_match_section_iv_c2():
     assert sig.joint_velocity_timeout(49.0) is False
     assert sig.excessive_base_accel(50.0, 0.5) is False
     assert sig.excessive_base_accel(50.0, 1.1) is True
+    assert sig.collapsed_pelvis_above_feet_mask(0.76, 0.05, 0.40) is False
+    assert sig.collapsed_pelvis_above_feet_mask(0.16, 0.05, 0.40) is True
+    assert sig.collapsed_pelvis_above_feet_mask(0.20, -0.50, 0.40) is False
     assert sig.wrap_heading_error(0.0, 0.2) == pytest.approx(0.2)
     upright = sig.upright_orientation_reward(0.0, 0.0)
     tilted = sig.upright_orientation_reward(0.5, 0.0)
@@ -152,7 +155,7 @@ def test_oob_linf_sits_past_l2_promote_bar():
     """Axis-aligned walk must be able to promote (L2>half) before L-inf OOB."""
     import importlib.util
 
-    cur_path = Path(__file__).resolve().parents[1] / "legged_lab" / "envs" / "t4" / "curriculum.py"
+    cur_path = Path(__file__).resolve().parents[1] / "legged_lab" / "locomotion" / "curriculum.py"
     spec = importlib.util.spec_from_file_location("t4_curriculum_oob", cur_path)
     cur = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(cur)
@@ -173,7 +176,7 @@ def test_oob_linf_sits_past_l2_promote_bar():
 
 
 def test_lightlp_timeout_and_reset_is_what_the_env_calls():
-    env_src = (Path(__file__).resolve().parents[1] / "legged_lab" / "envs" / "t4" / "t4_env.py").read_text()
+    env_src = (Path(__file__).resolve().parents[1] / "legged_lab" / "locomotion" / "env.py").read_text()
     assert "lightlp_timeout_and_reset(" in env_src
     assert "impact_immunity_from_draws(" in env_src
     n = 4
@@ -206,13 +209,13 @@ def test_stage_e_task_has_no_soft_hard_switch():
     from pathlib import Path
 
     train = Path(__file__).resolve().parents[1] / "legged_lab" / "scripts" / "train.py"
-    cfg = Path(__file__).resolve().parents[1] / "legged_lab" / "envs" / "t4" / "teacher_cfg.py"
+    cfg = Path(__file__).resolve().parents[1] / "legged_lab" / "locomotion" / "teacher_cfg.py"
     train_src = train.read_text()
     cfg_src = cfg.read_text()
     assert "--hard_sparse_pits" not in train_src
-    assert "class T4LocoTeacherEnvCfg" in cfg_src
+    assert "class AmpLocomotionEnvCfg" in cfg_src
     # Stage E class body must not set a two-stage pit switch.
-    stage_e = cfg_src.split("class T4LocoSparseTeacherEnvCfg")[0]
+    stage_e = cfg_src.split("class LightLPLocomotionEnvCfg")[0]
     assert "soft_sparse_terrain" not in stage_e
     assert "apply_soft_sparse_stage" not in stage_e
     assert schemas.TEACHER_ACTOR_OBS_DIM == 1155
@@ -220,17 +223,17 @@ def test_stage_e_task_has_no_soft_hard_switch():
 
 def test_sparse_teacher_keeps_lightlp_terminal_cost_disabled():
     root = Path(__file__).resolve().parents[1]
-    cfg_src = (root / "legged_lab" / "envs" / "t4" / "teacher_cfg.py").read_text()
-    sparse_rewards = cfg_src.split("class T4SparseTeacherRewardCfg", 1)[1].split("@configclass", 1)[0]
+    cfg_src = (root / "legged_lab" / "locomotion" / "teacher_cfg.py").read_text()
+    sparse_rewards = cfg_src.split("class LightLPRewardCfg", 1)[1].split("@configclass", 1)[0]
 
     assert "termination_penalty = RewTerm(func=mdp.is_terminated, weight=0.0)" in sparse_rewards
 
 
 def test_sparse_teacher_keeps_s10_upright_bonus_without_ori_penalty():
     root = Path(__file__).resolve().parents[1]
-    cfg_src = (root / "legged_lab" / "envs" / "t4" / "teacher_cfg.py").read_text()
-    sparse_rewards = cfg_src.split("class T4SparseTeacherRewardCfg", 1)[1].split("@configclass", 1)[0]
-    teacher_rewards = cfg_src.split("class T4TeacherRewardCfg", 1)[1].split("class T4LocoTeacherEnvCfg", 1)[0]
+    cfg_src = (root / "legged_lab" / "locomotion" / "teacher_cfg.py").read_text()
+    sparse_rewards = cfg_src.split("class LightLPRewardCfg", 1)[1].split("@configclass", 1)[0]
+    teacher_rewards = cfg_src.split("class AmpLocomotionRewardCfg", 1)[1].split("class AmpLocomotionEnvCfg", 1)[0]
 
     assert "body_orientation_l2" in teacher_rewards
     assert "weight=-2.0" in teacher_rewards
@@ -244,12 +247,16 @@ def test_sparse_teacher_keeps_s10_upright_bonus_without_ori_penalty():
 
 def test_sparse_teacher_hard_contact_termination_is_trunk_only():
     root = Path(__file__).resolve().parents[1]
-    cfg_src = (root / "legged_lab" / "envs" / "t4" / "teacher_cfg.py").read_text()
-    teacher_env = cfg_src.split("class T4LocoTeacherEnvCfg", 1)[1].split("class T4LocoTeacherAgentCfg", 1)[0]
-    sparse_rewards = cfg_src.split("class T4SparseTeacherRewardCfg", 1)[1].split("@configclass", 1)[0]
+    cfg_src = (root / "legged_lab" / "locomotion" / "teacher_cfg.py").read_text()
+    teacher_env = cfg_src.split("class AmpLocomotionEnvCfg", 1)[1].split("class T4LocoTeacherAgentCfg", 1)[0]
+    sparse_rewards = cfg_src.split("class LightLPRewardCfg", 1)[1].split("@configclass", 1)[0]
 
-    assert 'terminate_contacts_body_names=["Trunk"]' in teacher_env
-    assert 'body_names=["A[LR]2", "A[LR]4", "Trunk", "Shank_.*"]' in sparse_rewards
+    from legged_lab.assets.t4.locomotion import T4_LOCOMOTION
+    binding = (root / "legged_lab/locomotion/config_binding.py").read_text()
+    assert "cfg.robot.terminate_contacts_body_names = [spec.torso]" in binding
+    assert T4_LOCOMOTION.torso == "Trunk"
+    assert T4_LOCOMOTION.reward_bodies["sparse_undesired"] == ("A[LR]2", "A[LR]4", "Trunk", "Shank_.*")
+    assert 'body_names="$sparse_undesired"' in sparse_rewards
     assert "weight=-2.0" in sparse_rewards
 
 

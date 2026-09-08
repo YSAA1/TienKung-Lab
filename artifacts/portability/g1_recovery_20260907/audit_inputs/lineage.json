@@ -1,0 +1,6 @@
+{
+  "checkpoint": "/home/nubot/phn_ws/t4_train/TienKung-Lab-g1-unitree-v6-20260907/logs/g1_full17_30k/2026-09-07_18-52-02_g1_full17_30k/model_4000.pt",
+  "checkpoint_sha256": "ad891990654d4acc93ecd05b3580ef99600b874e9dc4db99fa18ab0c9bc51bb9",
+  "probe_sha256": "873bcee8e8ad1b1dddbe246cf4feb6d73d7e16f47a2fe5d613ed1223042bebfd",
+  "purpose": "read-only fixed flat diagnostics, no training mutations"
+}

@@ -1,8 +1,8 @@
 from pathlib import Path
 
 
-ENV = Path(__file__).resolve().parents[1] / "legged_lab" / "envs" / "t4" / "t4_env.py"
-CFG = Path(__file__).resolve().parents[1] / "legged_lab" / "envs" / "t4" / "teacher_cfg.py"
+ENV = Path(__file__).resolve().parents[1] / "legged_lab" / "locomotion" / "env.py"
+CFG = Path(__file__).resolve().parents[1] / "legged_lab" / "locomotion" / "teacher_cfg.py"
 INIT = Path(__file__).resolve().parents[1] / "legged_lab" / "envs" / "__init__.py"
 
 
@@ -24,7 +24,7 @@ def test_paper_task_is_unregistered():
 
 def test_sparse_teacher_is_one_stage_lightlp():
     source = CFG.read_text()
-    assert "t_sparse_lightlp_s12_rim_yaw40" in source
+    assert 'run_name = "t_sparse_lightlp_s12_rim_yaw40"' in (Path(__file__).resolve().parents[1] / "legged_lab/envs/t4/teacher_cfg.py").read_text()
     assert "use_lightlp_terminations" in source
     assert "append_critic_foot_scan" in source
     assert "append_critic_immunity" in source
@@ -81,9 +81,13 @@ def test_tensorboard_exposes_per_terrain_and_sparse_band_outcomes():
     assert "accel_for_gate" in source
     assert "lightlp_sparse_promotion_guard(" in source
     lightlp_reset = source.split("def _check_reset_lightlp", 1)[1].split("def reset(", 1)[0]
+    assert "foot_z_all.min(dim=1).values" in lightlp_reset
+    assert "foot_z_all.mean(dim=1)" not in lightlp_reset
+    assert "cold_start_max_terrain_level" not in source
     assert "self.last_root_accel_mps2.copy_(accel)" in lightlp_reset
     assert "accel_mps2=accel_for_gate" in lightlp_reset
     assert "accel_mps2=accel," not in lightlp_reset
+    assert "collapsed_pelvis_above_feet_mask(" in lightlp_reset
     terrain_fn = source.split("def update_terrain_levels", 1)[1]
     before_stage_e_sparse = terrain_fn.split("if not self.use_lightlp_terminations:", 1)[0]
     assert "lightlp_sparse_promotion_guard(" in before_stage_e_sparse
@@ -91,8 +95,8 @@ def test_tensorboard_exposes_per_terrain_and_sparse_band_outcomes():
 
 def test_sparse_push_event_is_tagged_stage_e_is_not():
     source = CFG.read_text()
-    stage_e = source.split("class T4LocoSparseTeacherEnvCfg", 1)[0]
-    sparse = source.split("class T4LocoSparseTeacherEnvCfg", 1)[1]
+    stage_e = source.split("class LightLPLocomotionEnvCfg", 1)[0]
+    sparse = source.split("class LightLPLocomotionEnvCfg", 1)[1]
     assert "func=mdp.push_by_setting_velocity," in stage_e
     assert "push_by_setting_velocity_tagged" not in stage_e
     assert "push_by_setting_velocity_tagged" in sparse

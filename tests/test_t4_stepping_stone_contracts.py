@@ -73,14 +73,14 @@ def test_soft_terrain_stands_but_reports_hole():
 
 def test_pillar_first_step_is_a_step_not_a_jump():
     pillar_easy = layout.platform_to_first_gap(
-        0.0, layout.pillar_diameter(0.0), pitch_range=layout.T4_PILLAR_PITCH_RANGE
+        0.0, layout.pillar_diameter(0.0), pitch_range=layout.LIGHTLP_PILLAR_PITCH_RANGE
     )
     pillar_hard = layout.platform_to_first_gap(
-        1.0, layout.pillar_diameter(1.0), pitch_range=layout.T4_PILLAR_PITCH_RANGE
+        1.0, layout.pillar_diameter(1.0), pitch_range=layout.LIGHTLP_PILLAR_PITCH_RANGE
     )
     assert 0.03 <= pillar_easy <= 0.08
     assert pillar_easy < pillar_hard <= 0.20
-    assert layout.first_foothold_center_offset(layout.foothold_pitch(0.0, layout.T4_PILLAR_PITCH_RANGE)) == pytest.approx(
+    assert layout.first_foothold_center_offset(layout.foothold_pitch(0.0, layout.LIGHTLP_PILLAR_PITCH_RANGE)) == pytest.approx(
         1.10
     )
 
@@ -113,8 +113,8 @@ def test_isaac_tile_layout_is_centered_square_with_rim():
     start = next(geom for geom in geoms if geom["name"] == "start_platform")
     assert start["pos"][0] == pytest.approx(0.0)
     assert start["pos"][1] == pytest.approx(0.0)
-    assert start["size"][0] == pytest.approx(0.5 * layout.T4_STONE_PLATFORM_WIDTH)
-    assert start["size"][1] == pytest.approx(0.5 * layout.T4_STONE_PLATFORM_WIDTH)
+    assert start["size"][0] == pytest.approx(0.5 * layout.LIGHTLP_STONE_PLATFORM_WIDTH)
+    assert start["size"][1] == pytest.approx(0.5 * layout.LIGHTLP_STONE_PLATFORM_WIDTH)
     assert any(geom["name"] == "finish_platform" for geom in geoms)
     assert any(geom["name"].startswith("rim_") for geom in geoms)
     stones = [geom for geom in geoms if geom["name"].startswith("stone_")]
@@ -130,10 +130,10 @@ def test_foothold_centers_skip_platform_and_stay_in_border():
     pitch = layout.foothold_pitch(0.5)
     centers = layout.foothold_centers(pitch)
     assert centers
-    c = layout.T4_STONE_TILE_SIZE / 2.0
-    half = layout.T4_STONE_PLATFORM_WIDTH / 2.0
+    c = layout.LIGHTLP_STONE_TILE_SIZE / 2.0
+    half = layout.LIGHTLP_STONE_PLATFORM_WIDTH / 2.0
     for x, y in centers:
-        assert layout.T4_STONE_BORDER_WIDTH < x < layout.T4_STONE_TILE_SIZE - layout.T4_STONE_BORDER_WIDTH
+        assert layout.LIGHTLP_STONE_BORDER_WIDTH < x < layout.LIGHTLP_STONE_TILE_SIZE - layout.LIGHTLP_STONE_BORDER_WIDTH
         assert not (abs(x - c) <= half and abs(y - c) <= half)
 
 
@@ -145,21 +145,21 @@ def test_foothold_count_fills_tile_without_increasing_with_difficulty():
 
 
 def test_landing_rim_width_is_seventy_five_cm():
-    assert layout.T4_SPARSE_RIM_WIDTH == pytest.approx(0.75)
-    assert layout.rim_inner_offset() == pytest.approx(0.5 * layout.T4_STONE_TILE_SIZE - 0.75)
+    assert layout.LIGHTLP_SPARSE_RIM_WIDTH == pytest.approx(0.75)
+    assert layout.rim_inner_offset() == pytest.approx(0.5 * layout.LIGHTLP_STONE_TILE_SIZE - 0.75)
 
 
 @pytest.mark.parametrize("kind", ["stepping_stones", "raised_pillars"])
 @pytest.mark.parametrize("difficulty", [0.0, 0.39, 1.0])
 def test_sparse_lattice_meets_the_landing_rim(kind, difficulty):
     last_edge = layout.last_cardinal_support_edge(kind, difficulty)
-    rim_local = layout.T4_STONE_TILE_SIZE - layout.T4_SPARSE_RIM_WIDTH
+    rim_local = layout.LIGHTLP_STONE_TILE_SIZE - layout.LIGHTLP_SPARSE_RIM_WIDTH
     assert last_edge + 1.0e-9 >= rim_local
 
 
 def test_rim_slabs_are_the_four_frame_rectangles():
-    tile = layout.T4_STONE_TILE_SIZE
-    rim = layout.T4_SPARSE_RIM_WIDTH
+    tile = layout.LIGHTLP_STONE_TILE_SIZE
+    rim = layout.LIGHTLP_SPARSE_RIM_WIDTH
     slabs = layout.rim_slab_centers_and_sizes()
     assert len(slabs) == 4
     sizes = sorted(size for _, size in slabs)
@@ -172,7 +172,7 @@ def test_rim_slabs_are_the_four_frame_rectangles():
 
 
 def test_rim_covers_oob_margin_and_does_not_shortcut_the_course():
-    tile = layout.T4_STONE_TILE_SIZE
+    tile = layout.LIGHTLP_STONE_TILE_SIZE
     center = 0.5 * tile
     oob = center + 4.25
     assert layout.point_on_rim((oob, center), overflow=True)
@@ -184,7 +184,7 @@ def test_rim_covers_oob_margin_and_does_not_shortcut_the_course():
     assert layout.point_on_support((oob, center), kind="raised_pillars", difficulty=1.0)
     assert layout.point_on_support(neighbor_xy, kind="stepping_stones", difficulty=1.0)
     assert layout.point_on_support(neighbor_xy, kind="raised_pillars", difficulty=1.0)
-    pad_edge = center + 0.5 * layout.T4_STONE_PLATFORM_WIDTH
+    pad_edge = center + 0.5 * layout.LIGHTLP_STONE_PLATFORM_WIDTH
     rim_inner = center + layout.rim_inner_offset()
     assert rim_inner - pad_edge >= 2.0
     first = center + layout.first_foothold_center_offset(layout.foothold_pitch(0.0))
@@ -205,7 +205,7 @@ def test_rim_covers_oob_margin_and_does_not_shortcut_the_course():
 
 
 def test_sparse_mix_is_large_enough_to_drive_learning():
-    proportions = layout.T4_SPARSE_TERRAIN_PROPORTIONS
+    proportions = layout.LIGHTLP_SPARSE_TERRAIN_PROPORTIONS
     assert abs(sum(proportions.values()) - 1.0) < 1.0e-9
     assert proportions["stepping_stones"] == 0.20
     assert proportions["raised_pillars"] == 0.20
@@ -215,12 +215,12 @@ def test_sparse_mix_is_large_enough_to_drive_learning():
 def test_sparse_mesh_cfg_declares_landing_rim():
     cfg_path = Path(__file__).resolve().parents[1] / "legged_lab" / "terrains" / "terrain_generator_cfg.py"
     text = cfg_path.read_text(encoding="utf-8")
-    assert "rim_width: float = T4_SPARSE_RIM_WIDTH" in text
+    assert "rim_width: float = LIGHTLP_SPARSE_RIM_WIDTH" in text
     assert "_sparse_rim_meshes" in text
     assert "rim_slab_centers_and_sizes" in text
-    env_path = Path(__file__).resolve().parents[1] / "legged_lab" / "envs" / "t4" / "t4_env.py"
+    env_path = Path(__file__).resolve().parents[1] / "legged_lab" / "locomotion" / "env.py"
     env_text = env_path.read_text(encoding="utf-8")
-    assert "T4_SPARSE_RIM_WIDTH" in env_text
+    assert "LIGHTLP_SPARSE_RIM_WIDTH" in env_text
     assert "on_rim" in env_text
 
 

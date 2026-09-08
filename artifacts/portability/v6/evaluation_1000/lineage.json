@@ -1,0 +1,22 @@
+{
+  "time": "2026-09-07T14:36:04.173159+08:00",
+  "source_commit": "c125f74d50b9d1aef70ae6ce8bd8b3fcb7b26d52",
+  "g1_checkpoint": "/home/nubot/phn_ws/t4_train/TienKung-Lab-g1-unitree-v6-20260907/logs/g1_loco_teacher_sparse/2026-09-07_13-55-07_g1_unitree_29dof_teacher_v6/model_1000.pt",
+  "t4_checkpoint": "/home/nubot/phn_ws/t4_train/TienKung-Lab-s11b-upright-tbslim/logs/t4_loco_teacher_sparse/2026-08-22_01-12-08_t_sparse_lightlp_s11b_upright_tbslim/model_2000.pt",
+  "t4_checkpoint_sha256": "02a3202dbed7435577e4bb4463e30a5a78420e1167fb74a185e12190ba6ecbd2",
+  "sample_match": "G1 1000 * 4096 * 24 approximately T4 2000 * 2048 * 24",
+  "seed": 42,
+  "episodes_per_condition": 32,
+  "command_vx": 0.7,
+  "conditions": [
+    "flat difficulty0",
+    "stepping_stones difficulty0 pinned spawn"
+  ],
+  "evaluation_gpu": 0,
+  "tmux": "g1-v6-eval-1000",
+  "limitations": [
+    "Flat evaluation retains robot-specific reset settings.",
+    "Play retains material/mass randomization and random spawn; videos illustrate behavior but are not the exact fixed evaluator episodes.",
+    "MP4 may be derived from every fourth recorded frame at 12.5 Hz; verify manifest and visual content."
+  ]
+}

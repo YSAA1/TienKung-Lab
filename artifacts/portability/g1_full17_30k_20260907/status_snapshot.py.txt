@@ -1,0 +1,31 @@
+from pathlib import Path
+import json,datetime,subprocess,math
+import yaml
+from tensorboard.backend.event_processing.event_accumulator import EventAccumulator
+root=Path('/home/nubot/phn_ws/t4_train/TienKung-Lab-g1-unitree-v6-20260907');out=root/'artifacts/portability/g1_full17_30k_20260907'
+r={'time':datetime.datetime.now().astimezone().isoformat(),'session_alive':subprocess.run(['tmux','has-session','-t','g1-full17-30k'],capture_output=True).returncode==0,'runs':{},'processes':[]}
+for d in Path('/proc').iterdir():
+ if not d.name.isdigit():continue
+ try:
+  cmd=(d/'cmdline').read_bytes().replace(b'\0',b' ').decode()
+  if str(out/'train.py') not in cmd or 'python' not in cmd or '--max_iterations 30000' not in cmd:continue
+  env=dict(s.split('=',1) for s in (d/'environ').read_bytes().decode().split('\0') if '=' in s)
+  r['processes'].append({'pid':int(d.name),'command':cmd,'rank':env.get('RANK'),'world_size':env.get('WORLD_SIZE'),'local_rank':env.get('LOCAL_RANK'),'physical_devices':env.get('CUDA_VISIBLE_DEVICES')})
+ except (FileNotFoundError,PermissionError,ProcessLookupError):pass
+for p in sorted((root/'logs/g1_full17_30k').glob('*')):
+ if not p.is_dir():continue
+ a=p/'params/agent.yaml';e=p/'params/env.yaml';run={'checkpoints':sorted(q.name for q in p.glob('model_*.pt'))}
+ if a.exists() and e.exists():
+  agent=yaml.load(a.read_text(),Loader=yaml.BaseLoader);env=yaml.load(e.read_text(),Loader=yaml.BaseLoader)
+  assert agent['max_iterations']=='30000' and agent['resume']=='false'
+  assert len(agent['amp_motion_files'])==17 and env['scene']['num_envs']=='2048'
+  run.update(saved_config_verified=True,amp_files=len(agent['amp_motion_files']),num_envs=env['scene']['num_envs'],max_iterations=agent['max_iterations'],resume=agent['resume'])
+ events=sorted(p.glob('events.out.tfevents.*'))
+ if events:
+  acc=EventAccumulator(str(events[-1]),size_guidance={'scalars':100});acc.Reload();run['metrics']={}
+  for tag in ('Train/mean_reward','Train/mean_episode_length','Loss/value_function','Loss/surrogate','Loss/amp','Loss/learning_rate','Policy/mean_noise_std','Reset/collapsed','Perf/total_fps'):
+   if tag not in acc.Tags()['scalars']:continue
+   vals=acc.Scalars(tag);run['metrics'][tag]={'step':vals[-1].step,'last':vals[-1].value,'finite_last20':all(math.isfinite(v.value) for v in vals[-20:])}
+ r['runs'][str(p)]=run
+r['gpu_processes']=subprocess.check_output(['nvidia-smi','--query-compute-apps=pid,gpu_uuid,used_memory','--format=csv,noheader']).decode()
+(out/'latest_health.json').write_text(json.dumps(r,indent=2));print(json.dumps(r))

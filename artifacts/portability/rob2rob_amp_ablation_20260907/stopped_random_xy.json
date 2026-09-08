@@ -1,0 +1,12 @@
+{
+  "pid": 479839,
+  "command": "/home/nubot/isaac-sim-standalone-5.1.0-linux-x86_64/kit/python/bin/python3 /home/nubot/phn_ws/t4_train/TienKung-Lab-g1-unitree-v6-20260907/artifacts/diagnostics/g1_reset_ablation/train.py --group random_xy --output /home/nubot/phn_ws/t4_train/TienKung-Lab-g1-unitree-v6-20260907/artifacts/portability/reset_xy_ablation_20260907/random_xy --start-file /home/nubot/phn_ws/t4_train/TienKung-Lab-g1-unitree-v6-20260907/artifacts/portability/reset_xy_ablation_20260907/start.allowed --headless ",
+  "time": "2026-09-07T18:16:54.354645+08:00",
+  "checkpoints": [
+    "model_0.pt",
+    "model_1000.pt",
+    "model_1500.pt",
+    "model_500.pt"
+  ],
+  "reason": "User requested new AMP data ablation immediately after data validation."
+}

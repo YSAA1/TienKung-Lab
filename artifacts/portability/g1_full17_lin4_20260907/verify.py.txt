@@ -1,0 +1,39 @@
+from pathlib import Path
+import json,datetime,subprocess,urllib.request,urllib.parse,math,yaml,hashlib
+root=Path('/home/nubot/phn_ws/t4_train/TienKung-Lab-g1-unitree-v6-20260907');out=root/'artifacts/portability/g1_full17_lin4_20260907'
+base=next((root/'logs/g1_full17_30k').glob('*/params/env.yaml')).parent
+params=next((root/'logs/g1_full17_lin4').glob('*/params/env.yaml')).parent
+result={'time':datetime.datetime.now().astimezone().isoformat(),'run':str(params.parent),'config_diffs':{},'processes':[]}
+def diff(a,b,path=''):
+ if isinstance(a,dict) and isinstance(b,dict):
+  return [d for k in sorted(set(a)|set(b)) for d in diff(a.get(k),b.get(k),path+'.'+k)]
+ return [] if a==b else [{'path':path,'baseline':a,'experiment':b}]
+for name in ['env','agent']:
+ a=yaml.load((base/f'{name}.yaml').read_text(),Loader=yaml.BaseLoader);b=yaml.load((params/f'{name}.yaml').read_text(),Loader=yaml.BaseLoader)
+ ds=diff(a,b);result['config_diffs'][name]=ds
+ if name=='env': assert ds==[{'path':'.reward.track_lin_vel_xy_exp.weight','baseline':'2.0','experiment':'4.0'}],ds
+ else:
+  assert all(d['path'] in ['.experiment_name','.run_name'] for d in ds),ds
+  assert b['resume']=='false' and b['max_iterations']=='30000' and len(b['amp_motion_files'])==17
+for p in Path('/proc').iterdir():
+ if not p.name.isdigit():continue
+ try:
+  cmd=(p/'cmdline').read_bytes().replace(b'\0',b' ').decode()
+  if str(out/'train.py') not in cmd:continue
+  env=dict(x.split('=',1) for x in (p/'environ').read_bytes().decode().split('\0') if '=' in x)
+  if env.get('RANK') is not None:result['processes'].append({'pid':int(p.name),'rank':env['RANK'],'world_size':env['WORLD_SIZE'],'gpus':env['CUDA_VISIBLE_DEVICES']})
+ except (OSError,ProcessLookupError):pass
+assert {p['rank'] for p in result['processes']}=={'0','1'}
+url='http://localhost:8039/data/plugin/scalars/'
+runs=json.load(urllib.request.urlopen(url+'tags',timeout=15));result['metrics']={}
+for run,tags in runs.items():
+ metrics={}
+ for tag in ['Train/mean_reward','Loss/value_function','Loss/surrogate','Loss/amp','Curriculum/terrain_levels','Curriculum/episode_tracking_mean']:
+  if tag not in tags:continue
+  vals=json.load(urllib.request.urlopen(url+'scalars?'+urllib.parse.urlencode({'run':run,'tag':tag}),timeout=15))
+  metrics[tag]={'step':vals[-1][1],'last':vals[-1][2],'finite_last20':all(math.isfinite(v[2]) for v in vals[-20:])}
+ result['metrics'][run]=metrics
+assert any('weight4' in run for run in result['metrics'])
+result['checkpoints']=[p.name for p in params.parent.glob('model_*.pt')]
+assert 'model_0.pt' in result['checkpoints']
+(out/'verified_health.json').write_text(json.dumps(result,indent=2));print(json.dumps(result,indent=2))

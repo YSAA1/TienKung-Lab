@@ -1,0 +1,144 @@
+{
+  "decision": "continue unchanged training; normal locomotion goal not achieved",
+  "checkpoint_iteration": 500,
+  "source_commit": "c125f74d50b9d1aef70ae6ce8bd8b3fcb7b26d52",
+  "visual_review": "Inspected frame sequences from both continuous 16-second videos: brief support followed by forward leaning and collapse; no sustained alternating gait. The recorded collapse is physical loss of support, not the former torso self-contact termination.",
+  "conditions": {
+    "flat": {
+      "g1_500": {
+        "progress_mean_m": 0.8909791614860296,
+        "reach_2m_rate": 0.0,
+        "failure_step_mean": 94.96875,
+        "reset_reason_counts": {
+          "horizon": 0,
+          "oob": 0,
+          "joint_vel": 0,
+          "torso": 0,
+          "accel": 0,
+          "fall_over": 0,
+          "immune_skip": 0,
+          "collapsed": 32
+        }
+      },
+      "t4_1000": {
+        "progress_mean_m": 0.07525643717963248,
+        "reach_2m_rate": 0.0,
+        "failure_step_mean": 974.9375,
+        "reset_reason_counts": {
+          "horizon": 31,
+          "oob": 0,
+          "joint_vel": 0,
+          "torso": 0,
+          "accel": 0,
+          "fall_over": 1,
+          "immune_skip": 1
+        }
+      },
+      "replay_steps": 800,
+      "replay_resets": 7,
+      "replay_first_reset": {
+        "step": 105,
+        "reset": true,
+        "reset_reasons": [
+          "collapsed"
+        ],
+        "root_pos_w_m": [
+          -1.066713809967041,
+          0.18750789761543274,
+          0.31153246760368347
+        ],
+        "root_lin_vel_w_mps": [
+          -1.2300693988800049,
+          0.19876636564731598,
+          -2.4471681118011475
+        ],
+        "root_accel_mps2": 9.278482437133789,
+        "tilt_rad": 0.8320667743682861,
+        "min_foot_z_m": 0.11575929075479507,
+        "pelvis_clearance_m": 0.1957731768488884,
+        "collapsed_gate": true,
+        "contact_force_n": {
+          "torso_link": 0.0,
+          "left_knee_link": 0.0,
+          "right_knee_link": 0.0
+        }
+      },
+      "video_manifest_verified": true
+    },
+    "stepping_stones": {
+      "g1_500": {
+        "progress_mean_m": 0.7739470321685076,
+        "reach_2m_rate": 0.0,
+        "failure_step_mean": 78.0,
+        "reset_reason_counts": {
+          "horizon": 0,
+          "oob": 0,
+          "joint_vel": 0,
+          "torso": 0,
+          "accel": 0,
+          "fall_over": 0,
+          "immune_skip": 0,
+          "collapsed": 32
+        }
+      },
+      "t4_1000": {
+        "progress_mean_m": 0.9639409203082323,
+        "reach_2m_rate": 0.0,
+        "failure_step_mean": 103.21875,
+        "reset_reason_counts": {
+          "horizon": 0,
+          "oob": 0,
+          "joint_vel": 0,
+          "torso": 31,
+          "accel": 30,
+          "fall_over": 1,
+          "immune_skip": 1
+        }
+      },
+      "replay_steps": 800,
+      "replay_resets": 10,
+      "replay_first_reset": {
+        "step": 73,
+        "reset": true,
+        "reset_reasons": [
+          "accel"
+        ],
+        "root_pos_w_m": [
+          -0.9911112785339355,
+          0.13733865320682526,
+          0.3378223776817322
+        ],
+        "root_lin_vel_w_mps": [
+          -0.6380621790885925,
+          0.2903991937637329,
+          -0.5827399492263794
+        ],
+        "root_accel_mps2": 61.12832260131836,
+        "tilt_rad": 0.4054095149040222,
+        "min_foot_z_m": 0.12980680167675018,
+        "pelvis_clearance_m": 0.208015576004982,
+        "collapsed_gate": false,
+        "contact_force_n": {
+          "torso_link": 0.0,
+          "left_knee_link": 0.0,
+          "right_knee_link": 0.0
+        }
+      },
+      "video_manifest_verified": true
+    }
+  },
+  "comparison_limits": [
+    "G1 500 and T4 1000 approximately match total policy transitions, not iteration count.",
+    "Flat evaluation uses robot-specific reset pose settings; T4 flat reference mainly stands still.",
+    "Replay retains material/mass randomization and random spawn, so its episodes differ from the fixed evaluator.",
+    "Videos contain all 200 frames of the GIF fallback at the original sampled cadence 12.5 Hz; full 800-step diagnostics are retained."
+  ],
+  "latest_training_observation": {
+    "time": "2026-09-07T14:36:14+08:00",
+    "iteration": 797,
+    "last100_episode_length_steps": 125.6295994567871,
+    "last100_collapsed_fraction": 0.9372938853502274,
+    "training_tmux_live": true
+  },
+  "next_action": "g1-v6-eval-1000 is running on GPU0: evaluate T4 model_2000, then G1 model_1000 under the same conditions and record two continuous replays. Training remains frozen and active."
+}

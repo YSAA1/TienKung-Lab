@@ -1,0 +1,167 @@
+{
+  "time": "2026-09-08T15:06:24.149742+08:00",
+  "root": "/home/nubot/phn_ws/t4_train/TienKung-Lab-g1-progress-ab-20260908",
+  "processes": [],
+  "groups": {
+    "A": {
+      "checkpoint_count": 10,
+      "files": [
+        {
+          "path": "/home/nubot/phn_ws/t4_train/TienKung-Lab-g1-progress-ab-20260908/logs/g1_progress_A/2026-09-08_10-16-38_g1_progress_A/events.out.tfevents.1788833799.nubot-4U-GPU-Server.1107854.0",
+          "size": 125036574,
+          "sha256": "ba9b45e2d42d746463f91b83c84386f19a239943f2dda6a9f3780efd40019276"
+        },
+        {
+          "path": "/home/nubot/phn_ws/t4_train/TienKung-Lab-g1-progress-ab-20260908/logs/g1_progress_A/2026-09-08_10-16-38_g1_progress_A/model_0.pt",
+          "size": 38665642,
+          "sha256": "05cb126ade974c1e23020d39d4a712b6b507697cf05a843e2f08b1d98682fa42"
+        },
+        {
+          "path": "/home/nubot/phn_ws/t4_train/TienKung-Lab-g1-progress-ab-20260908/logs/g1_progress_A/2026-09-08_10-16-38_g1_progress_A/model_1000.pt",
+          "size": 38666210,
+          "sha256": "09330ff20311f43962ff5c1d1ca7390bbe70a97964b948b3ee4bbb2650ecdcb9"
+        },
+        {
+          "path": "/home/nubot/phn_ws/t4_train/TienKung-Lab-g1-progress-ab-20260908/logs/g1_progress_A/2026-09-08_10-16-38_g1_progress_A/model_1500.pt",
+          "size": 38666210,
+          "sha256": "4954d27b2d0d707d5af2ec61205f9ea834357e8aa083f80f54e2c05b0cf6615d"
+        },
+        {
+          "path": "/home/nubot/phn_ws/t4_train/TienKung-Lab-g1-progress-ab-20260908/logs/g1_progress_A/2026-09-08_10-16-38_g1_progress_A/model_2000.pt",
+          "size": 38666210,
+          "sha256": "d05d003f20c8714a9ba39125dc6f6eaf0ca8b955300bee748042b88a134ba9f9"
+        },
+        {
+          "path": "/home/nubot/phn_ws/t4_train/TienKung-Lab-g1-progress-ab-20260908/logs/g1_progress_A/2026-09-08_10-16-38_g1_progress_A/model_2500.pt",
+          "size": 38666210,
+          "sha256": "1c7d85b84485537f0e989e7a571ebfc294e78c38bd220a7bc599910fb4fcfae4"
+        },
+        {
+          "path": "/home/nubot/phn_ws/t4_train/TienKung-Lab-g1-progress-ab-20260908/logs/g1_progress_A/2026-09-08_10-16-38_g1_progress_A/model_3000.pt",
+          "size": 38666210,
+          "sha256": "decf07e43c20544042645e21d22535bcf58d42ef34c18d3fb63b497d254eb370"
+        },
+        {
+          "path": "/home/nubot/phn_ws/t4_train/TienKung-Lab-g1-progress-ab-20260908/logs/g1_progress_A/2026-09-08_10-16-38_g1_progress_A/model_3500.pt",
+          "size": 38666210,
+          "sha256": "5e49c74cc8b2d2600424b3e9a51e3204273ae79f8fc34d245febacbf678ab682"
+        },
+        {
+          "path": "/home/nubot/phn_ws/t4_train/TienKung-Lab-g1-progress-ab-20260908/logs/g1_progress_A/2026-09-08_10-16-38_g1_progress_A/model_4000.pt",
+          "size": 38666210,
+          "sha256": "454c699344063dbb50a9dd72f5b18d1f6047b2daced80fd82ab363f683ffdf62"
+        },
+        {
+          "path": "/home/nubot/phn_ws/t4_train/TienKung-Lab-g1-progress-ab-20260908/logs/g1_progress_A/2026-09-08_10-16-38_g1_progress_A/model_4500.pt",
+          "size": 38666210,
+          "sha256": "029dba8ed10a15630ddac210e9bc9b6b8e14ec33e8f86c9c73850e286b3f05ea"
+        },
+        {
+          "path": "/home/nubot/phn_ws/t4_train/TienKung-Lab-g1-progress-ab-20260908/logs/g1_progress_A/2026-09-08_10-16-38_g1_progress_A/model_500.pt",
+          "size": 38666106,
+          "sha256": "e9df3d39b26176f10f842218ec5268ccaa41c59a5fb346bee8190e7f4219fc04"
+        },
+        {
+          "path": "/home/nubot/phn_ws/t4_train/TienKung-Lab-g1-progress-ab-20260908/logs/g1_progress_A/2026-09-08_10-16-38_g1_progress_A/params/agent.yaml",
+          "size": 5335,
+          "sha256": "0113e35db43bb02a07afb65e8a13f878e1d59db27d4401ab70f1395c227886e3"
+        },
+        {
+          "path": "/home/nubot/phn_ws/t4_train/TienKung-Lab-g1-progress-ab-20260908/logs/g1_progress_A/2026-09-08_10-16-38_g1_progress_A/params/env.yaml",
+          "size": 39124,
+          "sha256": "f09c752dc4b70eeafa127699901e2f9c24c2c3edbcdd8533a57feb0868288885"
+        }
+      ]
+    },
+    "B": {
+      "checkpoint_count": 10,
+      "files": [
+        {
+          "path": "/home/nubot/phn_ws/t4_train/TienKung-Lab-g1-progress-ab-20260908/logs/g1_progress_B/2026-09-08_10-18-18_g1_progress_B/events.out.tfevents.1788833899.nubot-4U-GPU-Server.1109813.0",
+          "size": 129540946,
+          "sha256": "0ff2cfbe9f697ac6f251d581fd05195fdc955777ae007fd8e9aa620da86e2fc4"
+        },
+        {
+          "path": "/home/nubot/phn_ws/t4_train/TienKung-Lab-g1-progress-ab-20260908/logs/g1_progress_B/2026-09-08_10-18-18_g1_progress_B/model_0.pt",
+          "size": 38665642,
+          "sha256": "45719140aea74cacfcb5b302b1aaae705d5cf1661b69c0ca8d48cb698e35efb6"
+        },
+        {
+          "path": "/home/nubot/phn_ws/t4_train/TienKung-Lab-g1-progress-ab-20260908/logs/g1_progress_B/2026-09-08_10-18-18_g1_progress_B/model_1000.pt",
+          "size": 38666210,
+          "sha256": "0cb8d6a713c3cfaa0f0a5d26a190cff9de30c5d22d44d9735e560c87c1f206e6"
+        },
+        {
+          "path": "/home/nubot/phn_ws/t4_train/TienKung-Lab-g1-progress-ab-20260908/logs/g1_progress_B/2026-09-08_10-18-18_g1_progress_B/model_1500.pt",
+          "size": 38666210,
+          "sha256": "45af15a7f36bfc627ae1795bd8456a50d027121fe23c513faac311003dbe8d3e"
+        },
+        {
+          "path": "/home/nubot/phn_ws/t4_train/TienKung-Lab-g1-progress-ab-20260908/logs/g1_progress_B/2026-09-08_10-18-18_g1_progress_B/model_2000.pt",
+          "size": 38666210,
+          "sha256": "c2b0b2df78291650420ffd578fb85f396e9d2b45c7513dc47e7ee6cb3ea9029f"
+        },
+        {
+          "path": "/home/nubot/phn_ws/t4_train/TienKung-Lab-g1-progress-ab-20260908/logs/g1_progress_B/2026-09-08_10-18-18_g1_progress_B/model_2500.pt",
+          "size": 38666210,
+          "sha256": "510889fdae5354e01ab41744b5907fe74839235296d079028d629c41333c2e15"
+        },
+        {
+          "path": "/home/nubot/phn_ws/t4_train/TienKung-Lab-g1-progress-ab-20260908/logs/g1_progress_B/2026-09-08_10-18-18_g1_progress_B/model_3000.pt",
+          "size": 38666210,
+          "sha256": "7593f1c8f08a8a0b4705b44dac656fceea6d1ae6374bc56fc8cff4eafa35a4fa"
+        },
+        {
+          "path": "/home/nubot/phn_ws/t4_train/TienKung-Lab-g1-progress-ab-20260908/logs/g1_progress_B/2026-09-08_10-18-18_g1_progress_B/model_3500.pt",
+          "size": 38666210,
+          "sha256": "eb88ef65bbb8419f3e593fcf0922befdd83eb913229d5304a0ed542c83cde6e6"
+        },
+        {
+          "path": "/home/nubot/phn_ws/t4_train/TienKung-Lab-g1-progress-ab-20260908/logs/g1_progress_B/2026-09-08_10-18-18_g1_progress_B/model_4000.pt",
+          "size": 38666210,
+          "sha256": "3d37f0e32f0b7307a2d961a6845dfb477d654ec4a933b9095394d8782710fe94"
+        },
+        {
+          "path": "/home/nubot/phn_ws/t4_train/TienKung-Lab-g1-progress-ab-20260908/logs/g1_progress_B/2026-09-08_10-18-18_g1_progress_B/model_4500.pt",
+          "size": 38666210,
+          "sha256": "b158c3424c263e3c19a52738389aeec22a9e3c050fb4ebf49690770250e15d74"
+        },
+        {
+          "path": "/home/nubot/phn_ws/t4_train/TienKung-Lab-g1-progress-ab-20260908/logs/g1_progress_B/2026-09-08_10-18-18_g1_progress_B/model_500.pt",
+          "size": 38666106,
+          "sha256": "624044d95b3813b2f6bae492c4222fa35bb0c0ce973aa6b485d0d87ca26abc4a"
+        },
+        {
+          "path": "/home/nubot/phn_ws/t4_train/TienKung-Lab-g1-progress-ab-20260908/logs/g1_progress_B/2026-09-08_10-18-18_g1_progress_B/params/agent.yaml",
+          "size": 5335,
+          "sha256": "cd54bae3f33dae9c8ac99dc20b259dd4cdf7bb392602c4e538e164decbc23a95"
+        },
+        {
+          "path": "/home/nubot/phn_ws/t4_train/TienKung-Lab-g1-progress-ab-20260908/logs/g1_progress_B/2026-09-08_10-18-18_g1_progress_B/params/env.yaml",
+          "size": 39123,
+          "sha256": "702e9049bb4fe9958b15f19241d804f5c75d6ae4e484e9e5883674880fa7c2d3"
+        },
+        {
+          "path": "/home/nubot/phn_ws/t4_train/TienKung-Lab-g1-progress-ab-20260908/logs/g1_progress_B/2026-09-08_10-18-19_g1_progress_B/params/agent.yaml",
+          "size": 5335,
+          "sha256": "e48a4b7266cbd0fdb17365ff5ebe1e717da11d31097277811a0a58036a038ff6"
+        },
+        {
+          "path": "/home/nubot/phn_ws/t4_train/TienKung-Lab-g1-progress-ab-20260908/logs/g1_progress_B/2026-09-08_10-18-19_g1_progress_B/params/env.yaml",
+          "size": 39123,
+          "sha256": "b57edc639e743b94a31714a42b9c93382a1cac49202f7f516ec66d0126df69f2"
+        }
+      ]
+    }
+  },
+  "stdout_logs": {
+    "/home/nubot/phn_ws/t4_train/TienKung-Lab-g1-progress-ab-20260908/artifacts/portability/g1_progress_ab_20260908/train_A.log": {
+      "size": 588594531,
+      "sha256": "d906922cfcce13cd77d36fc22df5dfca8ceb12af9c103fba96181bb4c10ae6b9"
+    },
+    "/home/nubot/phn_ws/t4_train/TienKung-Lab-g1-progress-ab-20260908/artifacts/portability/g1_progress_ab_20260908/train_B.log": {
+      "size": 611673755,
+      "sha256": "0cec39ef84ee6730608fd37c456a8fc2e374672e318817492b817156feacc4be"
+    }
+  }
+}

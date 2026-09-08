@@ -412,6 +412,17 @@ def robot_and_terrain_depth_option() -> mujoco.MjvOption:
     return option
 
 
+def enable_sparse_terrain_in_mjv_option(option: mujoco.MjvOption) -> None:
+    """Show geom group 3 in the interactive viewer.
+
+    MuJoCo's default ``MjvOption.geomgroup`` is ``[1, 1, 1, 0, 0, 0]``. Sparse
+    tiles, pit floor, and the start/finish pads are group 3 so the depth camera
+    can isolate terrain. The offscreen follow-cam renderer still draws them;
+    ``launch_passive`` does not unless this bit is turned on.
+    """
+    option.geomgroup[DEPTH_TERRAIN_GEOM_GROUP] = 1
+
+
 def apply_terrain_only_depth_groups(model: mujoco.MjModel) -> None:
     """Move the MJCF ground plane onto the terrain depth group."""
     ground_id = mujoco.mj_name2id(model, mujoco.mjtObj.mjOBJ_GEOM, "ground")
@@ -1224,7 +1235,7 @@ def build_sparse_foothold_course(course: str, difficulty: float = 0.0) -> str:
     """Isaac 8 m sparse tile (center pad + lattice + rim) over a real pit."""
     from legged_lab.scripts.play_t4_sparse_teacher_mujoco import _LAYOUT, _geom_xml
 
-    T4_STONE_TILE_SIZE = _LAYOUT.T4_STONE_TILE_SIZE
+    LIGHTLP_STONE_TILE_SIZE = _LAYOUT.LIGHTLP_STONE_TILE_SIZE
     isaac_sparse_tile_geoms = _LAYOUT.isaac_sparse_tile_geoms
 
     if course not in SPARSE_COURSE_TERRAIN:
@@ -1239,7 +1250,7 @@ def build_sparse_foothold_course(course: str, difficulty: float = 0.0) -> str:
             isaac_sparse_tile_geoms(
                 difficulty,
                 "raised_pillars",
-                origin_xy=(T4_STONE_TILE_SIZE, 0.0),
+                origin_xy=(LIGHTLP_STONE_TILE_SIZE, 0.0),
                 platform_name="transition_platform",
                 finish_name="finish_platform",
                 name_prefix="b_",
@@ -1671,12 +1682,14 @@ def interactive_run(
     control_mode = "nav" if navigator is not None else "auto" if auto_command is not None else "hold"
 
     def init_view(viewer) -> None:
-        viewer.cam.type = mujoco.mjtCamera.mjCAMERA_TRACKING
-        viewer.cam.trackbodyid = sim.trunk_id
-        viewer.cam.fixedcamid = -1
-        viewer.cam.distance = 4.8
-        viewer.cam.azimuth = 145.0
-        viewer.cam.elevation = -18.0
+        with viewer.lock():
+            enable_sparse_terrain_in_mjv_option(viewer.opt)
+            viewer.cam.type = mujoco.mjtCamera.mjCAMERA_TRACKING
+            viewer.cam.trackbodyid = sim.trunk_id
+            viewer.cam.fixedcamid = -1
+            viewer.cam.distance = 4.8
+            viewer.cam.azimuth = 145.0
+            viewer.cam.elevation = -18.0
 
     def apply_high_level_command() -> None:
         if control_mode == "nav" and navigator is not None:
@@ -1698,6 +1711,7 @@ def interactive_run(
     print("[INFO] goal nav is running. Mouse orbits the tracking camera. R resets.")
     print("[INFO] Do not use I/J/K/L — MuJoCo uses those to toggle inertia/joints/labels.")
     print("[INFO] depth inset: raw D455 | policy 48x64. Head-height 35 deg down.")
+    print("[INFO] enabled geom group 3 so sparse tiles are visible (viewer default hides 3-5).")
 
     steps = 0
     start = time.time()

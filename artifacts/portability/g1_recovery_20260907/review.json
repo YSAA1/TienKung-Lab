@@ -1,0 +1,13 @@
+{
+  "reviewer": "independent subagent /root/review_recovery",
+  "target": "recovery code diff against d16a3db",
+  "findings": [],
+  "tests": "7 passed: collapse recovery and distributed log",
+  "limitations": [
+    "Not proof of learned walking or improved recovery"
+  ],
+  "documentation_correction": "Existing immunity already masks acceleration impacts; plan wording corrected",
+  "followup": "Independent recomputation of raw rollout JSON hashes, termination counts, persistence/immunity, zero observed recoveries, launch script and expert hash checks",
+  "status": "ready for bounded training experiment",
+  "runtime_evidence": "launch_verification.json and runtime_health.json: two ranks, config/source/expert checks, iterations 36 then 132"
+}

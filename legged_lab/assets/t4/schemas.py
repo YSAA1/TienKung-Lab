@@ -11,11 +11,49 @@ from __future__ import annotations
 
 import math
 
+from legged_lab.locomotion.schemas import (
+    CRITIC_EXTRA_FIELDS,
+    DEPTH_CLIP_RANGE,
+    DEPTH_HISTORY_LENGTH,
+    DEPTH_INVALID_VALUE,
+    DEPTH_NORMALIZED_RANGE,
+    DEPTH_POLICY_SIZE,
+    DEPTH_RESIZE_MODE,
+    DEPTH_SENSOR_SIZE,
+    DEPTH_UPDATE_DECIMATION,
+    FOOT_SCAN_BOTH_DIM,
+    FOOT_SCAN_DIM,
+    FOOT_SCAN_RESOLUTION,
+    FOOT_SCAN_SHAPE,
+    FOOT_SCAN_SIZE,
+    POLICY_ROLES,
+    PROPRIO_HISTORY_LENGTH,
+    STUDENT_DEPTH_HISTORY_LENGTH,
+    STUDENT_PROPRIO_HISTORY_LENGTH,
+    TEACHER_FORBIDDEN_PRIVILEGE_FIELDS,
+    TEACHER_PAPER_CONTACT_DIM,
+    TEACHER_SCAN_CLIP,
+    TEACHER_SCAN_DIM,
+    TEACHER_SCAN_FORWARD_RANGE,
+    TEACHER_SCAN_HEIGHT_OFFSET,
+    TEACHER_SCAN_HISTORY_LENGTH,
+    TEACHER_SCAN_INVALID_VALUE,
+    TEACHER_SCAN_LATERAL_RANGE,
+    TEACHER_SCAN_OFFSET,
+    TEACHER_SCAN_ORDERING,
+    TEACHER_SCAN_RESOLUTION,
+    TEACHER_SCAN_SHAPE,
+    TEACHER_SCAN_SIZE,
+    TEACHER_SPARSE_CONTACT_DIM,
+    TEACHER_SPARSE_IMMUNITY_DIM,
+    TEACHER_SPARSE_SCAN_HISTORY_LENGTH,
+    assert_no_privilege_leakage,
+)
 from legged_lab.assets.t4.constants import T4_JOINT_NAMES
 
 NUM_T4_JOINTS = len(T4_JOINT_NAMES)
+DEPTH_NEAREST_VISIBLE_GROUND = 0.67
 
-POLICY_ROLES = ("teacher", "student")
 
 # ---------------------------------------------------------------------------
 # AMP state: q27 + dq27 + hands_root6 + feet_root6
@@ -124,49 +162,14 @@ def amp_expert_files(expert_dir: str = AMP_FORMAL_EXPERT_DIR) -> list[str]:
 TEACHER_TERRAIN_SCHEMA_VERSION = "t4_teacher_terrain.v1"
 
 TEACHER_SCAN_BODY = "Trunk"
-TEACHER_SCAN_RESOLUTION = 0.1
 # Forward-asymmetric window. The IsaacLab grid pattern is centred on the sensor
 # frame, so the forward bias comes from the sensor offset rather than the size.
-TEACHER_SCAN_SIZE = (1.4, 1.2)
-TEACHER_SCAN_OFFSET = (0.9, 0.0)
-TEACHER_SCAN_FORWARD_RANGE = (0.2, 1.6)
-TEACHER_SCAN_LATERAL_RANGE = (-0.6, 0.6)
-TEACHER_SCAN_ORDERING = "xy"
-TEACHER_SCAN_SHAPE = (
-    round(TEACHER_SCAN_SIZE[0] / TEACHER_SCAN_RESOLUTION) + 1,
-    round(TEACHER_SCAN_SIZE[1] / TEACHER_SCAN_RESOLUTION) + 1,
-)
-TEACHER_SCAN_DIM = TEACHER_SCAN_SHAPE[0] * TEACHER_SCAN_SHAPE[1]
-TEACHER_SCAN_HEIGHT_OFFSET = 0.5
-TEACHER_SCAN_CLIP = (-1.0, 1.0)
 # A ray that finds no ground means a drop deeper than the caster reaches, so the
 # invalid fill is the positive clip bound rather than zero.
-TEACHER_SCAN_INVALID_VALUE = 1.0
-TEACHER_SCAN_HISTORY_LENGTH = 1
 
 # Downward foot grid used only for reward / critic. Matches FootScannerCfg.
-FOOT_SCAN_RESOLUTION = 0.04
-FOOT_SCAN_SIZE = (0.16, 0.08)
-FOOT_SCAN_SHAPE = (
-    round(FOOT_SCAN_SIZE[0] / FOOT_SCAN_RESOLUTION) + 1,
-    round(FOOT_SCAN_SIZE[1] / FOOT_SCAN_RESOLUTION) + 1,
-)
-FOOT_SCAN_DIM = FOOT_SCAN_SHAPE[0] * FOOT_SCAN_SHAPE[1]
-FOOT_SCAN_BOTH_DIM = 2 * FOOT_SCAN_DIM
 
 # Fields that would make the teacher unlearnable for a depth student.
-TEACHER_FORBIDDEN_PRIVILEGE_FIELDS = (
-    "global_map",
-    "route_progress",
-    "future_gate",
-    "gate_pose",
-    "success_label",
-    "terrain_id",
-    "terrain_type",
-    "terrain_difficulty",
-    "contact_truth",
-    "teacher_latent",
-)
 
 # ---------------------------------------------------------------------------
 # Depth student preprocessing
@@ -174,16 +177,8 @@ TEACHER_FORBIDDEN_PRIVILEGE_FIELDS = (
 
 DEPTH_SCHEMA_VERSION = "t4_depth.v2"
 
-DEPTH_SENSOR_SIZE = (270, 480)
-DEPTH_POLICY_SIZE = (48, 64)
-DEPTH_CLIP_RANGE = (0.2, 3.0)
-DEPTH_INVALID_VALUE = 1.0
-DEPTH_NORMALIZED_RANGE = (0.0, 1.0)
-DEPTH_HISTORY_LENGTH = 3
 # Depth refreshes every third policy step; intermediate steps reuse the newest
 # frame, which is also what the deployment stack does.
-DEPTH_UPDATE_DECIMATION = 3
-DEPTH_RESIZE_MODE = "area"
 
 # Head-height mount on Trunk at the MJCF ``forward_camera`` site. The official
 # T4 head joints are fixed in the 27DoF policy, so this is not a gimbaled
@@ -196,7 +191,6 @@ DEPTH_CAMERA_BODY = "Trunk"
 DEPTH_CAMERA_SITE = "forward_camera"
 DEPTH_CAMERA_SITE_POS = (0.085, 0.0, 0.42)
 DEPTH_CAMERA_PITCH_DEG = 35.0
-DEPTH_NEAREST_VISIBLE_GROUND = 0.67
 
 
 def depth_camera_ros_axes() -> tuple[tuple[float, float, float], tuple[float, float, float], tuple[float, float, float]]:
@@ -263,29 +257,20 @@ PROPRIO_FIELDS: tuple[tuple[str, int], ...] = (
     ("gait_air_ratio", 2),
 )
 PROPRIO_FRAME_DIM = sum(width for _, width in PROPRIO_FIELDS)
-PROPRIO_HISTORY_LENGTH = 10
 
-CRITIC_EXTRA_FIELDS: tuple[tuple[str, int], ...] = (
-    ("base_lin_vel", 3),
-    ("feet_contact", 2),
-)
 CRITIC_FRAME_DIM = PROPRIO_FRAME_DIM + sum(width for _, width in CRITIC_EXTRA_FIELDS)
 
 TEACHER_ACTOR_OBS_DIM = PROPRIO_FRAME_DIM * PROPRIO_HISTORY_LENGTH + TEACHER_SCAN_DIM
 # Historical T-paper lineage (kept for old checkpoint playback only; task removed).
-TEACHER_PAPER_CONTACT_DIM = 2
 TEACHER_PAPER_ACTOR_OBS_DIM = TEACHER_ACTOR_OBS_DIM + TEACHER_PAPER_CONTACT_DIM
 # LightLP §IV sparse teacher (v4): scan history ×5 + feet contact on actor;
 # foot sole scan is critic-only. Default Stage E stays at TEACHER_ACTOR_OBS_DIM.
-TEACHER_SPARSE_SCAN_HISTORY_LENGTH = 5
-TEACHER_SPARSE_CONTACT_DIM = 2
 TEACHER_SPARSE_ACTOR_OBS_DIM = (
     PROPRIO_FRAME_DIM * PROPRIO_HISTORY_LENGTH
     + TEACHER_SCAN_DIM * TEACHER_SPARSE_SCAN_HISTORY_LENGTH
     + TEACHER_SPARSE_CONTACT_DIM
 )
 # Critic-only LightLP §IV-C2 impact-immunity bit (10% of envs).
-TEACHER_SPARSE_IMMUNITY_DIM = 1
 TEACHER_SPARSE_CRITIC_OBS_DIM = (
     CRITIC_FRAME_DIM * PROPRIO_HISTORY_LENGTH
     + TEACHER_SCAN_DIM * TEACHER_SPARSE_SCAN_HISTORY_LENGTH
@@ -295,8 +280,6 @@ TEACHER_SPARSE_CRITIC_OBS_DIM = (
 # LightLP §IV-A student: one proprio frame + one depth frame. Do not change
 # PROPRIO_HISTORY_LENGTH (teacher 1937D / model_21500) or DEPTH_HISTORY_LENGTH
 # (sim2sim hold buffer). Slice the newest frame from those buffers instead.
-STUDENT_PROPRIO_HISTORY_LENGTH = 1
-STUDENT_DEPTH_HISTORY_LENGTH = 1
 STAGE_E_STUDENT_ACTOR_OBS_DIM = (
     PROPRIO_FRAME_DIM * PROPRIO_HISTORY_LENGTH + DEPTH_POLICY_SIZE[0] * DEPTH_POLICY_SIZE[1] * DEPTH_HISTORY_LENGTH
 )
@@ -329,19 +312,6 @@ def proprio_field_slice(name: str) -> tuple[int, int]:
     raise KeyError(f"unknown proprio field {name!r}; known={[field for field, _ in PROPRIO_FIELDS]}")
 
 
-def assert_no_privilege_leakage(role: str, field_names: tuple[str, ...] | list[str]) -> None:
-    """Fail fast when a deployable role is fed teacher-only or route-truth fields."""
-    if role not in POLICY_ROLES:
-        raise ValueError(f"unknown policy role {role!r}; known={POLICY_ROLES}")
-    if role == "teacher":
-        leaked = [name for name in field_names if name in TEACHER_FORBIDDEN_PRIVILEGE_FIELDS]
-        if leaked:
-            raise ValueError(f"teacher privilege schema contains non-transferable fields: {sorted(leaked)}")
-        return
-    forbidden = set(TEACHER_FORBIDDEN_PRIVILEGE_FIELDS) | {"height_scan", "teacher_scan", "elevation_map"}
-    leaked = [name for name in field_names if name in forbidden]
-    if leaked:
-        raise ValueError(f"student observation schema leaks privileged fields: {sorted(leaked)}")
 
 
 def observation_manifest() -> dict:

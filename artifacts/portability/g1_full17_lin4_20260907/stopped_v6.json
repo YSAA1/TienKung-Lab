@@ -1,0 +1,43 @@
+{
+  "time": "2026-09-07T21:10:12.286641+08:00",
+  "reason": "Replace old-data v6 with user-requested full17 linear weight 4 comparison; preserve full17 baseline",
+  "processes": [
+    {
+      "pid": 400980,
+      "command": "/bin/bash /home/nubot/isaac-sim-standalone-5.1.0-linux-x86_64/python.sh -m torch.distributed.run --nnodes=1 --nproc_per_node=2 --master_port=29593 legged_lab/scripts/train.py --task=g1_loco_teacher --num_envs=2048 --distributed --headless --run_name g1_unitree_29dof_teacher_v6 --max_iterations 30000 "
+    },
+    {
+      "pid": 400987,
+      "command": "/home/nubot/isaac-sim-standalone-5.1.0-linux-x86_64/kit/python/bin/python3 -m torch.distributed.run --nnodes=1 --nproc_per_node=2 --master_port=29593 legged_lab/scripts/train.py --task=g1_loco_teacher --num_envs=2048 --distributed --headless --run_name g1_unitree_29dof_teacher_v6 --max_iterations 30000 "
+    },
+    {
+      "pid": 401128,
+      "command": "/home/nubot/isaac-sim-standalone-5.1.0-linux-x86_64/kit/python/bin/python3 -u legged_lab/scripts/train.py --task=g1_loco_teacher --num_envs=2048 --distributed --headless --run_name g1_unitree_29dof_teacher_v6 --max_iterations 30000 "
+    },
+    {
+      "pid": 401129,
+      "command": "/home/nubot/isaac-sim-standalone-5.1.0-linux-x86_64/kit/python/bin/python3 -u legged_lab/scripts/train.py --task=g1_loco_teacher --num_envs=2048 --distributed --headless --run_name g1_unitree_29dof_teacher_v6 --max_iterations 30000 "
+    }
+  ],
+  "checkpoints": [
+    "model_1000.pt",
+    "model_5000.pt",
+    "model_3000.pt",
+    "model_8500.pt",
+    "model_4500.pt",
+    "model_500.pt",
+    "model_6000.pt",
+    "model_2000.pt",
+    "model_2500.pt",
+    "model_7500.pt",
+    "model_3500.pt",
+    "model_8000.pt",
+    "model_4000.pt",
+    "model_0.pt",
+    "model_6500.pt",
+    "model_1500.pt",
+    "model_5500.pt",
+    "model_7000.pt"
+  ],
+  "exit_verified_at": "2026-09-07T21:11:14.584364+08:00"
+}

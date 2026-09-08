@@ -221,12 +221,12 @@ def test_stepping_stones_course_has_square_footholds_and_a_pit():
 
 def test_raised_pillars_course_has_cylinders_not_boxes():
     from legged_lab.scripts.play_t4_sparse_teacher_mujoco import _LAYOUT as layout
-    T4_PILLAR_PITCH_RANGE = layout.T4_PILLAR_PITCH_RANGE
+    LIGHTLP_PILLAR_PITCH_RANGE = layout.LIGHTLP_PILLAR_PITCH_RANGE
     foothold_centers = layout.foothold_centers
     foothold_pitch = layout.foothold_pitch
 
     xml = Path(build_model_xml(course="raised_pillars", difficulty=0.0)).read_text()
-    expected_pillars = len(foothold_centers(foothold_pitch(0.0, T4_PILLAR_PITCH_RANGE)))
+    expected_pillars = len(foothold_centers(foothold_pitch(0.0, LIGHTLP_PILLAR_PITCH_RANGE)))
     assert xml.count('name="pillar_') == expected_pillars
     assert expected_pillars != 70
     assert 'type="cylinder"' in xml
@@ -241,13 +241,13 @@ def test_raised_pillars_course_has_cylinders_not_boxes():
 
 def test_sparse_course_chains_stones_then_pillars():
     from legged_lab.scripts.play_t4_sparse_teacher_mujoco import _LAYOUT as layout
-    T4_PILLAR_PITCH_RANGE = layout.T4_PILLAR_PITCH_RANGE
+    LIGHTLP_PILLAR_PITCH_RANGE = layout.LIGHTLP_PILLAR_PITCH_RANGE
     foothold_centers = layout.foothold_centers
     foothold_pitch = layout.foothold_pitch
 
     xml = Path(build_model_xml(course="sparse", difficulty=0.0)).read_text()
     assert xml.count('name="stone_') == len(foothold_centers(foothold_pitch(0.0)))
-    assert xml.count('name="pillar_') == len(foothold_centers(foothold_pitch(0.0, T4_PILLAR_PITCH_RANGE)))
+    assert xml.count('name="pillar_') == len(foothold_centers(foothold_pitch(0.0, LIGHTLP_PILLAR_PITCH_RANGE)))
     assert 'name="transition_platform"' in xml
 
 
@@ -286,6 +286,21 @@ def test_deploy_depth_option_shows_robot_and_terrain():
     option = robot_and_terrain_depth_option()
     assert int(option.geomgroup[0]) == 1
     assert int(option.geomgroup[3]) == 1
+
+
+def test_interactive_viewer_enables_sparse_geom_group():
+    import mujoco
+
+    from legged_lab.scripts.sim2sim_t4_depth_student import (
+        DEPTH_TERRAIN_GEOM_GROUP,
+        enable_sparse_terrain_in_mjv_option,
+    )
+
+    option = mujoco.MjvOption()
+    assert int(option.geomgroup[DEPTH_TERRAIN_GEOM_GROUP]) == 0
+    enable_sparse_terrain_in_mjv_option(option)
+    assert int(option.geomgroup[0]) == 1
+    assert int(option.geomgroup[DEPTH_TERRAIN_GEOM_GROUP]) == 1
 
 
 def test_sim2sim_cli_exposes_depth_noise_and_keeps_robot_in_view_by_default():

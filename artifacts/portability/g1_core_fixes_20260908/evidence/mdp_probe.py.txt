@@ -1,0 +1,103 @@
+"""CPU-only reproducer for the read-only G1 core MDP audit.
+
+The component probes were already executed inline with the same interpreter.
+This saved reproducer combines those probes; saving it did not rerun tests.
+Run: D:\\anaconda\\envs\\pytorch\\python.exe mdp_probe.py
+No Isaac imports, physics execution, training, or repository writes are needed.
+"""
+
+from __future__ import annotations
+
+import ast
+import json
+import math
+from pathlib import Path
+from types import SimpleNamespace as NS
+
+import torch
+
+
+ROOT = Path(r"D:\TienKung-Lab-g1-portability-20260906")
+signals_path = ROOT / "legged_lab/locomotion/mdp/sparse_signals.py"
+signals = {}
+exec(compile(signals_path.read_text(encoding="utf-8"), str(signals_path), "exec"), signals)
+
+rows = []
+for command in [0.6, 0.7, 1.3, 2.0]:
+    def score(velocity):
+        return (
+            2 * math.exp(-((command - velocity) / 0.5) ** 2)
+            + 1.5 * signals["velocity_slack"](command, velocity)
+            - signals["opposite_direction"]([command, 0], [velocity, 0])
+        )
+
+    count = 100000
+    oscillating = sum(
+        score(command * math.sin(2 * math.pi * i / count)) for i in range(count)
+    ) / count
+    rows.append({
+        "cmd": command,
+        "stand": score(0),
+        "zero_net_sinusoidal": oscillating,
+        "slow_forward_30pct": score(command * 0.3),
+        "exact_forward": score(command),
+    })
+
+# Execute the actual production reward function, without importing Isaac.
+reward_path = ROOT / "legged_lab/mdp/rewards.py"
+tree = ast.parse(reward_path.read_text(encoding="utf-8"))
+heading = next(
+    node for node in tree.body
+    if isinstance(node, ast.FunctionDef) and node.name == "heading_error"
+)
+module = ast.Module(body=[
+    ast.ImportFrom(module="__future__", names=[ast.alias(name="annotations")], level=0),
+    heading,
+], type_ignores=[])
+reward_globals = {
+    "torch": torch,
+    "SceneEntityCfg": lambda name: NS(name=name),
+    "math_utils": NS(wrap_to_pi=lambda value: torch.atan2(torch.sin(value), torch.cos(value))),
+}
+exec(compile(ast.fix_missing_locations(module), str(reward_path), "exec"), reward_globals)
+robot = NS(data=NS(heading_w=torch.zeros(2)))
+env = NS(
+    num_envs=2, device="cpu", scene={"robot": robot},
+    command_generator=NS(
+        command=torch.zeros(2, 3), heading_target=torch.tensor([0.0, math.pi]),
+        is_standing_env=torch.tensor([True, True]), is_heading_env=torch.tensor([True, True]),
+    ),
+)
+
+# Reproduce the source's tensor ownership, not the full Isaac environment.
+# env.py writes extras['time_outs'] only in nonempty reset; check_reset next
+# allocates a fresh tensor; the no-reset branch only removes extras['log'].
+time_out_buf = torch.tensor([True, False])
+extras = {"time_outs": time_out_buf}
+time_out_buf = torch.tensor([False, False])
+extras.pop("log", None)
+values = torch.tensor([[2.0], [3.0]])
+boost = 0.99 * torch.squeeze(values * extras["time_outs"].unsqueeze(1), 1)
+
+result = {
+    "speed_terms_before_dt_and_amp_task_mix": rows,
+    "speed_probe_interpretation": (
+        "Only weighted linear tracking, velocity slack, and opposite-direction terms. "
+        "The sinusoid has zero net displacement over one period. "
+        "This is not a complete-return comparison or a dynamically feasible rollout."
+    ),
+    "upright_bonus_both_upright_and_inverted": signals["upright_orientation_reward"](0, 0),
+    "standing_heading_alias": {
+        "visible_commands": env.command_generator.command.tolist(),
+        "hidden_heading_targets": env.command_generator.heading_target.tolist(),
+        "heading_error": reward_globals["heading_error"](env).tolist(),
+    },
+    "stale_timeout_ownership_reproducer": {
+        "current_timeouts": time_out_buf.tolist(),
+        "returned_timeouts": extras["time_outs"].tolist(),
+        "values": values.flatten().tolist(),
+        "gamma": 0.99,
+        "spurious_bootstrap": boost.tolist(),
+    },
+}
+print(json.dumps(result, indent=2))

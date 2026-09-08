@@ -1,0 +1,15 @@
+{
+  "commit": "3d5ea25ddbcba05bef4c9acd1dacb9fa728b289b",
+  "modified_count": 1534,
+  "mode_only_count": 1533,
+  "content_changes": [
+    [
+      "3",
+      "1",
+      "source/isaaclab/isaaclab/utils/assets.py"
+    ]
+  ],
+  "assets_path": "/home/nubot/IsaacLab/source/isaaclab/isaaclab/utils/assets.py",
+  "assets_sha256": "3511aadf5054ca6832f5d3869c137d0c74a6bb9eeed0e2df1681a0435e8569e3",
+  "assets_patch_sha256": "f97745a900a344d447d280876cb5d575068897df88e4aa185062b8b3f941e6b0"
+}

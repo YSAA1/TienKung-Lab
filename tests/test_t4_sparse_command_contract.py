@@ -17,9 +17,9 @@ _spec = importlib.util.spec_from_file_location("t4_sparse_signals_cmd", _SIG_PAT
 sig = importlib.util.module_from_spec(_spec)
 _spec.loader.exec_module(sig)
 
-CFG = Path(__file__).resolve().parents[1] / "legged_lab" / "envs" / "t4" / "teacher_cfg.py"
-ENV = Path(__file__).resolve().parents[1] / "legged_lab" / "envs" / "t4" / "t4_env.py"
-EVAL = Path(__file__).resolve().parents[1] / "legged_lab" / "scripts" / "eval_t4_hurdle.py"
+CFG = Path(__file__).resolve().parents[1] / "legged_lab" / "locomotion" / "teacher_cfg.py"
+ENV = Path(__file__).resolve().parents[1] / "legged_lab" / "locomotion" / "env.py"
+EVAL = Path(__file__).resolve().parents[1] / "legged_lab" / "scripts" / "eval_locomotion.py"
 PLAY = Path(__file__).resolve().parents[1] / "legged_lab" / "scripts" / "play.py"
 
 
@@ -81,9 +81,9 @@ def test_pinned_command_ranges_disable_terrain_aware_overlay():
 
 def test_sparse_teacher_cfg_enables_s12_command_and_full_level_reset():
     source = CFG.read_text()
-    sparse = source.split("class T4LocoSparseTeacherEnvCfg", 1)[1]
-    teacher = source.split("class T4LocoTeacherEnvCfg", 1)[1].split("class T4LocoTeacherAgentCfg", 1)[0]
-    rewards = source.split("class T4SparseTeacherRewardCfg", 1)[1].split("@configclass", 1)[0]
+    sparse = source.split("class LightLPLocomotionEnvCfg", 1)[1]
+    teacher = source.split("class AmpLocomotionEnvCfg", 1)[1].split("class T4LocoTeacherAgentCfg", 1)[0]
+    rewards = source.split("class LightLPRewardCfg", 1)[1].split("@configclass", 1)[0]
 
     assert "random_level_reset_max_level: int | None = None" in sparse
     assert "self.random_level_reset_max_level = None" in sparse
@@ -97,7 +97,7 @@ def test_sparse_teacher_cfg_enables_s12_command_and_full_level_reset():
     assert "self.sparse_command_straight_yaw_prob = 0.60" in sparse
     assert "self.sparse_command_gentle_ang_vel_z = (-0.3, 0.3)" in sparse
     assert "(-0.3, 0.3)" in sparse
-    assert "run_name = \"t_sparse_lightlp_s12_rim_yaw40\"" in source
+    assert 'run_name = "t_sparse_lightlp_s12_rim_yaw40"' in (Path(__file__).resolve().parents[1] / "legged_lab/envs/t4/teacher_cfg.py").read_text()
     assert "weight=-2.0" in rewards
     ori_block = rewards.split("body_orientation_l2", 1)[1].split("upright_orientation", 1)[0]
     upright_block = rewards.split("upright_orientation", 1)[1].split("undesired_contacts", 1)[0]

@@ -22,7 +22,7 @@ from isaaclab.sensors import ContactSensorCfg
 from isaaclab.utils import configclass
 from isaaclab.utils.noise import AdditiveUniformNoiseCfg as Unoise
 
-import legged_lab.envs.t4.vault_mimic.mdp as mdp
+import legged_lab.motion_tracking.mdp as mdp
 from legged_lab.assets.t4.t4 import T4_CFG
 from legged_lab.assets.t4.vault_contract import (
     T4_VAULT_ACTION_SCALE,

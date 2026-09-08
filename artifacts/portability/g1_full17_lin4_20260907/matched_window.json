@@ -1,0 +1,70 @@
+{
+  "window": [
+    2400,
+    2600
+  ],
+  "samples_per_update": 98304,
+  "t4_sample_evidence": "historical train.log iteration 0 total_timesteps=98304; iteration 1=196608",
+  "metrics": {
+    "full17": {
+      "Curriculum/episode_tracking_mean": {
+        "mean": 0.2504376857718335,
+        "n": 79
+      },
+      "Curriculum/terrain_levels": {
+        "mean": 1.3743499804146682,
+        "n": 79
+      },
+      "Curriculum/promotion_rate": {
+        "mean": 0.03523305911995188,
+        "n": 79
+      },
+      "Curriculum/episode_path_length": {
+        "mean": 1.9557501485076132,
+        "n": 79
+      },
+      "Terrain/flat/reach_2m_rate": {
+        "mean": 0.0,
+        "n": 79
+      },
+      "Episode_Reward/track_lin_vel_xy_exp": {
+        "mean": 0.2374178082505359,
+        "n": 79
+      },
+      "Perf/total_fps": {
+        "mean": 33634.59493670886,
+        "n": 79
+      }
+    },
+    "t4": {
+      "Curriculum/episode_tracking_mean": {
+        "mean": 0.3023741679701639,
+        "n": 201
+      },
+      "Curriculum/terrain_levels": {
+        "mean": 1.5444868103188663,
+        "n": 201
+      },
+      "Curriculum/promotion_rate": {
+        "mean": 0.013647813705579187,
+        "n": 201
+      },
+      "Curriculum/episode_path_length": {
+        "mean": 1.4045333642864701,
+        "n": 201
+      },
+      "Terrain/flat/reach_2m_rate": {
+        "mean": 0.13365343802455645,
+        "n": 201
+      },
+      "Episode_Reward/track_lin_vel_xy_exp": {
+        "mean": 0.13876404253701072,
+        "n": 201
+      },
+      "Perf/total_fps": {
+        "mean": 39467.78606965174,
+        "n": 201
+      }
+    }
+  }
+}

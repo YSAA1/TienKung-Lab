@@ -120,10 +120,15 @@ class TienKungEnv(VecEnv):
             self.event_manager.apply(mode="startup")
         self.reset(env_ids)
 
-        self.amp_loader_display = AMPLoaderDisplay(
-            motion_files=self.cfg.amp_motion_files_display, device=self.device, time_between_frames=self.physics_dt
-        )
-        self.motion_len = self.amp_loader_display.trajectory_num_frames[0]
+        amp_files = getattr(self.cfg, "amp_motion_files_display", None) or []
+        if amp_files:
+            self.amp_loader_display = AMPLoaderDisplay(
+                motion_files=amp_files, device=self.device, time_between_frames=self.physics_dt
+            )
+            self.motion_len = self.amp_loader_display.trajectory_num_frames[0]
+        else:
+            self.amp_loader_display = None
+            self.motion_len = 0
 
     def init_buffers(self):
         self.extras = {}
@@ -160,54 +165,35 @@ class TienKungEnv(VecEnv):
         self.feet_cfg = SceneEntityCfg(name="contact_sensor", body_names=self.cfg.robot.feet_body_names)
         self.feet_cfg.resolve(self.scene)
 
+        kinematics = getattr(self.cfg, "kinematics", None)
+        if kinematics is None:
+            from legged_lab.config import KinematicNamesCfg
+
+            kinematics = KinematicNamesCfg()
         self.feet_body_ids, _ = self.robot.find_bodies(
-            name_keys=["ankle_roll_l_link", "ankle_roll_r_link"], preserve_order=True
+            name_keys=list(kinematics.feet_link_names), preserve_order=True
         )
         self.elbow_body_ids, _ = self.robot.find_bodies(
-            name_keys=["elbow_pitch_l_link", "elbow_pitch_r_link"], preserve_order=True
+            name_keys=list(kinematics.elbow_link_names), preserve_order=True
         )
         self.left_leg_ids, _ = self.robot.find_joints(
-            name_keys=[
-                "hip_roll_l_joint",
-                "hip_pitch_l_joint",
-                "hip_yaw_l_joint",
-                "knee_pitch_l_joint",
-                "ankle_pitch_l_joint",
-                "ankle_roll_l_joint",
-            ],
+            name_keys=list(kinematics.left_leg_joint_names),
             preserve_order=True,
         )
         self.right_leg_ids, _ = self.robot.find_joints(
-            name_keys=[
-                "hip_roll_r_joint",
-                "hip_pitch_r_joint",
-                "hip_yaw_r_joint",
-                "knee_pitch_r_joint",
-                "ankle_pitch_r_joint",
-                "ankle_roll_r_joint",
-            ],
+            name_keys=list(kinematics.right_leg_joint_names),
             preserve_order=True,
         )
         self.left_arm_ids, _ = self.robot.find_joints(
-            name_keys=[
-                "shoulder_pitch_l_joint",
-                "shoulder_roll_l_joint",
-                "shoulder_yaw_l_joint",
-                "elbow_pitch_l_joint",
-            ],
+            name_keys=list(kinematics.left_arm_joint_names),
             preserve_order=True,
         )
         self.right_arm_ids, _ = self.robot.find_joints(
-            name_keys=[
-                "shoulder_pitch_r_joint",
-                "shoulder_roll_r_joint",
-                "shoulder_yaw_r_joint",
-                "elbow_pitch_r_joint",
-            ],
+            name_keys=list(kinematics.right_arm_joint_names),
             preserve_order=True,
         )
         self.ankle_joint_ids, _ = self.robot.find_joints(
-            name_keys=["ankle_pitch_l_joint", "ankle_pitch_r_joint", "ankle_roll_l_joint", "ankle_roll_r_joint"],
+            name_keys=list(kinematics.ankle_joint_names),
             preserve_order=True,
         )
 

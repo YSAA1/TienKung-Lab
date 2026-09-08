@@ -1,0 +1,36 @@
+{
+  "flat": {
+    "source_gif_sha256": "9b384f75a794f88bdc748f1ff63b6cabc759347830040b9edd38354aff83e6b7",
+    "mp4_sha256": "55eaf64291afaefa1f2387b7f44666ec83e8c938807cb6250d52cc19611bb851",
+    "video": {
+      "programs": [],
+      "streams": [
+        {
+          "width": 960,
+          "height": 480,
+          "r_frame_rate": "25/2",
+          "duration": "16.000000",
+          "nb_frames": "200"
+        }
+      ]
+    },
+    "note": "Original play captured 800 physics steps at 50 Hz; GIF fallback retained every fourth frame. MP4 retains all 200 GIF frames at the original sampled cadence 12.5 Hz."
+  },
+  "stepping_stones": {
+    "source_gif_sha256": "ae59a97a5f6e29cce3bf79f33f0ad7c3579d5375a25df9ee37fa6c08013f629a",
+    "mp4_sha256": "56daa6c62b70c89b45b0fd1c93a49da4d37f58d6a43577080307b6a6590c75b1",
+    "video": {
+      "programs": [],
+      "streams": [
+        {
+          "width": 960,
+          "height": 480,
+          "r_frame_rate": "25/2",
+          "duration": "16.000000",
+          "nb_frames": "200"
+        }
+      ]
+    },
+    "note": "Original play captured 800 physics steps at 50 Hz; GIF fallback retained every fourth frame. MP4 retains all 200 GIF frames at the original sampled cadence 12.5 Hz."
+  }
+}

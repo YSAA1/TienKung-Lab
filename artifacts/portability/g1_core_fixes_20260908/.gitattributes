@@ -1,0 +1,5 @@
+# Preserve raw audit evidence bytes across Windows and Linux checkouts.
+*.json -text whitespace=cr-at-eol
+*.log -text -diff
+*.exit -text
+*.patch -text -diff

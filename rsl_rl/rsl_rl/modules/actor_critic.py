@@ -90,6 +90,25 @@ class ActorCritic(nn.Module):
         self.distribution = None
         # disable args validation for speedup
         Normal.set_default_validate_args(False)
+        # Runtime constraint supplied by the AMP runner; old checkpoints stay loadable.
+        self.register_buffer("minimum_action_std", None, persistent=False)
+
+    def set_minimum_action_std(self, minimum):
+        parameter = self.std if self.noise_std_type == "scalar" else self.log_std
+        minimum = torch.as_tensor(minimum, device=parameter.device, dtype=parameter.dtype)
+        if minimum.shape != parameter.shape or not torch.isfinite(minimum).all() or torch.any(minimum < 0):
+            raise ValueError("minimum action std must be finite, nonnegative and match the action width")
+        self.minimum_action_std = minimum.clone()
+        self.enforce_minimum_action_std()
+
+    @torch.no_grad()
+    def enforce_minimum_action_std(self):
+        if self.minimum_action_std is None:
+            return
+        if self.noise_std_type == "scalar":
+            self.std.copy_(torch.maximum(self.std, self.minimum_action_std))
+        else:
+            self.log_std.copy_(torch.maximum(self.log_std, self.minimum_action_std.log()))
 
     @staticmethod
     # not used at the moment
@@ -159,4 +178,5 @@ class ActorCritic(nn.Module):
         """
 
         super().load_state_dict(state_dict, strict=strict)
+        self.enforce_minimum_action_std()
         return True

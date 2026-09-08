@@ -1,0 +1,18 @@
+{
+  "scope": "Shared teacher runtime and robot adapters ready for G1 training; broader repository work and behavior acceptance remain open",
+  "review": "review_curriculum: no blocking findings; old/new T4 and G1 mirrors exactly equal",
+  "cold_verification": "verify_teacher_gate: six startup criteria confirmed; final deployment manifest verification required",
+  "test_outputs": [
+    "149 passed in 1.83s",
+    "90 passed in 5.27s",
+    "89 passed in 2.74s after evaluator entrypoint update"
+  ],
+  "runtime": [
+    "neutral_g1_loco_teacher.json",
+    "neutral_t4_loco_teacher_sparse.json"
+  ],
+  "probe_source": "neutral_probe_source.json",
+  "amp": "original: start=.3,min=.3,sparse=0,coef=.3,task_lerp=.7",
+  "random_resets": "fraction=.10,min=None,max=None; all rows0..9 observed",
+  "limits": "32 flat env probe; no sparse behavior or full PPO stability claim"
+}

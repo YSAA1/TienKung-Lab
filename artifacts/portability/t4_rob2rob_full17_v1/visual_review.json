@@ -1,0 +1,18 @@
+{
+  "accepted_for_data_ablation": true,
+  "time": "2026-09-07T18:45:49.361655+08:00",
+  "coverage": "All 17 clips rendered continuously; 68 frames across 3 review pages inspected",
+  "video_sha256": "20b9cdd4a4b655d682ade446be766416553f639bbcf94565ddc1b9060425258f",
+  "source_csv_matches_actual_t4_run": true,
+  "observations": [
+    "Walking, backward jogging, curved jogging, side steps, stand and turns retained; no dancing selection introduced.",
+    "Backward jog positive knee branch fixed and all trajectory joint velocities below official limits.",
+    "Motion names/classes and weights deliberately preserve the actual T4 run, including curved t4_walk_left and jog_left/right."
+  ],
+  "limitations": [
+    "Kinematic replay only, not dynamic tracking or trained policy acceptance.",
+    "Worst sole orientation discrepancy is about 0.408 rad in side stepping due bounded geometry mapping.",
+    "Lowest collision sphere sole is -0.02095 m; a single rigid vertical shift preserves source trajectories, not framewise contact repair.",
+    "Geometric support-speed proxy is not a measured physical slip test."
+  ]
+}

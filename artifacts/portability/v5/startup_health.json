@@ -1,0 +1,41 @@
+{
+  "run": "/home/nubot/phn_ws/t4_train/TienKung-Lab-g1-unitree-v5-20260907/logs/g1_loco_teacher_sparse/2026-09-07_13-36-29_g1_unitree_29dof_teacher_v5",
+  "checkpoints": [
+    "model_0.pt"
+  ],
+  "saved_config": {
+    "scale": "0.25",
+    "asset": "/home/nubot/phn_ws/t4_train/TienKung-Lab-g1-unitree-v5-20260907/legged_lab/assets/unitree_g1/urdf/g1_29dof_rev_1_0.urdf",
+    "envs": "2048",
+    "resume": "false",
+    "budget": "30000"
+  },
+  "metrics": {
+    "Train/mean_episode_length": [
+      1788759447.2669654,
+      16,
+      10.90999984741211
+    ],
+    "Train/mean_reward": [
+      1788759447.266736,
+      16,
+      -0.9811932444572449
+    ],
+    "Reset/collapsed": [
+      1788759450.4074936,
+      17,
+      0.003787520108744502
+    ],
+    "Reset/accel": [
+      1788759450.407411,
+      17,
+      9.468800271861255e-05
+    ],
+    "Loss/learning_rate": [
+      1788759450.4147694,
+      17,
+      0.00011390625149942935
+    ]
+  },
+  "time": "2026-09-07T13:37:33.540888+08:00"
+}

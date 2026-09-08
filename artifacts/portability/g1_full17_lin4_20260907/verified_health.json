@@ -1,0 +1,108 @@
+{
+  "time": "2026-09-07T21:13:01.677472+08:00",
+  "run": "/home/nubot/phn_ws/t4_train/TienKung-Lab-g1-unitree-v6-20260907/logs/g1_full17_lin4/2026-09-07_21-11-47_g1_full17_lin4",
+  "config_diffs": {
+    "env": [
+      {
+        "path": ".reward.track_lin_vel_xy_exp.weight",
+        "baseline": "2.0",
+        "experiment": "4.0"
+      }
+    ],
+    "agent": [
+      {
+        "path": ".experiment_name",
+        "baseline": "g1_full17_30k",
+        "experiment": "g1_full17_lin4"
+      },
+      {
+        "path": ".run_name",
+        "baseline": "g1_full17_30k",
+        "experiment": "g1_full17_lin4"
+      }
+    ]
+  },
+  "processes": [
+    {
+      "pid": 792141,
+      "rank": "0",
+      "world_size": "2",
+      "gpus": "1,3"
+    },
+    {
+      "pid": 792142,
+      "rank": "1",
+      "world_size": "2",
+      "gpus": "1,3"
+    }
+  ],
+  "metrics": {
+    "weight2/2026-09-07_18-52-02_g1_full17_30k": {
+      "Train/mean_reward": {
+        "step": 2730,
+        "last": 15.372302055358887,
+        "finite_last20": true
+      },
+      "Loss/value_function": {
+        "step": 2730,
+        "last": 0.10890340805053711,
+        "finite_last20": true
+      },
+      "Loss/surrogate": {
+        "step": 2730,
+        "last": -0.0004154497291892767,
+        "finite_last20": true
+      },
+      "Loss/amp": {
+        "step": 2730,
+        "last": 0.14939628541469574,
+        "finite_last20": true
+      },
+      "Curriculum/terrain_levels": {
+        "step": 2730,
+        "last": 1.4460042715072632,
+        "finite_last20": true
+      },
+      "Curriculum/episode_tracking_mean": {
+        "step": 2730,
+        "last": 0.2583010494709015,
+        "finite_last20": true
+      }
+    },
+    "weight4/2026-09-07_21-11-47_g1_full17_lin4": {
+      "Train/mean_reward": {
+        "step": 20,
+        "last": -3.4174611568450928,
+        "finite_last20": true
+      },
+      "Loss/value_function": {
+        "step": 20,
+        "last": 0.054263219237327576,
+        "finite_last20": true
+      },
+      "Loss/surrogate": {
+        "step": 20,
+        "last": -0.013229907490313053,
+        "finite_last20": true
+      },
+      "Loss/amp": {
+        "step": 20,
+        "last": 0.0023909914307296276,
+        "finite_last20": true
+      },
+      "Curriculum/terrain_levels": {
+        "step": 20,
+        "last": 1.49664306640625,
+        "finite_last20": true
+      },
+      "Curriculum/episode_tracking_mean": {
+        "step": 20,
+        "last": 0.2819102108478546,
+        "finite_last20": true
+      }
+    }
+  },
+  "checkpoints": [
+    "model_0.pt"
+  ]
+}

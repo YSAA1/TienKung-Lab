@@ -32,7 +32,7 @@ from isaaclab_rl.rsl_rl import (  # noqa:F401
 
 import legged_lab.mdp as mdp
 
-from .base_config import (
+from legged_lab.config import (
     ActionDelayCfg,
     BaseSceneCfg,
     CommandRangesCfg,

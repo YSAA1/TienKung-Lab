@@ -1,0 +1,8 @@
+{
+  "time": "2026-09-07T14:27:45.094313+08:00",
+  "failed_command": "play.py default plane",
+  "failure": "IsaacLab ground plane material binding receives None collision prim path",
+  "replacement": "play.py --terrain --terrain_types flat --difficulty 0",
+  "training_source_unchanged": true,
+  "checkpoint": "/home/nubot/phn_ws/t4_train/TienKung-Lab-g1-unitree-v6-20260907/logs/g1_loco_teacher_sparse/2026-09-07_13-55-07_g1_unitree_29dof_teacher_v6/model_500.pt"
+}

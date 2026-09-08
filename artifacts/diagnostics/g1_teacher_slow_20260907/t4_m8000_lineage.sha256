@@ -1,0 +1,2 @@
+f7ceb094fab064e60e715543b5f7725f99789298ea9025d5c92d117ccfb921cb  legged_lab/scripts/eval_t4_hurdle.py
+b7ebaa918f9296716999ca73462fa8ab7607a16857e361ab48923492af12d64e  logs/t4_loco_teacher_sparse/2026-08-22_01-12-08_t_sparse_lightlp_s11b_upright_tbslim/model_8000.pt

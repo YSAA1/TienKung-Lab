@@ -21,17 +21,17 @@ from __future__ import annotations
 # Canonical Stage E hurdle-bucket parameters. The rule contract (100m obstacle
 # #2) uses 1.1m spacing and up to 0.35m bar height; the training tile keeps
 # heights on-contract while widening spacing variety for robustness.
-T4_HURDLE_TILE_SIZE = 8.0
-T4_HURDLE_PLATFORM_WIDTH = 1.6
-T4_HURDLE_BORDER_WIDTH = 0.25
-T4_HURDLE_SPACING_RANGE = (0.9, 1.3)
-T4_HURDLE_BAR_HEIGHT_RANGE = (0.05, 0.35)
+LIGHTLP_HURDLE_TILE_SIZE = 8.0
+LIGHTLP_HURDLE_PLATFORM_WIDTH = 1.6
+LIGHTLP_HURDLE_BORDER_WIDTH = 0.25
+LIGHTLP_HURDLE_SPACING_RANGE = (0.9, 1.3)
+LIGHTLP_HURDLE_BAR_HEIGHT_RANGE = (0.05, 0.35)
 # Real hurdle top boards are ~7cm; 0.07m also keeps the bar visible to the
 # 0.1m-resolution height scan often enough to be anticipated.
-T4_HURDLE_BAR_THICKNESS = 0.07
+LIGHTLP_HURDLE_BAR_THICKNESS = 0.07
 
 
-def hurdle_bar_height(difficulty: float, height_range: tuple[float, float] = T4_HURDLE_BAR_HEIGHT_RANGE) -> float:
+def hurdle_bar_height(difficulty: float, height_range: tuple[float, float] = LIGHTLP_HURDLE_BAR_HEIGHT_RANGE) -> float:
     """Interpolate the bar height from the terrain difficulty in [0, 1]."""
     d = min(max(float(difficulty), 0.0), 1.0)
     return height_range[0] + d * (height_range[1] - height_range[0])
@@ -39,9 +39,9 @@ def hurdle_bar_height(difficulty: float, height_range: tuple[float, float] = T4_
 
 def hurdle_ring_half_widths(
     spacing: float,
-    tile_size: float = T4_HURDLE_TILE_SIZE,
-    platform_width: float = T4_HURDLE_PLATFORM_WIDTH,
-    border_width: float = T4_HURDLE_BORDER_WIDTH,
+    tile_size: float = LIGHTLP_HURDLE_TILE_SIZE,
+    platform_width: float = LIGHTLP_HURDLE_PLATFORM_WIDTH,
+    border_width: float = LIGHTLP_HURDLE_BORDER_WIDTH,
 ) -> list[float]:
     """Half-widths (center to bar centerline) of the concentric square rings.
 
@@ -64,8 +64,8 @@ def hurdle_ring_half_widths(
 def hurdle_bar_aabbs(
     ring_half_widths: list[float],
     bar_height: float,
-    tile_size: float = T4_HURDLE_TILE_SIZE,
-    bar_thickness: float = T4_HURDLE_BAR_THICKNESS,
+    tile_size: float = LIGHTLP_HURDLE_TILE_SIZE,
+    bar_thickness: float = LIGHTLP_HURDLE_BAR_THICKNESS,
 ) -> list[tuple[tuple[float, float, float], tuple[float, float, float]]]:
     """Axis-aligned bounding boxes of every bar, as ``(min_xyz, max_xyz)``.
 
@@ -96,3 +96,11 @@ def point_hits_bar(
         if x0 - margin <= x <= x1 + margin and y0 - margin <= y <= y1 + margin and z0 - margin <= z <= z1 + margin:
             return True
     return False
+
+# Compatibility for historical external scripts and checkpoint recipes.
+T4_HURDLE_TILE_SIZE = LIGHTLP_HURDLE_TILE_SIZE
+T4_HURDLE_PLATFORM_WIDTH = LIGHTLP_HURDLE_PLATFORM_WIDTH
+T4_HURDLE_BORDER_WIDTH = LIGHTLP_HURDLE_BORDER_WIDTH
+T4_HURDLE_SPACING_RANGE = LIGHTLP_HURDLE_SPACING_RANGE
+T4_HURDLE_BAR_HEIGHT_RANGE = LIGHTLP_HURDLE_BAR_HEIGHT_RANGE
+T4_HURDLE_BAR_THICKNESS = LIGHTLP_HURDLE_BAR_THICKNESS

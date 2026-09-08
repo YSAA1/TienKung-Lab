@@ -1,0 +1,4 @@
+{
+  "time": "2026-09-07T13:48:15.576924",
+  "reason": "99 percent torso termination; airborne self collision reproduced at step 3, torso height 1.79m. Pure official asset retained; remove invalid hard net-contact criterion only."
+}

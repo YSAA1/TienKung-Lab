@@ -1,0 +1,10 @@
+{
+  "source_commit": "c125f74d50b9d1aef70ae6ce8bd8b3fcb7b26d52",
+  "checkpoint": "/home/nubot/phn_ws/t4_train/TienKung-Lab-g1-unitree-v6-20260907/logs/g1_loco_teacher_sparse/2026-09-07_13-55-07_g1_unitree_29dof_teacher_v6/model_3000.pt",
+  "sha256": "f6b17b720e7d833bb6df4804d2e849dbb663e2ddb9141a14fd9f97350dcaa1b7",
+  "task": "g1_loco_teacher",
+  "episodes": 32,
+  "seed": 42,
+  "vx": 0.7,
+  "terrain": "flat difficulty0"
+}

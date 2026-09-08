@@ -177,9 +177,7 @@ def upright_orientation(
     return torch.exp(-2.0 * n2) + 0.1 * torch.exp(-n1)
 
 
-def heading_error(
-    env: BaseEnv | TienKungEnv, asset_cfg: SceneEntityCfg = SceneEntityCfg("robot")
-) -> torch.Tensor:
+def heading_error(env: BaseEnv | TienKungEnv, asset_cfg: SceneEntityCfg = SceneEntityCfg("robot")) -> torch.Tensor:
     """LightLP Table I |Δψ| between commanded heading and base yaw."""
     target = getattr(env.command_generator, "heading_target", None)
     if target is None:
@@ -190,7 +188,9 @@ def heading_error(
         _, _, yaw = math_utils.euler_xyz_from_quat(asset.data.root_quat_w)
         heading_w = yaw
     delta = math_utils.wrap_to_pi(target - heading_w)
-    return torch.abs(delta)
+    heading_env = getattr(env.command_generator, "is_heading_env", torch.zeros_like(target, dtype=torch.bool))
+    standing_env = getattr(env.command_generator, "is_standing_env", torch.zeros_like(target, dtype=torch.bool))
+    return torch.where(heading_env & ~standing_env, torch.abs(delta), torch.zeros_like(delta))
 
 
 def feet_stumble(env: BaseEnv | TienKungEnv, sensor_cfg: SceneEntityCfg) -> torch.Tensor:

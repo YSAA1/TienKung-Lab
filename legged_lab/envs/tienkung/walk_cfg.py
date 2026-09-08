@@ -32,7 +32,7 @@ from isaaclab_rl.rsl_rl import (  # noqa:F401
 
 import legged_lab.mdp as mdp
 from legged_lab.assets.tienkung2_lite import TIENKUNG2LITE_CFG
-from legged_lab.envs.base.base_config import (
+from legged_lab.config import (
     ActionDelayCfg,
     BaseSceneCfg,
     CommandRangesCfg,
@@ -40,6 +40,7 @@ from legged_lab.envs.base.base_config import (
     DomainRandCfg,
     EventCfg,
     HeightScannerCfg,
+    KinematicNamesCfg,
     NoiseCfg,
     NoiseScalesCfg,
     NormalizationCfg,
@@ -189,6 +190,7 @@ class TienKungWalkFlatEnvCfg:
         terminate_contacts_body_names=["knee_pitch.*", "shoulder_roll.*", "elbow_pitch.*", "pelvis"],
         feet_body_names=["ankle_roll.*"],
     )
+    kinematics: KinematicNamesCfg = KinematicNamesCfg()
     reward = LiteRewardCfg()
     gait = GaitCfg()
     normalization: NormalizationCfg = NormalizationCfg(

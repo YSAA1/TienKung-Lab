@@ -1,0 +1,80 @@
+{
+  "time": "2026-09-07T23:34:29.805309",
+  "ranks": [
+    {
+      "pid": 920838,
+      "command": "/home/nubot/isaac-sim-standalone-5.1.0-linux-x86_64/kit/python/bin/python3 -u artifacts/portability/g1_recovery_20260907/train.py --task g1_loco_teacher --num_envs 2048 --seed 42 --distributed --headless --max_iterations 30000 --experiment_name g1_recovery_30k --run_name g1_recovery_30k --amp_expert_manifest /home/nubot/phn_ws/t4_train/TienKung-Lab-g1-recovery-20260907/legged_lab/envs/g1/datasets/motion_amp_expert_t4_rob2rob_full17_v1/_manifest.json ",
+      "environment": {
+        "LOCAL_RANK": "0",
+        "RANK": "0",
+        "WORLD_SIZE": "2",
+        "CUDA_VISIBLE_DEVICES": "1,3"
+      }
+    },
+    {
+      "pid": 920839,
+      "command": "/home/nubot/isaac-sim-standalone-5.1.0-linux-x86_64/kit/python/bin/python3 -u artifacts/portability/g1_recovery_20260907/train.py --task g1_loco_teacher --num_envs 2048 --seed 42 --distributed --headless --max_iterations 30000 --experiment_name g1_recovery_30k --run_name g1_recovery_30k --amp_expert_manifest /home/nubot/phn_ws/t4_train/TienKung-Lab-g1-recovery-20260907/legged_lab/envs/g1/datasets/motion_amp_expert_t4_rob2rob_full17_v1/_manifest.json ",
+      "environment": {
+        "LOCAL_RANK": "1",
+        "RANK": "1",
+        "WORLD_SIZE": "2",
+        "CUDA_VISIBLE_DEVICES": "1,3"
+      }
+    }
+  ],
+  "metrics": {
+    "/home/nubot/phn_ws/t4_train/TienKung-Lab-g1-recovery-20260907/logs/g1_recovery_30k/2026-09-07_23-26-29_g1_recovery_30k": {
+      "Collapse/immune_skip_fraction": {
+        "step": 132,
+        "value": 0.0599873848259449
+      },
+      "Collapse/low_fraction": {
+        "step": 132,
+        "value": 0.1676127165555954
+      },
+      "Collapse/terminated_fraction": {
+        "step": 132,
+        "value": 0.0060526528395712376
+      },
+      "Loss/value_function": {
+        "step": 132,
+        "value": 0.11581103503704071
+      },
+      "Loss/surrogate": {
+        "step": 132,
+        "value": -0.006281842477619648
+      },
+      "Loss/entropy": {
+        "step": 132,
+        "value": 29.053565979003906
+      },
+      "Loss/amp": {
+        "step": 132,
+        "value": 0.037155892699956894
+      },
+      "Loss/amp_grad_pen": {
+        "step": 132,
+        "value": 0.08271721005439758
+      },
+      "Loss/amp_policy_pred": {
+        "step": 132,
+        "value": -0.8778359293937683
+      },
+      "Loss/amp_expert_pred": {
+        "step": 132,
+        "value": 0.8767019510269165
+      },
+      "Loss/symmetry": {
+        "step": 132,
+        "value": 0.0010948823764920235
+      },
+      "Loss/learning_rate": {
+        "step": 132,
+        "value": 0.00011390625149942935
+      }
+    }
+  },
+  "baseline_alive": true,
+  "all_17_experts_identical_to_baseline": true,
+  "baseline_latest_checkpoint": "model_5500.pt"
+}

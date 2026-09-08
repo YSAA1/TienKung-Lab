@@ -1,0 +1,30 @@
+{
+  "scope": "shared named motion loading, tracking MDP and IsaacLab/RSL-RL adapter",
+  "base_commit": "dcd22d4",
+  "review": "pass",
+  "verification": "pass",
+  "isolation": "subagent",
+  "reviewer": "review_curriculum",
+  "cold_verifier": "verify_teacher_gate",
+  "evidence": {
+    "focused_tests": "64 passed",
+    "reference_motion": "overbox_1m_t4_mjcf_fps50.npz",
+    "old_new_reference_fields_equal": 12,
+    "reference_frames": 346,
+    "runtime_motion_loader_joint_counts": [21, 27, 29],
+    "runtime_loader_invalid_name_cases_per_robot": 5,
+    "mdp_files_ast_equal_except_imports": 6,
+    "rl_adapter_text_equal": true,
+    "runtime": "runtime.json",
+    "cold_import": "import.json",
+    "source_manifest": "source_manifest.json",
+    "verified_code_files": 225,
+    "probe_exit": "exit.txt",
+    "probe_session_missing_after_exit": true
+  },
+  "limitations": [
+    "Runtime evidence establishes T4 tracking interfaces, not vault task success.",
+    "Other joint counts establish named data reordering, not other robot dynamics.",
+    "G1 training remains frozen at 4fd6ec2 and was not modified by this slice."
+  ]
+}

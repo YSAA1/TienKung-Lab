@@ -1,0 +1,34 @@
+{
+  "source": "D:\\TienKung-Lab-g1-portability-20260906\\rsl_rl\\rsl_rl\\algorithms\\amp_ppo.py",
+  "raw_expert_first_row": [
+    10.0,
+    -20.0,
+    30.0
+  ],
+  "normalized_expert_first_row": [
+    3.9999499320983887,
+    -5.666635036468506,
+    6.4999799728393555
+  ],
+  "normalizer_update_first_row": [
+    3.9999499320983887,
+    -5.666635036468506,
+    6.4999799728393555
+  ],
+  "grad_penalty_input_first_row": [
+    10.0,
+    -20.0,
+    30.0
+  ],
+  "normalizer_receives_raw": false,
+  "gradient_penalty_receives_discriminator_coordinates": false,
+  "loss": {
+    "value_function": 3.7014291286468506,
+    "surrogate": 1.4901161193847656e-07,
+    "entropy": 2.837877035140991,
+    "amp": 4.336426734924316,
+    "amp_grad_pen": 0.5224769711494446,
+    "amp_policy_pred": -1.8240580558776855,
+    "amp_expert_pred": -1.8240580558776855
+  }
+}

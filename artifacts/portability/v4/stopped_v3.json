@@ -1,0 +1,9 @@
+{
+  "read_time": "2026-09-07T12:52:36.449915+08:00",
+  "reason": "User requested replacement with official G1 locomanipulation asset and new cold-start training; v4 model_0 exists.",
+  "checkpoint_count": 7,
+  "latest_checkpoint": "/home/nubot/phn_ws/t4_train/TienKung-Lab-g1-amp-fix-20260907/logs/g1_loco_teacher_sparse/2026-09-07_10-08-58_g1_lightlp_teacher_v3/model_3000.pt",
+  "interrupt_returncode": 0,
+  "verified_time": "2026-09-07T12:54:05.720889+08:00",
+  "remaining_train_pids": []
+}

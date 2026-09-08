@@ -1,0 +1,75 @@
+{
+  "before": [
+    {
+      "stem": "t4_jog_backward",
+      "frames": 171,
+      "sole_error": 0.18600403115364877,
+      "angle_error": 1.5505773515297334,
+      "velocity_ratio": 0.8335668571763082,
+      "worstframe": 32,
+      "q": [
+        -0.5020519912887365,
+        0.007998372039835363,
+        0.08103646512364023,
+        0.8913350180836702,
+        -0.48389832496107243,
+        0.07756065791506307,
+        0.2123152292198387,
+        -0.18010602027068787,
+        -0.08709035907485388,
+        -0.08725699999999942,
+        -0.8726599999999999,
+        0.2617899999999999
+      ],
+      "sourceq": [
+        -0.5116522908210754,
+        0.015661772340536118,
+        0.1163206398487091,
+        0.9337760210037231,
+        -0.5169823169708252,
+        0.07632235437631607,
+        -0.8415578007698059,
+        -0.21906983852386475,
+        0.03964389115571976,
+        1.9332010746002197,
+        -0.3362538814544678,
+        -0.027969853952527046
+      ]
+    }
+  ],
+  "after": {
+    "duration_s": 5.666666666666667,
+    "speed_mean_m_s": 1.1512211542860475,
+    "forward_speed_mean_m_s": -1.1433670856562468,
+    "speed_p10_p50_p90_m_s": [
+      0.06394808449743732,
+      1.4119002280508761,
+      1.9444090436487917
+    ],
+    "fraction_speed_below_0_1": 0.12941176470588237,
+    "hard_joint_limit_excess_rad": 0.0,
+    "max_joint_velocity_limit_ratio": 0.718916888914173,
+    "lowest_sole_m": -0.0019716075384333285,
+    "highest_sole_m": 0.18593790274272648,
+    "max_root_tilt_rad": 0.2654001645268566,
+    "support_point_speed_proxy_p50_p95_m_s": [
+      0.0310554417360954,
+      0.23282942470894716
+    ],
+    "max_sole_position_error_m": 0.003038306518461677,
+    "max_wrist_position_error_m": 0.029667098233451643,
+    "max_sole_orientation_error_rad": 0.08375840969068225,
+    "motion_class": "jog",
+    "source_start": 0,
+    "source_stop": 170,
+    "source": "t4_jog_backward",
+    "full_stride_cycles": null,
+    "lateral_speed_mean_m_s": -0.03723267632273741,
+    "yaw_rate_mean_rad_s": 0.02130808893986942,
+    "root_vertical_shift_m": -0.03699718545163378,
+    "sha256": "0ccce07ed3658c94bea3c1931bbc8fbb3b9d22c70fb22ef23dfdcbc2784cb7df",
+    "motion_weight": 0.15,
+    "frames": 170
+  },
+  "fix": "Positive knee flexion branch during bounded IK; no output clipping, dropping or retiming."
+}

@@ -10,7 +10,7 @@ import importlib.util
 from pathlib import Path
 
 _ROOT = Path(__file__).resolve().parents[1]
-_COL_PATH = _ROOT / "legged_lab" / "envs" / "t4" / "terrain_columns.py"
+_COL_PATH = _ROOT / "legged_lab" / "locomotion" / "terrain_columns.py"
 _spec = importlib.util.spec_from_file_location("t4_terrain_columns", _COL_PATH)
 cols = importlib.util.module_from_spec(_spec)
 _spec.loader.exec_module(cols)
@@ -19,14 +19,14 @@ _LAYOUT_PATH = _ROOT / "legged_lab" / "terrains" / "stepping_stone_layout.py"
 _layout_spec = importlib.util.spec_from_file_location("t4_stone_layout", _LAYOUT_PATH)
 layout = importlib.util.module_from_spec(_layout_spec)
 _layout_spec.loader.exec_module(layout)
-T4_SPARSE_TERRAIN_PROPORTIONS = layout.T4_SPARSE_TERRAIN_PROPORTIONS
+LIGHTLP_SPARSE_TERRAIN_PROPORTIONS = layout.LIGHTLP_SPARSE_TERRAIN_PROPORTIONS
 
-ENV = _ROOT / "legged_lab" / "envs" / "t4" / "t4_env.py"
+ENV = _ROOT / "legged_lab" / "locomotion" / "env.py"
 REWARDS = _ROOT / "legged_lab" / "mdp" / "rewards.py"
 
 
 def test_sparse_20_col_assignment_matches_isaaclab_formula():
-    names = cols.assign_curriculum_columns(T4_SPARSE_TERRAIN_PROPORTIONS, 20)
+    names = cols.assign_curriculum_columns(LIGHTLP_SPARSE_TERRAIN_PROPORTIONS, 20)
     assert names == [
         "flat",
         "random_rough",
@@ -61,8 +61,8 @@ def test_sparse_20_col_assignment_matches_isaaclab_formula():
 
 
 def test_name_index_is_not_a_column_id():
-    names = cols.assign_curriculum_columns(T4_SPARSE_TERRAIN_PROPORTIONS, 20)
-    sub_names = list(T4_SPARSE_TERRAIN_PROPORTIONS)
+    names = cols.assign_curriculum_columns(LIGHTLP_SPARSE_TERRAIN_PROPORTIONS, 20)
+    sub_names = list(LIGHTLP_SPARSE_TERRAIN_PROPORTIONS)
     assert sub_names.index("stepping_stones") == 5
     assert names[5] == "hurdles"
     assert sub_names.index("raised_pillars") == 6

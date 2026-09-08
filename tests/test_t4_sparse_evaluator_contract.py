@@ -5,8 +5,8 @@ import torch
 
 from legged_lab.scripts.recurrent_policy_eval import evaluate_counterfactual_actions, reset_recurrent_policy
 
-SCRIPT = Path(__file__).resolve().parents[1] / "legged_lab" / "scripts" / "eval_t4_hurdle.py"
-ENV = Path(__file__).resolve().parents[1] / "legged_lab" / "envs" / "t4" / "t4_env.py"
+SCRIPT = Path(__file__).resolve().parents[1] / "legged_lab" / "scripts" / "eval_locomotion.py"
+ENV = Path(__file__).resolve().parents[1] / "legged_lab" / "locomotion" / "env.py"
 PLAY = Path(__file__).resolve().parents[1] / "legged_lab" / "scripts" / "play.py"
 
 
@@ -79,6 +79,9 @@ def test_sparse_progress_evaluator_accepts_both_foothold_terrains():
     assert '"reach_2m_rate"' in source
     assert '"reach_4m_rate"' in source
     assert '"terrain_type": args_cli.terrain_type' in source
+    assert "--disable_student_depth_noise" in source
+    assert "env_cfg.student_depth_noise = False" in source
+    assert '"student_depth_noise"' in source
     assert "--hard_sparse_pits" not in source
     assert "apply_soft_sparse_stage" not in source
     assert "soft_fill = False" in source
@@ -116,10 +119,14 @@ def _layout():
 
 
 def test_pinned_sparse_spawn_keeps_eight_cm_on_the_pad_and_rejects_holes():
+    from functools import partial
+
     layout = _layout()
     from legged_lab.assets.t4.constants import T4_NOMINAL_FEET_Y_DISTANCE
 
-    assert layout.PINNED_SPARSE_SPAWN_FEET_Y_DISTANCE == pytest.approx(T4_NOMINAL_FEET_Y_DISTANCE)
+    geometry = dict(feet_y_distance=T4_NOMINAL_FEET_Y_DISTANCE, foot_size=layout.LIGHTLP_FOOT_SCAN_SIZE)
+    layout.resolve_pinned_sparse_spawn = partial(layout.resolve_pinned_sparse_spawn, **geometry)
+    layout.pinned_spawn_stays_on_platform = partial(layout.pinned_spawn_stays_on_platform, **geometry)
     centered = layout.resolve_pinned_sparse_spawn(0.0, 0.0, terrain_type="stepping_stones")
     assert centered["y_offset_m"] == 0.0
     assert centered["yaw_rad"] == 0.0
@@ -153,12 +160,29 @@ def test_pinned_sparse_spawn_keeps_eight_cm_on_the_pad_and_rejects_holes():
     assert unset_y["y_offset_m"] == 0.0
 
 
+def test_pinned_sparse_spawn_uses_declared_robot_geometry():
+    layout = _layout()
+    for stance in (0.20, 0.233, 0.50):
+        assert layout.resolve_pinned_sparse_spawn(
+            0.08, 8.0, terrain_type="stepping_stones", feet_y_distance=stance, foot_size=(0.16, 0.08)
+        ) is not None
+    for stance, sole in ((1.8, (0.16, 0.08)), (0.20, (1.8, 0.08))):
+        with pytest.raises(ValueError, match="would leave"):
+            layout.resolve_pinned_sparse_spawn(
+                0.0, 0.0, terrain_type="stepping_stones", feet_y_distance=stance, foot_size=sole
+            )
+    with pytest.raises(TypeError, match="feet_y_distance"):
+        layout.resolve_pinned_sparse_spawn(0.0, 0.0, terrain_type="stepping_stones")
+
+
 def test_sparse_evaluator_pins_spawn_only_when_offset_or_yaw_is_set():
     source = SCRIPT.read_text()
 
     assert "--spawn_y_offset_m" in source
     assert "--spawn_yaw_deg" in source
     assert "resolve_pinned_sparse_spawn(" in source
+    assert "feet_y_distance=env_cfg.robot_spec.nominal_feet_distance" in source
+    assert "foot_size=env_cfg.scene.foot_scanner.size" in source
     assert 'params["pose_range"] = pinned_spawn["pose_range"]' in source
     assert 'params["velocity_range"] = pinned_spawn["velocity_range"]' in source
     assert '["position_range"] = pinned_spawn["joint_position_range"]' in source
@@ -255,7 +279,9 @@ def test_play_recording_reads_the_terminal_snapshot_contract():
 def test_terminal_snapshot_includes_impact_diagnostics():
     source = ENV.read_text()
 
-    assert 'self.diagnostic_contact_body_names = ("Trunk", "Shank_Left", "Shank_Right")' in source
+    assert "self.diagnostic_contact_body_names = self.cfg.robot_spec.diagnostic_bodies" in source
+    from legged_lab.assets.t4.locomotion import T4_LOCOMOTION
+    assert T4_LOCOMOTION.diagnostic_bodies == ("Trunk", "Shank_Left", "Shank_Right")
     assert "self.terminal_root_lin_vel_w[env_ids]" in source
     assert "self.terminal_root_accel_mps2[env_ids]" in source
     assert "self.terminal_tilt_rad[env_ids]" in source

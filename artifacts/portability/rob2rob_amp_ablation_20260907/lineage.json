@@ -1,0 +1,25 @@
+{
+  "created_at": "2026-09-07T18:17:04.387876+08:00",
+  "runtime_source_commit": "c125f74d50b9d1aef70ae6ce8bd8b3fcb7b26d52",
+  "verified_runtime_files": 204,
+  "train_sha256": "4fe4f8a41106e368a65d54906bb6b0edc0113c60ed4d1decbefe736950b35250",
+  "data_manifest_sha256": "83525a7a1630a32f43431c32cd6a0baa953944d53251de8ee83b32901306bbec",
+  "control": "/home/nubot/phn_ws/t4_train/TienKung-Lab-g1-unitree-v6-20260907/artifacts/portability/reset_xy_ablation_20260907/control",
+  "treatment": "/home/nubot/phn_ws/t4_train/TienKung-Lab-g1-unitree-v6-20260907/artifacts/portability/rob2rob_amp_ablation_20260907/rob2rob",
+  "seed": 42,
+  "num_envs": 2048,
+  "updates": 4000,
+  "steps_per_env": 24,
+  "cold_start": true,
+  "difference": "AMP expert dataset only; both reset root velocities remain zero.",
+  "shared_class_probabilities": {
+    "walk_forward": 0.625,
+    "run": 0.375
+  },
+  "limitations": [
+    "Single seed exploratory data ablation.",
+    "Control starts earlier; compare equal updates/samples.",
+    "Two short retargeted clips; no dynamic-trackability guarantee."
+  ],
+  "tensorboard": "http://100.100.188.39:8037/#scalars"
+}

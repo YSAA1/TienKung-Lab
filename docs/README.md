@@ -1,15 +1,16 @@
-# T4 文档入口
+# 运动训练文档入口
 
-本 checkout 在上游 TienKung-Lab 上做 **T4 27DoF** 感知走跑与技能。
+本 checkout 在上游 TienKung-Lab 上维护共享 AMP/LightLP 运动算法，以及 **T4 27DoF、Unitree G1 29DoF** 的独立机器人配置。共享教师、深度学生运行时与参考动作跟踪按算法组织；[新机器人接入方法](runbooks/robot-locomotion-adapter.md) 是代码边界入口。
 先读本文，再进代码。`docs/archive/` 与 `docs/research/` **不是**开训或接票权威。
 
 ## 当前工作面
 
-当前唯一执行轨道是翻箱 G1/G2。S12 梅花桩 teacher 与 GRU 深度学生训练已完成仿真验收；后续真机或更严格落脚验收需要另开计划。
+当前执行轨道：宇树 G1 越障老师（共享 LightLP 稀疏地形），以及 T4 翻箱 G1/G2 阶段。T4 S12 老师 plant 重训暂停。表示先行学生 `model_13999` 是 Isaac 对照候选，不是部署包。
 
 | 轨道 | 现在做什么 | 执行计划 | 规格 |
 | --- | --- | --- | --- |
-| 梅花桩 | active：保留已验收的 Phase B `model_5999.pt`；从该完整 checkpoint 开 targeted robustness FT 新 lineage，补动作/执行器/深度边界与圆桩制造误差域。旧 Phase C 仍跳过 | [targeted FT 决策](../artifacts/diagnostics/s12_targeted_ft_decision.md)；[门控学生归档计划](archive/plans/2026-08-26--t4-sparse-s12-gated-dagger-joint-ft-plan.md) | [稀疏规格](specs/2026-08-15--t4-stepping-stones-and-hurdle-stable.md) |
+| 梅花桩 | paused：G1 越障老师优先。T4 plant DR 计划仍在 | [老师 plant 重训](plans/2026-09-02--t4-s12-teacher-plant-retrain-plan.md) | [表示先行蒸馏](specs/2026-09-01--t4-s12-repr-first-distill.md)（学生对照） |
+| Unitree G1 越障 teacher | G1 portability 里程碑已合并回 t4-train；核心修复B30000在GPU0/2、TB8042；VITAL起步配方实验在GPU1/3、TB8043 | [当前实验与核心修复计划](plans/2026-09-07--robot-neutral-locomotion.md) | 实验仅改动作变化惩罚、终止与步态门控；能力仍需 evaluator JSON、lineage 和连续回放 |
 | 翻箱 | G1 跟踪专家 → G2 heightscan 技能（zhuoqun）。**G2 学生与 G3 合并（走跑+翻箱成一条策略）等 G2 过箱后再开。** | [翻箱 recovery](plans/2026-08-15--t4-vault-g1-g2-recovery-plan.md) | [合并规格](specs/2026-08-13--t4-vault-loco-merge.md) |
 
 运行时切片与机器占用：`.harness/work_index.md`、`.harness/state.md`。
@@ -31,7 +32,8 @@
 
 | 项 | 真值 |
 | --- | --- |
-| 关节序 | `legged_lab/assets/t4/constants.py::T4_JOINT_NAMES` |
+| T4 关节序 | `legged_lab/assets/t4/constants.py::T4_JOINT_NAMES` |
+| Unitree G1 关节序 | `legged_lab/assets/unitree_g1/constants.py::G1_29DOF_JOINT_NAMES` |
 | 默认 Stage E Actor | 1155D（本体史 10×96 + 前向 scan 195）。翻箱 G2 / 旧学生仍吃这个。 |
 | Sparse teacher Actor | 1937D（scan×5 + 接触 2）。独立任务 `t4_loco_teacher_sparse`。 |
 | 足底 scan | 只进 Critic / 奖励，不上 Actor、不上实机 |
@@ -61,8 +63,8 @@
 | --- | --- |
 | 本文、`AGENTS.md` | 入口。不写 session 流水。 |
 | `.harness/` | 工作面索引与短状态。 |
-| `docs/specs/` | 已批准行为 / 架构。half-living 的文头会标明。 |
-| `docs/plans/` | **只放现行执行计划**（梅花桩 S12 + 部署向 RTX 蒸馏、翻箱 G1/G2）。 |
+| `docs/specs/` | 已批准行为 / 架构。文头 `Status: draft` 的不是执行权威。现行学生配方是 [表示先行蒸馏](specs/2026-09-01--t4-s12-repr-first-distill.md)（已批准）。 |
+| `docs/plans/` | **只放现行执行计划**（G1 越障老师、暂停的梅花桩 S12 plant 重训、翻箱 G1/G2）。 |
 | `docs/runbooks/` | 现在还能照着跑的操作。 |
 | `docs/research/` | 调研与论文摘录，非权威。 |
 | `docs/archive/` | 已完成或已取代的执行纸（含已交付的学生成本/RTX 切片）。 |

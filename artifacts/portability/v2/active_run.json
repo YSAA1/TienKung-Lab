@@ -1,0 +1,7 @@
+{
+  "run": "/home/nubot/phn_ws/t4_train/TienKung-Lab-g1-portability-20260906/logs/g1_loco_teacher_sparse/2026-09-07_01-35-42_g1_lightlp_amp_full_levels_v2",
+  "session": "g1-full-levels-v2",
+  "tensorboard": "http://100.100.188.39:8031/#scalars",
+  "tensorboard_session": "g1-full-levels-tb",
+  "time": 1788716241.9001873
+}

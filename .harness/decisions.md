@@ -1,4 +1,34 @@
-# Decisions
+- 2026-09-06：同配方再冷启动无用。探针已证 collapse 无漏杀；`model_39999` 连续地形会走、梅花桩不会。用户否决「不改配方再开一趟」。已停 `2026-09-06_10-08-08`。下一刀必须改课表/地形/奖励之一，不能再烧相同 40k。
+- 2026-09-06：g1term 40k 后的蹲坐/摔倒**不是**终止漏洞。策略踏石 + 随机踏石 + 随机平地三条单环境 trace 都是 clearance < 0.20 当帧 reset。plantfix 那种 16 s 坐下混时长已经堵住。梅花桩失败是 G1 折腰后 2–4 s 内走不完 2 m，不是漏 reset。不改 0.20 / 63° / `torso_link`。40k 僵尸已杀并冷启动同配方；不 resume `model_39999`。
+- 2026-09-04：G1 终止不再当 T4 Trunk-only。mjlab G1 velocity：`fell_over` 70°，无 torso illegal_contact。unitree_rl_lab G1 29DoF：`root_height_below_minimum=0.2`、`bad_orientation=0.8`、非踝 `undesired_contacts`。稀疏用地形相对支撑脚的同一 0.2 m（世界坐标 0.2 会误杀下楼）。正式 run `g1_sparse_teacher_g1term`。不续 plantfix。v8 的 0.40 m 不是这份合同。
+- 2026-09-04：`Reset/oob=0` + `ep_len≈900` 不是学会走，是 horizon timeout 混时长。plantfix `model_6000` 踏石回放 16 s 零 reset：pelvis z 0.77→0.17（~0.7 s），tilt max 42°，`torso_link`/`knee` 接触全程 0 N。T4 `Trunk` 是骨盆+躯干一体的 10×16×34 cm 盒；G1 `torso_link` 只是腰 3 轴之上的胸胶囊。已改用 unitree_rl_lab G1 的 0.2 m 根高度终止（相对支撑脚），不续 plantfix。
+- 2026-09-04：G1 不改 T4 稀疏训练配方。v8–v11 的 collapse / 锁 flat / 放宽阈值撤回。`model_21500` 是 S11b `19000` + 5k S12（`resume=true` / `load_checkpoint=model_19000.pt`）；S6/S10/S11 才是混合 LightLP 从 0。Stage E 1155D 没装进 21500。正式 run `g1_sparse_teacher_plantfix`：只保留 G1 名映射 + delay 关；硬接触仅 `torso_link`。
+- 2026-09-03：G1 蹲坐不算失败。v6 回放 max tilt 49°、torso/knee 接触 0 N、accel 24<40，LightLP 63°/1% 一次都不触发；pelvis-foot 高度 0.16 m。v8 加 `collapse_reset_pelvis_above_feet_m=0.40` + pelvis 接触终止。不改 T4 的 63°/1%。不续 v7。**2026-09-04 覆盖：collapse 不是 T4 配方，正式 lineage 拿掉。**
+- 2026-09-03：G1 v6 不续。Isaac 回放 `model_15000` 在 d=0 踏石 ~1.2 s 蹲塌，z 0.76→0.17，12 s 无 reset；TB 课表锁在 level≈1.3。根因是冷启动套了 T4 **还没开** 的 plant DR（delay 0–2 + 执行器抖动），而会走的 T4 稀疏老师是 S11b 热启且 `action_delay=False`。v7 只关掉这两项，碰撞/MIMIC/AMP/mirror/稀疏 MDP 不动。不续 v6。
+- 2026-09-02：G1 Isaac plant 碰撞必须从 `xmls/g1_actuated.xml` 同步到 URDF，不能直接用官方 URDF 的 mesh/5mm 球碰撞。脚本 `sync_urdf_collision_from_mjcf.py` 为真值；改 MJCF 后重跑 sync。开 `g1_sparse_teacher_v6`（含 mirror symmetry），不续 v4/v5 mesh 碰撞 lineage。
+- 2026-09-02：不用 Isaac Lab 自带 `G1_CFG`/`g1_minimal.usd`（旧 G1，关节对不上 29DoF/LAFAN）。也不手改 URDF 碰撞：宇树官方 29DoF URDF 同样是 5 mm 球脚。plant 只改成宇树 MIMIC 站立姿，开 v4，不续 v3。
+- 2026-09-02：G1 老师训不起来的根因不是 TB 记错、也不是 v2/v3 自碰撞。v1 才是 300 Nm 手臂 + 自碰打到 `torso` 终止。现行死亡时钟是站立姿态穿地 18 mm + URDF 5 mm 球脚，被 LightLP accel 1 s 门切掉。下一刀改 plant（碰撞 primitive / 匹配 MJCF 蹲姿或抬出生高度），不放开 `LIGHTLP_ACCEL_LIMIT`，不续未修 plant 的 v3。
+- 2026-09-02：网上 G1 AMP 走跑数据换上。用 LAFAN1 G1 retarget 镜像 `lvhaidong/LAFAN1_Retargeting_Dataset` 的 walk/run CSV，70D 专家 + `AmpOnPolicyRunner`。不把 T4 66D 专家喂给 G1，不加舞蹈/格斗 clip。v2 不续，开 `g1_sparse_teacher_v3`。
+- 2026-09-02：G1 越障老师第一趟 `g1_sparse_teacher` 在 ~250 iter 崩：ep_len 50→2，`Reset/torso`→0.998。根因是 G1 执行器 `effort_limit_sim=300`（URDF 手臂 25 Nm）+ 自碰撞打到终止躯干。已改 URDF 力矩、关自碰撞，并加上 delay 0–2 与执行器 DR 后重开，不续崩掉的 run。
+- 2026-09-02：G1 老师必须跑现行越障任务（LightLP 稀疏地形 / `T4LocoEnv`），不是 TienKung `walk`。同日晚间已换上 LAFAN1 走跑 AMP，本条「PPO only」作废。T4 plant 重训继续暂停。
+- 2026-09-02：MuJoCo PD/摩擦/足底对齐早已落地且楼梯能过；稀疏上老师 21500 仍 7–8 s 摔。下一刀从 21500 热启老师 plant DR（delay+执行器），不重做对齐、不加地形种类。计划 `docs/plans/2026-09-02--t4-s12-teacher-plant-retrain-plan.md`。
+- 2026-09-02：`s12_repr_first` `model_13999` 过 Isaac hard 稀疏门，但 MuJoCo 踏石/圆桩仍 8 s 内摔。用户确认不上真机跑桩。本切片不修 plant；deploy-only 只是导出合同，不是部署许可。
+- 2026-09-01：knowledge cleanup。根目录 planning 草稿与 `artifacts/work/` 一次性编排脚本删除。`docs/specs/2026-09-01--t4-s12-repr-first-distill.md` 保持 draft，不顶替 08-29 执行 plan。训练侧叠代 AlgCfg 不在 cleanup 里删。
+- 2026-09-01：nubot 开 `s12_repr_first`。机器当时只有 3 张 4090，按既有 PhysX 经验单卡 GPU2×256，不用 4 卡 distributed。第一次起训因 runner `log()` 遮蔽 `str` 在第一 iter 崩；第二次探针累计写在 `transition.clear()` 之后，iter 100 没有 Recon tag，已杀并重开。现行 logdir `2026-09-01_09-39-29_s12_repr_first`。
+- 2026-09-01：表示先行阶段 1 review READY。对抗审查（Claude）先标 CONDITIONAL：动作段 resume 时 `attach` 在 `load` 之后，课表不回贴。已改为 `attach_repr_runtime` 在 phase=action 时回贴课表，lineage 在 attach 之后按 `_repr_state` 写。named pytest 15/15 与 focused `141 passed, 1 skipped`。未开 nubot，未宣称 hard 24/32。
+- 2026-09-01：用户批准表示先行 Spec 并要求 plan+implement。打破轴：冻老师/冻部署观测；老师开车学分层 scan；一条 run 按 P3 自动切 DAgger；本 run `pg_coef=0`；不热启 13500。旧 `s12_final_main` 计划 superseded。
+- 2026-08-31：合同 A 诊断：`13500` 评测关掉深度 hold/delay/scale/dropout 后，hard 踏石 18→16、圆桩 23→25，达不到「噪声盖住已有技能」。下一刀若改合同，改蒸馏标签/观测怎么学，不减部署噪声、不开 FT。
+- 2026-08-31：用户同意分层，不再摇摆。后改主攻老师复现，plant 搁置。
+- 2026-08-31：用户确认 10k 续训无效并下令停止。已杀 tmux `t4-s12-final-main-from14999-10k`，停在 `model_16500.pt`，不评、不续。当前学生产物锁 `model_13500.pt`。8027 TB 仍指向该死 run，需要可再关。
+- 2026-08-31：13500 residual FT 已 student-only 评完。终点 `model_999`：踏石 easy/hard strict 26/32、2/32，圆桩 24/32、11/32，相对 parent 13500（32/18、30/23）全部掉超过 4/32。中点 `model_500` 踏石 hard 12/32（-6）同样过 drop 门。两趟 residual FT 都弃用，不续。蒸馏产物仍以 `model_13500.pt` 为准。
+- 2026-08-31：用户覆盖 15k 主蒸馏预算，要求从 `model_14999.pt` 真 resume 再续 10k。实现：`train_t4_sparse_depth_student.py` 在加载老师之后 `--resume` 整包加载学生/GRU/critic/Adam/`num_updates`（mix 保持 0、pg 保持 0.2），与 warmstart 互斥。新 logdir `s12_final_main_from14999_10k`，tmux `t4-s12-final-main-from14999-10k`，GPU0×256。这不是 residual FT，也不改老师 MDP。
+- 2026-08-31：14999 residual FT 终点 `model_999.pt` student-only 相对 parent 14999 明显回退（hard 踏石 12→0、圆桩 easy 31→4、圆桩 hard 18→1）。按计划 drop 规则弃用，不续这趟 FT。
+- 2026-08-31：用户授权从 `model_13500.pt` 重开 residual FT。14999 那趟当对照已跑满（终点 `model_999.pt`）。新 lineage：tmux `t4-s12-residual-ft-13500`，logdir `2026-08-31_13-54-56_s12_residual_ft_from13500`，parent SHA `a8420d602d9c3bdf9aa8b6ba42f02244469b4d148968cf714a710c4dd18ea598`，同一 `--mode residual_ft` 配方，GPU1×256。
+- 2026-08-31：`s12_final_main` 跑满 `model_14999.pt`。同一 evaluator（32 env/32 ep，`vx=0.8`，seed 42，spawn 未钉）评最新 ckpt：flat/hurdles easy 32/32；hurdles hard strict 4/32、reach2 30/32；stones easy 25/32、hard 12/32；pillars easy 31/32、hard 18/32。相对 `model_13500` 的 hard 稀疏（18/32、23/32）终点更差。当时用户要求评最新后开 FT，因此第一趟 residual FT parent 用 14999；同日用户改口从 13500 重开。
+- 2026-08-31：主蒸馏之后的用户可见 FT 改为 `--mode residual_ft`（1k、`teacher_mix=0`、critic warmup 200、`pg` 0→0.5/400、BC=0.5、recon=0.5、fixed LR `3e-5`、hard 踏石/圆桩 `0.50/min_level=6` 且比例 0.30/0.30）。这是 LightLP 式任务残差 FT，不是 plant `final_ft`，不是 Phase C `recon=0.25`，也不是 D3 `pg=1`+BC=0。主蒸馏和老师课表仍是 `0.10 / None`。15k 主 run 不 resume；parent 必须是完整 student ckpt + teacher manifest + capability-gate JSON。
+- 2026-08-29：nubot 开 `s12_final_main` 时 GPU0 句柄错误不可用，GPU1 被他人 `yhy_qh_g095_full` 占用。GPU2 上有本仓库卡住 22h 的 `play.py` 20s replay（PID 1056233），可杀。最大多卡是 GPU2+GPU3，每卡 256。
+- 2026-08-29：审核后改写最终计划。主蒸馏必须含小权 PPO（Phase A 纯 DAgger hard 只有 4/32、5/32，Phase B 加上 PPO 才到 18/32、27/32）；PPO 不挪到 FT。15k 是预算不是典礼，默认日程 mix 2k / critic 200 / pg 0→0.2，人工看 6k/10k/15k。主蒸馏全程 fixed LR `1e-4`（一条 run 不能中途改成 Phase B 的 `3e-5`）。FT 改成可选 plant 适配（延迟+执行器，无制造误差），不是噪声 FT，也不是 Phase C。默认单卡 GPU2 × 256，不默认 `--distributed`。学生课表改回老师 `0.10 / min_level=None`，放弃现行 `0.50 / min_level=6`。
+- 2026-08-29：用户否决过度设计的自动 supervisor。S12 最终流程改为两条人工命令：一次 teacher-consistent 全地形主蒸馏 + 一次预先固定的低压力 FT；不自动判断、不自动终止。学生必须复用 teacher 的 flat/rough/boxes/wave/hurdles/slope/stairs/stepping_stones/raised_pillars terrain 合同。
 
 - 2026-08-29：S12 GRU 学生不重新训练。修复 evaluator 的 recurrent hidden 污染后，Phase B `model_5999.pt` 已超过 easy/hard 门并有连续回放、lineage、deploy-only 推理验证。选它作为最终候选；跳过高风险且无必要的 Phase C `pg=0.5`。
 

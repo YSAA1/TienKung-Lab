@@ -6,6 +6,12 @@ logs
 VITAL_Lab/
 zl_deploy/
 artifacts/test
+artifacts/tmp_*.py
+artifacts/work/
+/findings.md
+/progress.md
+/task_plan.md
+artifacts/__pycache__/
 artifacts/checkpoints/t4_depth_student_latest.pt
 artifacts/checkpoints/t4_depth_student_latest*.scp.*
 artifacts/motion_review/*.mp4

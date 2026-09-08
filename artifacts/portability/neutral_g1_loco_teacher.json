@@ -1,0 +1,316 @@
+{
+  "recipe": {
+    "random_fraction": 0.1,
+    "random_min": null,
+    "random_max": null,
+    "terrain_rows": 10,
+    "amp_decay_start": 0.3,
+    "amp_min_scale": 0.3,
+    "amp_reward_coef": 0.3,
+    "amp_task_reward_lerp": 0.7,
+    "robot_spec": "g1",
+    "teacher_base": "legged_lab.locomotion.teacher_cfg.LightLPLocomotionEnvCfg"
+  },
+  "sampled_random_levels": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9
+  ],
+  "realized_random_fraction": 0.09796875,
+  "amp_scales_by_level": [
+    1.0,
+    1.0,
+    1.0,
+    0.9666666984558105,
+    0.855555534362793,
+    0.7444444298744202,
+    0.6333333253860474,
+    0.5222222208976746,
+    0.41111111640930176,
+    0.30000001192092896
+  ],
+  "runtime_mirror_involution": true,
+  "task": "g1_loco_teacher",
+  "actor_width": 1997,
+  "critic_width": 2076,
+  "amp_width": 70,
+  "policy_joint_names": [
+    "left_hip_pitch_joint",
+    "left_hip_roll_joint",
+    "left_hip_yaw_joint",
+    "left_knee_joint",
+    "left_ankle_pitch_joint",
+    "left_ankle_roll_joint",
+    "right_hip_pitch_joint",
+    "right_hip_roll_joint",
+    "right_hip_yaw_joint",
+    "right_knee_joint",
+    "right_ankle_pitch_joint",
+    "right_ankle_roll_joint",
+    "waist_yaw_joint",
+    "waist_roll_joint",
+    "waist_pitch_joint",
+    "left_shoulder_pitch_joint",
+    "left_shoulder_roll_joint",
+    "left_shoulder_yaw_joint",
+    "left_elbow_joint",
+    "left_wrist_roll_joint",
+    "left_wrist_pitch_joint",
+    "left_wrist_yaw_joint",
+    "right_shoulder_pitch_joint",
+    "right_shoulder_roll_joint",
+    "right_shoulder_yaw_joint",
+    "right_elbow_joint",
+    "right_wrist_roll_joint",
+    "right_wrist_pitch_joint",
+    "right_wrist_yaw_joint"
+  ],
+  "policy_to_sim_joint_ids": [
+    0,
+    3,
+    6,
+    9,
+    13,
+    17,
+    1,
+    4,
+    7,
+    10,
+    14,
+    18,
+    2,
+    5,
+    8,
+    11,
+    15,
+    19,
+    21,
+    23,
+    25,
+    27,
+    12,
+    16,
+    20,
+    22,
+    24,
+    26,
+    28
+  ],
+  "t4_action_contract_unchanged": true,
+  "joints": {
+    "left_hip_pitch_joint": {
+      "kp": 200.0,
+      "effort_limit": 139.0,
+      "action_scale_rad": 0.17374999821186066,
+      "old_unit_action_torque_fraction": 0.35971224308013916,
+      "new_unit_action_torque_fraction": 0.25
+    },
+    "right_hip_pitch_joint": {
+      "kp": 200.0,
+      "effort_limit": 139.0,
+      "action_scale_rad": 0.17374999821186066,
+      "old_unit_action_torque_fraction": 0.35971224308013916,
+      "new_unit_action_torque_fraction": 0.25
+    },
+    "waist_yaw_joint": {
+      "kp": 200.0,
+      "effort_limit": 88.0,
+      "action_scale_rad": 0.10999999940395355,
+      "old_unit_action_torque_fraction": 0.5681818127632141,
+      "new_unit_action_torque_fraction": 0.25
+    },
+    "left_hip_roll_joint": {
+      "kp": 150.0,
+      "effort_limit": 139.0,
+      "action_scale_rad": 0.2316666692495346,
+      "old_unit_action_torque_fraction": 0.26978418231010437,
+      "new_unit_action_torque_fraction": 0.25
+    },
+    "right_hip_roll_joint": {
+      "kp": 150.0,
+      "effort_limit": 139.0,
+      "action_scale_rad": 0.2316666692495346,
+      "old_unit_action_torque_fraction": 0.26978418231010437,
+      "new_unit_action_torque_fraction": 0.25
+    },
+    "waist_roll_joint": {
+      "kp": 150.0,
+      "effort_limit": 35.0,
+      "action_scale_rad": 0.05833333358168602,
+      "old_unit_action_torque_fraction": 1.0714285373687744,
+      "new_unit_action_torque_fraction": 0.25
+    },
+    "left_hip_yaw_joint": {
+      "kp": 150.0,
+      "effort_limit": 88.0,
+      "action_scale_rad": 0.14666666090488434,
+      "old_unit_action_torque_fraction": 0.4261363744735718,
+      "new_unit_action_torque_fraction": 0.25
+    },
+    "right_hip_yaw_joint": {
+      "kp": 150.0,
+      "effort_limit": 88.0,
+      "action_scale_rad": 0.14666666090488434,
+      "old_unit_action_torque_fraction": 0.4261363744735718,
+      "new_unit_action_torque_fraction": 0.25
+    },
+    "waist_pitch_joint": {
+      "kp": 150.0,
+      "effort_limit": 35.0,
+      "action_scale_rad": 0.05833333358168602,
+      "old_unit_action_torque_fraction": 1.0714285373687744,
+      "new_unit_action_torque_fraction": 0.25
+    },
+    "left_knee_joint": {
+      "kp": 200.0,
+      "effort_limit": 139.0,
+      "action_scale_rad": 0.17374999821186066,
+      "old_unit_action_torque_fraction": 0.35971224308013916,
+      "new_unit_action_torque_fraction": 0.25
+    },
+    "right_knee_joint": {
+      "kp": 200.0,
+      "effort_limit": 139.0,
+      "action_scale_rad": 0.17374999821186066,
+      "old_unit_action_torque_fraction": 0.35971224308013916,
+      "new_unit_action_torque_fraction": 0.25
+    },
+    "left_shoulder_pitch_joint": {
+      "kp": 40.0,
+      "effort_limit": 25.0,
+      "action_scale_rad": 0.15625,
+      "old_unit_action_torque_fraction": 0.4000000059604645,
+      "new_unit_action_torque_fraction": 0.25
+    },
+    "right_shoulder_pitch_joint": {
+      "kp": 40.0,
+      "effort_limit": 25.0,
+      "action_scale_rad": 0.15625,
+      "old_unit_action_torque_fraction": 0.4000000059604645,
+      "new_unit_action_torque_fraction": 0.25
+    },
+    "left_ankle_pitch_joint": {
+      "kp": 20.0,
+      "effort_limit": 35.0,
+      "action_scale_rad": 0.4375,
+      "old_unit_action_torque_fraction": 0.1428571492433548,
+      "new_unit_action_torque_fraction": 0.25
+    },
+    "right_ankle_pitch_joint": {
+      "kp": 20.0,
+      "effort_limit": 35.0,
+      "action_scale_rad": 0.4375,
+      "old_unit_action_torque_fraction": 0.1428571492433548,
+      "new_unit_action_torque_fraction": 0.25
+    },
+    "left_shoulder_roll_joint": {
+      "kp": 40.0,
+      "effort_limit": 25.0,
+      "action_scale_rad": 0.15625,
+      "old_unit_action_torque_fraction": 0.4000000059604645,
+      "new_unit_action_torque_fraction": 0.25
+    },
+    "right_shoulder_roll_joint": {
+      "kp": 40.0,
+      "effort_limit": 25.0,
+      "action_scale_rad": 0.15625,
+      "old_unit_action_torque_fraction": 0.4000000059604645,
+      "new_unit_action_torque_fraction": 0.25
+    },
+    "left_ankle_roll_joint": {
+      "kp": 20.0,
+      "effort_limit": 35.0,
+      "action_scale_rad": 0.4375,
+      "old_unit_action_torque_fraction": 0.1428571492433548,
+      "new_unit_action_torque_fraction": 0.25
+    },
+    "right_ankle_roll_joint": {
+      "kp": 20.0,
+      "effort_limit": 35.0,
+      "action_scale_rad": 0.4375,
+      "old_unit_action_torque_fraction": 0.1428571492433548,
+      "new_unit_action_torque_fraction": 0.25
+    },
+    "left_shoulder_yaw_joint": {
+      "kp": 40.0,
+      "effort_limit": 25.0,
+      "action_scale_rad": 0.15625,
+      "old_unit_action_torque_fraction": 0.4000000059604645,
+      "new_unit_action_torque_fraction": 0.25
+    },
+    "right_shoulder_yaw_joint": {
+      "kp": 40.0,
+      "effort_limit": 25.0,
+      "action_scale_rad": 0.15625,
+      "old_unit_action_torque_fraction": 0.4000000059604645,
+      "new_unit_action_torque_fraction": 0.25
+    },
+    "left_elbow_joint": {
+      "kp": 40.0,
+      "effort_limit": 25.0,
+      "action_scale_rad": 0.15625,
+      "old_unit_action_torque_fraction": 0.4000000059604645,
+      "new_unit_action_torque_fraction": 0.25
+    },
+    "right_elbow_joint": {
+      "kp": 40.0,
+      "effort_limit": 25.0,
+      "action_scale_rad": 0.15625,
+      "old_unit_action_torque_fraction": 0.4000000059604645,
+      "new_unit_action_torque_fraction": 0.25
+    },
+    "left_wrist_roll_joint": {
+      "kp": 20.0,
+      "effort_limit": 25.0,
+      "action_scale_rad": 0.3125,
+      "old_unit_action_torque_fraction": 0.20000000298023224,
+      "new_unit_action_torque_fraction": 0.25
+    },
+    "right_wrist_roll_joint": {
+      "kp": 20.0,
+      "effort_limit": 25.0,
+      "action_scale_rad": 0.3125,
+      "old_unit_action_torque_fraction": 0.20000000298023224,
+      "new_unit_action_torque_fraction": 0.25
+    },
+    "left_wrist_pitch_joint": {
+      "kp": 20.0,
+      "effort_limit": 13.399999618530273,
+      "action_scale_rad": 0.16749998927116394,
+      "old_unit_action_torque_fraction": 0.3731343448162079,
+      "new_unit_action_torque_fraction": 0.25
+    },
+    "right_wrist_pitch_joint": {
+      "kp": 20.0,
+      "effort_limit": 13.399999618530273,
+      "action_scale_rad": 0.16749998927116394,
+      "old_unit_action_torque_fraction": 0.3731343448162079,
+      "new_unit_action_torque_fraction": 0.25
+    },
+    "left_wrist_yaw_joint": {
+      "kp": 20.0,
+      "effort_limit": 13.399999618530273,
+      "action_scale_rad": 0.16749998927116394,
+      "old_unit_action_torque_fraction": 0.3731343448162079,
+      "new_unit_action_torque_fraction": 0.25
+    },
+    "right_wrist_yaw_joint": {
+      "kp": 20.0,
+      "effort_limit": 13.399999618530273,
+      "action_scale_rad": 0.16749998927116394,
+      "old_unit_action_torque_fraction": 0.3731343448162079,
+      "new_unit_action_torque_fraction": 0.25
+    }
+  },
+  "terminal_snapshots_checked": 113,
+  "terminal_distinct_from_reset": 113,
+  "zero_action_min_clearance_m": 0.20169173181056976,
+  "finite_steps": 240
+}

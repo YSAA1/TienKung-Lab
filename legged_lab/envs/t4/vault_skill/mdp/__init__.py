@@ -2,9 +2,9 @@
 
 from isaaclab.envs.mdp import *  # noqa: F401, F403
 
-from legged_lab.envs.t4.vault_mimic.mdp.commands import *  # noqa: F401, F403
-from legged_lab.envs.t4.vault_mimic.mdp.events import *  # noqa: F401, F403
-from legged_lab.envs.t4.vault_mimic.mdp.rewards import *  # noqa: F401, F403
-from legged_lab.envs.t4.vault_mimic.mdp.terminations import *  # noqa: F401, F403
+from legged_lab.motion_tracking.mdp.commands import *  # noqa: F401, F403
+from legged_lab.motion_tracking.mdp.events import *  # noqa: F401, F403
+from legged_lab.motion_tracking.mdp.rewards import *  # noqa: F401, F403
+from legged_lab.motion_tracking.mdp.terminations import *  # noqa: F401, F403
 
 from .observations import *  # noqa: F401, F403

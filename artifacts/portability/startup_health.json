@@ -1,0 +1,70 @@
+{
+  "checked_at_utc": "2026-09-06T16:22:15.856428+00:00",
+  "iterations_tail": [
+    [
+      "66",
+      "10000"
+    ],
+    [
+      "67",
+      "10000"
+    ],
+    [
+      "68",
+      "10000"
+    ]
+  ],
+  "checkpoints": [
+    {
+      "path": "/home/nubot/phn_ws/t4_train/TienKung-Lab-g1-portability-20260906/logs/g1_loco_teacher_sparse/2026-09-07_00-18-15_g1_sparse_teacher_portable_v1/model_0.pt",
+      "bytes": 38665642
+    }
+  ],
+  "errors": [],
+  "gpu": "index, memory.used [MiB], utilization.gpu [%]\n0, 47 MiB, 0 %\n1, 8674 MiB, 72 %\n2, 406 MiB, 6 %\n3, 8504 MiB, 66 %\n",
+  "tmux": "g1-portable-train: 1 windows (created Mon Sep  7 00:17:43 2026)\n",
+  "checkpoint_finite": true,
+  "checkpoint_iteration": 0,
+  "scalars": {
+    "Train/mean_reward": {
+      "step": 69,
+      "value": -0.35140788555145264
+    },
+    "Train/mean_episode_length": {
+      "step": 69,
+      "value": 45.40999984741211
+    },
+    "Loss/learning_rate": {
+      "step": 69,
+      "value": 5.0625003495952114e-05
+    },
+    "Loss/value_function": {
+      "step": 69,
+      "value": 0.026277197524905205
+    },
+    "Policy/mean_noise_std": {
+      "step": 69,
+      "value": 0.6827549338340759
+    },
+    "Curriculum/episode_tracking_mean": {
+      "step": 69,
+      "value": 0.21876288950443268
+    },
+    "Reset/collapsed": {
+      "step": 69,
+      "value": 0.9756097793579102
+    },
+    "Reset/accel": {
+      "step": 69,
+      "value": 0.029756097123026848
+    },
+    "Terrain/stepping_stones/reach_2m_rate": {
+      "step": 69,
+      "value": 0.0
+    },
+    "Terrain/raised_pillars/reach_2m_rate": {
+      "step": 69,
+      "value": 0.0
+    }
+  }
+}

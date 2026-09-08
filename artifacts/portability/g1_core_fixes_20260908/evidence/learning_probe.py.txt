@@ -1,0 +1,175 @@
+"""Reproduce the CPU learning-chain audit without changing the source checkout.
+
+Recorded values in learning_probe.json come from the already completed audit run.
+Run manually with D:\\anaconda\\envs\\pytorch\\python.exe.
+The mirror-ratio example demonstrates the symmetry assumption, not a proven bug.
+"""
+import ast
+import contextlib
+import importlib.util
+import io
+import json
+import sys
+from pathlib import Path
+from types import SimpleNamespace
+
+import numpy as np
+import torch
+
+ROOT = Path(r"D:\TienKung-Lab-g1-portability-20260906")
+
+
+def loader_probe():
+    path = ROOT / "rsl_rl/rsl_rl/utils/motion_loader.py"
+    spec = importlib.util.spec_from_file_location("audit_motion_loader", path)
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    loader = module.AMPLoader.__new__(module.AMPLoader)
+    loader.device, loader.frame_dim, loader.time_between_frames = "cpu", 1, .02
+    n, dt = 4, 1 / 30
+    loader.trajectory_lens = np.array([(n - 1) * dt])
+    loader.trajectory_num_frames = np.array([float(n)])
+    loader.trajectory_frame_durations = np.array([dt])
+    loader.trajectories = loader.trajectories_full = [torch.arange(n, dtype=torch.float32)[:, None]]
+    at_dt = loader.get_full_frame_at_time(0, dt)
+    start = loader.get_full_frame_at_time(0, 0)
+    end = loader.get_full_frame_at_time(0, .02)
+    np.random.seed(0)
+    times = loader.traj_time_sample_batch(np.zeros(100000, dtype=int))
+    synthetic = {
+        "at_frame_dt_expected": 1.0,
+        "at_frame_dt_actual": at_dt.item(),
+        "transition_delta_expected": .6,
+        "transition_delta_actual": (end - start).item(),
+        "first_frame_point_mass": float((times == 0).mean()),
+        "uniform_correct_max_t": float(loader.trajectory_lens[0] - .02),
+        "actual_max_t": float(times.max()),
+    }
+    records = []
+    folder = ROOT / "legged_lab/envs/g1/datasets/motion_amp_expert_t4_rob2rob_full17_v1"
+    for path in sorted(folder.glob("*.txt")):
+        data = json.loads(path.read_text())
+        n, dt = len(data["Frames"]), data["FrameDuration"]
+        records.append({
+            "file": path.name, "n": n, "time_factor": n / (n - 1),
+            "zero_mass": (.02 + dt) / ((n - 1) * dt), "w": data["MotionWeight"],
+        })
+    return {
+        "synthetic": synthetic,
+        "active_clips": records,
+        "weighted_zero_mass": sum(r["zero_mass"] * r["w"] for r in records) / sum(r["w"] for r in records),
+    }
+
+
+def timeout_probe():
+    tree = ast.parse((ROOT / "rsl_rl/rsl_rl/algorithms/amp_ppo.py").read_text())
+    fn = next(
+        node for cls in tree.body if isinstance(cls, ast.ClassDef) and cls.name == "AMPPPO"
+        for node in cls.body if isinstance(node, ast.FunctionDef) and node.name == "process_env_step"
+    )
+    module = ast.Module(body=[fn], type_ignores=[])
+    ast.fix_missing_locations(module)
+    scope = {"torch": torch}
+    exec(compile(module, "amp_ppo.py", "exec"), scope)
+
+    class Transition(SimpleNamespace):
+        def clear(self):
+            pass
+
+    algorithm = SimpleNamespace(
+        transition=Transition(values=torch.tensor([[10.0]])),
+        amp_transition=Transition(observations=torch.tensor([[0.0]])),
+        gamma=.99, device="cpu", rnd=None,
+        amp_storage=SimpleNamespace(insert=lambda *args: None),
+        storage=SimpleNamespace(add_transitions=lambda transition: None),
+        policy=SimpleNamespace(reset=lambda dones: None),
+    )
+    scope["process_env_step"](
+        algorithm, torch.tensor([1.0]), torch.tensor([True]),
+        {"time_outs": torch.tensor([True])}, torch.tensor([[1.0]]),
+    )
+    # This reproduces the observed info lifecycle, not a full Isaac environment.
+    infos = {"time_outs": torch.tensor([True, False])}
+    current_time_outs = torch.tensor([False, False])
+    reset_ids = current_time_outs.nonzero().flatten()
+    if len(reset_ids):
+        infos["time_outs"] = current_time_outs
+    return {
+        "bootstrap": {
+            "V_start": 10.0, "V_terminal": 2.0,
+            "actual_reward": algorithm.transition.rewards.item(),
+            "correct_terminal_bootstrap_reward": 1 + .99 * 2,
+            "bias": algorithm.transition.rewards.item() - (1 + .99 * 2),
+        },
+        "stale_timeout_on_zero_reset": {
+            "current": current_time_outs.tolist(), "infos": infos["time_outs"].tolist(),
+        },
+        "limitations": [
+            "Constructed values demonstrate semantics; no current-policy average bias was measured.",
+            "Large parallel runs may reset at least one environment each step, masking stale infos.",
+        ],
+    }
+
+
+def mirror_probe():
+    original_distribution = torch.distributions.Normal(torch.tensor([1.0]), torch.tensor([.2]))
+    mirrored_obs_distribution = torch.distributions.Normal(torch.tensor([0.0]), torch.tensor([.2]))
+    action = torch.tensor([1.0])
+    mirrored_action = -action
+    ratio = torch.exp(
+        mirrored_obs_distribution.log_prob(mirrored_action) - original_distribution.log_prob(action)
+    )
+    ordinary_same_distribution_ratio = torch.exp(
+        mirrored_obs_distribution.log_prob(mirrored_action)
+        - mirrored_obs_distribution.log_prob(mirrored_action)
+    )
+    return {
+        "ratio_using_repeated_original_logprob_before_update": ratio.item(),
+        "ordinary_same_distribution_ratio_before_update": ordinary_same_distribution_ratio.item(),
+        "interpretation": (
+            "Symmetry augmentation uses an induced transformed behavior distribution. "
+            "The non-unit ratio is a design-risk example, not proof that the denominator is wrong. "
+            "Blindly replacing it with the old policy at mirrored observations is not an established fix."
+        ),
+    }
+
+
+def std_floor_probe():
+    sys.path.insert(0, str(ROOT / "rsl_rl"))
+    from rsl_rl.algorithms.amp_ppo import AMPPPO
+    from rsl_rl.modules import ActorCritic, Discriminator
+    from rsl_rl.utils import Normalizer
+
+    with contextlib.redirect_stdout(io.StringIO()):
+        torch.manual_seed(42)
+        raw = torch.randn(8, 3)
+        next_raw = raw + .02
+        policy = ActorCritic(5, 5, 2, init_noise_std=.01, actor_hidden_dims=[8], critic_hidden_dims=[8])
+        disc = Discriminator(6, .3, [8], "cpu", .7)
+        loader = SimpleNamespace(feed_forward_generator=lambda *args: iter([(raw, next_raw)]))
+        alg = AMPPPO(
+            policy, disc, loader, Normalizer(3), min_std=torch.tensor([.05, .05]),
+            learning_rate=.0001, amp_replay_buffer_size=16, device="cpu",
+        )
+        alg.init_storage("rl", 4, 2, [5], [5], [2])
+        for _ in range(2):
+            obs = torch.randn(4, 5)
+            alg.act(obs, obs, raw[:4])
+            alg.process_env_step(torch.ones(4), torch.zeros(4, dtype=torch.bool), {}, next_raw[:4])
+        alg.compute_returns(torch.randn(4, 5))
+        alg.amp_storage.feed_forward_generator = lambda *args: iter([(raw, next_raw)])
+        before = policy.std.detach().tolist()
+        alg.update()
+        after = policy.std.detach().tolist()
+    return {"configured_floor": alg.min_std.tolist(), "std_before": before, "std_after_actual_update": after}
+
+
+if __name__ == "__main__":
+    print(json.dumps({
+        "source_root": str(ROOT),
+        "loader": loader_probe(),
+        "timeout": timeout_probe(),
+        "mirror": mirror_probe(),
+        "std_floor": std_floor_probe(),
+    }, indent=2))
+

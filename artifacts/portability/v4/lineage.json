@@ -1,0 +1,18 @@
+{
+  "source_commit": "7243c667d15eda8366ee0162a98d170779ab1963",
+  "official_source_commit": "b0542fe2d45bf91c4e1d9ef6952b9c709c80b4e8",
+  "remote_root": "/home/nubot/phn_ws/t4_train/TienKung-Lab-g1-official-v4-20260907",
+  "run": "2026-09-07_12-50-50_g1_official_teacher_v4",
+  "rank1_config_directory": "2026-09-07_12-50-51_g1_official_teacher_v4",
+  "authoritative_checkpoint_rank": 0,
+  "budget": 30000,
+  "resume": false,
+  "gpu_ids": [1, 3],
+  "num_envs_per_rank": 2048,
+  "tensorboard_port": 8033,
+  "tmux": "g1-teacher-v4",
+  "runtime_validation": {"finite_interface_steps": 240, "ddp_updates": 3, "cross_rank_max_difference": 0, "auxiliary_default_targets_verified": true},
+  "tests": {"passed": 104, "temporary_directory_setup_error_resolved": true},
+  "reviews": {"standards": "no blocking finding", "spec": "AMP auxiliary mapping failure reproduced and fixed; full-robot auxiliary safety constraints explicitly retained"},
+  "learning_capability_proven": false
+}

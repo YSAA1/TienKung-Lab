@@ -127,14 +127,72 @@ class T4SparseDepthStudentDaggerAlgCfg(T4DepthDistillationAlgCfg):
 
 
 @configclass
+class T4SparseDepthStudentFinalMainAlgCfg(T4SparseDepthStudentDaggerAlgCfg):
+    """One-run main distill: mix 2k, critic 200, then DAgger + pg 0.2."""
+
+    learning_rate: float = 1.0e-4
+    pg_coef: float = 0.2
+    pg_coef_ramp_iters: int = 800
+    pg_delay_iters: int = 2000
+    critic_warmup_iters: int = 200
+    behavior_coef: float = 1.0
+    behavior_coef_end: float = 1.0
+    behavior_coef_decay_iters: int = 0
+    recon_coef: float = 1.0
+    teacher_mix: float = 1.0
+    teacher_mix_end: float = 0.0
+    teacher_mix_decay_iters: int = 2000
+    schedule: str = "fixed"
+    entropy_coef: float = 0.0
+
+
+@configclass
 class T4SparseDepthStudentAgentCfg(T4DepthStudentAgentCfg):
     experiment_name: str = "t4_loco_sparse_depth_student"
-    run_name: str = "s12_rtx_gated_dagger"
-    max_iterations: int = 8000
+    run_name: str = "s12_final_main"
+    max_iterations: int = 15000
     save_interval: int = 500
     resume: bool = False
     policy: T4SparseDepthStudentPolicyCfg = T4SparseDepthStudentPolicyCfg()
-    algorithm: T4SparseDepthStudentDaggerAlgCfg = T4SparseDepthStudentDaggerAlgCfg()
+    algorithm: T4SparseDepthStudentFinalMainAlgCfg = T4SparseDepthStudentFinalMainAlgCfg()
+
+
+@configclass
+class T4SparseDepthStudentReprFirstAlgCfg(T4SparseDepthStudentDaggerAlgCfg):
+    """One-run representation-first distill: teacher-driven scan, then Ross DAgger. No PPO."""
+
+    learning_rate: float = 1.0e-4
+    pg_coef: float = 0.0
+    pg_coef_ramp_iters: int = 0
+    pg_delay_iters: int = 0
+    critic_warmup_iters: int = 0
+    behavior_coef: float = 1.0
+    behavior_coef_end: float = 1.0
+    behavior_coef_decay_iters: int = 0
+    recon_coef: float = 1.0
+    teacher_mix: float = 1.0
+    teacher_mix_end: float = 0.0
+    teacher_mix_decay_iters: int = 0
+    schedule: str = "fixed"
+    entropy_coef: float = 0.0
+    repr_first: bool = True
+    repr_cap_iters: int = 4000
+    repr_probe_interval: int = 100
+    repr_probe_patience: int = 3
+    repr_min_probe_count: int = 8
+    repr_baseline_start_iter: int = 200
+    repr_baseline_end_iter: int = 400
+    action_mix_decay_iters: int = 2000
+    action_level_reset_fraction: float = 0.10
+    action_level_reset_min_level: int | None = None
+
+
+@configclass
+class T4SparseDepthStudentReprFirstAgentCfg(T4SparseDepthStudentAgentCfg):
+    run_name: str = "s12_repr_first"
+    max_iterations: int = 14000
+    save_interval: int = 500
+    algorithm: T4SparseDepthStudentReprFirstAlgCfg = T4SparseDepthStudentReprFirstAlgCfg()
 
 
 @configclass
@@ -206,3 +264,62 @@ class T4SparseDepthStudentTargetedFtAgentCfg(T4SparseDepthStudentAgentCfg):
     max_iterations: int = 800
     save_interval: int = 100
     algorithm: T4SparseDepthStudentTargetedFtAlgCfg = T4SparseDepthStudentTargetedFtAlgCfg()
+
+
+@configclass
+class T4SparseDepthStudentResidualFtAlgCfg(T4SparseDepthStudentJointAlgCfg):
+    """LightLP-style residual task-success FT: short PPO, BC floor 0.5, not plant FT."""
+
+    learning_rate: float = 3.0e-5
+    pg_coef: float = 0.5
+    pg_coef_ramp_iters: int = 400
+    pg_delay_iters: int = 0
+    critic_warmup_iters: int = 200
+    behavior_coef: float = 0.5
+    behavior_coef_end: float = 0.5
+    behavior_coef_decay_iters: int = 0
+    recon_coef: float = 0.5
+    teacher_mix: float = 0.0
+    teacher_mix_end: float = 0.0
+    teacher_mix_decay_iters: int = 0
+    schedule: str = "fixed"
+    entropy_coef: float = 0.0
+    reference_action_coef: float = 0.0
+
+
+@configclass
+class T4SparseDepthStudentResidualFtAgentCfg(T4SparseDepthStudentAgentCfg):
+    experiment_name: str = "t4_loco_sparse_depth_student_ft"
+    run_name: str = "s12_residual_ft"
+    max_iterations: int = 1000
+    save_interval: int = 100
+    algorithm: T4SparseDepthStudentResidualFtAlgCfg = T4SparseDepthStudentResidualFtAlgCfg()
+
+
+@configclass
+class T4SparseDepthStudentPlantFtAlgCfg(T4SparseDepthStudentJointAlgCfg):
+    """Plant-gap FT: delay + actuator DR, low PPO, BC/recon floor, action anchor."""
+
+    learning_rate: float = 1.0e-5
+    pg_coef: float = 0.1
+    pg_coef_ramp_iters: int = 400
+    pg_delay_iters: int = 0
+    critic_warmup_iters: int = 200
+    behavior_coef: float = 1.0
+    behavior_coef_end: float = 1.0
+    recon_coef: float = 1.0
+    reference_action_coef: float = 0.25
+    teacher_mix: float = 0.0
+    teacher_mix_end: float = 0.0
+    teacher_mix_decay_iters: int = 0
+    schedule: str = "fixed"
+    entropy_coef: float = 0.0
+
+
+@configclass
+class T4SparseDepthStudentPlantFtAgentCfg(T4SparseDepthStudentAgentCfg):
+    experiment_name: str = "t4_loco_sparse_depth_student_ft"
+    run_name: str = "s12_plant_ft"
+    max_iterations: int = 1000
+    save_interval: int = 100
+    algorithm: T4SparseDepthStudentPlantFtAlgCfg = T4SparseDepthStudentPlantFtAlgCfg()

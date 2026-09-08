@@ -49,15 +49,16 @@ extrinsic = importlib.util.module_from_spec(_extrinsic_spec)
 _extrinsic_spec.loader.exec_module(extrinsic)
 
 ENV_PY = ROOT / "legged_lab" / "envs" / "t4" / "depth_student_env.py"
+RUNTIME_PY = ROOT / "legged_lab/locomotion/depth_env.py"
 CFG_PY = ROOT / "legged_lab" / "envs" / "t4" / "depth_student_cfg.py"
 INIT_PY = ROOT / "legged_lab" / "envs" / "__init__.py"
-TEACHER_PY = ROOT / "legged_lab" / "envs" / "t4" / "teacher_cfg.py"
+TEACHER_PY = ROOT / "legged_lab" / "locomotion" / "teacher_cfg.py"
 TRAIN_PY = ROOT / "legged_lab" / "scripts" / "train_t4_sparse_depth_student.py"
 FT_PY = ROOT / "legged_lab" / "scripts" / "train_t4_sparse_depth_student_ft.py"
 SIM2SIM_PY = ROOT / "legged_lab" / "scripts" / "sim2sim_t4_depth_student.py"
-T4_ENV_PY = ROOT / "legged_lab" / "envs" / "t4" / "t4_env.py"
+T4_ENV_PY = ROOT / "legged_lab" / "locomotion" / "env.py"
 PLAY_PY = ROOT / "legged_lab" / "scripts" / "play.py"
-EVAL_PY = ROOT / "legged_lab" / "scripts" / "eval_t4_hurdle.py"
+EVAL_PY = ROOT / "legged_lab" / "scripts" / "eval_locomotion.py"
 PROBE_PY = ROOT / "legged_lab" / "scripts" / "probe_t4_student_depth_render.py"
 
 
@@ -90,27 +91,40 @@ def _student_obs(n=3):
 
 
 def test_sparse_student_env_inherits_s12_teacher_mdp():
-    env_src = ENV_PY.read_text(encoding="utf-8")
+    env_src = ENV_PY.read_text(encoding="utf-8") + RUNTIME_PY.read_text(encoding="utf-8")
     cfg_src = CFG_PY.read_text(encoding="utf-8")
     sparse_alg = cfg_src.split("class T4SparseDepthStudentDaggerAlgCfg", 1)[1].split(
+        "class T4SparseDepthStudentFinalMainAlgCfg", 1
+    )[0]
+    final_main = cfg_src.split("class T4SparseDepthStudentFinalMainAlgCfg", 1)[1].split(
         "class T4SparseDepthStudentAgentCfg", 1
     )[0]
+    agent = cfg_src.split("class T4SparseDepthStudentAgentCfg", 1)[1].split(
+        "class T4SparseDepthStudentReprFirstAlgCfg", 1
+    )[0]
     assert "class T4LocoSparseDepthStudentEnvCfg(T4LocoSparseTeacherEnvCfg)" in env_src
-    assert "class T4LocoSparseDepthDistillEnv(T4LocoDepthDistillEnv)" in env_src
-    assert "TEACHER_SPARSE_ACTOR_OBS_DIM" in env_src
-    assert "STUDENT_ACTOR_OBS_DIM" in env_src
+    assert "class LightLPDepthDistillationEnv(DepthDistillationEnv)" in env_src
+    assert "self.observation_layout.actor_dim" in env_src
+    assert "self.student_observation_dim" in env_src
     assert "student_depth_noise" in env_src
     assert 'class_name: str = "DepthStudentTeacherRecurrent"' in cfg_src
     assert 'rnn_type: str = "gru"' in cfg_src
     assert "teacher_recurrent: bool = False" in cfg_src
     assert "pg_coef: float = 0.0" in sparse_alg
     assert "pg_delay_iters: int = 0" in sparse_alg
+    assert "teacher_mix_decay_iters: int = 1000" in sparse_alg
+    assert "pg_coef: float = 0.2" in final_main
+    assert "pg_coef_ramp_iters: int = 800" in final_main
+    assert "pg_delay_iters: int = 2000" in final_main
+    assert "critic_warmup_iters: int = 200" in final_main
+    assert "teacher_mix_decay_iters: int = 2000" in final_main
+    assert "learning_rate: float = 1.0e-4" in final_main
     assert "recon_coef: float = 1.0" in cfg_src
     assert 'experiment_name: str = "t4_loco_sparse_depth_student"' in cfg_src
-    assert 'run_name: str = "s12_rtx_gated_dagger"' in cfg_src
-    assert "max_iterations: int = 8000" in cfg_src
+    assert 'run_name: str = "s12_final_main"' in agent
+    assert "max_iterations: int = 15000" in agent
+    assert "T4SparseDepthStudentFinalMainAlgCfg" in agent
     assert "behavior_coef_decay_iters: int = 0" in sparse_alg
-    assert "teacher_mix_decay_iters: int = 1000" in sparse_alg
     assert "teacher_mix: float = 1.0" in sparse_alg
     assert 'schedule: str = "fixed"' in sparse_alg
     assert "learning_rate: float = 1.0e-4" in sparse_alg
@@ -137,15 +151,22 @@ def test_stage_e_student_lineage_is_unchanged():
 def test_train_scripts_require_sparse_teacher_checkpoint():
     train_src = TRAIN_PY.read_text(encoding="utf-8")
     ft_src = FT_PY.read_text(encoding="utf-8")
-    assert "T4LocoSparseDepthStudentEnvCfg" in train_src
-    assert "T4SparseDepthStudentAgentCfg" in train_src
+    assert "T4LocoSparseDepthStudentReprFirstEnvCfg" in train_src
+    assert "T4SparseDepthStudentReprFirstAgentCfg" in train_src
     assert "teacher_checkpoint" in train_src
     assert "student_warmstart_checkpoint" in train_src
     assert "student_lineage.json" in train_src
+    assert "resume and --student_warmstart_checkpoint are mutually exclusive" in train_src
+    assert "Resuming student from:" in train_src
+    teacher_load_at = train_src.index("runner.load(str(teacher_path), load_optimizer=False)")
+    resume_load_at = train_src.index("runner.load(resume_path, load_optimizer=load_optimizer)")
+    assert teacher_load_at < resume_load_at
     assert "agent_cfg.algorithm.teacher_mix" in train_src
     assert "agent_cfg.algorithm.pg_coef" in train_src
     assert "agent_cfg.algorithm.schedule" in train_src
     assert "agent_cfg.algorithm.learning_rate" in train_src
+    assert '"phase": "representation"' in train_src
+    assert "attach_repr_runtime" in train_src
     assert "teacher_eval_manifest" in train_src
     assert "allow_ungated_teacher" in train_src
     assert "require_sparse_teacher_checkpoint" in train_src
@@ -156,17 +177,32 @@ def test_train_scripts_require_sparse_teacher_checkpoint():
     assert "pg_delay_iters" in train_src
     assert "student_depth_noise" in train_src
     assert "random_level_reset_min_level" in train_src
+    assert "random_level_reset_max_level" in train_src
+    assert "entropy_coef" in train_src
     assert "T4LocoSparseDepthStudentFtEnvCfg" in ft_src
     assert "student_checkpoint" in ft_src
-    assert 'choices=("joint", "deploy_ft", "targeted_ft")' in ft_src
+    assert 'choices=("joint", "deploy_ft", "targeted_ft", "residual_ft", "plant_ft")' in ft_src
     assert "T4SparseDepthStudentTargetedFtAgentCfg" in ft_src
+    assert "T4SparseDepthStudentResidualFtAgentCfg" in ft_src
+    assert "T4LocoSparseDepthStudentResidualFtEnvCfg" in ft_src
+    assert "T4SparseDepthStudentPlantFtAgentCfg" in ft_src
+    assert "T4LocoSparseDepthStudentPlantFtEnvCfg" in ft_src
+    assert 'phase = "plant_ft"' in ft_src
     assert "set_reference_policy_from_current" in ft_src
     assert 'phase = "targeted_ft"' in ft_src
+    assert 'phase = "residual_ft"' in ft_src
     assert "capability_gate_json" in ft_src
+    assert "teacher_eval_manifest" in ft_src
+    assert 'required=True' in ft_src.split("--capability_gate_json", 1)[1].split(")", 1)[0]
+    assert 'required=True' in ft_src.split("--student_checkpoint", 1)[1].split(")", 1)[0]
+    assert 'required=True' in ft_src.split("--teacher_checkpoint", 1)[1].split(")", 1)[0]
+    assert "allow_ungated" not in ft_src
     assert "load_student_continuation_checkpoint" in ft_src
     assert "require_sparse_teacher_checkpoint" in ft_src
     assert "T4LocoDepthStudentEnvCfg" not in train_src
     assert "T4DepthStudentAgentCfg" not in train_src
+    assert "runner.current_learning_iteration = 0" in ft_src
+    assert "runner.alg.num_updates = 0" in ft_src
 
 
 def test_student_obs_has_no_scan_or_contact_privilege():
@@ -762,21 +798,30 @@ def test_depth_refresh_plan_keeps_reset_and_skips_idle_steps():
 
 def test_student_cfg_exposes_nan_guard_camera_period_and_noise_overrides():
     cfg_src = CFG_PY.read_text(encoding="utf-8")
-    env_src = ENV_PY.read_text(encoding="utf-8")
+    env_src = ENV_PY.read_text(encoding="utf-8") + RUNTIME_PY.read_text(encoding="utf-8")
     assert "nan_guard: bool = True" in cfg_src
     assert "max_grad_norm: float = 1.0" in cfg_src
     sparse_env = env_src.split("class T4LocoSparseDepthStudentEnvCfg", 1)[1].split(
-        "class T4LocoSparseDepthStudentFtEnvCfg", 1
+        "class T4LocoSparseDepthStudentReprFirstEnvCfg", 1
     )[0]
     assert "student_depth_camera_update_period: float = 0.02" in sparse_env
     assert "student_depth_noise: bool = True" in sparse_env
     assert "student_camera_pos_jitter_m" in sparse_env
     assert "student_camera_ori_jitter_rad" in sparse_env
     assert "sparse_curriculum_demote: bool = False" in sparse_env
-    assert "random_level_reset_fraction: float = 0.50" in sparse_env
-    assert "random_level_reset_min_level: int = 6" in sparse_env
-    assert "self.random_level_reset_fraction = 0.50" in sparse_env
-    assert "self.random_level_reset_min_level = 6" in sparse_env
+    assert "random_level_reset_fraction: float = 0.10" in sparse_env
+    assert "random_level_reset_min_level: int | None = None" in sparse_env
+    assert "random_level_reset_max_level: int | None = None" in sparse_env
+    assert "self.random_level_reset_fraction = 0.10" in sparse_env
+    assert "self.random_level_reset_min_level = None" in sparse_env
+    assert "self.random_level_reset_max_level = None" in sparse_env
+    assert "random_level_reset_fraction: float = 0.50" not in sparse_env
+    assert "random_level_reset_min_level: int = 6" not in sparse_env
+    assert "self.scene.terrain_generator" not in sparse_env
+    assert "self.scene.max_init_terrain_level" not in sparse_env
+    assert "self.commands" not in sparse_env
+    assert "self.reward =" not in sparse_env
+    assert "self.use_lightlp_terminations" not in sparse_env
     assert "self.noise.add_noise = True" in sparse_env
     ft_block = env_src.split("class T4LocoSparseDepthStudentFtEnvCfg", 1)[1].split("\nclass ", 1)[0]
     assert "student_depth_camera_update_period: float = 0.02" in ft_block
@@ -796,8 +841,118 @@ def test_student_cfg_exposes_nan_guard_camera_period_and_noise_overrides():
     )
 
 
+def test_residual_ft_recipe_is_not_plant_or_d3():
+    cfg_src = CFG_PY.read_text(encoding="utf-8")
+    env_src = ENV_PY.read_text(encoding="utf-8") + RUNTIME_PY.read_text(encoding="utf-8")
+    ft_src = FT_PY.read_text(encoding="utf-8")
+    residual_alg = cfg_src.split("class T4SparseDepthStudentResidualFtAlgCfg", 1)[1].split(
+        "class T4SparseDepthStudentResidualFtAgentCfg", 1
+    )[0]
+    residual_agent = cfg_src.split("class T4SparseDepthStudentResidualFtAgentCfg", 1)[1]
+    residual_env = env_src.split("class T4LocoSparseDepthStudentResidualFtEnvCfg", 1)[1].split(
+        "class T4TargetedFtEventCfg", 1
+    )[0]
+    final_main = cfg_src.split("class T4SparseDepthStudentFinalMainAlgCfg", 1)[1].split(
+        "class T4SparseDepthStudentAgentCfg", 1
+    )[0]
+    main_agent = cfg_src.split("class T4SparseDepthStudentAgentCfg", 1)[1].split(
+        "class T4SparseDepthStudentReprFirstAlgCfg", 1
+    )[0]
+    sparse_env = env_src.split("class T4LocoSparseDepthStudentEnvCfg", 1)[1].split(
+        "class T4LocoSparseDepthStudentReprFirstEnvCfg", 1
+    )[0]
+    assert "max_iterations: int = 1000" in residual_agent
+    assert 'run_name: str = "s12_residual_ft"' in residual_agent
+    assert "teacher_mix: float = 0.0" in residual_alg
+    assert "critic_warmup_iters: int = 200" in residual_alg
+    assert "pg_coef: float = 0.5" in residual_alg
+    assert "pg_coef_ramp_iters: int = 400" in residual_alg
+    assert "behavior_coef: float = 0.5" in residual_alg
+    assert "behavior_coef_end: float = 0.5" in residual_alg
+    assert "recon_coef: float = 0.5" in residual_alg
+    assert 'schedule: str = "fixed"' in residual_alg
+    assert "learning_rate: float = 3.0e-5" in residual_alg
+    assert "reference_action_coef: float = 0.0" in residual_alg
+    assert "pg_coef: float = 0.1" not in residual_alg
+    assert "behavior_coef: float = 1.0" not in residual_alg
+    assert "reference_action_coef: float = 0.25" not in residual_alg
+    assert "pg_coef: float = 1.0" not in residual_alg
+    assert "behavior_coef: float = 0.0" not in residual_alg
+    assert "recon_coef: float = 0.25" not in residual_alg
+    assert "random_level_reset_fraction: float = 0.50" in residual_env
+    assert "random_level_reset_min_level: int | None = 6" in residual_env
+    assert "self.random_level_reset_fraction = 0.50" in residual_env
+    assert "self.random_level_reset_min_level = 6" in residual_env
+    assert "student_depth_noise = True" in residual_env
+    assert "student_depth_boundary_corruption = False" in residual_env
+    assert "action_delay.enable = False" in residual_env
+    assert 'sub.proportion = 0.30' in residual_env
+    assert '("stepping_stones", "raised_pillars")' in residual_env
+    assert "targeted_manufacturing_variation = False" in residual_env
+    assert "targeted_layout_seed = False" in residual_env
+    assert "randomize_actuator_gains" not in residual_env
+    assert 'choices=("joint", "deploy_ft", "targeted_ft", "residual_ft", "plant_ft")' in ft_src
+    assert "T4LocoSparseDepthStudentResidualFtEnvCfg" in ft_src
+    assert "T4SparseDepthStudentResidualFtAgentCfg" in ft_src
+    assert 'phase = "residual_ft"' in ft_src
+    assert "teacher_eval_manifest" in ft_src
+    assert "load_student_continuation_checkpoint" in ft_src
+    assert 'required=True' in ft_src.split("--capability_gate_json", 1)[1].split(")", 1)[0]
+    assert 'required=True' in ft_src.split("--student_checkpoint", 1)[1].split(")", 1)[0]
+    assert 'required=True' in ft_src.split("--teacher_checkpoint", 1)[1].split(")", 1)[0]
+    assert "allow_ungated" not in ft_src
+    assert "require_sparse_teacher_checkpoint" in ft_src
+    assert "pg_coef: float = 0.2" in final_main
+    assert "teacher_mix_decay_iters: int = 2000" in final_main
+    assert "behavior_coef: float = 1.0" in final_main
+    assert "max_iterations: int = 15000" in main_agent
+    assert "random_level_reset_fraction: float = 0.10" in sparse_env
+    assert "random_level_reset_min_level: int | None = None" in sparse_env
+
+
+def test_plant_ft_recipe_is_delay_actuator_not_manufacturing():
+    cfg_src = CFG_PY.read_text(encoding="utf-8")
+    env_src = ENV_PY.read_text(encoding="utf-8") + RUNTIME_PY.read_text(encoding="utf-8")
+    ft_src = FT_PY.read_text(encoding="utf-8")
+    plant_alg = cfg_src.split("class T4SparseDepthStudentPlantFtAlgCfg", 1)[1].split(
+        "class T4SparseDepthStudentPlantFtAgentCfg", 1
+    )[0]
+    plant_agent = cfg_src.split("class T4SparseDepthStudentPlantFtAgentCfg", 1)[1]
+    plant_env = env_src.split("class T4LocoSparseDepthStudentPlantFtEnvCfg", 1)[1].split("\nclass ", 1)[0]
+    residual_env = env_src.split("class T4LocoSparseDepthStudentResidualFtEnvCfg", 1)[1].split(
+        "class T4TargetedFtEventCfg", 1
+    )[0]
+    assert "max_iterations: int = 1000" in plant_agent
+    assert 'run_name: str = "s12_plant_ft"' in plant_agent
+    assert "learning_rate: float = 1.0e-5" in plant_alg
+    assert "pg_coef: float = 0.1" in plant_alg
+    assert "pg_coef_ramp_iters: int = 400" in plant_alg
+    assert "critic_warmup_iters: int = 200" in plant_alg
+    assert "behavior_coef: float = 1.0" in plant_alg
+    assert "recon_coef: float = 1.0" in plant_alg
+    assert "reference_action_coef: float = 0.25" in plant_alg
+    assert "teacher_mix: float = 0.0" in plant_alg
+    assert "pg_coef: float = 0.5" not in plant_alg
+    assert "random_level_reset_fraction = 0.10" in plant_env
+    assert "random_level_reset_min_level = None" in plant_env
+    assert "student_depth_noise = True" in plant_env
+    assert "student_depth_boundary_corruption = False" in plant_env
+    assert "action_delay.enable = True" in plant_env
+    assert '"max_delay": 2' in plant_env
+    assert "T4TargetedFtEventCfg()" in plant_env
+    assert "targeted_manufacturing_variation" not in plant_env
+    assert "targeted_layout_seed" not in plant_env
+    assert "sub.proportion = 0.30" not in plant_env
+    assert "random_level_reset_fraction = 0.50" in residual_env
+    assert "action_delay.enable = False" in residual_env
+    assert 'choices=("joint", "deploy_ft", "targeted_ft", "residual_ft", "plant_ft")' in ft_src
+    assert "T4LocoSparseDepthStudentPlantFtEnvCfg" in ft_src
+    assert "T4SparseDepthStudentPlantFtAgentCfg" in ft_src
+    assert 'phase = "plant_ft"' in ft_src
+
+
 def test_targeted_ft_env_isolated_domain_randomization_contract():
-    env_src = ENV_PY.read_text(encoding="utf-8")
+    env_src = ENV_PY.read_text(encoding="utf-8") + RUNTIME_PY.read_text(encoding="utf-8")
     events = env_src.split("class T4TargetedFtEventCfg", 1)[1].split(
         "class T4LocoSparseDepthStudentTargetedFtEnvCfg", 1
     )[0]
@@ -864,7 +1019,7 @@ def test_scene_cfg_preserves_positive_depth_camera_update_period():
 
 def test_t4_headless_step_schedules_rtx_render_before_scene_update():
     t4_src = T4_ENV_PY.read_text(encoding="utf-8")
-    env_src = ENV_PY.read_text(encoding="utf-8")
+    env_src = ENV_PY.read_text(encoding="utf-8") + RUNTIME_PY.read_text(encoding="utf-8")
     play_src = PLAY_PY.read_text(encoding="utf-8")
     eval_src = EVAL_PY.read_text(encoding="utf-8")
     probe_src = PROBE_PY.read_text(encoding="utf-8")
@@ -910,3 +1065,49 @@ def test_camera_extrinsic_jitter_stays_inside_lightlp_table_ii():
     assert pos[1] == pytest.approx(-0.01)
     assert abs(quat[0] - 1.0) < 0.01
     assert abs(composed[0] - 1.0) < 0.01
+
+
+def test_repr_first_is_default_train_recipe_and_keeps_final_main():
+    cfg_src = CFG_PY.read_text(encoding="utf-8")
+    env_src = ENV_PY.read_text(encoding="utf-8") + RUNTIME_PY.read_text(encoding="utf-8")
+    train_src = TRAIN_PY.read_text(encoding="utf-8")
+    repr_alg = cfg_src.split("class T4SparseDepthStudentReprFirstAlgCfg", 1)[1].split(
+        "class T4SparseDepthStudentReprFirstAgentCfg", 1
+    )[0]
+    repr_agent = cfg_src.split("class T4SparseDepthStudentReprFirstAgentCfg", 1)[1].split(
+        "class T4SparseDepthStudentJointAlgCfg", 1
+    )[0]
+    repr_env = env_src.split("class T4LocoSparseDepthStudentReprFirstEnvCfg", 1)[1].split(
+        "class T4LocoSparseDepthStudentFtEnvCfg", 1
+    )[0]
+    final_main = cfg_src.split("class T4SparseDepthStudentFinalMainAlgCfg", 1)[1].split(
+        "class T4SparseDepthStudentAgentCfg", 1
+    )[0]
+    assert "repr_first: bool = True" in repr_alg
+    assert "pg_coef: float = 0.0" in repr_alg
+    assert "teacher_mix: float = 1.0" in repr_alg
+    assert "teacher_mix_decay_iters: int = 0" in repr_alg
+    assert "action_mix_decay_iters: int = 2000" in repr_alg
+    assert "repr_cap_iters: int = 4000" in repr_alg
+    assert "repr_probe_interval: int = 100" in repr_alg
+    assert "repr_probe_patience: int = 3" in repr_alg
+    assert "action_level_reset_fraction: float = 0.10" in repr_alg
+    assert 'run_name: str = "s12_repr_first"' in repr_agent
+    assert "max_iterations: int = 14000" in repr_agent
+    assert "self.random_level_reset_fraction = 0.50" in repr_env
+    assert "self.random_level_reset_min_level = 6" in repr_env
+    assert "pg_coef: float = 0.2" in final_main
+    assert 'run_name: str = "s12_final_main"' in cfg_src
+    assert "T4SparseDepthStudentReprFirstAgentCfg" in train_src
+    assert "T4LocoSparseDepthStudentReprFirstEnvCfg" in train_src
+    assert '"phase": "representation"' in train_src
+    assert '"repr_first": True' in train_src
+    assert "representation_curriculum" in train_src
+    assert "action_curriculum" in train_src
+    assert "attach_repr_runtime" in train_src
+    assert "switch_reason" in train_src
+    t4_src = T4_ENV_PY.read_text(encoding="utf-8")
+    assert 'fraction = float(getattr(self.cfg, "random_level_reset_fraction", 0.0) or 0.0)' in t4_src
+    assert train_src.find("attach(env, on_switch=on_repr_switch)") < train_src.find(
+        'getattr(runner.alg, "_repr_state"'
+    )

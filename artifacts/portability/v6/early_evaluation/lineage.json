@@ -1,0 +1,23 @@
+{
+  "training_source_commit": "c125f74d50b9d1aef70ae6ce8bd8b3fcb7b26d52",
+  "run": "/home/nubot/phn_ws/t4_train/TienKung-Lab-g1-unitree-v6-20260907/logs/g1_loco_teacher_sparse/2026-09-07_13-55-07_g1_unitree_29dof_teacher_v6",
+  "training_envs_per_rank": 2048,
+  "training_ranks": 2,
+  "steps_per_env": 24,
+  "iterations": [
+    0,
+    500
+  ],
+  "evaluation_gpu": 0,
+  "seed": 42,
+  "num_envs": 32,
+  "episodes": 32,
+  "command_vx": 0.7,
+  "conditions": [
+    "flat difficulty 0",
+    "stepping_stones difficulty 0 pinned spawn"
+  ],
+  "t4_reference": "../t4_reference/lineage.json",
+  "comparison_limit": "G1 500 roughly sample-matches T4 1000; flat retains robot-specific reset settings; T4 early baseline is mostly standing and cannot establish successful locomotion.",
+  "created_at": "2026-09-07T14:11:31.189221+08:00"
+}
