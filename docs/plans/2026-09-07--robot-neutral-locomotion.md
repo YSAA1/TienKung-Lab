@@ -1,6 +1,6 @@
 # 机器人无关的运动训练算法整理
 
-Status: 2026-09-08，用户授权四卡各两卡启动全速 A/B 冷启动对照。实现和验证中，旧两组在候选通过后停止留档。当前权威执行方案如下；启动证据补齐后更新状态。
+Status: 2026-09-08 10:20，全速 A/B 各双卡冷启动已核验。旧两组停止留档；A GPU0/2，B GPU1/3，TB8041。实现提交 `2f99efb`；正确开训不代表学习改善。
 
 ## 当前执行：恢复 T4 速度与真实进展晋级 A/B
 
@@ -13,6 +13,19 @@ Status: 2026-09-08，用户授权四卡各两卡启动全速 A/B 冷启动对照
 - 500/1000/2000/4000更新按相同预算复查真实位移和固定vx=.7、零初速、32env的flat/easy stones/easy pillars评估与连续回放。没有自动调参、自动切组或无证据能力声明。
 - 本轮不改瞬时速度奖励、AMP权重或探索下限。若全速两组仍晃动，先离线核查奖励排序，再单独验证窗口速度奖励；AMP .3→.1为后续独立候选，不混入本次对照。
 - 工件：`artifacts/portability/g1_progress_ab_20260908/`。完成声明只覆盖代码合同与正确开训；行走/越障能力仍须 evaluator JSON、lineage 和连续回放。
+
+### 本次验证与启动记录
+
+- 120项相关CPU检查通过；独立review无阻断问题。适用pre-commit hooks通过；缓存flake8/pyupgrade与默认Python3.14不兼容，使用已有Python3.12运行同插件。flake8仅有3个HEAD已存在的告警（env R506、runner log C901/E126），没有本次新增告警。
+- 真实Isaac32env/100步：level0/4/9每级260次稀疏命令采样完全相同，范围.60055–1.98255；部分reset清空窗口并重新记录出生点；注入相同晃动历史后A晋级率1、B为0。该注入只验证接线，不是物理行走成功率。
+- 两rank各64env/2更新smoke生成model_0/model_1，Progress与RewardMix标量存在且有限；已退出。headless图形插件/退出阶段有环境日志警告，未发现训练Traceback/OOM/NCCL超时。
+- 旧full17/recovery四PID已退出，38+26个checkpoint及历史TB保留，最近为model_18500/model_12500，SHA清单在old_stop_confirmed.json。
+- 同一候选冻结342个源码/资产/入口原始字节SHA与17段专家。前身manifest使用LF归一化哈希；本次改为原始字节并逐文件比对，未改写二进制资产。运行时相对前身只覆盖声明的6个已有源码文件，加新增monitor/启动/probe入口。
+- A run `logs/g1_progress_A/2026-09-08_10-16-38_g1_progress_A`，PID1107854/1107855；B run `logs/g1_progress_B/2026-09-08_10-18-18_g1_progress_B`，PID1109813/1109814。tmux分别 `g1-progress-A` / `g1-progress-B`；TensorBoard `http://100.100.188.39:8041/#scalars`，会话 `g1-progress-tb`，API已确认两个run。
+- 10:19快照A37/B13更新，两组保存model_0，最近全部标量有限；实际env/agent配置只差晋级模式与两个实验名称。10:20再次核实4rank的CUDA_VISIBLE_DEVICES、LOCAL_RANK以及342文件SHA；没有加载旧模型的日志或训练致命错误。
+- 恢复查询：远端系统Python运行 `artifacts/portability/g1_progress_ab_20260908/status.py`，写latest_health.json；启动核验在launch_verification.json。A先初始化，因此按同更新/样本量比较，不按同一墙钟时刻比较。
+
+`final_integration_claim`：按用户授权完成全速、同预算、晋级判据单变量的四卡A/B开训，代码与运行配置可追溯；后续500/1000/2000/4000的行为评估待完成，未宣称G1已学会行走或越障。
 
 ## 已替换实验：G1 终止与恢复合同修复
 

@@ -25,5 +25,10 @@
   },
   "runtime_probe": "probe.json",
   "ddp_smoke": "smoke_health.json",
-  "claim": "implementation and runtime gates only; no locomotion capability claim"
+  "claim": "implementation and runtime gates only; no locomotion capability claim",
+  "independent_launch_review": {
+    "blocking_findings": [],
+    "evidence": "latest_health.json, source_manifest.json, old_stop_confirmed.json, probe.json, smoke_health.json",
+    "claim": "correct A/B cold start; capability unvalidated"
+  }
 }

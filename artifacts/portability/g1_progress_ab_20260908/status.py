@@ -41,7 +41,7 @@ for arm in ("A",) if args.smoke else ("A", "B"):
     state = {
         "session_alive": (
             subprocess.run(
-                ["tmux", "has-session", "-t", "g1-progress-smoke" if args.smoke else f"g1-progress-{arm}"],
+                ["tmux", "has-session", "-t", "=g1-progress-smoke" if args.smoke else f"=g1-progress-{arm}"],
                 capture_output=True,
             ).returncode
             == 0

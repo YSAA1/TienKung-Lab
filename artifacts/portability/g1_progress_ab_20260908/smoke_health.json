@@ -1,0 +1,176 @@
+{
+  "time": "2026-09-08T10:10:48.804058+08:00",
+  "groups": {
+    "A": {
+      "session_alive": false,
+      "run": "/home/nubot/phn_ws/t4_train/TienKung-Lab-g1-progress-ab-20260908/logs/g1_progress_smoke_A/2026-09-08_10-08-49_g1_progress_smoke_A",
+      "checkpoints": [
+        "model_0.pt",
+        "model_1.pt"
+      ],
+      "metrics": {
+        "Progress/all/moving/command_completion": {
+          "step": 1,
+          "last": 0.2216203361749649
+        },
+        "Progress/all/moving/command_progress_m": {
+          "step": 1,
+          "last": 0.145964115858078
+        },
+        "Progress/all/moving/command_speed_mps": {
+          "step": 1,
+          "last": 1.234626054763794
+        },
+        "Progress/all/moving/directed_speed_mps": {
+          "step": 1,
+          "last": 0.20407120883464813
+        },
+        "Progress/all/moving/max_spawn_displacement_m": {
+          "step": 1,
+          "last": 0.24009428918361664
+        },
+        "Progress/all/moving/net_displacement_m": {
+          "step": 1,
+          "last": 0.24009428918361664
+        },
+        "Progress/all/moving/net_path_ratio": {
+          "step": 1,
+          "last": 0.7691465616226196
+        },
+        "Progress/all/moving/path_length_m": {
+          "step": 1,
+          "last": 0.2954726815223694
+        },
+        "Progress/all/moving/window_net_speed_mps": {
+          "step": 1,
+          "last": 0.2156798243522644
+        },
+        "Progress/all/standing/command_completion": {
+          "step": 1,
+          "last": 0.0
+        },
+        "Progress/all/standing/command_progress_m": {
+          "step": 1,
+          "last": 0.0
+        },
+        "Progress/all/standing/command_speed_mps": {
+          "step": 1,
+          "last": 0.0
+        },
+        "Progress/all/standing/directed_speed_mps": {
+          "step": 1,
+          "last": 0.0
+        },
+        "Progress/all/standing/max_spawn_displacement_m": {
+          "step": 1,
+          "last": 0.0656861811876297
+        },
+        "Progress/all/standing/net_displacement_m": {
+          "step": 1,
+          "last": 0.0656861811876297
+        },
+        "Progress/all/standing/net_path_ratio": {
+          "step": 1,
+          "last": 0.4886080324649811
+        },
+        "Progress/all/standing/path_length_m": {
+          "step": 1,
+          "last": 0.13443532586097717
+        },
+        "Progress/all/standing/window_net_speed_mps": {
+          "step": 1,
+          "last": 0.10209301859140396
+        },
+        "RewardMix/all/moving/style_per_step": {
+          "step": 1,
+          "last": 0.020688775926828384
+        },
+        "RewardMix/all/moving/task_per_step": {
+          "step": 1,
+          "last": -0.12140632420778275
+        },
+        "RewardMix/all/standing/style_per_step": {
+          "step": 1,
+          "last": 0.038103993982076645
+        },
+        "RewardMix/all/standing/task_per_step": {
+          "step": 1,
+          "last": -0.1383340209722519
+        },
+        "Loss/value_function": {
+          "step": 1,
+          "last": 0.6283010840415955
+        },
+        "Loss/surrogate": {
+          "step": 1,
+          "last": 0.11663464456796646
+        },
+        "Loss/entropy": {
+          "step": 1,
+          "last": 41.1656608581543
+        },
+        "Loss/amp": {
+          "step": 1,
+          "last": 0.5972877740859985
+        },
+        "Loss/amp_grad_pen": {
+          "step": 1,
+          "last": 0.009340459480881691
+        },
+        "Loss/amp_policy_pred": {
+          "step": 1,
+          "last": -0.616819441318512
+        },
+        "Loss/amp_expert_pred": {
+          "step": 1,
+          "last": -0.014729870483279228
+        },
+        "Loss/symmetry": {
+          "step": 1,
+          "last": 0.0256169606000185
+        },
+        "Loss/learning_rate": {
+          "step": 1,
+          "last": 9.999999747378752e-06
+        },
+        "Policy/mean_noise_std": {
+          "step": 1,
+          "last": 1.0005760192871094
+        },
+        "Perf/total_fps": {
+          "step": 1,
+          "last": 794.0
+        },
+        "Perf/collection time": {
+          "step": 1,
+          "last": 3.45693039894104
+        },
+        "Perf/learning_time": {
+          "step": 1,
+          "last": 0.4104456901550293
+        },
+        "Train/mean_episode_length": {
+          "step": 1,
+          "last": 21.149999618530273
+        }
+      },
+      "all_recent_scalars_finite": true,
+      "progress_tag_count": 153,
+      "reward_mix_tag_count": 12,
+      "contract": {
+        "speed_scale": "1.0",
+        "promotion": "path_length",
+        "monitor": "true",
+        "num_envs": "64",
+        "resume": "false",
+        "max_iterations": "2",
+        "steps_per_env": "24",
+        "seed": "42",
+        "save_interval": "500",
+        "experts": 17,
+        "lin_weight": "2.0"
+      }
+    }
+  },
+  "gpu_processes": "GPU-a29f1f68-af1a-73f1-1877-008a6793fd95, 523121, 408 MiB\nGPU-a29f1f68-af1a-73f1-1877-008a6793fd95, 523120, 8240 MiB\nGPU-75ba5f3b-b50f-26cb-3493-2dd1cf36984c, 920839, 577 MiB\nGPU-75ba5f3b-b50f-26cb-3493-2dd1cf36984c, 920838, 8104 MiB\nGPU-b2434cbe-4058-969d-d482-13f6718d33de, 523121, 7996 MiB\nGPU-b2434cbe-4058-969d-d482-13f6718d33de, 523120, 448 MiB\nGPU-d577411e-b527-1992-ff7d-41e7a9b86015, 920839, 8130 MiB\nGPU-d577411e-b527-1992-ff7d-41e7a9b86015, 920838, 450 MiB\n"
+}
