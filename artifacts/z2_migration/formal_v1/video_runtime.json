@@ -1,0 +1,14 @@
+﻿{
+  "package": "imageio-ffmpeg",
+  "version": "0.6.0",
+  "install_scope": "task-local --target, no live training package changes",
+  "remote_target": "/home/nubot/phn_ws/t4_train/TienKung-Lab-z2-teacher-20260909/artifacts/z2_migration/formal_v1/video_runtime",
+  "script_import_link": "formal_v1/evaluation/imageio_ffmpeg -> ../video_runtime/imageio_ffmpeg",
+  "bundled_encoder": "ffmpeg-linux-x86_64-v7.0.2",
+  "smoke_runtime": "bash scripts/nubot_run.sh artifacts/z2_migration/formal_v1/evaluation/smoke-video-encoder.py",
+  "smoke_output_bytes": 1729,
+  "smoke_exit_code": 0,
+  "first_failed_attempt": "direct Isaac python.sh omitted required LD_LIBRARY_PATH wrapper; immediately used documented nubot_run.sh",
+  "original_video_failure": "imageio MP4 backend absent; system ffmpeg pipe failed; original continuous GIF and diagnostics retained",
+  "training_source_commit_unchanged": "933e08a03f32beec85b8b968cb42ec56354475c9"
+}
