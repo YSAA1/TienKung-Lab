@@ -51,5 +51,5 @@ Status: active。唯一执行工作树 `D:/TienKung-Lab-z2-teacher-20260909`，�
 - nubot独立目录：`/home/nubot/phn_ws/t4_train/TienKung-Lab-z2-teacher-20260909`。tmux `z2-teacher-v1-20260909`，GPU0/2，2048env/rank、4096全局，seed42、30k、resume=false。
 - 主run：`logs/z2_loco_teacher_sparse/2026-09-09_03-45-12_z2_source_usd_teacher_v1`；`03-45-13`为另一rank的元数据目录，不用它找checkpoint。
 - 启动检查：iter151全部已查loss有限、实际配置和4个相关进程已记录，见`artifacts/z2_migration/formal_v1/startup_verified.json`。这不是行为验收。
-- 监控tmux：`z2-early-monitor-20260909`。只在1000/2000/3000checkpoint稳定且标量到达后写`formal_v1/monitor/iteration_<n>.json`，包含最近100iter窗口及checkpoint SHA。当前等待1000；固定evaluator、G1同条件对照和连续回放仍待执行。
+- 监控tmux：`z2-early-monitor-20260909`。只在1000/2000/3000checkpoint稳定且标量到达后写`formal_v1/monitor/iteration_<n>.json`，包含最近100iter窗口及checkpoint SHA。1000已完成：OOB/reach2m为0；同条件evaluator与20秒连续MP4确认倾倒，见`artifacts/z2_migration/formal_v1/iteration_1000_review.md`。保持原训练，自动评估批次`z2-milestone-evidence-20260909`等待2000/3000；尚未达到完成标准。
 - 不再改动正在训练的远端源码。后续若发现需要改配方/代码的问题，先据证据定位，并保存新lineage；不能把“已开训”当作完整目标完成。
