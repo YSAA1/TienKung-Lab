@@ -44,6 +44,7 @@ parser.add_argument(
 parser.add_argument(
     "--amp_expert_manifest", type=Path, help="Use the exact AMP files and hashes in this dataset manifest"
 )
+parser.add_argument("--g1_motion_experiment", choices=("vital_v1",), help="Opt-in cold-start G1 motion recipe")
 
 # append RSL-RL cli arguments
 cli_args.add_rsl_rl_args(parser)
@@ -87,6 +88,14 @@ def train():
         env_cfg.scene.num_envs = args_cli.num_envs
 
     agent_cfg = update_rsl_rl_cfg(agent_cfg, args_cli)
+    if args_cli.g1_motion_experiment is not None:
+        if env_class_name != "g1_loco_teacher" or agent_cfg.resume or args_cli.amp_expert_manifest is None:
+            raise ValueError("G1 motion experiment requires G1, cold start and an explicit AMP manifest")
+        if args_cli.g1_progress_ab is not None:
+            raise ValueError("Select the motion experiment or the historical A/B flag, not both")
+        from legged_lab.envs.g1.motion_experiment import apply_vital_motion_v1
+
+        apply_vital_motion_v1(env_cfg)
     if args_cli.g1_progress_ab is not None:
         if env_class_name != "g1_loco_teacher" or agent_cfg.resume or args_cli.amp_expert_manifest is None:
             raise ValueError("G1 A/B requires g1_loco_teacher, cold start and an explicit full17 AMP manifest")

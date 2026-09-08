@@ -1077,6 +1077,19 @@ class LocomotionEnv(VecEnv):
             immunity=self.impact_immunity,
         )
 
+        # Explicit experimental overrides; the default LightLP contract is unchanged.
+        if not getattr(self.cfg, "acceleration_termination_enabled", True):
+            reasons["accel_threshold"] = reasons["accel"].clone()
+            reasons["accel"] = torch.zeros_like(reasons["accel"])
+        fall_limits = getattr(self.cfg, "deterministic_fall_limits", None)
+        if fall_limits is not None:
+            roll, pitch, _ = euler_xyz_from_quat(self.robot.data.root_quat_w)
+            roll = torch.atan2(torch.sin(roll), torch.cos(roll))
+            pitch = torch.atan2(torch.sin(pitch), torch.cos(pitch))
+            reasons["fall_over"] = (roll.abs() > fall_limits[0]) | (pitch.abs() > fall_limits[1])
+        if fall_limits is not None or not getattr(self.cfg, "acceleration_termination_enabled", True):
+            reset_buf = time_out_buf | reasons["torso"] | reasons["accel"] | reasons["fall_over"]
+
         self.pit_fall_buf.zero_()
         is_sparse = self.refresh_sparse_tile_mask()
         if self.sparse_foothold_type_ids and torch.any(is_sparse):
@@ -1500,6 +1513,8 @@ class LocomotionEnv(VecEnv):
         cmd_speed = torch.norm(self.command_generator.command[:, :2], dim=1)
         tracking_scale = self._gait_tracking_scale()
         moving = cmd_speed > STANDING_COMMAND_THRESHOLD
+        if not getattr(gait, "tracking_gate_enabled", True):
+            tracking_scale = moving.float()
 
         if gait.mode == "command_conditioned":
             blend = (cmd_speed / max(1.0e-6, gait.reference_max_speed)).clamp(0.0, 1.0)

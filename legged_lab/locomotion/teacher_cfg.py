@@ -89,8 +89,8 @@ class GaitCfg:
       as the per-env terrain level rises, so stairs are not forced onto the
       flat-ground rhythm.
 
-    In every mode the periodic gait terms are multiplied by planar velocity
-    tracking accuracy (zero when standing) so marching in place cannot farm them.
+    By default periodic terms are multiplied by planar tracking accuracy. An
+    explicit experiment can disable that gate; standing commands still get zero.
     """
 
     mode: str = "fixed_clock"
@@ -105,6 +105,7 @@ class GaitCfg:
     reference_max_speed: float = 1.0
     # Same kernel std as track_lin_vel_xy_exp; gait pays only when this tracking is good.
     tracking_std: float = 0.5
+    tracking_gate_enabled: bool = True
     # difficulty_relaxed only.
     min_gait_reward_scale: float = 0.3
     gait_relax_start_difficulty: float = 0.4
@@ -513,6 +514,8 @@ class LightLPLocomotionEnvCfg(AmpLocomotionEnvCfg):
     append_critic_foot_scan: bool = True
     append_critic_immunity: bool = True
     use_lightlp_terminations: bool = True
+    acceleration_termination_enabled: bool = True
+    deterministic_fall_limits: tuple[float, float] | None = None
     use_algebraic_sparse_scan: bool = False
     terminate_on_pit_fall: bool = False
     random_level_reset_fraction: float = 0.10

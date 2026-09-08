@@ -1,5 +1,18 @@
 # 机器人无关的运动训练算法整理
 
+## 2026-09-08：G1 VITAL 起步配方实验（与核心修复主训练并行）
+
+用户授权使用空闲GPU1/3尽快启动真实训练实验，检验G1是否更愿意迈步；固定checkpoint取消终止的回放不能回答训练诱导问题。
+用户随后明确保留LightLP论文（2608.02653v1）的直立、速度宽容及其他奖励，不删除所谓“与前进无关”的项。
+
+- 独立入口 `scripts/train_g1_vital_motion.sh`；远端 `TienKung-Lab-g1-vital-motion-20260908`。
+- `--g1_motion_experiment vital_v1` 只在显式选择时生效：关闭加速度硬终止；以VITAL的确定性roll>.8/pitch>1.0替代随机倾倒终止，仍保留塌低；action_rate从-.1降到-.01；普通地形周期步态不乘速度误差门控。站立命令和踏石/圆桩仍不获得周期步态奖励。
+- upright=1、slack=1.5、yaw=2及全部其他奖励权重保持。资产/PD/动作尺度.25、Actor/Critic/AMP 1997/2076/70、17段专家、AMP曲线、全速命令、10%全0～9、径向课程与PPO保持。
+- GPU1/3各2048env、24steps、seed42+rank、30000更新、冷启动；GPU0/2上的 `g1_core_fixes_B30000` 保留作同预算对照，不热覆盖源码。
+- 这是组合配方有效性实验，不宣称某个变量的单独因果。参考VITAL源码commit `8b1a371b523a7d5024f7743c8581a7c4e8ae58a3`，不整包迁移VITAL网络或运行时。
+- 当前验收：62项受影响CPU检查通过；真实双GPU每rank32env、两次更新、17段专家、非对称截断、checkpoint重载通过，两rank策略/判别器/AMP统计差值全0；奖励保留与实验开关在实际cfg断言通过。正式启动记录见 `artifacts/portability/g1_vital_motion_20260908/`。
+- 按500/1000/2000更新与主训练同checkpoint预算比较。持续前进必须看固定vx=.7、零初速、flat/easy stones/easy pillars evaluator和连续回放，评估需显式应用各自训练profile；监控reward/净位移不单独作为能力结论。当前尚未完成训练与行为验收。
+
 Status: 2026-09-08，F1–F6/R1/R2修复和验收完成。173项CPU、三组单卡、G1/T4增强reset、真实双GPU两次更新与独立Standards/Spec审核通过；旧A/B已停止并保留历史；单组B径向判据30k已冷启动，GPU0/2各2048env，TB8042。
 
 ## 已完成：明确缺陷修复与真实环境验收

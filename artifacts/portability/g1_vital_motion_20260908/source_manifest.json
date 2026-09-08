@@ -1,0 +1,14 @@
+{
+  "baseline_commit": "5b8927f",
+  "baseline_remote": "TienKung-Lab-g1-core-fixes-20260908",
+  "candidate_remote": "TienKung-Lab-g1-vital-motion-20260908",
+  "files": {
+    "legged_lab/envs/g1/motion_experiment.py": "0f486f9710ca97dfff598e36bd13c5cce3ddd73909f2d95d2b57379a173bba54",
+    "legged_lab/locomotion/env.py": "3dc371286a90dbf37df938f116457c09df8a7187c62b5c9abcdcd3136dc1845f",
+    "legged_lab/locomotion/teacher_cfg.py": "085e2a3a0402ac374c4fe2125b5ecf8e6129ca0950972c480363ba6ae2ecfcb5",
+    "legged_lab/scripts/train.py": "be71eb79338c956ccb14a7e25b87bf10e013a56a5b863e2ff784a74fa4a85887",
+    "scripts/train_g1_vital_motion.sh": "35f1e4b13282b3f172eff150c7d927e9c417e12fac1bdb5e35a6de936ed6fa2f",
+    "artifacts/portability/g1_vital_motion_20260908/smoke.py": "f89982997d3683ff73c6ec932c976dd0924f5c073f866e23b5edbb4d7a937ec5",
+    "artifacts/portability/g1_vital_motion_20260908/smoke.sh": "51371109fc6832d853678dabb2de2ef369532c0e6d538a2734539209d75abb8d"
+  }
+}
