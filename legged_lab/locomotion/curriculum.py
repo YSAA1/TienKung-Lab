@@ -1,3 +1,21 @@
+# Copyright (c) 2021-2024, The RSL-RL Project Developers.
+# All rights reserved.
+# Original code is licensed under the BSD-3-Clause license.
+#
+# Copyright (c) 2022-2025, The Isaac Lab Project Developers.
+# All rights reserved.
+#
+# Copyright (c) 2025-2026, The Legged Lab Project Developers.
+# All rights reserved.
+#
+# Copyright (c) 2025-2026, The TienKung-Lab Project Developers.
+# All rights reserved.
+# Modifications are licensed under the BSD-3-Clause license.
+#
+# This file contains code derived from the RSL-RL, Isaac Lab, and Legged Lab Projects,
+# with additional modifications by the TienKung-Lab Project,
+# and is distributed under the BSD-3-Clause license.
+
 # Copyright (c) 2025-2026, The TienKung-Lab Project Developers.
 # All rights reserved.
 # Modifications are licensed under the BSD-3-Clause license.
@@ -76,17 +94,21 @@ def lightlp_terrain_level_moves(
     tile_size: float,
     tracking_threshold: float = LIGHTLP_TRACKING_WELL_THRESHOLD,
     standing_threshold: float = STANDING_COMMAND_THRESHOLD,
+    *,
+    max_radial_dist=None,
 ):
     """LightLP §IV-C3 level moves: cumulative path length and command tracking.
 
     Promotion requires walking more than half a cell *and* tracking the command
     well. Poor tracking demotes. Standing commands do neither. Distance is
-    episode-cumulative path length, not peak radial displacement.
+    episode-cumulative path length by default. The explicit traversal experiment
+    supplies max_radial_dist instead, rejecting loops near the spawn platform.
     """
     promote_dist = tile_size / 2
     moving = command_lin_vel_norm > standing_threshold
     tracking_well = tracking_mean >= tracking_threshold
-    move_up = (path_length > promote_dist) & tracking_well & moving
+    distance = path_length if max_radial_dist is None else max_radial_dist
+    move_up = (distance > promote_dist) & tracking_well & moving
     move_down = (~tracking_well) & moving & ~move_up
     return move_up, move_down
 

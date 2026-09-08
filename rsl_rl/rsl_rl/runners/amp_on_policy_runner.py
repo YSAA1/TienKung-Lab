@@ -37,7 +37,7 @@ from rsl_rl.modules import (
     StudentTeacherRecurrent,
 )
 from rsl_rl.utils import AMPLoader, Normalizer, store_code_state
-from rsl_rl.utils.distributed_logs import reduce_episode_log_dicts
+from rsl_rl.utils.distributed_logs import COUNT_SUFFIX, reduce_episode_log_dicts
 
 
 class AmpOnPolicyRunner:
@@ -262,6 +262,8 @@ class AmpOnPolicyRunner:
                     else:
                         coef_scale = None
                     # Step the environment
+                    reward_masks_fn = getattr(self.env, "progress_reward_masks", None)
+                    reward_masks = reward_masks_fn() if reward_masks_fn is not None else {}
                     obs, rewards, dones, infos = self.env.step(actions.to(self.env.device))
                     next_amp_obs = self.env.get_amp_obs_for_expert_trans()
                     # Move to device
@@ -290,6 +292,7 @@ class AmpOnPolicyRunner:
                             terminal_amp_states = self.env.get_amp_obs_for_expert_trans()[reset_env_ids]
                         next_amp_obs_with_term[reset_env_ids] = terminal_amp_states.to(self.device)
 
+                    task_rewards_for_log = rewards.clone() if reward_masks else None
                     rewards = self.alg.discriminator.predict_amp_reward(
                         amp_obs,
                         next_amp_obs_with_term,
@@ -297,6 +300,18 @@ class AmpOnPolicyRunner:
                         normalizer=self.alg.amp_normalizer,
                         coef_scale=coef_scale,
                     )[0]
+                    if reward_masks:
+                        task_part = task_rewards_for_log * max(0.0, self.alg.discriminator.task_reward_lerp)
+                        style_part = rewards - task_part
+                        for bucket, mask in reward_masks.items():
+                            mask = mask.to(self.device)
+                            count = mask.sum().float()
+                            if count.item() == 0:
+                                continue
+                            for name, value in (("task", task_part), ("style", style_part)):
+                                key = f"RewardMix/{bucket}/{name}_per_step"
+                                infos.setdefault("log", {})[key] = value[mask].mean()
+                                infos["log"][f"{key}{COUNT_SUFFIX}"] = count
                     amp_obs = torch.clone(next_amp_obs)
                     self.alg.process_env_step(rewards, dones, infos, next_amp_obs_with_term)
 

@@ -39,6 +39,9 @@ parser.add_argument("--task", type=str, default=None, help="Name of the task.")
 parser.add_argument("--num_envs", type=int, default=None, help="Number of environments to simulate.")
 parser.add_argument("--seed", type=int, default=None, help="Seed used for the environment")
 parser.add_argument(
+    "--g1_progress_ab", choices=("A", "B"), help="Cold-start full-speed G1: A legacy path, B radial traversal"
+)
+parser.add_argument(
     "--amp_expert_manifest", type=Path, help="Use the exact AMP files and hashes in this dataset manifest"
 )
 
@@ -84,6 +87,12 @@ def train():
         env_cfg.scene.num_envs = args_cli.num_envs
 
     agent_cfg = update_rsl_rl_cfg(agent_cfg, args_cli)
+    if args_cli.g1_progress_ab is not None:
+        if env_class_name != "g1_loco_teacher" or agent_cfg.resume or args_cli.amp_expert_manifest is None:
+            raise ValueError("G1 A/B requires g1_loco_teacher, cold start and an explicit full17 AMP manifest")
+        env_cfg.sparse_command_min_speed_scale = 1.0
+        env_cfg.lightlp_promotion_distance = "path_length" if args_cli.g1_progress_ab == "A" else "max_radial"
+        env_cfg.progress_monitor_enabled = True
     if args_cli.amp_expert_manifest is not None:
         manifest_path = args_cli.amp_expert_manifest.resolve()
         manifest = json.loads(manifest_path.read_text())

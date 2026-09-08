@@ -42,7 +42,12 @@ from isaaclab.scene import InteractiveScene
 from isaaclab.sensors import ContactSensor, RayCaster
 from isaaclab.sim import PhysxCfg, SimulationContext
 from isaaclab.utils.buffers import CircularBuffer, DelayBuffer
-from isaaclab.utils.math import euler_xyz_from_quat, quat_rotate_inverse, yaw_quat
+from isaaclab.utils.math import (
+    euler_xyz_from_quat,
+    quat_apply,
+    quat_rotate_inverse,
+    yaw_quat,
+)
 
 from legged_lab.locomotion.amp_features import AmpFeatureBuilder
 from legged_lab.locomotion.curriculum import (
@@ -76,6 +81,7 @@ from legged_lab.locomotion.mdp.sparse_signals import (
     terrain_aware_commands_enabled,
     tilt_from_upright_rad,
 )
+from legged_lab.locomotion.progress import ProgressMonitor
 from legged_lab.locomotion.schemas import (
     TEACHER_PAPER_CONTACT_DIM,
     TEACHER_SCAN_CLIP,
@@ -354,6 +360,13 @@ class LocomotionEnv(VecEnv):
         )
         self.episode_path_length = torch.zeros(
             self.num_envs, dtype=torch.float, device=self.device, requires_grad=False
+        )
+        if getattr(self.cfg, "lightlp_promotion_distance", "path_length") not in ("path_length", "max_radial"):
+            raise ValueError("lightlp_promotion_distance must be path_length or max_radial")
+        self.progress_monitor = (
+            ProgressMonitor(self.num_envs, self.device, self.step_dt)
+            if getattr(self.cfg, "progress_monitor_enabled", False)
+            else None
         )
         self.episode_tracking_sum = torch.zeros(
             self.num_envs, dtype=torch.float, device=self.device, requires_grad=False
@@ -834,6 +847,12 @@ class LocomotionEnv(VecEnv):
     """
 
     def step(self, actions: torch.Tensor):
+        if self.progress_monitor is not None:
+            # Use the command and heading that governed this transition, before
+            # the end-of-step command resample or reset changes either one.
+            command_local = self.command_generator.command.clone()
+            command_local[:, 2] = 0
+            progress_command_w = quat_apply(yaw_quat(self.robot.data.root_quat_w), command_local)[:, :2]
         delayed_actions = self.action_buffer.compute(actions)
         self.policy_action = torch.clip(delayed_actions, -self.clip_actions, self.clip_actions).to(self.device)
         # Scatter the policy-ordered action into simulator joint order once, so rewards
@@ -881,6 +900,8 @@ class LocomotionEnv(VecEnv):
         self.episode_max_radial_dist = torch.maximum(self.episode_max_radial_dist, radial_dist)
         step_delta = torch.norm(self.robot.data.root_pos_w[:, :2] - self.prev_step_root_pos_w[:, :2], dim=1)
         self.episode_path_length = self.episode_path_length + step_delta
+        if self.progress_monitor is not None:
+            self.progress_monitor.update(self.robot.data.root_pos_w[:, :2], progress_command_w)
         tracking = self._gait_tracking_scale()
         moving_cmd = torch.norm(self.command_generator.command[:, :2], dim=1) > STANDING_COMMAND_THRESHOLD
         self.episode_tracking_sum = self.episode_tracking_sum + tracking
@@ -1102,6 +1123,8 @@ class LocomotionEnv(VecEnv):
         if hasattr(self, "_rtx_reset_sim_step"):
             self._rtx_reset_sim_step[env_ids] = int(self.sim_step_counter)
         self.prev_step_root_pos_w[env_ids] = self.robot.data.root_pos_w[env_ids]
+        if self.progress_monitor is not None:
+            self.progress_monitor.reset(env_ids, self.robot.data.root_pos_w[env_ids, :2])
 
     def update_terrain_levels(self, env_ids):
         """Apply terrain curriculum and update recent per-bucket behavior metrics."""
@@ -1128,6 +1151,9 @@ class LocomotionEnv(VecEnv):
                 command_lin_vel_norm=command_norm,
                 tile_size=tile_size,
                 tracking_threshold=LIGHTLP_TRACKING_WELL_THRESHOLD,
+                max_radial_dist=(
+                    max_dist if getattr(self.cfg, "lightlp_promotion_distance", "path_length") == "max_radial" else None
+                ),
             )
         else:
             move_up, move_down = terrain_level_moves(
@@ -1168,6 +1194,7 @@ class LocomotionEnv(VecEnv):
             pit_fall=pit_fall,
             max_dist=max_dist,
         )
+        progress_logs = self._progress_log(env_ids, terrain_types)
         self.scene.terrain.update_env_origins(env_ids, move_up, move_down)
         random_reset_logs = self._apply_random_level_resets(env_ids)
         n_all = torch.tensor(float(self.num_envs), device=self.device)
@@ -1190,7 +1217,47 @@ class LocomotionEnv(VecEnv):
         logs.update(self._terrain_metrics_log())
         logs.update(self._batch_terrain_outcome_log(env_ids, promotion, timeout_success, timed_out, terrain_types))
         logs.update(random_reset_logs)
+        logs.update(progress_logs)
         return logs
+
+    def _progress_log(self, env_ids, terrain_types):
+        """Episode metrics by terrain and command bucket, weighted across ranks."""
+        monitor = self.progress_monitor
+        if monitor is None:
+            return {}
+        values = monitor.metrics(env_ids)
+        valid = monitor.steps[env_ids] > 0
+        moving = monitor.moving_steps[env_ids] > 0
+        groups = {"all": valid}
+        for name in self.terrain_type_names:
+            groups[name] = valid & self._columns_mask(terrain_types, self.terrain_name_to_columns.get(name, []))
+        logs = {}
+        for name, terrain_mask in groups.items():
+            for bucket, mask in (("moving", terrain_mask & moving), ("standing", terrain_mask & ~moving)):
+                count = mask.sum().float()
+                if count.item() == 0:
+                    continue
+                for metric, value in values.items():
+                    key = f"Progress/{name}/{bucket}/{metric}"
+                    logs[key] = value[mask].mean()
+                    logs[f"{key}{LOG_COUNT_SUFFIX}"] = count
+        return logs
+
+    def progress_reward_masks(self):
+        """Snapshot the pre-transition terrain/command buckets for reward logs."""
+        if self.progress_monitor is None:
+            return {}
+        moving = self.command_generator.command[:, :2].norm(dim=-1) > STANDING_COMMAND_THRESHOLD
+        masks = {}
+        for name in ("all", "flat", "stepping_stones", "raised_pillars"):
+            terrain_mask = (
+                torch.ones_like(moving)
+                if name == "all"
+                else self._columns_mask(self.scene.terrain.terrain_types, self.terrain_name_to_columns.get(name, []))
+            )
+            masks[f"{name}/moving"] = terrain_mask & moving
+            masks[f"{name}/standing"] = terrain_mask & ~moving
+        return masks
 
     def _reset_reason_log(self, env_ids: torch.Tensor) -> dict[str, torch.Tensor]:
         """Fractions of this reset batch attributed to each LightLP terminator."""

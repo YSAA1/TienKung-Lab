@@ -249,6 +249,9 @@ class AmpLocomotionEnvCfg:
     random_level_reset_max_level: int | None = None
     random_level_reset_min_level: int | None = None
     collapse_reset_grace_s: float = 0.0
+    # Explicit A/B switch; legacy LightLP and T4 remain path-based by default.
+    lightlp_promotion_distance: str = "path_length"
+    progress_monitor_enabled: bool = False
     collapse_reset_respects_impact_immunity: bool = False
     scene: BaseSceneCfg = BaseSceneCfg(
         max_episode_length_s=20.0,

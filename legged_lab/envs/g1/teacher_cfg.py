@@ -66,7 +66,8 @@ class G1LocoTeacherEnvCfg(LightLPLocomotionEnvCfg):
         self.random_level_reset_fraction = 0.10
         self.random_level_reset_min_level = None
         self.random_level_reset_max_level = None
-        self.sparse_command_min_speed_scale = 0.5
+        # Restore the T4 sparse command range at every terrain difficulty.
+        self.sparse_command_min_speed_scale = 1.0
         self.collapse_reset_pelvis_above_feet_m = 0.20
         # A brief low pose is a recovery opportunity, not an immediate failure.
         # Preserve the LightLP impact-immunity contract for sustained collapse.

@@ -1,3 +1,21 @@
+# Copyright (c) 2021-2024, The RSL-RL Project Developers.
+# All rights reserved.
+# Original code is licensed under the BSD-3-Clause license.
+#
+# Copyright (c) 2022-2025, The Isaac Lab Project Developers.
+# All rights reserved.
+#
+# Copyright (c) 2025-2026, The Legged Lab Project Developers.
+# All rights reserved.
+#
+# Copyright (c) 2025-2026, The TienKung-Lab Project Developers.
+# All rights reserved.
+# Modifications are licensed under the BSD-3-Clause license.
+#
+# This file contains code derived from the RSL-RL, Isaac Lab, and Legged Lab Projects,
+# with additional modifications by the TienKung-Lab Project,
+# and is distributed under the BSD-3-Clause license.
+
 from __future__ import annotations
 
 import csv
@@ -30,6 +48,7 @@ def test_g1_teacher_is_sparse_obstacle_task() -> None:
     assert "envs.t4" not in text
     assert "TienKungWalkFlatEnvCfg" not in text
     from legged_lab.assets.unitree_g1.locomotion import G1_LOCOMOTION
+
     assert G1_LOCOMOTION.feet == ("left_ankle_roll_link", "right_ankle_roll_link")
     assert G1_LOCOMOTION.torso == "torso_link"
     assert "self.collapse_reset_pelvis_above_feet_m = 0.20" in text
@@ -57,7 +76,7 @@ def test_g1_teacher_uses_shared_full_level_sparse_curriculum() -> None:
     text = (ROOT / "legged_lab/envs/g1/teacher_cfg.py").read_text(encoding="utf-8")
     assert "self.scene.max_init_terrain_level = 0" in text
     assert "self.random_level_reset_max_level = None" in text
-    assert "self.sparse_command_min_speed_scale = 0.5" in text
+    assert "self.sparse_command_min_speed_scale = 1.0" in text
     assert "self.robot.action_scale_effort_fraction = None" in text
     assert "self.robot.action_scale = 0.25" in text
     assert "self.random_level_reset_fraction = 0.10" in text
@@ -119,7 +138,11 @@ def test_g1_amp_schema_is_70d_and_does_not_change_t4() -> None:
 
 
 def test_g1_lafan_source_csvs_match_joint_contract() -> None:
-    from legged_lab.assets.unitree_g1.schemas import AMP_MOTION_SOURCE_DIR, LAFAN1_CSV_WIDTH, amp_expert_files
+    from legged_lab.assets.unitree_g1.schemas import (
+        AMP_MOTION_SOURCE_DIR,
+        LAFAN1_CSV_WIDTH,
+        amp_expert_files,
+    )
 
     source = ROOT / AMP_MOTION_SOURCE_DIR
     declared = {Path(path).stem for path in amp_expert_files()}
@@ -145,11 +168,7 @@ def test_g1_urdf_bundle_matches_joint_contract() -> None:
     meshes = list((G1_ASSET / "urdf/meshes").glob("*"))
     assert len(meshes) >= 20
     urdf = ET.parse(urdf_path).getroot()
-    revolute = [
-        joint.attrib["name"]
-        for joint in urdf.findall(".//joint")
-        if joint.attrib.get("type") == "revolute"
-    ]
+    revolute = [joint.attrib["name"] for joint in urdf.findall(".//joint") if joint.attrib.get("type") == "revolute"]
     assert tuple(revolute) == G1_29DOF_JOINT_NAMES
     mesh_paths = [urdf_path.parent / mesh.attrib["filename"] for mesh in urdf.findall(".//mesh")]
     assert mesh_paths
@@ -213,7 +232,9 @@ def _add(a: tuple[float, float, float], b: tuple[float, float, float]) -> tuple[
     return a[0] + b[0], a[1] + b[1], a[2] + b[2]
 
 
-def _T_from_xyz_rpy(xyz: tuple[float, float, float], rpy: tuple[float, float, float]) -> tuple[list[list[float]], tuple[float, float, float]]:
+def _T_from_xyz_rpy(
+    xyz: tuple[float, float, float], rpy: tuple[float, float, float]
+) -> tuple[list[list[float]], tuple[float, float, float]]:
     return _rpy_matrix(*rpy), xyz
 
 
@@ -232,10 +253,22 @@ def _urdf_fk_and_collisions(urdf_path: Path):
         parent = joint.find("parent").attrib["link"]
         child = joint.find("child").attrib["link"]
         origin = joint.find("origin")
-        xyz = tuple(float(v) for v in origin.attrib.get("xyz", "0 0 0").split()) if origin is not None else (0.0, 0.0, 0.0)
-        rpy = tuple(float(v) for v in origin.attrib.get("rpy", "0 0 0").split()) if origin is not None else (0.0, 0.0, 0.0)
+        xyz = (
+            tuple(float(v) for v in origin.attrib.get("xyz", "0 0 0").split())
+            if origin is not None
+            else (0.0, 0.0, 0.0)
+        )
+        rpy = (
+            tuple(float(v) for v in origin.attrib.get("rpy", "0 0 0").split())
+            if origin is not None
+            else (0.0, 0.0, 0.0)
+        )
         axis_elem = joint.find("axis")
-        axis = tuple(float(v) for v in axis_elem.attrib.get("xyz", "0 0 1").split()) if axis_elem is not None else (0.0, 0.0, 1.0)
+        axis = (
+            tuple(float(v) for v in axis_elem.attrib.get("xyz", "0 0 1").split())
+            if axis_elem is not None
+            else (0.0, 0.0, 1.0)
+        )
         joints.append((joint.attrib["name"], joint.attrib.get("type"), parent, child, xyz, rpy, axis))
 
     collisions: dict[str, list[tuple]] = {}
@@ -244,8 +277,16 @@ def _urdf_fk_and_collisions(urdf_path: Path):
         geoms = []
         for collision in link.findall("collision"):
             origin = collision.find("origin")
-            xyz = tuple(float(v) for v in origin.attrib.get("xyz", "0 0 0").split()) if origin is not None else (0.0, 0.0, 0.0)
-            rpy = tuple(float(v) for v in origin.attrib.get("rpy", "0 0 0").split()) if origin is not None else (0.0, 0.0, 0.0)
+            xyz = (
+                tuple(float(v) for v in origin.attrib.get("xyz", "0 0 0").split())
+                if origin is not None
+                else (0.0, 0.0, 0.0)
+            )
+            rpy = (
+                tuple(float(v) for v in origin.attrib.get("rpy", "0 0 0").split())
+                if origin is not None
+                else (0.0, 0.0, 0.0)
+            )
             geom = collision.find("geometry")
             child = list(geom)[0] if geom is not None else None
             if child is None:
@@ -281,12 +322,7 @@ def _geom_min_z(kind: str, xyz, rpy, attrib, link_pose) -> float:
         return trans[2] - float(attrib["radius"])
     if kind == "box":
         sx, sy, sz = (float(v) for v in attrib["size"].split())
-        corners = [
-            (x, y, z)
-            for x in (-sx / 2, sx / 2)
-            for y in (-sy / 2, sy / 2)
-            for z in (-sz / 2, sz / 2)
-        ]
+        corners = [(x, y, z) for x in (-sx / 2, sx / 2) for y in (-sy / 2, sy / 2) for z in (-sz / 2, sz / 2)]
         return min(_add(trans, _matvec(rot, c))[2] for c in corners)
     if kind == "cylinder":
         radius = float(attrib["radius"])
@@ -362,7 +398,9 @@ def test_g1_mirror_swaps_legs_and_negates_roll() -> None:
 def test_g1_urdf_collision_matches_mjcf_not_mesh() -> None:
     import xml.etree.ElementTree as ET
 
-    from legged_lab.assets.unitree_g1.sync_urdf_collision_from_mjcf import load_mjcf_collisions
+    from legged_lab.assets.unitree_g1.sync_urdf_collision_from_mjcf import (
+        load_mjcf_collisions,
+    )
 
     urdf_path = G1_ASSET / "urdf/g1_29dof_mode_15.urdf"
     mjcf_cols = load_mjcf_collisions(G1_ASSET / "xmls/g1_actuated.xml")

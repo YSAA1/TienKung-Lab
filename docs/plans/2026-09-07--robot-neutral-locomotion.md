@@ -1,8 +1,20 @@
 # 机器人无关的运动训练算法整理
 
-Status: 2026-09-07 23:30，恢复合同已实现、真实Isaac验证及独立review通过；权重4已停止留档，GPU1/3新实验 `g1-recovery-30k` 已启动，GPU0/2权重2基线保留。新TB8040。能力效果待同预算评估。
+Status: 2026-09-08，用户授权四卡各两卡启动全速 A/B 冷启动对照。实现和验证中，旧两组在候选通过后停止留档。当前权威执行方案如下；启动证据补齐后更新状态。
 
-## 当前执行：G1 终止与恢复合同修复
+## 当前执行：恢复 T4 速度与真实进展晋级 A/B
+
+- 原因：同 11000 更新，recovery OOB 0.23% 对 T4 54.35%，简单石头/圆桩 reach2m 为 0。固定 model_11000 平地 6 秒累计路径 1.558 m、净位移仅 3.45 cm，证实原地往复晃动。旧晋级用累计路径；G1 最低速度缩放 0.5 又使静止在 0.3 m/s 命令下达到 tracking 0.698，不能继续把 terrain level 或回合增长当能力。
+- 用户明确取消降速：`sparse_command_min_speed_scale=1.0`，踏石/圆桩各难度都是 0.6–2.0 m/s；其余地形命令与合法站立合同不变。最低速度 0.3 是未经独立验证的迁移假设，不是 G1 物理要求。
+- A：GPU0/2，`--g1_progress_ab A`，晋级沿用累计路径。B：GPU1/3，`--g1_progress_ab B`，晋级用相对 tile 中心最大径向距离 >4 m。两者保持 tracking>=0.5、moving 和 pit 等现有约束，OOB 4.25 m 不变。径向距离可以在对角方向先于 OOB 达标，不能把晋级视作 OOB。
+- 两组共用同一冻结代码、recovery 终止（塌低 .20 m/.20 s、impact immunity）、全17段 AMP、线速度权重2、统一动作尺度.25、官方资产/PD、零根初速、固定默认关节姿态、10%全等级随机回访。每组双卡各2048env、24steps、seed42+rank、98304样本/更新、预算30000、save interval500，不加载旧checkpoint。A/B 唯一训练行为差异是晋级距离。
+- 共用只读监控：实际出生点净/最大位移、路径、净位移/路径比、命令方向进度和完成度、.4秒窗口平均速度；按地形和命令桶记录。Progress/moving 是回合曾有移动命令，standing 是全程站立；window_net_speed 是窗口速度模长的回合均值，不是最终净位移/时长。RewardMix 为 transition 开始地形/命令的每步 task/style贡献，使用 __n 做跨rank加权；原有末步命令重采样语义保留。
+- 先通过CPU回归、独立review、真实Isaac命令采样/部分reset/晋级接线probe，再保存旧checkpoint与配置清单、停止旧训练，串行初始化 A、B 避免Isaac临时USD冲突。新根 `TienKung-Lab-g1-progress-ab-20260908`；入口 `scripts/train_g1_progress_ab.sh A|B`，每组独立tmux。
+- 500/1000/2000/4000更新按相同预算复查真实位移和固定vx=.7、零初速、32env的flat/easy stones/easy pillars评估与连续回放。没有自动调参、自动切组或无证据能力声明。
+- 本轮不改瞬时速度奖励、AMP权重或探索下限。若全速两组仍晃动，先离线核查奖励排序，再单独验证窗口速度奖励；AMP .3→.1为后续独立候选，不混入本次对照。
+- 工件：`artifacts/portability/g1_progress_ab_20260908/`。完成声明只覆盖代码合同与正确开训；行走/越障能力仍须 evaluator JSON、lineage 和连续回放。
+
+## 已替换实验：G1 终止与恢复合同修复
 
 ### 研究结论与方案
 
