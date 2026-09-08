@@ -4,9 +4,9 @@
 
 | Work surface | Status | Active slice | Source |
 | --- | --- | --- | --- |
-| Z2 29DoF teacher | active / migration | 独立工作树 `D:/TienKung-Lab-z2-teacher-20260909`，基线 `97b70e7`；Grok 4.6 xhigh 实施，对抗审查已派发；尚未开训 | `docs/plans/2026-09-09--z2-teacher-migration.md` |
+| Z2 29DoF teacher | active / training | 独立工作树 `D:/TienKung-Lab-z2-teacher-20260909`；源码`933e08a`，原始USD/393帧专家/对抗审核通过；nubot GPU0/2、tmux `z2-teacher-v1-20260909`，30k冷启动；startup iter151损失有限，等待1000/2000/3000行为验收 | `docs/plans/2026-09-09--z2-teacher-migration.md` |
 | T4 梅花桩 LightLP teacher | paused | G1 老师开训优先。T4 plant DR 计划仍在 `docs/plans/2026-09-02--t4-s12-teacher-plant-retrain-plan.md`，不开 | `docs/plans/2026-09-02--t4-s12-teacher-plant-retrain-plan.md` |
-| Unitree G1 越障 teacher | active / training + experiment | 核心修复B30000在GPU0/2、TB8042保持；VITAL起步实验已在GPU1/3冷启动30k，TB8043，run `2026-09-08_16-25-01_vital_motion_v1`。保留LightLP奖励，仅改动作变化惩罚、终止和步态门控；开训快照iter12，行为待验收 | `docs/plans/2026-09-07--robot-neutral-locomotion.md` |
+| Unitree G1 越障 teacher | external reference | G1保持独立轨道；本次Z2工作未改动其训练。对照对象为nubot `g1_vital_motion/2026-09-08_16-25-01_vital_motion_v1`；当前状态以G1独立索引为准，勿用本树继承的旧GPU占用记录 | `D:/TienKung-Lab-g1-portability-20260906/.harness/work_index.md` |
 | T4 梅花桩 GRU 深度学生 | done | `s12_repr_first` `model_13999` Isaac hard 过门；MuJoCo 稀疏仍摔。下一刀跟新老师，不续 14k 蒸馏 | `docs/plans/2026-09-01--t4-s12-repr-first-distill-plan.md` |
 | T4 梅花桩学生 LightLP 成本 | done | warp + 3168/MLP + 单次 backward；collection p50 ~2.2 s。质量未过，已转配方修复 | `docs/archive/plans/2026-08-23--t4-sparse-s12-student-lightlp-distill-cost-plan.md` |
 | T4 学生 headless RTX 出图正确性 | done | `sim.render()` 调度 + checksum probe 绿；`s12_gru_ppo_rtx167` 已按 16.7 Hz 真出图 | `docs/archive/plans/2026-08-23--t4-sparse-s12-student-rtx-correctness-plan.md` |

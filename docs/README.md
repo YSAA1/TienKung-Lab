@@ -1,7 +1,8 @@
 # 运动训练文档入口
 
 Z2 29DoF 新迁移轨道仅在 `D:/TienKung-Lab-z2-teacher-20260909` 执行，权威计划为
-[Z2 教师迁移](plans/2026-09-09--z2-teacher-migration.md)。当前处于实施与验证阶段，尚未开训。
+[Z2 教师迁移](plans/2026-09-09--z2-teacher-migration.md)。迁移、原始USD物理参数和393帧完整专家已验收，
+已在nubot GPU0/2冷启动30k教师训练；等待1000/2000/3000iter行为验收。训练源码冻结于`933e08a`。
 
 本 checkout 在上游 TienKung-Lab 上维护共享 AMP/LightLP 运动算法，以及 **T4 27DoF、Unitree G1 29DoF、Z2 29DoF** 的独立机器人配置。共享教师、深度学生运行时与参考动作跟踪按算法组织；[新机器人接入方法](runbooks/robot-locomotion-adapter.md) 是代码边界入口。
 先读本文，再进代码。`docs/archive/` 与 `docs/research/` **不是**开训或接票权威。

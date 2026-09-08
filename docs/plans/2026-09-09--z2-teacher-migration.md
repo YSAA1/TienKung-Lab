@@ -44,4 +44,12 @@ Status: active。唯一执行工作树 `D:/TienKung-Lab-z2-teacher-20260909`，�
 ## 恢复入口
 
 实施材料和执行日志：`work/z2-migration/`；正式验收/来源清单：`artifacts/z2_migration/`。
-当前：工作树建立；上游 clone 在进行，模型参数和迁移尚未核验，尚未启动 Z2 训练。
+当前：迁移代码、原始USD物理参数、393帧完整AMP专家与对抗审核通过，已冷启动正式训练。
+
+- 训练源码：`933e08a03f32beec85b8b968cb42ec56354475c9`。启动前618个运行文件和全部专家哈希通过。
+- 原始USD为30body/29DoF；重新导入URDF会出现额外固定neck刚体，故正式任务直接使用原始USD。质量/COM/惯量/PD/限幅/armature/硬限位/friction对照通过，见`artifacts/z2_migration/migration_review.md`。
+- nubot独立目录：`/home/nubot/phn_ws/t4_train/TienKung-Lab-z2-teacher-20260909`。tmux `z2-teacher-v1-20260909`，GPU0/2，2048env/rank、4096全局，seed42、30k、resume=false。
+- 主run：`logs/z2_loco_teacher_sparse/2026-09-09_03-45-12_z2_source_usd_teacher_v1`；`03-45-13`为另一rank的元数据目录，不用它找checkpoint。
+- 启动检查：iter151全部已查loss有限、实际配置和4个相关进程已记录，见`artifacts/z2_migration/formal_v1/startup_verified.json`。这不是行为验收。
+- 监控tmux：`z2-early-monitor-20260909`。只在1000/2000/3000checkpoint稳定且标量到达后写`formal_v1/monitor/iteration_<n>.json`，包含最近100iter窗口及checkpoint SHA。当前等待1000；固定evaluator、G1同条件对照和连续回放仍待执行。
+- 不再改动正在训练的远端源码。后续若发现需要改配方/代码的问题，先据证据定位，并保存新lineage；不能把“已开训”当作完整目标完成。
