@@ -4,7 +4,7 @@
 
 | Work surface | Status | Active slice | Source |
 | --- | --- | --- | --- |
-| Z2 29DoF teacher | active / training | 独立工作树 `D:/TienKung-Lab-z2-teacher-20260909`；源码`933e08a`，nubot GPU0/2；2000轮OOB/reach2m仍为0，平地64回合到时限但平均仅前进0.116m；保持原训练，等待3000 | `docs/plans/2026-09-09--z2-teacher-migration.md`；`artifacts/z2_migration/formal_v1/iteration_2000_review.md` |
+| Z2 29DoF teacher | active / single-variable training | 本地仍在`D:/TienKung-Lab-z2-teacher-20260909`；基线933e08a三节点失败已停；候选7ca0c76只降动作变化代价，远端`TienKung-Lab-z2-actionrate-20260909`，tmux `z2-actionrate-v1-20260909`、GPU0/2；startup通过，等待新1k/2k/3k | `docs/plans/2026-09-09--z2-teacher-migration.md`；`artifacts/z2_migration/action_rate_v1/lineage.json` |
 | T4 梅花桩 LightLP teacher | paused | G1 老师开训优先。T4 plant DR 计划仍在 `docs/plans/2026-09-02--t4-s12-teacher-plant-retrain-plan.md`，不开 | `docs/plans/2026-09-02--t4-s12-teacher-plant-retrain-plan.md` |
 | Unitree G1 越障 teacher | external reference | G1保持独立轨道；本次Z2工作未改动其训练。对照对象为nubot `g1_vital_motion/2026-09-08_16-25-01_vital_motion_v1`；当前状态以G1独立索引为准，勿用本树继承的旧GPU占用记录 | `D:/TienKung-Lab-g1-portability-20260906/.harness/work_index.md` |
 | T4 梅花桩 GRU 深度学生 | done | `s12_repr_first` `model_13999` Isaac hard 过门；MuJoCo 稀疏仍摔。下一刀跟新老师，不续 14k 蒸馏 | `docs/plans/2026-09-01--t4-s12-repr-first-distill-plan.md` |

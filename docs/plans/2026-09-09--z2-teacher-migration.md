@@ -54,6 +54,18 @@ Status: active。唯一执行工作树 `D:/TienKung-Lab-z2-teacher-20260909`，�
 - 监控tmux：`z2-early-monitor-20260909`。只在1000/2000/3000checkpoint稳定且标量到达后写`formal_v1/monitor/iteration_<n>.json`，包含最近100iter窗口及checkpoint SHA。1000已完成：OOB/reach2m为0；同条件evaluator与20秒连续MP4确认倾倒，见`artifacts/z2_migration/formal_v1/iteration_1000_review.md`。保持原训练，自动评估批次`z2-milestone-evidence-20260909`等待2000/3000；尚未达到完成标准。
 - 不再改动正在训练的远端源码。后续若发现需要改配方/代码的问题，先据证据定位，并保存新lineage；不能把“已开训”当作完整目标完成。
 
-### 2000节点（当前）
+### 2000节点（基线历史）
 
 见`artifacts/z2_migration/formal_v1/iteration_2000_review.md`：Z2训练OOB/reach2m仍为0；确定性平地64回合均到时限但最大前向进度均值仅0.116m，踏石0/64。4个G1/Z2同条件JSON及lineage全部完成并验证。保持原训练到3000，同协议视频完成后决定下一lineage。若仍失败，优先仅验证动作变化权重-0.1到-0.01，保持资产/PD/专家/终止等合同；目前未实施，不将候选当已验证修复。
+
+### 当前执行：动作变化代价单变量候选
+
+基线933e08a的1k/2k/3k监控、全部固定评估和4个20秒视频已完成，均未达到行走标准，已主动停训并保留全部工件，见`artifacts/z2_migration/formal_v1/iteration_3000_review.md`及停止记录。
+
+- 候选源码7ca0c7678c08ec45dfd79d249626779a3b7bd9dd，仅Z2动作变化权重-0.1→-0.01。Grok4.6/xhigh实施，31项合同测试/格式检查和独立差异审核通过；不声称因果修复已验证。
+- 新远端`/home/nubot/phn_ws/t4_train/TienKung-Lab-z2-actionrate-20260909`。从冻结基线复制618个运行文件；仅teacher_cfg.py不同，完整专家哈希通过。旧目录未改动。
+- 30k冷启动，GPU0/2，2048env/rank，seed42，resume=false；tmux`z2-actionrate-v1-20260909`。
+- canonical run为`logs/z2_loco_teacher_sparse/2026-09-09_07-30-59_z2_actionrate_001_v1`。启动实际配置确认-0.01、加速度终止true、gait gate true；完整env.yaml只差此权重，agent.yaml只差run_name（仅归一化目录前缀）。startup loss81步有限仅证明数值启动。
+- 本地证据`artifacts/z2_migration/action_rate_v1/`；远端沿用新目录内`artifacts/z2_migration/formal_v1/`，不要与旧基线目录混淆。
+- 监控tmux`z2-actionrate-monitor-20260909`，评估tmux`z2-actionrate-evidence-20260909`；仍在1000/2000/3000节点固定评估，3000连续回放。复用已冻结G1参考JSON/视频，不重复运行相同G1条件。
+- 完成标准不变：实际非零OOB/reach2m、有持续行走而非站桩/持续倾倒，全部由节点JSON、lineage和连续回放证明。当前只是已启动候选，总体目标未完成。
