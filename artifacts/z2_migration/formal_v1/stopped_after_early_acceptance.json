@@ -1,0 +1,19 @@
+﻿{
+  "status": "stopped_after_failed_early_behavior_acceptance",
+  "baseline_source_commit": "933e08a03f32beec85b8b968cb42ec56354475c9",
+  "run_dir": "/home/nubot/phn_ws/t4_train/TienKung-Lab-z2-teacher-20260909/logs/z2_loco_teacher_sparse/2026-09-09_03-45-12_z2_source_usd_teacher_v1",
+  "completed_monitor_iterations": [1000, 2000, 3000],
+  "evaluation_batch_exit_code": 0,
+  "video_checks": "four 20-second MP4s, each 1000 frames, all lineage checks passed and frames visually inspected",
+  "signal": "SIGTERM",
+  "signal_target_pid": 1479426,
+  "target_command_verified_run_name": "z2_source_usd_teacher_v1",
+  "observed_launcher_exit_code": 1,
+  "observed_absent_pids": [1479426, 1479436, 1479437],
+  "gpu_0_2_released": true,
+  "other_g1_training_untouched": true,
+  "reason": "OOB and effective reach2m remained zero at all three training milestones; final fixed evaluation and continuous replay confirmed repeated failure to sustain locomotion",
+  "retention": "No source, checkpoint, log, evaluator JSON, lineage, or replay was deleted or overwritten",
+  "next_lineage": "../action_rate_v1/lineage.json",
+  "goal_complete": false
+}

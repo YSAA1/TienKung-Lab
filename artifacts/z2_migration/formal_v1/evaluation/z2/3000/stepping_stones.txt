@@ -1,0 +1,10 @@
+reset step=90 xy=(-1.03,0.10) z=0.26 r=1.04 peak=1.04 accel=51.6mps2 tilt=1.11rad flags=accel contacts=waist_roll_link:0.0N,L_knee_link:0.0N,R_knee_link:0.0N
+reset step=180 xy=(0.56,0.03) z=0.15 r=0.56 peak=0.56 accel=57.6mps2 tilt=1.29rad flags=accel contacts=waist_roll_link:1838.9N,L_knee_link:0.0N,R_knee_link:0.0N
+reset step=378 xy=(-1.17,-0.88) z=0.20 r=1.47 peak=1.47 accel=3.9mps2 tilt=1.78rad flags=fall_over contacts=waist_roll_link:560.0N,L_knee_link:0.0N,R_knee_link:0.0N
+reset step=464 xy=(0.63,0.16) z=0.13 r=0.65 peak=0.65 accel=57.7mps2 tilt=1.28rad flags=accel contacts=waist_roll_link:2253.5N,L_knee_link:0.0N,R_knee_link:0.0N
+reset step=552 xy=(1.16,0.32) z=0.28 r=1.21 peak=1.21 accel=47.2mps2 tilt=1.12rad flags=accel contacts=waist_roll_link:0.0N,L_knee_link:0.0N,R_knee_link:0.0N
+reset step=645 xy=(1.33,-0.09) z=0.15 r=1.33 peak=1.33 accel=163.8mps2 tilt=1.37rad flags=accel contacts=waist_roll_link:1046.2N,L_knee_link:0.0N,R_knee_link:0.0N
+reset step=731 xy=(0.29,1.28) z=0.27 r=1.31 peak=1.31 accel=46.6mps2 tilt=1.12rad flags=accel contacts=waist_roll_link:0.0N,L_knee_link:0.0N,R_knee_link:0.0N
+reset step=819 xy=(-0.33,0.93) z=0.23 r=0.99 peak=0.99 accel=56.2mps2 tilt=1.15rad flags=accel contacts=waist_roll_link:0.0N,L_knee_link:0.0N,R_knee_link:0.0N
+reset step=908 xy=(0.48,-0.71) z=0.23 r=0.86 peak=0.86 accel=41.8mps2 tilt=1.22rad flags=accel contacts=waist_roll_link:0.0N,L_knee_link:0.0N,R_knee_link:0.0N
+reset step=998 xy=(-0.99,-0.67) z=0.22 r=1.19 peak=1.19 accel=49.7mps2 tilt=1.22rad flags=accel contacts=waist_roll_link:0.0N,L_knee_link:0.0N,R_knee_link:0.0N

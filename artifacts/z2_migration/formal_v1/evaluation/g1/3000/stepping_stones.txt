@@ -1,0 +1,6 @@
+reset step=123 xy=(-1.42,0.76) z=0.34 r=1.61 peak=1.61 accel=11.9mps2 tilt=1.06rad flags=fall_over contacts=torso_link:0.0N,left_knee_link:623.2N,right_knee_link:0.0N
+reset step=267 xy=(1.24,1.19) z=0.33 r=1.72 peak=1.72 accel=8.0mps2 tilt=1.05rad flags=fall_over contacts=torso_link:0.0N,left_knee_link:0.0N,right_knee_link:0.0N
+reset step=395 xy=(1.17,1.29) z=0.34 r=1.74 peak=1.74 accel=8.3mps2 tilt=1.04rad flags=fall_over contacts=torso_link:0.0N,left_knee_link:0.0N,right_knee_link:0.0N
+reset step=616 xy=(-0.47,1.21) z=0.52 r=1.30 peak=1.30 accel=9.3mps2 tilt=1.11rad flags=fall_over contacts=torso_link:0.0N,left_knee_link:0.0N,right_knee_link:0.0N
+reset step=754 xy=(-1.51,0.58) z=0.35 r=1.62 peak=1.62 accel=8.7mps2 tilt=1.03rad flags=fall_over contacts=torso_link:0.0N,left_knee_link:0.0N,right_knee_link:0.0N
+reset step=933 xy=(0.23,-1.46) z=0.35 r=1.48 peak=1.48 accel=8.9mps2 tilt=1.05rad flags=fall_over contacts=torso_link:0.0N,left_knee_link:0.0N,right_knee_link:0.0N

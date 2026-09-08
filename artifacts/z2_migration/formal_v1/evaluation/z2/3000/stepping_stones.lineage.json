@@ -1,0 +1,164 @@
+{
+  "wrapper": "run-milestone-evidence.py",
+  "mode": "eval",
+  "profile": "registry",
+  "seed": 42,
+  "project_root": "/home/nubot/phn_ws/t4_train/TienKung-Lab-z2-teacher-20260909",
+  "target_script": "/home/nubot/phn_ws/t4_train/TienKung-Lab-z2-teacher-20260909/legged_lab/scripts/eval_locomotion.py",
+  "full_argv": [
+    "/home/nubot/phn_ws/t4_train/TienKung-Lab-z2-teacher-20260909/artifacts/z2_migration/formal_v1/evaluation/run-milestone-evidence.py",
+    "--mode",
+    "eval",
+    "--profile",
+    "registry",
+    "--project-root",
+    "/home/nubot/phn_ws/t4_train/TienKung-Lab-z2-teacher-20260909",
+    "--evidence-manifest",
+    "/home/nubot/phn_ws/t4_train/TienKung-Lab-z2-teacher-20260909/artifacts/z2_migration/formal_v1/evaluation/z2/3000/stepping_stones.lineage.json",
+    "--amp-expert-manifest",
+    "/home/nubot/phn_ws/t4_train/TienKung-Lab-z2-teacher-20260909/legged_lab/envs/z2/datasets/motion_amp_expert/_manifest.json",
+    "--task",
+    "z2_loco_teacher",
+    "--num_envs",
+    "32",
+    "--episodes",
+    "64",
+    "--load_run",
+    "2026-09-09_03-45-12_z2_source_usd_teacher_v1",
+    "--checkpoint",
+    "/home/nubot/phn_ws/t4_train/TienKung-Lab-z2-teacher-20260909/logs/z2_loco_teacher_sparse/2026-09-09_03-45-12_z2_source_usd_teacher_v1/model_3000.pt",
+    "--output",
+    "/home/nubot/phn_ws/t4_train/TienKung-Lab-z2-teacher-20260909/artifacts/z2_migration/formal_v1/evaluation/z2/3000/stepping_stones.json",
+    "--terrain_type",
+    "stepping_stones",
+    "--difficulty",
+    "0.0",
+    "--command_vx",
+    "0.7",
+    "--device",
+    "cuda:0",
+    "--headless"
+  ],
+  "downstream_argv": [
+    "--task",
+    "z2_loco_teacher",
+    "--num_envs",
+    "32",
+    "--episodes",
+    "64",
+    "--load_run",
+    "2026-09-09_03-45-12_z2_source_usd_teacher_v1",
+    "--checkpoint",
+    "/home/nubot/phn_ws/t4_train/TienKung-Lab-z2-teacher-20260909/logs/z2_loco_teacher_sparse/2026-09-09_03-45-12_z2_source_usd_teacher_v1/model_3000.pt",
+    "--output",
+    "/home/nubot/phn_ws/t4_train/TienKung-Lab-z2-teacher-20260909/artifacts/z2_migration/formal_v1/evaluation/z2/3000/stepping_stones.json",
+    "--terrain_type",
+    "stepping_stones",
+    "--difficulty",
+    "0.0",
+    "--command_vx",
+    "0.7",
+    "--device",
+    "cuda:0",
+    "--headless"
+  ],
+  "wrapper_flags_in_downstream_argv": false,
+  "checkpoint": {
+    "path": "/home/nubot/phn_ws/t4_train/TienKung-Lab-z2-teacher-20260909/logs/z2_loco_teacher_sparse/2026-09-09_03-45-12_z2_source_usd_teacher_v1/model_3000.pt",
+    "exists": true,
+    "sha256": "311451fd9511dd0d246bbe5434b83f87a6515093bb55243062a1037aaa3defe3"
+  },
+  "source_file_hashes": {
+    "run-milestone-evidence.py": {
+      "path": "/home/nubot/phn_ws/t4_train/TienKung-Lab-z2-teacher-20260909/artifacts/z2_migration/formal_v1/evaluation/run-milestone-evidence.py",
+      "exists": true,
+      "sha256": "73d04efc7cc8da81d41c0533b428f5fd32ec47b7ee30b39d00ad6face4612de2"
+    },
+    "eval_locomotion.py": {
+      "path": "/home/nubot/phn_ws/t4_train/TienKung-Lab-z2-teacher-20260909/legged_lab/scripts/eval_locomotion.py",
+      "exists": true,
+      "sha256": "5e9cf6944c03c4db7cdb084b6208939a13aa951c8d4b1f80d2a922ba125a1bcd"
+    },
+    "play.py": {
+      "path": "/home/nubot/phn_ws/t4_train/TienKung-Lab-z2-teacher-20260909/legged_lab/scripts/play.py",
+      "exists": true,
+      "sha256": "4492fa6e84ed549c9c9c5334cfd882903018b4662f7af49a92197ada9b8d4eda"
+    },
+    "train.py": {
+      "path": "/home/nubot/phn_ws/t4_train/TienKung-Lab-z2-teacher-20260909/legged_lab/scripts/train.py",
+      "exists": true,
+      "sha256": "c171c03873183b2dbc5e53e469820d7c493d27c1e93789aa83d9d57e8e495550"
+    },
+    "motion_experiment.py": {
+      "path": "/home/nubot/phn_ws/t4_train/TienKung-Lab-z2-teacher-20260909/legged_lab/envs/g1/motion_experiment.py",
+      "exists": true,
+      "sha256": "2607c28f84b16c173f9fb8c54e8bf19f82abbdd162579fddff2448d4dd187790"
+    },
+    "task_registry.py": {
+      "path": "/home/nubot/phn_ws/t4_train/TienKung-Lab-z2-teacher-20260909/legged_lab/utils/task_registry.py",
+      "exists": true,
+      "sha256": "2d1a9b62b62fae6283335daa468676aad1b0fe9ded72c69c0d2e5eedcf348d82"
+    }
+  },
+  "amp_expert_manifest": {
+    "path": "/home/nubot/phn_ws/t4_train/TienKung-Lab-z2-teacher-20260909/legged_lab/envs/z2/datasets/motion_amp_expert/_manifest.json",
+    "exists": true,
+    "sha256": "ca38ca870bc69f1f925b2cfd3772a346b554d2f81fff29b9e09057b7008caf4f"
+  },
+  "effective_profile": {
+    "task": "z2_loco_teacher",
+    "profile": "registry",
+    "seed": 42,
+    "robot_spec_name": "z2",
+    "acceleration_termination_enabled": true,
+    "deterministic_fall_limits": null,
+    "gait_tracking_gate_enabled": true,
+    "action_rate_l2_weight": -0.1,
+    "lightlp_promotion_distance": "max_radial",
+    "progress_monitor_enabled": true,
+    "sparse_command_min_speed_scale": 1.0,
+    "actor_hidden_dims": [
+      512,
+      256,
+      128
+    ],
+    "critic_hidden_dims": [
+      512,
+      256,
+      128
+    ],
+    "amp_frame_dim": 70,
+    "amp_discr_hidden_dims": [
+      1024,
+      512,
+      256
+    ],
+    "amp": {
+      "manifest_supplied": true,
+      "manifest_path": "/home/nubot/phn_ws/t4_train/TienKung-Lab-z2-teacher-20260909/legged_lab/envs/z2/datasets/motion_amp_expert/_manifest.json",
+      "motion_file_count": 3,
+      "clip_sha256": {
+        "run": "8cd6e4d9234ae87c29282b72b71865ca3a68bed1b3a5a92bfb22bf5c13a2bdaf",
+        "walk": "d9a71492427574c256076f4e95d140c24e57989eb7eb50baefe2b9ca6d67d38c",
+        "walk_l": "c67c46ba063a9fae54a3998005a29bf449f2dae5e3579fced06ea6e2365f3866"
+      }
+    },
+    "get_cfgs_consumed": true
+  },
+  "get_cfgs_consumed": true,
+  "eval_output": "/home/nubot/phn_ws/t4_train/TienKung-Lab-z2-teacher-20260909/artifacts/z2_migration/formal_v1/evaluation/z2/3000/stepping_stones.json",
+  "play_record": null,
+  "success": true,
+  "status": "success",
+  "exception_type": null,
+  "exception_message": null,
+  "exit_code": 0,
+  "close_timeout_s": 90.0,
+  "notes": [
+    "eval_locomotion.py / play.py / train.py were not modified.",
+    "vital_v1 is G1-only via apply_vital_motion_v1(env_cfg).",
+    "AMP files are taken from registry unless --amp-expert-manifest is supplied.",
+    "G1 training env.yaml / full17 datapaths are not guessed here.",
+    "Runtime simulation validation is parent-owned."
+  ]
+}
