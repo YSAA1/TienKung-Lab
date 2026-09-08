@@ -1,8 +1,63 @@
 # 机器人无关的运动训练算法整理
 
-Status: 2026-09-08 10:20，全速 A/B 各双卡冷启动已核验。旧两组停止留档；A GPU0/2，B GPU1/3，TB8041。实现提交 `2f99efb`；正确开训不代表学习改善。
+Status: 2026-09-08，已制定核心缺陷修复计划，尚未实施。现有全速 A/B 保留为冻结运行；本轮仅更新计划和证据，不停止、重启或修改训练。此前 A/B 实现提交 `2f99efb`、TB8041；正确开训不代表学习改善。
 
-## 当前执行：恢复 T4 速度与真实进展晋级 A/B
+## 待实施：明确缺陷修复与真实环境验收
+
+**目标与范围**：修复两轮审计已经复现的计算/重置/接线错误，并在服务器真实 Isaac 环境中验证。执行工作树为 `D:\TienKung-Lab-g1-portability-20260906`；修改不得热覆盖现有远端 `TienKung-Lab-g1-progress-ab-20260908`。下方 A/B 记录继续描述既有运行，不代表本修复已经启动。
+
+**Actor 合同保持**：真实根线速度只进入 Critic 是合理的非对称 Actor–Critic 设计。此前将其列为优先修复方向的建议撤回；本计划不向 Actor 添加真实速度，也不安排该变量对照。G1 Actor/Critic/AMP 保持 **1997/2076/70**；T4 sparse 保持 **1937/2016/66**，其余已有观测合同不变。
+
+### 已确认的修复清单
+
+| 编号 / 优先级 | 缺陷与修改位置 | 修复决定 | 必须通过的验收 |
+| --- | --- | --- | --- |
+| F1 / P1 | 足速度历史跨 reset：`locomotion/env.py::reset`、`update_foot_accel_penalty` | 在 reset 写入和 forward 完成后，以**已可靠刷新的本回合实际 link velocity**重新播种对应 env 的足速度历史；清该 env 的 EMA。不得读到旧 ArticulationData 缓存，不得给所有机器人统一置零，不额外推进物理时间来掩盖时序。 | 重跑已失败的8env G1反例：root/qdot/PhysX足速度为0时，首步仅重力运动，EMA从113.93/64.22变为0/0；第二步真实加速度仍生效。再覆盖T4非零初速度、连续/部分reset，未reset环境历史不变。 |
+| F2 / P1 | `extras["time_outs"]`跨步残留：`env.py::step/reset` | 每个控制步无条件导出当前timeout mask，不依赖是否有人reset；明确与本步done、有效物理终止原因的关系。 | 实际horizon结束后的连续三个无reset步骤返回全false；部分reset、全reset及混合原因均正确。 |
+| F3 / P2 | 截断bootstrap使用动作前价值：`env.py`、`amp_on_policy_runner.py`、`amp_ppo.py` | reset前构造真实终点Critic观测，只对纯截断补 `gamma * V(terminal)`。使用临时历史副本，不推进真实历史，不取reset后状态，不改变输入字段/维度。 | CPU反例r=1、gamma=.99、V(start)=10、V(terminal)=2得到2.98而非10.90；真实终点观测对齐、历史只推进一次；物理失败与timeout重叠不bootstrap。 |
+| F4 / P1 | `.05`探索下限配置无效：`amp_on_policy_runner.py`、`amp_ppo.py`、策略std参数化 | 读取真实配置值，在初始化、加载、optimizer更新后落实下限；覆盖scalar/log std。明确 `.05`是policy action标准差，本G1尺度下对应目标角标准差 `.0125 rad`，不是关节范围比例。 | 下限以下初始化/加载/更新均被约束；正常高于下限时分布不变；两rank一致。保留已有`.05`数值，不扩大探索强度。 |
+| F5 / P2 | 合法站立受隐藏航向目标惩罚：`mdp/rewards.py::heading_error` | 仅对 `is_heading_env & ~is_standing_env` 启用heading误差；没有heading任务时该项为0，运动heading原公式保留。 | 相同站立输入下，隐藏target=0或pi均罚0；运动heading仍正确；稀疏yaw-rate桶沿用既有语义。无需增加heading观测。 |
+| F6 / P2 | AMP插值和起点采样有偏：`rsl_rl/utils/motion_loader.py` | 按 `t/frame_dt` 索引；起点均匀采样 `[0, length-step_dt]`，明确边界与过短clip报错。 | 4帧线性例在一帧时间取到1而非1.333；scalar/batch结果一致，终点不越界，无多余首帧点质量。保持17个专家文件、SHA、逐文件权重和70D格式。 |
+
+**F1 实现约束**：单纯把赋值挪到 `sim.forward()` 后不算完成，必须与当前运行时直接 PhysX `get_link_velocities()` 的结果对照，确认body顺序、坐标系和缓存刷新；零与非零reset速度都要测试。若运行时确实无法可靠获得reset瞬间速度，备选是每env历史有效标记：首个真实物理更新只播种、跳过该20ms差分，随后正常计算；这有明确首步语义变化，必须在实施记录中说明，并对T4/G1验证，不可悄悄叠加两种方案。
+
+**F3 实现约束**：
+
+- 仅为待bootstrap的env构造Critic只读预览：当前本体帧和前向scan分别按既有oldest→newest顺序加入各自临时历史；足scan与immunity保持单帧，按原顺序在末尾拼接，再使用原尺度/clip。覆盖history=1、多帧和未填满历史；不调用会append的 `compute_observations()`，不采Actor噪声，不更新normalizer统计。
+- 保留现行 `timeout_causes = horizon | OOB | joint_guard`、所有阈值、免疫规则与reset事件。有效物理 `terminated` 必须来自真实终止原因，不能用 `done & ~time_out` 反推；使用 `bootstrap_mask = timeout_causes & done & ~terminated`，使同时发生的真实失败优先。
+- GAE在所有done处截断。正常reset及其后观测生成仍只有一次。检查共享环境/runner调用方，不要求未迁移环境默默使用错误的旧值；对本次支持的合同显式接线，兼容范围及相邻调用须验证。
+
+### 两项运行保障
+
+| 编号 | 内容 | 验收 |
+| --- | --- | --- |
+| R1 | 必需foot scanner缺失时显式失败：`locomotion/env.py::compute_foot_scan_privilege`及初始化校验 | 配置要求足scan却缺任意一只传感器时给出明确错误；不再用全0伪装有效观测。正常ray miss、洞、全平地常量和显式关闭的可选配置按原语义处理。 |
+| R2 | 精确运行依赖与资源溯源 | manifest同时记录项目commit、IsaacLab `3d5ea25ddbcba05bef4c9acd1dacb9fa728b289b`、唯一`assets.py`内容补丁、Isaac Sim/Python/Torch/NumPy版本、实际导入路径及URDF/专家SHA。保持已实测的运行时内容，不顺手升级、回滚至精确v2.1.0、改4.5视觉资源根或重装服务器环境。 |
+
+当前342文件及真实导入检查未发现业务代码漏同步；IsaacLab的1534个Git modified中1533项仅权限变化，唯一内容改动是资产根。实际G1的29关节PD/力矩、URDF来源和最终自碰撞属性已核对。历史T4缺少精确依赖commit，保留这一对照限制，不能宣称历史环境已完整重建。
+
+### 执行顺序与验证
+
+- [x] **计划与修复前证据**：完成两轮审计及真实Isaac检查，确认Actor速度设计正常。证据持久化到 `artifacts/portability/g1_core_fixes_20260908/evidence/`，SHA见该目录 `manifest.json`。这只表示证据已保存，不表示修复通过。
+- [ ] **阶段0，固定候选环境**：记录实施时本地HEAD和dirty状态；由冻结源码建立独立候选运行面，明确允许的变更清单。记录上述精确依赖与`assets.py`补丁，保留旧A/B的代码、checkpoint、配置和日志。不得用旧运行目录承接修改。
+- [ ] **阶段1，修reset及transition边界**：优先F1、F2、F3，先把现有反例写成有意义的行为测试，再修实现。F2/F3共享同一组终止原因、terminal观测和history检查，避免两个实现互相覆盖。提取可复用的小型Isaac验收入口，不把旧probe的 `ok=true` 当作合同通过。
+- [ ] **阶段2，修配置与采样接线**：完成F4、F5、F6及R1；互不影响的实现/审查可并行，相关验证通过后按范围提交。R2贯穿两个阶段。保持原专家内容与其权重，原奖励数值、动作尺度/PD、命令、地形、终止阈值不调参。
+- [ ] **阶段3，CPU回归**：运行新增反例及受影响的AMP更新/地形transition、T4/G1观测与机器人映射、稀疏奖励/终止/部分reset回归。实现触及共享深度环境或其他runner时，仅补相应相邻检查；无需重训学生或机械跑全库部署测试。证据记录实际命令、解释器和结果，不能沿用修复前通过数。
+- [ ] **阶段4，真实单卡Isaac集成**：nubot独立tmux中串行跑G1 mixed、T4 mixed、G1 flat各32env约500步，加关节脉冲、部分reset、horizon后无reset、真实物理失败与截断重叠；重跑8env高速足速度reset反例和T4非零初速度版本。逐项断言F1/F2/F3语义，而非仅检查finite/shape；核对最新scan/历史、terminal AMP以及固定Actor/Critic/AMP维度。仍保留诊断注入与自然rollout的区别。
+- [ ] **阶段5，真实双GPU集成**：同一候选，每rank32～64env、原24steps/update、2次PPO/AMP更新，使用当前完整17段数据；在不同rank制造不同reset/截断分布。确认第二次采样正常、没有因某rank无截断而遗漏collective、policy/discriminator和AMP normalizer一致、std下限生效、checkpoint与新metadata可保存加载、进程正常退出。只在tmux运行，不与其他probe并行初始化USD。
+- [ ] **阶段6，独立审查与交付**：审查最终差异、所有反例的修复前后结果、运行模块/资产SHA和保存配置；仅提交任务相关修改，使用中文里程碑commit。产出修复后manifest、原始JSON及日志，更新本计划状态。最终行为验收未完成时，不将G1学习问题标为已解决。
+
+CPU入口沿用现有测试组合，具体按实际修改选择：`tests/test_amp_update_contract.py`、`tests/test_amp_curriculum_transition.py`、`tests/test_t4_observation_contracts.py`、`tests/test_robot_neutral_locomotion.py`、`tests/test_t4_sparse_reward_contracts.py`、`tests/test_collapse_recovery_contract.py`及新增reset/bootstrap/loader反例。本机使用已有 `D:\anaconda\envs\pytorch\python.exe` 做CPU检查；Isaac验收使用nubot的 `scripts/nubot_run.sh`，不安装本机Docker来替代它。
+
+**后续训练与能力边界**：本次只制定方案，不隐含停止现有A/B或启动新的30k。以后执行正式开训时，在上述门槛通过后建立新lineage冷启动，不热加载旧optimizer接续一个改变了回报语义的实验；预算和GPU安排沿用届时明确的执行指令，不自动新增多组消融。能力验收继续使用同预算checkpoint、固定vx=.7、零根初速、flat/easy stones/easy pillars各32env，报告实际速度/净位移/reach2m/终止原因、evaluator JSON、lineage与连续回放。无需重新发明或降低现有门槛。
+
+**明确不纳入本轮**：Actor/Critic新增特权量、AMP70→76D或降权、净位移窗口奖励、PD/动作尺度/探索强度调参、放宽终止、改镜像PPO、启用empirical normalization、重定向/裁剪专家数据。这些不属于本轮已确认缺陷的必要修复。脚速度和timeout问题虽已在G1真实复现，仍位于共享逻辑，不能预先承诺修完就追平历史T4。
+
+`final_integration_claim`：完成时必须满足F1～F6及R1/R2均完成、修复前失败的真实反例通过、正常差分/终止/历史/采样合同及既有观测宽度保持、单卡和双卡实际更新验证通过、候选来源可追溯且旧运行未被污染。此声明只覆盖核心缺陷和开训合同修复；G1持续行走、越障及追平同期T4必须另外由行为证据支持。
+
+修复前证据索引：[证据说明](../../artifacts/portability/g1_core_fixes_20260908/README.md)。
+
+## 既有运行：恢复 T4 速度与真实进展晋级 A/B
 
 - 原因：同 11000 更新，recovery OOB 0.23% 对 T4 54.35%，简单石头/圆桩 reach2m 为 0。固定 model_11000 平地 6 秒累计路径 1.558 m、净位移仅 3.45 cm，证实原地往复晃动。旧晋级用累计路径；G1 最低速度缩放 0.5 又使静止在 0.3 m/s 命令下达到 tracking 0.698，不能继续把 terrain level 或回合增长当能力。
 - 用户明确取消降速：`sparse_command_min_speed_scale=1.0`，踏石/圆桩各难度都是 0.6–2.0 m/s；其余地形命令与合法站立合同不变。最低速度 0.3 是未经独立验证的迁移假设，不是 G1 物理要求。

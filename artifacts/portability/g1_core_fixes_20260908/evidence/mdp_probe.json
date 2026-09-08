@@ -1,0 +1,55 @@
+{
+  "provenance": {
+    "repository": "D:\\TienKung-Lab-g1-portability-20260906",
+    "interpreter": "D:\\anaconda\\envs\\pytorch\\python.exe",
+    "execution": "Component probes executed inline during the current read-only audit; this artifact preserves their observed outputs without rerunning.",
+    "saved_reproducer": "mdp_probe.py",
+    "repository_mutations": false,
+    "physics_or_training_executed": false
+  },
+  "speed_terms_before_dt_and_amp_task_mix": [
+    {
+      "cmd": 0.6,
+      "stand": 0.47385551736424353,
+      "zero_net_sinusoidal": 1.232350232190007,
+      "slow_forward_30pct": 2.4876243960666926,
+      "exact_forward": 3.5
+    },
+    {
+      "cmd": 0.7,
+      "stand": 0.28171684184209006,
+      "zero_net_sinusoidal": 1.125803206294558,
+      "slow_forward_30pct": 2.265479518896138,
+      "exact_forward": 3.5
+    },
+    {
+      "cmd": 1.3,
+      "stand": 0.0023184583478091806,
+      "zero_net_sinusoidal": 0.7153711468573245,
+      "slow_forward_30pct": 1.5728572800384581,
+      "exact_forward": 3.5
+    },
+    {
+      "cmd": 2.0,
+      "stand": 2.2507034943851823e-07,
+      "zero_net_sinusoidal": 0.38520994055956914,
+      "slow_forward_30pct": 1.5007873380813102,
+      "exact_forward": 3.5
+    }
+  ],
+  "speed_probe_interpretation": "Only weighted linear tracking, velocity slack, and opposite-direction terms. The sinusoid has zero net displacement over one period. This is not a complete-return comparison or a dynamically feasible rollout.",
+  "upright_bonus_both_upright_and_inverted": 1.1,
+  "standing_heading_alias": {
+    "visible_commands": [[0.0, 0.0, 0.0], [0.0, 0.0, 0.0]],
+    "hidden_heading_targets": [0.0, 3.1415927410125732],
+    "heading_error": [0.0, 3.141592502593994]
+  },
+  "stale_timeout_ownership_reproducer": {
+    "current_timeouts": [false, false],
+    "returned_timeouts": [true, false],
+    "values": [2.0, 3.0],
+    "gamma": 0.99,
+    "spurious_bootstrap": [1.9800000190734863, 0.0],
+    "scope": "Source tensor ownership and PPO arithmetic reproduced with torch tensors; this is not a full Isaac step integration test."
+  }
+}

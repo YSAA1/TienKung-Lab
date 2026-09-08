@@ -1,5 +1,7 @@
 # Current State
 
+- 2026-09-08 核心修复计划：用户仅要求制定方案，尚未实施或改动训练。唯一入口仍为 `docs/plans/2026-09-07--robot-neutral-locomotion.md` 顶部；范围为足速度跨reset、timeout残留、terminal bootstrap、std下限、standing heading、AMP时间采样，加必需传感器缺失检查和依赖溯源。Actor不输入真实根速度是正常设计，不纳修复或默认实验。修复前真实Isaac/CPU/导入证据已保存到 `artifacts/portability/g1_core_fixes_20260908/evidence/`；现有A/B冻结保留。旧短probe通过记录不能覆盖本次已实测发现的缺陷。
+
 - 2026-09-08：用户授权四卡全速 A/B，代码提交 `2f99efb`。共同冻结目录 `/home/nubot/phn_ws/t4_train/TienKung-Lab-g1-progress-ab-20260908`；A GPU0/2、tmux `g1-progress-A`，原路径晋级；B GPU1/3、tmux `g1-progress-B`，相对tile中心最大径向距离>4m晋级。速度缩放均1.0、全17段、权重2、recovery终止、每卡2048env、24steps、seed42+rank、冷启动30000，TB8041。120项CPU检查、独立review、32env真实Isaac命令/部分reset/晋级probe及双卡2更新smoke通过。旧full17/recovery四rank已退出，保留model_18500/model_12500及全部历史日志。启动配置/进程/标量证据见 `artifacts/portability/g1_progress_ab_20260908/`；本状态不声明学习改善。
 
 - 2026-09-07 23:30：G1恢复合同对照已启动。GPU0/2保留full17权重2基线；原GPU1/3权重4已停、6个checkpoint保留（model_2500）。新tmux `g1-recovery-30k`，冻结目录 `/home/nubot/phn_ws/t4_train/TienKung-Lab-g1-recovery-20260907`，主run `logs/g1_recovery_30k/2026-09-07_23-26-29_g1_recovery_30k`，TB8040，rank PID920838/920839。连续塌低.20s且无immunity才触发collapsed；线速度2、全17段、每卡2048env、冷启动30000。56项检查、真实Isaac和独立review通过。固定旧checkpoint探针仅证明合同正确，仍站立、未见稳定恢复，不宣称学习改善。证据 `artifacts/portability/g1_recovery_20260907/`，执行以当前plan顶部为准。

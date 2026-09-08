@@ -1,0 +1,4 @@
+# Preserve the exact bytes of audit inputs on Windows and Linux.
+* -text whitespace=cr-at-eol
+# These are archived source snapshots, not implementation files.
+*.py.txt -diff

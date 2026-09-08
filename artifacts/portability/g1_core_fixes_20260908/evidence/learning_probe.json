@@ -1,0 +1,112 @@
+{
+  "provenance": {
+    "source_root": "D:\\TienKung-Lab-g1-portability-20260906",
+    "interpreter": "D:\\anaconda\\envs\\pytorch\\python.exe",
+    "run_date": "2026-09-08",
+    "recording": "Results preserved from already completed inline CPU probes; not rerun when saving these artifacts.",
+    "source_checkout_modified": false,
+    "training_modified": false
+  },
+  "loader": {
+    "source_lines": [
+      "rsl_rl/rsl_rl/utils/motion_loader.py:83",
+      "rsl_rl/rsl_rl/utils/motion_loader.py:156-167",
+      "rsl_rl/rsl_rl/utils/motion_loader.py:176-225"
+    ],
+    "synthetic": {
+      "at_frame_dt_expected": 1,
+      "at_frame_dt_actual": 1.3333333730697632,
+      "transition_delta_expected": 0.6,
+      "transition_delta_actual": 0.800000011920929,
+      "first_frame_point_mass": 0.53354,
+      "uniform_correct_max_t": 0.08,
+      "actual_max_t": 0.04666446184473895
+    },
+    "active_clip_count": 17,
+    "active_frame_count_range": [
+      137,
+      372
+    ],
+    "active_time_factor_range": [
+      1.0026954177897573,
+      1.0073529411764706
+    ],
+    "weighted_zero_mass": 0.008922069299242502,
+    "interpretation": "Confirmed shared time-coordinate and time-sampling defects. Current clip magnitudes are small; not evidence for the G1-T4 performance gap."
+  },
+  "timeout": {
+    "source_lines": [
+      "rsl_rl/rsl_rl/algorithms/amp_ppo.py:180",
+      "rsl_rl/rsl_rl/algorithms/amp_ppo.py:209-212",
+      "legged_lab/locomotion/env.py:916",
+      "legged_lab/locomotion/env.py:922-926",
+      "legged_lab/locomotion/env.py:948-955",
+      "legged_lab/locomotion/env.py:1078-1079",
+      "legged_lab/locomotion/env.py:1102"
+    ],
+    "bootstrap": {
+      "V_start": 10,
+      "V_terminal": 2,
+      "actual_reward": 10.899999618530273,
+      "correct_terminal_bootstrap_reward": 2.98,
+      "bias": 7.919999618530273
+    },
+    "stale_timeout_on_zero_reset": {
+      "current": [
+        false,
+        false
+      ],
+      "infos": [
+        true,
+        false
+      ]
+    },
+    "limitations": [
+      "Bootstrap executed the actual AST-extracted process_env_step method with a small stub.",
+      "Stale-info reproduction models the source lifecycle; it is not a live Isaac runtime frequency measurement.",
+      "Constructed V values demonstrate semantic bias, not measured current-policy average bias.",
+      "Both defects are shared by T4 and G1."
+    ]
+  },
+  "mirror": {
+    "source_lines": [
+      "rsl_rl/rsl_rl/algorithms/amp_ppo.py:295-309",
+      "rsl_rl/rsl_rl/algorithms/amp_ppo.py:362-367"
+    ],
+    "ratio_using_repeated_original_logprob_before_update": 0.000003726656814251328,
+    "ordinary_same_distribution_ratio_before_update": 1,
+    "interpretation": "Design-risk example, not a confirmed implementation bug. Transformed samples come from the induced mirrored behavior distribution; repeating original log-prob can represent its density. Do not blindly replace the denominator. Measure original/mirrored ratio and clipping; isolate augmentation-vs-mirror-loss if justified."
+  },
+  "std_floor": {
+    "source_lines": [
+      "rsl_rl/rsl_rl/runners/amp_on_policy_runner.py:132",
+      "rsl_rl/rsl_rl/algorithms/amp_ppo.py:118",
+      "rsl_rl/rsl_rl/algorithms/amp_ppo.py:461",
+      "rsl_rl/rsl_rl/modules/actor_critic.py:83",
+      "rsl_rl/rsl_rl/modules/actor_critic.py:124-131"
+    ],
+    "configured_floor": [
+      0.05000000074505806,
+      0.05000000074505806
+    ],
+    "std_before": [
+      0.009999999776482582,
+      0.009999999776482582
+    ],
+    "std_after_actual_update": [
+      0.010099999606609344,
+      0.00989999994635582
+    ],
+    "interpretation": "Actual CPU AMPPPO update demonstrates configured lower bound is unenforced. Shared historical defect, not a measurement that current G1 std has collapsed."
+  },
+  "empirical_normalization": {
+    "active": false,
+    "source": "legged_lab/locomotion/teacher_cfg.py:395",
+    "interpretation": "Initial raw observation and unsynchronized rank normalizers are dormant with current False configuration; cannot explain current training."
+  },
+  "regression": {
+    "command": "D:\\anaconda\\envs\\pytorch\\python.exe -m pytest tests/test_amp_update_contract.py tests/test_amp_curriculum_transition.py -q",
+    "result": "4 passed in 2.74s",
+    "scope": "CPU raw AMP statistics, gradient-penalty coordinates, terrain schedule, pre-reset coefficient capture. Not a live distributed collective probe."
+  }
+}
