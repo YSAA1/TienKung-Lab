@@ -1,6 +1,6 @@
 # 核心缺陷修复与验收证据
 
-状态：F1–F6/R1/R2已完成修复及实际验收，独立审核通过。训练启动单独记录，不将开训合同等同运动能力。
+状态：F1–F6/R1/R2已完成修复及实际验收，独立审核通过。新训练已启动：B径向判据、GPU0/2各2048env、30000更新，TensorBoard [8042](http://100.100.188.39:8042/#scalars)。启动核验见[launch_verification.json](launch_verification.json)，旧A/B各10个checkpoint与历史保留见[old_stopped.json](old_stopped.json)。开训合同不等同运动能力。
 
 修复后入口：[manifest.json](manifest.json)，包含实际生产源码SHA、精确依赖、资源、验收JSON及独立审核状态。[code_review.md](code_review.md)保存两个审核轴结果。
 

@@ -1,0 +1,44 @@
+{
+  "checkpoint": "/home/nubot/phn_ws/t4_train/TienKung-Lab-g1-core-fixes-20260908/logs/g1_core_fixes/2026-09-08_15-07-29_g1_core_fixes_B30000/model_0.pt",
+  "sha256": "a2c1195d304d09cf392a4e3a4b11c47fa8fac3f0fded7ab31d0632ba82bffd2b",
+  "transition_contract": {
+    "version": 1,
+    "timeout_bootstrap": "pre_reset_terminal_critic_pure_truncation",
+    "min_action_std": [
+      0.05000000074505806,
+      0.05000000074505806,
+      0.05000000074505806,
+      0.05000000074505806,
+      0.05000000074505806,
+      0.05000000074505806,
+      0.05000000074505806,
+      0.05000000074505806,
+      0.05000000074505806,
+      0.05000000074505806,
+      0.05000000074505806,
+      0.05000000074505806,
+      0.05000000074505806,
+      0.05000000074505806,
+      0.05000000074505806,
+      0.05000000074505806,
+      0.05000000074505806,
+      0.05000000074505806,
+      0.05000000074505806,
+      0.05000000074505806,
+      0.05000000074505806,
+      0.05000000074505806,
+      0.05000000074505806,
+      0.05000000074505806,
+      0.05000000074505806,
+      0.05000000074505806,
+      0.05000000074505806,
+      0.05000000074505806,
+      0.05000000074505806
+    ]
+  },
+  "minimum_saved_std": 0.995880126953125,
+  "saved_config_sha": {
+    "/home/nubot/phn_ws/t4_train/TienKung-Lab-g1-core-fixes-20260908/logs/g1_core_fixes/2026-09-08_15-07-29_g1_core_fixes_B30000/params/agent.yaml": "e26c6d341a3f6f361a7521e6f0b33a2ba7d2e02224bacea9e266d12b1b6125ac",
+    "/home/nubot/phn_ws/t4_train/TienKung-Lab-g1-core-fixes-20260908/logs/g1_core_fixes/2026-09-08_15-07-29_g1_core_fixes_B30000/params/env.yaml": "af19b2aa84f056d07de3cedbfaeff0df3ed7e128450b1f9817032de3a5b46341"
+  }
+}

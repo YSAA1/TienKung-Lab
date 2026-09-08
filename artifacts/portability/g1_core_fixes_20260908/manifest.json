@@ -891,10 +891,277 @@
     "stop_old_ab_after_gates": true,
     "preserve_all_old_artifacts": true
   },
-  "training_status": "not_started",
+  "training_status": "running",
   "evidence_archives": {
     "g1-core-final-integration-20260908.tar.gz": "330db57dbad5b9f60025f9d237e5aaa4050677e330bdf31d38a8a224a089a061",
     "g1-core-runtime-records-20260908.tar.gz": "4bb6dd1be145b1d359b2c2f84c6336abf5c4819119cf78216de9369516e22226",
     "g1-core-single-results-20260908.tar.gz": "1c79e71f46a5cd389f63595f0da0a80b196c6195d18ee62055de70dc10a1e004"
-  }
+  },
+  "launch": {
+    "ranks": [
+      {
+        "pid": 1209376,
+        "rank": 0,
+        "visible_gpus": "0,2",
+        "command": [
+          "/home/nubot/isaac-sim-standalone-5.1.0-linux-x86_64/kit/python/bin/python3",
+          "-u",
+          "legged_lab/scripts/train.py",
+          "--task",
+          "g1_loco_teacher",
+          "--g1_progress_ab",
+          "B",
+          "--num_envs",
+          "2048",
+          "--seed",
+          "42",
+          "--distributed",
+          "--headless",
+          "--max_iterations",
+          "30000",
+          "--experiment_name",
+          "g1_core_fixes",
+          "--run_name",
+          "g1_core_fixes_B30000",
+          "--amp_expert_manifest",
+          "/home/nubot/phn_ws/t4_train/TienKung-Lab-g1-core-fixes-20260908/legged_lab/envs/g1/datasets/motion_amp_expert_t4_rob2rob_full17_v1/_manifest.json",
+          ""
+        ]
+      },
+      {
+        "pid": 1209377,
+        "rank": 1,
+        "visible_gpus": "0,2",
+        "command": [
+          "/home/nubot/isaac-sim-standalone-5.1.0-linux-x86_64/kit/python/bin/python3",
+          "-u",
+          "legged_lab/scripts/train.py",
+          "--task",
+          "g1_loco_teacher",
+          "--g1_progress_ab",
+          "B",
+          "--num_envs",
+          "2048",
+          "--seed",
+          "42",
+          "--distributed",
+          "--headless",
+          "--max_iterations",
+          "30000",
+          "--experiment_name",
+          "g1_core_fixes",
+          "--run_name",
+          "g1_core_fixes_B30000",
+          "--amp_expert_manifest",
+          "/home/nubot/phn_ws/t4_train/TienKung-Lab-g1-core-fixes-20260908/legged_lab/envs/g1/datasets/motion_amp_expert_t4_rob2rob_full17_v1/_manifest.json",
+          ""
+        ]
+      }
+    ],
+    "tensorboard_runs": [
+      "2026-09-08_15-07-29_g1_core_fixes_B30000"
+    ],
+    "tensorboard": "http://100.100.188.39:8042/#scalars",
+    "run": "/home/nubot/phn_ws/t4_train/TienKung-Lab-g1-core-fixes-20260908/logs/g1_core_fixes/2026-09-08_15-07-29_g1_core_fixes_B30000",
+    "iteration": 21,
+    "scope": "launch verified, no behavior claim"
+  },
+  "initial_health": {
+    "time": "2026-09-08T15:09:00.328619+08:00",
+    "run": "/home/nubot/phn_ws/t4_train/TienKung-Lab-g1-core-fixes-20260908/logs/g1_core_fixes/2026-09-08_15-07-29_g1_core_fixes_B30000",
+    "last_iteration": 21,
+    "recent_scalars_finite": true,
+    "metrics": {
+      "Progress/all/moving/command_completion": {
+        "step": 21,
+        "value": 0.24540472030639648
+      },
+      "Progress/all/moving/command_progress_m": {
+        "step": 21,
+        "value": 0.30907484889030457
+      },
+      "Progress/all/moving/command_speed_mps": {
+        "step": 21,
+        "value": 1.0841073989868164
+      },
+      "Progress/all/moving/directed_speed_mps": {
+        "step": 21,
+        "value": 0.2839789390563965
+      },
+      "Progress/all/moving/max_spawn_displacement_m": {
+        "step": 21,
+        "value": 0.5978019833564758
+      },
+      "Progress/all/moving/net_displacement_m": {
+        "step": 21,
+        "value": 0.5965139865875244
+      },
+      "Progress/all/moving/net_path_ratio": {
+        "step": 21,
+        "value": 0.8930527567863464
+      },
+      "Progress/all/moving/path_length_m": {
+        "step": 21,
+        "value": 0.6699537038803101
+      },
+      "Progress/all/moving/window_net_speed_mps": {
+        "step": 21,
+        "value": 0.4068470597267151
+      },
+      "Progress/all/standing/command_completion": {
+        "step": 21,
+        "value": 0.0
+      },
+      "Progress/all/standing/command_progress_m": {
+        "step": 21,
+        "value": 0.0
+      },
+      "Progress/all/standing/command_speed_mps": {
+        "step": 21,
+        "value": 0.0
+      },
+      "Progress/all/standing/directed_speed_mps": {
+        "step": 21,
+        "value": 0.0
+      },
+      "Progress/all/standing/max_spawn_displacement_m": {
+        "step": 21,
+        "value": 0.5914769768714905
+      },
+      "Progress/all/standing/net_displacement_m": {
+        "step": 21,
+        "value": 0.5905901789665222
+      },
+      "Progress/all/standing/net_path_ratio": {
+        "step": 21,
+        "value": 0.8483062982559204
+      },
+      "Progress/all/standing/path_length_m": {
+        "step": 21,
+        "value": 0.7091506719589233
+      },
+      "Progress/all/standing/window_net_speed_mps": {
+        "step": 21,
+        "value": 0.40038222074508667
+      },
+      "Loss/value_function": {
+        "step": 21,
+        "value": 0.2314980924129486
+      },
+      "Loss/surrogate": {
+        "step": 21,
+        "value": -0.002538147382438183
+      },
+      "Loss/entropy": {
+        "step": 21,
+        "value": 38.92030715942383
+      },
+      "Loss/amp": {
+        "step": 21,
+        "value": 0.0014331727288663387
+      },
+      "Loss/amp_grad_pen": {
+        "step": 21,
+        "value": 0.0031193243339657784
+      },
+      "Loss/amp_policy_pred": {
+        "step": 21,
+        "value": -0.9954383969306946
+      },
+      "Loss/amp_expert_pred": {
+        "step": 21,
+        "value": 1.001975417137146
+      },
+      "Loss/symmetry": {
+        "step": 21,
+        "value": 0.001408866373822093
+      },
+      "Loss/learning_rate": {
+        "step": 21,
+        "value": 0.00017085937724914402
+      },
+      "Policy/mean_noise_std": {
+        "step": 21,
+        "value": 0.9249552488327026
+      },
+      "Perf/total_fps": {
+        "step": 21,
+        "value": 26037.0
+      },
+      "Perf/collection time": {
+        "step": 21,
+        "value": 3.2109248638153076
+      },
+      "Perf/learning_time": {
+        "step": 21,
+        "value": 0.5645124912261963
+      }
+    },
+    "checkpoints": [
+      "/home/nubot/phn_ws/t4_train/TienKung-Lab-g1-core-fixes-20260908/logs/g1_core_fixes/2026-09-08_15-07-29_g1_core_fixes_B30000/model_0.pt"
+    ],
+    "config_verified": {
+      "budget": 30000,
+      "resume": false,
+      "envs_per_rank": 2048,
+      "steps_per_update": 24,
+      "progress": "max_radial",
+      "expert_count": 17
+    },
+    "scope": "startup and numerical health only; no behavior capability claim"
+  },
+  "old_runs_retained": {
+    "checkpoint_counts": {
+      "A": 10,
+      "B": 10
+    },
+    "manifest": "old_stopped.json",
+    "sha256": "9c9fa632dcc0cb10fe49516580307529f7ce982f289aa41cac2b7a724e511609"
+  },
+  "initial_checkpoint": {
+    "checkpoint": "/home/nubot/phn_ws/t4_train/TienKung-Lab-g1-core-fixes-20260908/logs/g1_core_fixes/2026-09-08_15-07-29_g1_core_fixes_B30000/model_0.pt",
+    "sha256": "a2c1195d304d09cf392a4e3a4b11c47fa8fac3f0fded7ab31d0632ba82bffd2b",
+    "transition_contract": {
+      "version": 1,
+      "timeout_bootstrap": "pre_reset_terminal_critic_pure_truncation",
+      "min_action_std": [
+        0.05000000074505806,
+        0.05000000074505806,
+        0.05000000074505806,
+        0.05000000074505806,
+        0.05000000074505806,
+        0.05000000074505806,
+        0.05000000074505806,
+        0.05000000074505806,
+        0.05000000074505806,
+        0.05000000074505806,
+        0.05000000074505806,
+        0.05000000074505806,
+        0.05000000074505806,
+        0.05000000074505806,
+        0.05000000074505806,
+        0.05000000074505806,
+        0.05000000074505806,
+        0.05000000074505806,
+        0.05000000074505806,
+        0.05000000074505806,
+        0.05000000074505806,
+        0.05000000074505806,
+        0.05000000074505806,
+        0.05000000074505806,
+        0.05000000074505806,
+        0.05000000074505806,
+        0.05000000074505806,
+        0.05000000074505806,
+        0.05000000074505806
+      ]
+    },
+    "minimum_saved_std": 0.995880126953125,
+    "saved_config_sha": {
+      "/home/nubot/phn_ws/t4_train/TienKung-Lab-g1-core-fixes-20260908/logs/g1_core_fixes/2026-09-08_15-07-29_g1_core_fixes_B30000/params/agent.yaml": "e26c6d341a3f6f361a7521e6f0b33a2ba7d2e02224bacea9e266d12b1b6125ac",
+      "/home/nubot/phn_ws/t4_train/TienKung-Lab-g1-core-fixes-20260908/logs/g1_core_fixes/2026-09-08_15-07-29_g1_core_fixes_B30000/params/env.yaml": "af19b2aa84f056d07de3cedbfaeff0df3ed7e128450b1f9817032de3a5b46341"
+    }
+  },
+  "source_verification_sha256": "f840027d9eda1a2d8906ba46dc7c2c555be848545c603dd9349faa5cafe66454",
+  "final_integration_claim": "F1-F6/R1-R2 and all specified CPU/Isaac single-GPU/two-GPU gates plus independent review passed. New cold-start B-radial lineage launched on GPU0/2, 2048 env/rank, budget30000. No locomotion capability claim."
 }

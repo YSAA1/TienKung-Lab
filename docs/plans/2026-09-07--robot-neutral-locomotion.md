@@ -1,6 +1,6 @@
 # 机器人无关的运动训练算法整理
 
-Status: 2026-09-08，F1–F6/R1/R2修复和验收完成。173项CPU、三组单卡、G1/T4增强reset、真实双GPU两次更新与独立Standards/Spec审核通过；已准备按授权停止旧A/B并冷启动单组30k，正式启动记录待填写。
+Status: 2026-09-08，F1–F6/R1/R2修复和验收完成。173项CPU、三组单卡、G1/T4增强reset、真实双GPU两次更新与独立Standards/Spec审核通过；旧A/B已停止并保留历史；单组B径向判据30k已冷启动，GPU0/2各2048env，TB8042。
 
 ## 已完成：明确缺陷修复与真实环境验收
 
@@ -68,7 +68,8 @@ CPU入口沿用现有测试组合，具体按实际修改选择：`tests/test_am
 - 真实单卡G1 mixed/T4 mixed/G1 flat各32env、500步加pulse、部分reset、horizon后3个无reset步骤、真实加速度失败与截断重叠均通过；Actor/Critic/AMP仍1997/2076/70与1937/2016/66。首轮末尾的根位置下移注入没有触发物理失败，明确保留为失败记录；修正为实际根速度+物理步后重跑通过，不改变正式阈值。
 - 双GPU：每rank32env、24steps/update、完整17段专家、两次更新通过；rank0有截断而rank1无截断及其反向分布均通过。policy/discriminator/AMP normalizer跨rank差异全0，std最小值0.05020105，checkpoint含新transition metadata且两rank加载一致，退出码0。
 - 独立code-review的Standards/Spec两个轴均无阻断代码发现；补充R2审核确认无剩余开训门槛。实现提交`24bf0aa`。依赖逐文件blob核实1534modified中1533仅mode，唯一内容补丁assets.py；Python3.11.13、Torch2.5.1+cu124、NumPy1.26.4、IsaacSim5.1.0-rc.19，IsaacLab固定3d5ea25，均未改动。
-- 工件位于 `artifacts/portability/g1_core_fixes_20260908/`，入口`manifest.json`包含源码、依赖、资源、实际导入与完整验收索引。单卡/双卡是计算与开训合同验收，不是行走或越障能力证明。正式启动记录待填写。
+- 工件位于 `artifacts/portability/g1_core_fixes_20260908/`，入口`manifest.json`包含源码、依赖、资源、实际导入与完整验收索引。单卡/双卡是计算与开训合同验收，不是行走或越障能力证明。正式启动已验证：run `2026-09-08_15-07-29_g1_core_fixes_B30000`，tmux `g1-core-fixes`，PID1209376/1209377，GPU0/2；预算30000、resume=false、各2048env、24steps、17专家、max_radial与全速命令均核对。启动快照iteration21，model_0已保存且transition metadata version1，最近标量有限。TensorBoard `http://100.100.188.39:8042/#scalars`，会话`g1-core-tb`。旧A/B各10个checkpoint、所有原日志/配置及源文件保留，退出与SHA见`old_stopped.json`。
+- 本次`final_integration_claim`只覆盖核心计算缺陷、真实验收和正确冷启动；G1行走、越障及追平历史T4仍须同预算固定evaluator JSON、lineage和连续回放。
 
 ## 既有运行：恢复 T4 速度与真实进展晋级 A/B
 
