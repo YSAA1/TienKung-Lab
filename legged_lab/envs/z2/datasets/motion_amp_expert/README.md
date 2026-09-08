@@ -2,6 +2,11 @@
 
 This directory is the formal 70D expert location for `z2_loco_teacher`.
 
+The full expert set was generated on the original Z2 USD in Isaac Sim 5.1 / IsaacLab 2.1:
+`walk` 74 frames, `walk_l` 280 frames, `run` 39 frames (393 total).
+All frames passed independent original-URDF FK comparison; maximum endpoint error was below 1.5e-6 m.
+`_manifest.json` binds source CSV/raw hashes, the five original USD layers, generator provenance and each expert SHA256.
+
 Generate on Isaac (nubot tmux):
 
 ```
