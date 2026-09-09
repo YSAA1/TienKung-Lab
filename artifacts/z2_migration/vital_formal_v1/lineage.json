@@ -1,0 +1,34 @@
+{
+  "source_commit": "d6bef3324a6db4586a36142f05de5ab7f95fece6",
+  "remote_root": "/home/nubot/phn_ws/t4_train/TienKung-Lab-z2-vital-20260909",
+  "run_dir": "/home/nubot/phn_ws/t4_train/TienKung-Lab-z2-vital-20260909/logs/z2_loco_teacher_sparse/2026-09-09_08-57-17_z2_vital_formal_v1",
+  "training_tmux": "z2-vital-formal-20260909",
+  "torchrun_pid": 1588610,
+  "worker_pids": [
+    1588626,
+    1588627
+  ],
+  "gpu_ids": [
+    0,
+    2
+  ],
+  "num_envs_per_rank": 2048,
+  "max_iterations": 30000,
+  "resume": false,
+  "seed": 42,
+  "verified_saved_config": {
+    "reward.action_rate_l2.weight": -0.01,
+    "acceleration_termination_enabled": false,
+    "gait.tracking_gate_enabled": false
+  },
+  "teacher_cfg_sha256": "af988ccbc1dd1c5e43ab7f551ee11eb8019afed5e4e2de269f374d30b2bb4525",
+  "startup_model_0_exists": true,
+  "old_actionrate_training_stopped": true,
+  "monitor_milestones": [
+    1000,
+    2000,
+    3000
+  ],
+  "user_direction": "Stop single-variable comparisons; directly train with all three requested G1 VITAL settings.",
+  "validation": "31 asset contract tests and scoped pre-commit passed. Saved env.yaml confirms all three settings. Behavior not yet evaluated."
+}

@@ -58,7 +58,7 @@ Status: active。唯一执行工作树 `D:/TienKung-Lab-z2-teacher-20260909`，�
 
 见`artifacts/z2_migration/formal_v1/iteration_2000_review.md`：Z2训练OOB/reach2m仍为0；确定性平地64回合均到时限但最大前向进度均值仅0.116m，踏石0/64。4个G1/Z2同条件JSON及lineage全部完成并验证。保持原训练到3000，同协议视频完成后决定下一lineage。若仍失败，优先仅验证动作变化权重-0.1到-0.01，保持资产/PD/专家/终止等合同；目前未实施，不将候选当已验证修复。
 
-### 当前执行：动作变化代价单变量候选
+### 历史：动作变化代价单变量候选（用户已停止）
 
 基线933e08a的1k/2k/3k监控、全部固定评估和4个20秒视频已完成，均未达到行走标准，已主动停训并保留全部工件，见`artifacts/z2_migration/formal_v1/iteration_3000_review.md`及停止记录。
 
@@ -69,3 +69,9 @@ Status: active。唯一执行工作树 `D:/TienKung-Lab-z2-teacher-20260909`，�
 - 本地证据`artifacts/z2_migration/action_rate_v1/`；远端沿用新目录内`artifacts/z2_migration/formal_v1/`，不要与旧基线目录混淆。
 - 监控tmux`z2-actionrate-monitor-20260909`，评估tmux`z2-actionrate-evidence-20260909`；仍在1000/2000/3000节点固定评估，3000连续回放。复用已冻结G1参考JSON/视频，不重复运行相同G1条件。
 - 完成标准不变：实际非零OOB/reach2m、有持续行走而非站桩/持续倾倒，全部由节点JSON、lineage和连续回放证明。当前只是已启动候选，总体目标未完成。
+
+### 当前执行：三项VITAL正式训练（用户最新指令）
+
+用户要求直接采用三项G1 VITAL设置：动作变化权重-0.01、加速度终止false、gait跟踪门控false。已停止单变量训练，保留旧数据；源码d6bef33在nubot GPU0/2正式冷启动30000 iter，4096环境，tmux `z2-vital-formal-20260909`。实际保存配置三项均验证，model_0已生成；按1000/2000/3000监控，不再执行逐项对比实验。行为尚未验收。
+
+恢复以 `artifacts/z2_migration/vital_formal_v1/lineage.json` 为准；旧单变量和基线均不得重启。
