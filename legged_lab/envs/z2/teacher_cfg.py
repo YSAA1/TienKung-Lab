@@ -45,6 +45,7 @@ from legged_lab.locomotion.teacher_cfg import (
 class Z2SparseTeacherRewardCfg(LightLPRewardCfg):
     def __post_init__(self):
         bind_reward_roles(self, Z2_LOCOMOTION)
+        self.undesired_contacts.weight = -1.0
 
 
 @configclass
@@ -61,6 +62,7 @@ class Z2LocoTeacherEnvCfg(LightLPLocomotionEnvCfg):
         self.reward.action_rate_l2.weight = -0.01
         self.acceleration_termination_enabled = False
         self.gait.tracking_gate_enabled = False
+        self.deterministic_fall_limits = (0.8, 1.0)
         # Upstream 29DoF enables self-collision. Torso net force then includes
         # internal impacts, so it cannot serve as a ground-fall detector.
         self.robot.terminate_contacts_body_names = []
@@ -76,8 +78,11 @@ class Z2LocoTeacherEnvCfg(LightLPLocomotionEnvCfg):
         # Promotion >4 m from tile origin is independent of OOB 4.25 m and of reach2m.
         self.lightlp_promotion_distance = "max_radial"
         self.progress_monitor_enabled = True
-        # Collapse height is not copied from G1 0.20 m. Isaac probe must measure
-        # Z2 sitting clearance before enabling a relative-to-feet threshold.
+        self.collapse_reset_pelvis_above_feet_m = 0.20
+        # 0.20 m is a collapse floor, below standing pelvis-foot clearance (~0.64 m).
+        # Brief low pose is recovery, not immediate failure; impact immunity is kept.
+        self.collapse_reset_grace_s = 0.20
+        self.collapse_reset_respects_impact_immunity = True
         self.amp_terrain_schedule.enable = True
         self.commands.debug_vis = False
         self.domain_rand.action_delay.enable = False

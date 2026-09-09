@@ -201,7 +201,11 @@ def test_teacher_selects_walk_pose_damped_pd_not_generic_or_g1() -> None:
     assert "self.robot.terminate_contacts_body_names = []" in text
     assert "self.scene.max_init_terrain_level = 0" in text
     assert "self.random_level_reset_fraction = 0.10" in text
-    assert "collapse_reset_pelvis_above_feet_m" not in text
+    assert "self.collapse_reset_pelvis_above_feet_m = 0.20" in text
+    assert "self.collapse_reset_grace_s = 0.20" in text
+    assert "self.collapse_reset_respects_impact_immunity = True" in text
+    assert "self.deterministic_fall_limits = (0.8, 1.0)" in text
+    assert "self.undesired_contacts.weight = -1.0" in text
     init = (ROOT / "legged_lab/envs/__init__.py").read_text(encoding="utf-8")
     assert 'task_registry.register("z2_loco_teacher", LocomotionEnv' in init
 
