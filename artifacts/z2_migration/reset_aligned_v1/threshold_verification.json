@@ -1,0 +1,25 @@
+{
+  "threshold_m": 0.2,
+  "standing_observed_range_m": [
+    0.6408718377351761,
+    0.6517089754343033
+  ],
+  "standing_frames": 1000,
+  "standing_below_threshold": 0,
+  "baseline_fall_terminal_clearances_m": [
+    -0.0018283873796463013,
+    -0.07150870561599731,
+    -0.0669575110077858,
+    -0.06618700921535492,
+    0.012999370694160461,
+    0.21670903265476227,
+    0.0069726258516311646,
+    -0.07127568125724792,
+    0.00511932373046875
+  ],
+  "basis": "Observed Z2 standing and actual collapse replays; not a complete validation of all crouch or recovery motions. Deterministic tilt termination complements clearance gate.",
+  "sources": [
+    "../vital_formal_v1/evaluation/z2/1000/flat.review.diagnostics.json",
+    "../formal_v1/evaluation/z2/1000/flat.replay.diagnostics.json"
+  ]
+}

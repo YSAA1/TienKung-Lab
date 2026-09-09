@@ -2,7 +2,7 @@
 
 Z2 29DoF 新迁移轨道仅在 `D:/TienKung-Lab-z2-teacher-20260909` 执行，权威计划为
 [Z2 教师迁移](plans/2026-09-09--z2-teacher-migration.md)。迁移、原始USD物理参数和393帧完整专家已验收，
-用户要求直接采用三项G1 VITAL设置：动作变化权重-0.01、加速度终止false、gait跟踪门控false。已停止单变量训练，保留旧数据；源码d6bef33在nubot GPU0/2正式冷启动30000 iter，4096环境，tmux `z2-vital-formal-20260909`。实际保存配置三项均验证，model_0已生成；按1000/2000/3000监控，不再执行逐项对比实验。行为尚未验收。
+当前已补齐G1倾倒/塌陷重置与接触奖励：roll/pitch=(0.8,1.0)rad、塌陷高度0.20m/持续0.20s/遵守碰撞免疫、接触权重-1；保留action rate -0.01、加速度终止false、gait gate false。源码105164f，nubot GPU0/2冷启动30000 iter、4096环境，tmux `z2-reset-formal-20260909`。八项实际配置与G1对照一致，model_0已生成。1000/2000/3000监控，无逐项对比实验；行为待验收。
 
 本 checkout 在上游 TienKung-Lab 上维护共享 AMP/LightLP 运动算法，以及 **T4 27DoF、Unitree G1 29DoF、Z2 29DoF** 的独立机器人配置。共享教师、深度学生运行时与参考动作跟踪按算法组织；[新机器人接入方法](runbooks/robot-locomotion-adapter.md) 是代码边界入口。
 先读本文，再进代码。`docs/archive/` 与 `docs/research/` **不是**开训或接票权威。
@@ -15,7 +15,7 @@ Z2 29DoF 新迁移轨道仅在 `D:/TienKung-Lab-z2-teacher-20260909` 执行，�
 | --- | --- | --- | --- |
 | 梅花桩 | paused：G1 越障老师优先。T4 plant DR 计划仍在 | [老师 plant 重训](plans/2026-09-02--t4-s12-teacher-plant-retrain-plan.md) | [表示先行蒸馏](specs/2026-09-01--t4-s12-repr-first-distill.md)（学生对照） |
 | Unitree G1 越障 teacher | 核心修复B30000在GPU0/2、TB8042；另用GPU1/3做VITAL起步配方实验，保留LightLP奖励，独立冷启动 | [当前实验与核心修复计划](plans/2026-09-07--robot-neutral-locomotion.md) | 基线源码保持；实验仅改动作变化惩罚、终止与步态门控，不声明运动能力 |
-| Z2 29DoF 越障 teacher | 三项VITAL正式训练中：d6bef33，GPU0/2；行为待验收 | [Z2 迁移](plans/2026-09-09--z2-teacher-migration.md) | -0.01 / accel false / gait gate false |
+| Z2 29DoF 越障 teacher | reset/接触奖励补齐后正式训练：105164f，GPU0/2；行为待验收 | [Z2 迁移](plans/2026-09-09--z2-teacher-migration.md) | 见 reset_aligned_v1/lineage.json |
 | 翻箱 | G1 跟踪专家 → G2 heightscan 技能（zhuoqun）。**G2 学生与 G3 合并（走跑+翻箱成一条策略）等 G2 过箱后再开。** | [翻箱 recovery](plans/2026-08-15--t4-vault-g1-g2-recovery-plan.md) | [合并规格](specs/2026-08-13--t4-vault-loco-merge.md) |
 
 运行时切片与机器占用：`.harness/work_index.md`、`.harness/state.md`。

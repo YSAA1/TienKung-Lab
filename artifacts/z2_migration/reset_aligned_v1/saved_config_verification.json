@@ -1,0 +1,80 @@
+{
+  "checks": {
+    "acceleration_termination_enabled": {
+      "g1": "false",
+      "z2": "false",
+      "match": true
+    },
+    "deterministic_fall_limits": {
+      "g1": [
+        "0.8",
+        "1.0"
+      ],
+      "z2": [
+        "0.8",
+        "1.0"
+      ],
+      "match": true
+    },
+    "collapse_reset_pelvis_above_feet_m": {
+      "g1": "0.2",
+      "z2": "0.2",
+      "match": true
+    },
+    "collapse_reset_grace_s": {
+      "g1": "0.2",
+      "z2": "0.2",
+      "match": true
+    },
+    "collapse_reset_respects_impact_immunity": {
+      "g1": "true",
+      "z2": "true",
+      "match": true
+    },
+    "reward.action_rate_l2": {
+      "g1": "-0.01",
+      "z2": "-0.01",
+      "match": true
+    },
+    "reward.undesired_contacts": {
+      "g1": "-1.0",
+      "z2": "-1.0",
+      "match": true
+    },
+    "gait.tracking_gate_enabled": {
+      "g1": "false",
+      "z2": "false",
+      "match": true
+    }
+  },
+  "env_changes": [
+    {
+      "field": ".collapse_reset_grace_s",
+      "old": "0.0",
+      "new": "0.2"
+    },
+    {
+      "field": ".collapse_reset_pelvis_above_feet_m",
+      "old": null,
+      "new": "0.2"
+    },
+    {
+      "field": ".collapse_reset_respects_impact_immunity",
+      "old": "false",
+      "new": "true"
+    },
+    {
+      "field": ".deterministic_fall_limits",
+      "old": "null",
+      "new": [
+        "0.8",
+        "1.0"
+      ]
+    },
+    {
+      "field": ".reward.undesired_contacts.weight",
+      "old": "-2.0",
+      "new": "-1.0"
+    }
+  ]
+}

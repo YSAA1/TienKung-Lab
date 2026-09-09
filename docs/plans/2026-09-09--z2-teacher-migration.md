@@ -70,8 +70,14 @@ Status: active。唯一执行工作树 `D:/TienKung-Lab-z2-teacher-20260909`，�
 - 监控tmux`z2-actionrate-monitor-20260909`，评估tmux`z2-actionrate-evidence-20260909`；仍在1000/2000/3000节点固定评估，3000连续回放。复用已冻结G1参考JSON/视频，不重复运行相同G1条件。
 - 完成标准不变：实际非零OOB/reach2m、有持续行走而非站桩/持续倾倒，全部由节点JSON、lineage和连续回放证明。当前只是已启动候选，总体目标未完成。
 
-### 当前执行：三项VITAL正式训练（用户最新指令）
+### 历史：三项VITAL训练（已按用户要求停止并补齐配置）
 
 用户要求直接采用三项G1 VITAL设置：动作变化权重-0.01、加速度终止false、gait跟踪门控false。已停止单变量训练，保留旧数据；源码d6bef33在nubot GPU0/2正式冷启动30000 iter，4096环境，tmux `z2-vital-formal-20260909`。实际保存配置三项均验证，model_0已生成；按1000/2000/3000监控，不再执行逐项对比实验。行为尚未验收。
 
 恢复以 `artifacts/z2_migration/vital_formal_v1/lineage.json` 为准；旧单变量和基线均不得重启。
+
+### 当前执行：reset与接触奖励补齐后重启
+
+当前已补齐G1倾倒/塌陷重置与接触奖励：roll/pitch=(0.8,1.0)rad、塌陷高度0.20m/持续0.20s/遵守碰撞免疫、接触权重-1；保留action rate -0.01、加速度终止false、gait gate false。源码105164f，nubot GPU0/2冷启动30000 iter、4096环境，tmux `z2-reset-formal-20260909`。八项实际配置与G1对照一致，model_0已生成。1000/2000/3000监控，无逐项对比实验；行为待验收。
+
+原三项运行1000迭代确定性平地64回合均站桩；当前修改经用户明确授权。旧运行数据保留。阈值核验、启动配置和运行信息见 `artifacts/z2_migration/reset_aligned_v1/`。
