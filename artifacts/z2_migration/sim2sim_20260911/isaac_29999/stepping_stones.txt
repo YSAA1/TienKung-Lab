@@ -1,0 +1,2 @@
+reset step=400 xy=(-4.25,3.66) z=0.69 r=5.61 peak=5.61 accel=1.3mps2 tilt=0.11rad flags=timeout,oob contacts=waist_roll_link:0.0N,L_knee_link:0.0N,R_knee_link:0.0N
+reset step=834 xy=(-4.25,-4.03) z=0.70 r=5.86 peak=5.86 accel=2.2mps2 tilt=0.10rad flags=timeout,oob contacts=waist_roll_link:0.0N,L_knee_link:0.0N,R_knee_link:0.0N

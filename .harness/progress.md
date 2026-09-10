@@ -2,6 +2,35 @@
 
 2026-08-22 以前的 TB 逐窗流水已从本文件删掉，仍在 git 历史。本文件只留能接住当前切片的证据。
 
+## 2026-09-11：Z2 reset_aligned_v1 训练完成与双仿真器验收
+
+- 训练：30k 跑满，`model_29999` SHA256 `491ff4c830694f5614da6e407581feafb6d48cf17335c14348f752dd8d0a76b9`；本机 `artifacts/checkpoints/nubot/z2_reset_aligned_v1/`（ckpt+agent/env params，与远端哈希一致）。
+- Isaac 终评（nubot，32env/64ep，vx=0.7，确定性）：d=0 flat/踏石/圆桩 64/64、64/64、63/64（全 0 摔）；d=0.85 踏石 60/64（3 摔）、圆桩 64/64。3000→29999 踏石 reach2m 4/64→62/64。证据远端 `formal_v1/evaluation/z2/{29999,29999_hard}/`，本地副本 `artifacts/z2_migration/sim2sim_20260911/isaac_29999*/`。
+- MuJoCo sim2sim 落地：新增 `legged_lab/assets/z2/mujoco_sim2sim.py`（WALK_POSE_DAMPED PD/摩擦合同，ankle 150Nm/50/4 等）与 `play_t4_sparse_teacher_mujoco.py` 的 `--robot z2` 分支（Z2 MJCF 根体 `Z2_0_Lite_description_0429_1`、扫描体 `waist_roll_link`、按 body 映射脚接触）。29DoF 与 G1 同 1997D，必须显式 `--robot z2`。回归：robot-neutral 14 项、G1 asset 16 项通过；Z2 asset 合同需 `work/upstream-z2` 镜像本机缺（nubot 启动时 42 passed）。
+- MuJoCo 结果：平地 d=0 vx=0.7 10/10 零摔、0.578 m/s（与 Isaac 0.559 一致→部署管线无 bug 级差异）；踏石 d=0 名义出生点 10/10 同点摔在第 3 排（x≈2.72m），扰动（y±6cm/yaw±6°）8/10 摔、2/10 走满 20s——Isaac 64/64 vs MuJoCo 2/10 存在踏石 sim2sim gap，与 G1 `artifacts/g1_gap_20260910/` 同性质（脚几何/接触时序/执行器瞬态）。MP4×2 + JSON 见 `artifacts/z2_migration/sim2sim_20260911/`。
+- 数据体检（用户疑虑 T4→Z2）：来源为上游 `z2-lab-stable-AMP@c78eb1f` 三个 PKL。数值合同干净（CSV==策略序、expert 帧 0 差 5.5e-17、零超限、四元数归一、dq 有限）；实质限制：`walk`(2.5s)/`run`(1.35s) 原地片段，仅 `walk_l`(9.4s) 真实前进 0.75 m/s（骨盆 0.66–0.71、yaw≈90°）。AMP 特征无全局位移→方向只靠命令 reward，1-env 视频偶发侧/后 OOB。报告 `artifacts/z2_migration/data_check_20260911/motion_data_report.json`。
+
+## 2026-09-11：G1 vital_v3 开训（curated AMP + 端到端 ramp DR）
+
+- 数据：v5 前 30s 含 T-pose 起始（前 60 帧肩外展>0.6rad 占 92–100%）、walk1/3 滑步（proxy p95 1.85/1.06 m/s）；用 `curate_g1_amp.py` 生成 `unitree_v6`（8 段干净步态周期，最早起始帧 2254，proxy p95≤0.36）。视觉 MCP + 本地/远端 pytest + nubot Isaac validate（误差 4.9e-7）三重验收。证据：`artifacts/g1_amp_acceptance_20260911/`（含 v6_all.mp4）。
+- 配方：`vital_v3` = vital_v1 奖励/终止 + DR 从第 0 步生效、36000 策略步线性 ramp（摩擦 (0.6,1.0)/(0.4,0.8)→(0.6,1.2)/(0.5,1.0) interval；增益锚 1.0→(0.9,1.1) reset；延迟 P(1步)→50% reset，上限 1 步；无 reset 初速度）。依据：配对回放 FINDINGS + BeamDojo/mjlab/humanoid-gym/IsaacLab 维护者调研。
+- 开训：nubot 工作树 `~/phn_ws/t4_train/TienKung-Lab-g1-vital-v3-20260911`，tmux `g1-vital-v3`（GPU0/2，2×2048 env，run `2026-09-11_01-08_vital_motion_v3` 附近），TB `g1-vital-v3-tb` 端口 8051；v2 仍占 GPU1/3（26.5k+/30k）。
+- 两次启动失败已修复：set_time_lag int32；`body_names=".*"` resolve 为列表的 covers_all_bodies 守卫。开训核验：env.yaml 三 ramp 事件/delay (0,1)/velocity{}，agent.yaml 8 段 v6，model_0，interval 首触发通过。
+- 对抗审查（只读 subagent）：无 blocking；非阻塞建议已落实（docstring、死区测试、脚本工作树断言）。中止线：~3000 iter tracking<0.45 或地形等级落后 v1 轨迹≥2 级。
+- Spec `docs/specs/2026-09-11--g1-vital-v3-curated-amp-ramped-dr.md`；Plan `docs/plans/2026-09-11--g1-vital-v3-curated-amp-ramped-dr-plan.md`。
+
+## 2026-09-10：G1 Isaac↔MuJoCo gap 配对定位
+
+- 同 checkpoint（v1 `model_29999`）同命令配对回放：t0 obs/action 对齐（1.9e-6），部署管线无 bug；发散从第 1 物理步的踝/肘瞬态开始，接触时序错 1–3 步；平地差异有界（8s Δz≤1.3cm）。
+- 行为：MuJoCo 踏石 d=0 10/10 零摔、d=1.0 名义出生确定性摔（第一排，±0.09m 落点预算被植物差异吃掉）；Isaac 同条件本身 71.9%。脚型（URDF 球替换胶囊）与扫描约定（torso yaw）消融均只能推迟不能救。
+- 配方结论：热启自 v1、窄区间分阶段 DR（增益→摩擦→半量 delay），门槛 tracking≥0.5 + 踏石 reach_2m≥0.9 + MuJoCo hard KPI。证据与工件：`artifacts/g1_gap_20260910/FINDINGS.md`。
+
+## 2026-09-10：G1 vital_v2 配方
+
+- Spec `docs/specs/2026-09-10--g1-vital-v2-lafan-dr.md`；计划 `docs/plans/2026-09-10--g1-vital-v2-lafan-dr-plan.md`。
+- `vital_v2` = VITAL 终止/步态/action_rate + delay 0–2、摩擦加宽、reset xy/yaw ±0.3、kp/kd 0.9–1.1；AMP 钉 `unitree_v5`。
+- 开训：nubot `TienKung-Lab-g1-vital-v2-20260910`，tmux `g1-vital-v2`，run `2026-09-10_01-05-50_vital_motion_v2`，GPU1/3 约 8.5GB，model_0 已保存。保存的 env.yaml 含 delay 0–2、摩擦 0.4–1.2、reset xy/yaw ±0.3、actuator_gains 0.9–1.1、action_rate -0.01；agent.yaml 为 6 段 `unitree_v5`，不是 rob2rob 17 段。
+
 ## 2026-09-07：教师算法从机器人配置中分离
 
 - 新工作面：`docs/plans/2026-09-07--robot-neutral-locomotion.md`。下面 portable_v1 属于已停止的对照，不能作为当前开训配置。

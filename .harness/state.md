@@ -1,6 +1,10 @@
 # Current State
 
-- 2026-09-09：`g1-portability-20260906` 里程碑已合并回 `t4-train`。当前 G1 执行入口为 `docs/plans/2026-09-07--robot-neutral-locomotion.md`；代码入口在本仓库 `legged_lab/locomotion/`、`legged_lab/motion_tracking/`、`legged_lab/envs/g1/` 和对应脚本。F1–F6/R1/R2 核心修复已完成并通过 CPU、真实单卡/双卡 Isaac 与独立审核；证据入口为 `artifacts/portability/g1_core_fixes_20260908/manifest.json`。`g1_core_fixes_B30000` 与 `vital_motion_v1` 是训练中的行为实验，启动健康不等于行走或越障能力。
+- 2026-09-11：Z2 `reset_aligned_v1` 30k 训练完成并通过双仿真器验收。`model_29999`（SHA256 `491ff4c8…8d0a76b9`，本机 `artifacts/checkpoints/nubot/z2_reset_aligned_v1/`）。Isaac 终评（d=0/vx=0.7/32env/64ep）：flat 64/64、踏石 64/64、圆桩 63/64，全部 0 摔；d=0.85 踏石 60/64、圆桩 64/64。MuJoCo sim2sim（新合同 `legged_lab/assets/z2/mujoco_sim2sim.py` + `play_t4_sparse_teacher_mujoco.py --robot z2`）：平地 10/10 零摔 0.58 m/s；踏石 d=0 名义出生点第 3 排确定性摔、扰动 2/10 存活——与 G1 同性质的 Isaac→MuJoCo 踏石 gap。数据体检：数值合同干净，但 `walk`/`run` 为原地片段、仅 `walk_l` 真实前进（0.75 m/s），AMP 无全局位移故方向锚定弱（视频偶发侧/后 OOB）。结论与验收入口 `artifacts/z2_migration/sim2sim_20260911/FINDINGS.md`。
+
+- 2026-09-10：G1 现行执行 `vital_v2`。远端 `/home/nubot/phn_ws/t4_train/TienKung-Lab-g1-vital-v2-20260910`，tmux `g1-vital-v2`，GPU1/3，run `2026-09-10_01-05-50_vital_motion_v2`，model_0 已落。AMP=`unitree_v5`，delay 0–2。Z2 仍占 GPU0/2。VITAL `model_29999` 只作对照。开训健康见 `artifacts/portability/g1_vital_v2_20260910/launch_verified.json`，不是行为验收。
+
+- 2026-09-09：G1 VITAL `2026-09-08_16-25-01_vital_motion_v1` 已停在 `model_29999`。nubot GPU1 终检：vx=0.7、32env/64ep、easy flat/踏石/圆桩；flat reach2m 64/64，踏石与圆桩 63/64。本机 ckpt `artifacts/checkpoints/nubot/g1_vital_motion_v1/model_29999.pt`（SHA256 `8d6b9d5b8a7b183ac3fa79e3ebbbc896d304e5829843eb916d603cf22cb2d202`），评测与 20s 回放 `artifacts/eval/g1_vital_v1_m29999/`。Windows 无本机 Isaac Docker；G1 教师没有 MuJoCo sim2sim 入口。G1 深度学生任务未注册，不能套 T4 学生脚本开训。
 
 - 2026-09-08：用户授权四卡全速 A/B，代码提交 `2f99efb`。共同冻结目录 `/home/nubot/phn_ws/t4_train/TienKung-Lab-g1-progress-ab-20260908`；A GPU0/2、tmux `g1-progress-A`，原路径晋级；B GPU1/3、tmux `g1-progress-B`，相对tile中心最大径向距离>4m晋级。速度缩放均1.0、全17段、权重2、recovery终止、每卡2048env、24steps、seed42+rank、冷启动30000，TB8041。120项CPU检查、独立review、32env真实Isaac命令/部分reset/晋级probe及双卡2更新smoke通过。旧full17/recovery四rank已退出，保留model_18500/model_12500及全部历史日志。启动配置/进程/标量证据见 `artifacts/portability/g1_progress_ab_20260908/`；本状态不声明学习改善。
 

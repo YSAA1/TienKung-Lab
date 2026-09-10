@@ -76,8 +76,18 @@ Status: active。唯一执行工作树 `D:/TienKung-Lab-z2-teacher-20260909`，�
 
 恢复以 `artifacts/z2_migration/vital_formal_v1/lineage.json` 为准；旧单变量和基线均不得重启。
 
-### 当前执行：reset与接触奖励补齐后重启
+### 当前执行：reset与接触奖励补齐后重启（已完成30000轮并验收）
 
 当前已补齐G1倾倒/塌陷重置与接触奖励：roll/pitch=(0.8,1.0)rad、塌陷高度0.20m/持续0.20s/遵守碰撞免疫、接触权重-1；保留action rate -0.01、加速度终止false、gait gate false。源码105164f，nubot GPU0/2冷启动30000 iter、4096环境，tmux `z2-reset-formal-20260909`。八项实际配置与G1对照一致，model_0已生成。1000/2000/3000监控，无逐项对比实验；行为待验收。
 
 原三项运行1000迭代确定性平地64回合均站桩；当前修改经用户明确授权。旧运行数据保留。阈值核验、启动配置和运行信息见 `artifacts/z2_migration/reset_aligned_v1/`。
+
+### 2026-09-11：训练完成与双仿真器终评（现行状态）
+
+训练已跑满30000轮，`model_29999.pt` SHA256 `491ff4c830694f5614da6e407581feafb6d48cf17335c14348f752dd8d0a76b9`；本机副本 `artifacts/checkpoints/nubot/z2_reset_aligned_v1/`（含params）。
+
+- Isaac终评（远端`formal_v1/evaluation/z2/{29999,29999_hard}/`）：d=0 flat/踏石/圆桩 64/64、64/64、63/64全部0摔；d=0.85踏石60/64（3摔）、圆桩64/64。3000→29999踏石从4/64 reach2m跃迁到62/64。
+- MuJoCo sim2sim（本机`artifacts/z2_migration/sim2sim_20260911/`）：平地10/10零摔（0.58m/s）；踏石d=0名义出生点确定性摔在第3排、带扰动2/10存活——存在Isaac→MuJoCo踏石gap，与G1 gap定位同性质。验收入口与结论见该目录`FINDINGS.md`。
+- 本机sim2sim代码合同：`legged_lab/assets/z2/mujoco_sim2sim.py`（WALK_POSE_DAMPED PD）+ `play_t4_sparse_teacher_mujoco.py --robot z2`。29DoF与G1同1997D，必须显式`--robot z2`。
+- 动作数据体检（`artifacts/z2_migration/data_check_20260911/`）：数值合同全部干净（CSV即策略序、零超限、四元数归一）；限制是`walk`/`run`为原地片段、仅`walk_l`真实前进（0.75m/s）——AMP无全局位移故方向/速度样式受限，3000节点曾出现倒走OOB。若要提速度需补带位移数据。
+- 训练tmux已结束；nubot GPU0/2已被G1 vital_v3接管。
