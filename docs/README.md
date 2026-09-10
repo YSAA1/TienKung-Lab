@@ -11,7 +11,7 @@ AMP/LightLP 运动算法以及 **T4 27DoF、Unitree G1 29DoF、Z2 29DoF** 的独
 
 | 轨道 | 现在做什么 | 执行计划 | 规格 |
 | --- | --- | --- | --- |
-| 梅花桩 | paused：G1 越障老师优先。T4 plant DR 计划仍在 | [老师 plant 重训](plans/2026-09-02--t4-s12-teacher-plant-retrain-plan.md) | [表示先行蒸馏](specs/2026-09-01--t4-s12-repr-first-distill.md)（学生对照） |
+| 梅花桩 | paused：G1 越障老师优先。T4 plant DR 重训计划尚未立项 | 计划未建；见 `.harness/work_index.md` | [表示先行蒸馏](archive/plans/2026-09-01--t4-s12-repr-first-distill-plan.md)（学生对照，已归档） |
 | Unitree G1 越障 teacher | 当前执行 `vital_v3`：curated `unitree_v6` AMP + ramp DR（GPU0/2）；`vital_v2` 全量 DR 对照（GPU1/3）。VITAL `model_29999` 仅对照 | [VITAL v3 开训](plans/2026-09-11--g1-vital-v3-curated-amp-ramped-dr-plan.md) | [规格](specs/2026-09-11--g1-vital-v3-curated-amp-ramped-dr.md)；gap 定位 `artifacts/g1_gap_20260910/FINDINGS.md` |
 | Z2 29DoF 越障 teacher | `reset_aligned_v1` 30k 完成（model_29999），行为验收待做 | [Z2 迁移](plans/2026-09-09--z2-teacher-migration.md) | 见 reset_aligned_v1/lineage.json |
 | 翻箱 | G1 跟踪专家 → G2 heightscan 技能（zhuoqun）。**G2 学生与 G3 合并（走跑+翻箱成一条策略）等 G2 过箱后再开。** | [翻箱 recovery](plans/2026-08-15--t4-vault-g1-g2-recovery-plan.md) | [合并规格](specs/2026-08-13--t4-vault-loco-merge.md) |
@@ -66,7 +66,7 @@ AMP/LightLP 运动算法以及 **T4 27DoF、Unitree G1 29DoF、Z2 29DoF** 的独
 | --- | --- |
 | 本文、`AGENTS.md` | 入口。不写 session 流水。 |
 | `.harness/` | 工作面索引与短状态。 |
-| `docs/specs/` | 已批准行为 / 架构。文头 `Status: draft` 的不是执行权威。现行学生配方是 [表示先行蒸馏](specs/2026-09-01--t4-s12-repr-first-distill.md)（已批准）。 |
+| `docs/specs/` | 已批准行为 / 架构。文头 `Status: draft` 的不是执行权威。现行学生配方是 [表示先行蒸馏](archive/plans/2026-09-01--t4-s12-repr-first-distill-plan.md)（已归档）。 |
 | `docs/plans/` | **只放现行执行计划**（G1 越障老师、暂停的梅花桩 S12 plant 重训、翻箱 G1/G2）。 |
 | `docs/runbooks/` | 现在还能照着跑的操作。 |
 | `docs/research/` | 调研与论文摘录，非权威。 |

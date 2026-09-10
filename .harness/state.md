@@ -18,7 +18,7 @@
 - GPU0旧数据control、GPU2两段组及仅初始化的全17段4000轮组均已停止，工件保留；旧v6现已停止，TB8035保留历史，GPU1/3改跑上方权重4对照。数据回放 `artifacts/portability/t4_rob2rob_full17_v1/all_clips.mp4`；数据验收及更新不代表策略能力成功。
 - 旧 v2 按用户要求在 iteration 9662 停止：tmux `g1-full-levels-v2` 与原 5 个训练进程全部退出，GPU 1/3 释放，20 个 checkpoint 保留；TB 8031 仍可查旧曲线。停止证据 `artifacts/portability/v3/stopped_v2.json`。共享教师、深度学生、动作跟踪与全库接入整理已完成；各候选行为能力仍由固定评估和连续回放判定。
 - S12 学生 `s12_repr_first` `model_13999` Isaac hard 过门，MuJoCo 残留交给老师 plant 重训。老师本机 `artifacts/checkpoints/nubot/s12_teacher/model_21500.pt`。
-- Approved specs: `docs/specs/2026-08-12--t4-unified-depth-locomotion.md`（走跑/学生合同）、`docs/specs/2026-08-13--t4-vault-loco-merge.md`（G1→G2→G3 目标）、`docs/specs/2026-08-15--t4-stepping-stones-and-hurdle-stable.md`（梅花桩目标；执行已改单阶段）、`docs/specs/2026-09-01--t4-s12-repr-first-distill.md`（表示先行蒸馏）
+- Approved specs: `docs/specs/2026-08-12--t4-unified-depth-locomotion.md`（走跑/学生合同）、`docs/specs/2026-08-13--t4-vault-loco-merge.md`（G1→G2→G3 目标）、`docs/specs/2026-08-15--t4-stepping-stones-and-hurdle-stable.md`（梅花桩目标；执行已改单阶段）、`docs/archive/plans/2026-09-01--t4-s12-repr-first-distill-plan.md`（表示先行蒸馏，已归档）
 
 ## 梅花桩（nubot）
 

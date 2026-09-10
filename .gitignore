@@ -27,3 +27,6 @@ work/upstream-z2/
 artifacts/checkpoints/nubot/
 artifacts/consolidation/worktree-preserved/*.tar.gz
 artifacts/consolidation/*.bundle
+artifacts/consolidation/baseline/
+artifacts/consolidation/worktree-preserved/
+artifacts/pytest-tmp/

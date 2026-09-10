@@ -45,5 +45,6 @@ Status: active。执行面 `D:/TienKung-Lab`，分支 `develop`。
 ## 遗留与注意
 
 - 本机 `%TEMP%\pytest-of-shash` 目录 ACL 损坏不可删；`tests/conftest.py` 已自动回落仓库本地 basetemp。
+- **数据集哈希分两个时代**：develop 上的全部数据集/manifest 已按 LF 字节重写哈希（4b11f16 起，含 urdf/mjcf/generator/original 等溯源字段）；nubot 正在训练的 v2/v3 冻结树仍持有 CRLF 字节 + CRLF 哈希（树内自洽，resume 校验必过）。**两套文件不可跨树混拷**——从 develop 拷 clip 到旧训练树（或反之）会破 manifest 校验；旧树续训一律整树用原树文件。
 - z2/t4-walk/g1-portability 旧工作树目录已移除；未提交数据在 `artifacts/consolidation/worktree-preserved/`（tar 不入 git）。
 - nubot 上 `~/phn_ws/t4_train/` 的历史训练树（含运行中的 v2/v3）按冻结源码保留，不属于本地 worktree 收敛范围。

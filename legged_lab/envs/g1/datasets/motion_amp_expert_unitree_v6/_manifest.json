@@ -1,7 +1,7 @@
 {
   "source_dataset": "lvhaidong/LAFAN1_Retargeting_Dataset",
-  "urdf_sha256": "c0ae739c640c3e2c00d1bdd8810b5d6e59601487bd1a3995859f9543269ee5c8",
-  "generator_sha256": "66bcd3d6914428894901e79e10068d13e7998065659387ccd8eb859685a60093",
+  "urdf_sha256": "4aa267edc4eb2458f43c15efb4a29590006112fa188005e8c5a79867f46eb629",
+  "generator_sha256": "f7112ba8dac15f0f6187be3103ee69d3e19c6536712165586aab2a4988531898",
   "fps": 30,
   "frame_dim": 70,
   "status": "kinematic_candidate_pending_isaac_and_visual_validation",

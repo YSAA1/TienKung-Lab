@@ -3,9 +3,9 @@
   "status": "kinematic_candidate_pending_isaac_and_visual_validation",
   "fps": 30,
   "frame_dim": 70,
-  "urdf_sha256": "c0ae739c640c3e2c00d1bdd8810b5d6e59601487bd1a3995859f9543269ee5c8",
-  "t4_mjcf_sha256": "60323af76cf3b3b9765e6f9657db54533c5be6c9c33b44f0db4b5dd187924e87",
-  "generator_sha256": "0b6bc898304a855b881dfdee84280d2d1e173cc4b290824b18e1135ce9328c3f",
+  "urdf_sha256": "4aa267edc4eb2458f43c15efb4a29590006112fa188005e8c5a79867f46eb629",
+  "t4_mjcf_sha256": "47dc86dfdae29abe754e5a6d066825b18898373033abb65db0927bfbed5c6ddc",
+  "generator_sha256": "f06b090f6663481919893954a0c4d63209102741e97bab39f0d3d959080b5373",
   "leg_and_hip_scale": [
     0.9193820415908641,
     1.017222789699571,
@@ -817,119 +817,119 @@
   "sources": {
     "B10_-__Walk_turn_left_45_stageii": {
       "original_path": "legged_lab/envs/t4/datasets/motion_source/B10_-__Walk_turn_left_45_stageii.csv",
-      "original_sha256": "92381306af58b0d65ca16b1a4c01900982b9ab3110aef6d952b294d2ec58cf3d",
+      "original_sha256": "e6349dedba8ceb6cd8cf78f19cffdeb5a416246383cfacd9aceb94bbcbff35e1",
       "source_frames": 179,
       "path": "legged_lab/envs/g1/datasets/motion_source_t4_rob2rob_full17_v1/g1_from_B10_-__Walk_turn_left_45_stageii.csv",
       "sha256": "cdb15321ddf37a329877127198bb9eed26648b01f07337be835add0ea5d0f5bb"
     },
     "B13_-__Walk_turn_right_90_stageii": {
       "original_path": "legged_lab/envs/t4/datasets/motion_source/B13_-__Walk_turn_right_90_stageii.csv",
-      "original_sha256": "cad50149eed9a59ad7e384235c086e5634bdedadf991dd6150714305d524c938",
+      "original_sha256": "26958b2189837ef67094fa2f044cc98e2fc4a077837e1e479bbd27377fc3239c",
       "source_frames": 168,
       "path": "legged_lab/envs/g1/datasets/motion_source_t4_rob2rob_full17_v1/g1_from_B13_-__Walk_turn_right_90_stageii.csv",
       "sha256": "74c0b1882bcd28a7770e006fd52ffc14caaae5ffda99964169b2e915efbb2c2d"
     },
     "B14_-__Walk_turn_right_45_t2_stageii": {
       "original_path": "legged_lab/envs/t4/datasets/motion_source/B14_-__Walk_turn_right_45_t2_stageii.csv",
-      "original_sha256": "ebfaa2756b519cbe3352c7e5ac86af83c18897229e2c3e8cdf5f706fe87f1e36",
+      "original_sha256": "4d090e7ee70186d02fd12694038c1994724766440ace9d0230c22d7850cc3272",
       "source_frames": 174,
       "path": "legged_lab/envs/g1/datasets/motion_source_t4_rob2rob_full17_v1/g1_from_B14_-__Walk_turn_right_45_t2_stageii.csv",
       "sha256": "0f08580faf1946deb006666eeea6ea66d359e2aeb159aabbe34188af69f22b56"
     },
     "B15_-__Walk_turn_around_stageii": {
       "original_path": "legged_lab/envs/t4/datasets/motion_source/B15_-__Walk_turn_around_stageii.csv",
-      "original_sha256": "6ca0114d77f85550a04440f093d4ec4b0febfc79d55c0d940a85f768f7d454b1",
+      "original_sha256": "245071a3783eebe56b1b119836c47c1edd396298f0567d55a9e7a645e595a5fa",
       "source_frames": 225,
       "path": "legged_lab/envs/g1/datasets/motion_source_t4_rob2rob_full17_v1/g1_from_B15_-__Walk_turn_around_stageii.csv",
       "sha256": "fe6c9ef911d5726c31f1acae7db003acca88342c056b71da443f39b072393a50"
     },
     "B4_-_Stand_to_Walk_backwards_stageii": {
       "original_path": "legged_lab/envs/t4/datasets/motion_source/B4_-_Stand_to_Walk_backwards_stageii.csv",
-      "original_sha256": "a34a75d268ac50f3f0728c1e1ec8977ea9a65c55a470253229313af668bcf73b",
+      "original_sha256": "028332197010ae283b7fa88a738ca844a78ec6c4e4297f588f8cb961b2735202",
       "source_frames": 138,
       "path": "legged_lab/envs/g1/datasets/motion_source_t4_rob2rob_full17_v1/g1_from_B4_-_Stand_to_Walk_backwards_stageii.csv",
       "sha256": "26b95c7eab138e25c6c67f0a1db58cff86fada0c5b86d147bcab26366ee754b8"
     },
     "B9_-__Walk_turn_left_90_stageii": {
       "original_path": "legged_lab/envs/t4/datasets/motion_source/B9_-__Walk_turn_left_90_stageii.csv",
-      "original_sha256": "10bfbce5d6b7e4f78b32bd36a432cf747a049fa21a6d44bd01b469a493faaa4a",
+      "original_sha256": "87d8807309dceb20a16e47e2db6aefa313536106ccb9a357c468ca2ff64baf74",
       "source_frames": 151,
       "path": "legged_lab/envs/g1/datasets/motion_source_t4_rob2rob_full17_v1/g1_from_B9_-__Walk_turn_left_90_stageii.csv",
       "sha256": "895d31fe04c1c8d263b608eac6dcc9891ab05c3e822adcade8d09ebf9669d768"
     },
     "t4_jog_backward": {
       "original_path": "legged_lab/envs/t4/datasets/motion_source/t4_jog_backward.csv",
-      "original_sha256": "74c07d41161afbb693e3dc99e5482b1648c1e09f1e594e6f6528acd95f0ad8b1",
+      "original_sha256": "206349e278eee7376292769b994a2b0ac927c738e981d72ef0de5579a082a306",
       "source_frames": 171,
       "path": "legged_lab/envs/g1/datasets/motion_source_t4_rob2rob_full17_v1/g1_from_t4_jog_backward.csv",
       "sha256": "557451ce13a98135d4268fb1d37925173e002ed388fee639fba9b9faa434a693"
     },
     "t4_jog_forward": {
       "original_path": "legged_lab/envs/t4/datasets/motion_source/t4_jog_forward.csv",
-      "original_sha256": "de4185c6a77c15b9610f9fb553790d9104c4899c31a8906e8b03cf067d50d2fb",
+      "original_sha256": "5bd4cf14bb4d1b9890abf223b280858340b56eed194364be778fdeb143c33f0e",
       "source_frames": 152,
       "path": "legged_lab/envs/g1/datasets/motion_source_t4_rob2rob_full17_v1/g1_from_t4_jog_forward.csv",
       "sha256": "2b06ce0d8ca2d5ac10b640f60e55ffbeb80fd67b01a0143af392d46310d00a12"
     },
     "t4_jog_left": {
       "original_path": "legged_lab/envs/t4/datasets/motion_source/t4_jog_left.csv",
-      "original_sha256": "508345615b0a205a3cf662e2715c375f063fc3f9a939f9521b0476d69565a73b",
+      "original_sha256": "7bc0e992428909b3c1ec34a49b577067190d03e5a03fc8b0fc9923164bf01b51",
       "source_frames": 207,
       "path": "legged_lab/envs/g1/datasets/motion_source_t4_rob2rob_full17_v1/g1_from_t4_jog_left.csv",
       "sha256": "c95fe3bfd3d82752a8bb293e483749a3b29d51fab3b402909f9482ae22829686"
     },
     "t4_jog_right": {
       "original_path": "legged_lab/envs/t4/datasets/motion_source/t4_jog_right.csv",
-      "original_sha256": "01066781de7e2835124f12175bd3d61855acd8af580a3c1498cf1d46fe1f8f7f",
+      "original_sha256": "f4ce621d42c425af66df3aeacb73bdc7185e96ee218bb944884b04e60f19d38d",
       "source_frames": 227,
       "path": "legged_lab/envs/g1/datasets/motion_source_t4_rob2rob_full17_v1/g1_from_t4_jog_right.csv",
       "sha256": "e5079d65572c2a9737d9d0ff1b23511b1dc9260c89abf54e9dd3c392729bb6f1"
     },
     "t4_left_rotate": {
       "original_path": "legged_lab/envs/t4/datasets/motion_source/t4_left_rotate.csv",
-      "original_sha256": "cb31a6c6887bc5d425a79f856c282466e4bed472b23c043433049d7b74ab5d8b",
+      "original_sha256": "035e9d173b32578e1c695800264b5aeefdca5b40d0a3bd16f16fe18e65b08d40",
       "source_frames": 232,
       "path": "legged_lab/envs/g1/datasets/motion_source_t4_rob2rob_full17_v1/g1_from_t4_left_rotate.csv",
       "sha256": "bea0a79827807e3407fa7f24c37051bd18ec111080da45398791e1e282a9061f"
     },
     "t4_right_rotate": {
       "original_path": "legged_lab/envs/t4/datasets/motion_source/t4_right_rotate.csv",
-      "original_sha256": "a5825368eee118e6dd59ce40c22083a1c83f7e3be0dcf7e814287f2c361167af",
+      "original_sha256": "f473de65f05459190fa62b496109a04c43c8b9afa1d43eb02fff9396de7d9eca",
       "source_frames": 194,
       "path": "legged_lab/envs/g1/datasets/motion_source_t4_rob2rob_full17_v1/g1_from_t4_right_rotate.csv",
       "sha256": "29e40c97df3f31f5a985e794e0fa9b12337b6c4f8e637e990fb6403721c51014"
     },
     "t4_side_left": {
       "original_path": "legged_lab/envs/t4/datasets/motion_source/t4_side_left.csv",
-      "original_sha256": "74b5d1c557dd5c2e65cd76c780307b76298b02e7c7c16e38fd7bc47930382592",
+      "original_sha256": "acb42641e2cb2d54018b10dda4a9a8b8f300955c87349fcaaa80a48a3eb9ce66",
       "source_frames": 138,
       "path": "legged_lab/envs/g1/datasets/motion_source_t4_rob2rob_full17_v1/g1_from_t4_side_left.csv",
       "sha256": "96602a8c7a4fa81e0ee626c74fde96116f17e29a05df666dfd469145ee8f5b99"
     },
     "t4_side_right": {
       "original_path": "legged_lab/envs/t4/datasets/motion_source/t4_side_right.csv",
-      "original_sha256": "55389ca06b2d954494efdd968c028e4c26570397bdb48c5d385dbbe1b7610abe",
+      "original_sha256": "0199c28db0739b2e3b62451f1bf71cdc93bbe497fc02c15321a5501e00108de9",
       "source_frames": 151,
       "path": "legged_lab/envs/g1/datasets/motion_source_t4_rob2rob_full17_v1/g1_from_t4_side_right.csv",
       "sha256": "877184edebb1454554b1e06a10d348d80d19dca6071183ab4f28cfeb8b1caf65"
     },
     "t4_stand": {
       "original_path": "legged_lab/envs/t4/datasets/motion_source/t4_stand.csv",
-      "original_sha256": "0c6e6e23c5f389431edc1bacec575f8918948afaba9201d76d954a9b5134815d",
+      "original_sha256": "56e74f90aceee3ba2ff6388377cafe9a9aaed8d40285d8c85f1204e522a44bd2",
       "source_frames": 150,
       "path": "legged_lab/envs/g1/datasets/motion_source_t4_rob2rob_full17_v1/g1_from_t4_stand.csv",
       "sha256": "af6396b167b12598a61cf17a9821f248d0793cc13046ef502788051f770fd28b"
     },
     "t4_walk_forward": {
       "original_path": "legged_lab/envs/t4/datasets/motion_source/t4_walk_forward.csv",
-      "original_sha256": "c2ebf40a47fdd2efd58d297325368f465707f7920d34c9c2504e593038c4f7ce",
+      "original_sha256": "435e8e6b841e6f14b12ee8d7593f15eb7c678e1f2c7ee102d3899e6b0a7d697a",
       "source_frames": 290,
       "path": "legged_lab/envs/g1/datasets/motion_source_t4_rob2rob_full17_v1/g1_from_t4_walk_forward.csv",
       "sha256": "4188b3addc751a04ef315aa3448c3ab69a5a7137ffd186148c6d47b030695609"
     },
     "t4_walk_left": {
       "original_path": "legged_lab/envs/t4/datasets/motion_source/t4_walk_left.csv",
-      "original_sha256": "8cf834b5e1141018e62639a7fb46582d294d19bc19c3063c909d5782b11d5e83",
+      "original_sha256": "a565f1132a7b3b743652fd1357a251ee197407eeed262a9cbdae51fe5ad8ca65",
       "source_frames": 373,
       "path": "legged_lab/envs/g1/datasets/motion_source_t4_rob2rob_full17_v1/g1_from_t4_walk_left.csv",
       "sha256": "7367e05a89eabe09181e37b836062ce068e134b30a022bcf936bf71848a1ad88"

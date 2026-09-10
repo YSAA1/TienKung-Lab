@@ -3,8 +3,8 @@
   "status": "kinematic_candidate_pending_isaac_and_visual_validation",
   "fps": 30,
   "frame_dim": 70,
-  "urdf_sha256": "c0ae739c640c3e2c00d1bdd8810b5d6e59601487bd1a3995859f9543269ee5c8",
-  "t4_mjcf_sha256": "60323af76cf3b3b9765e6f9657db54533c5be6c9c33b44f0db4b5dd187924e87",
+  "urdf_sha256": "4aa267edc4eb2458f43c15efb4a29590006112fa188005e8c5a79867f46eb629",
+  "t4_mjcf_sha256": "47dc86dfdae29abe754e5a6d066825b18898373033abb65db0927bfbed5c6ddc",
   "generator_sha256": "a6e88cc6bbfcb035f94b5e375334bb83cb537be17b95d79388af425ad009f9cc",
   "leg_and_hip_scale": [
     0.9193820415908641,
@@ -24,14 +24,14 @@
   "sources": {
     "t4_walk_forward": {
       "original_path": "legged_lab/envs/t4/datasets/motion_source/t4_walk_forward.csv",
-      "original_sha256": "c2ebf40a47fdd2efd58d297325368f465707f7920d34c9c2504e593038c4f7ce",
+      "original_sha256": "435e8e6b841e6f14b12ee8d7593f15eb7c678e1f2c7ee102d3899e6b0a7d697a",
       "source_frames": 290,
       "path": "legged_lab/envs/g1/datasets/motion_source_t4_rob2rob_v1/g1_from_t4_walk_forward.csv",
       "sha256": "816296f7d03f4ea3b3b39afc69d461363196380d136180c2d75ae259495a1e0d"
     },
     "t4_jog_forward": {
       "original_path": "legged_lab/envs/t4/datasets/motion_source/t4_jog_forward.csv",
-      "original_sha256": "de4185c6a77c15b9610f9fb553790d9104c4899c31a8906e8b03cf067d50d2fb",
+      "original_sha256": "5bd4cf14bb4d1b9890abf223b280858340b56eed194364be778fdeb143c33f0e",
       "source_frames": 152,
       "path": "legged_lab/envs/g1/datasets/motion_source_t4_rob2rob_v1/g1_from_t4_jog_forward.csv",
       "sha256": "c1f3b96b4d5ef76b5bb6dbc0503cbdb95a95c9c31eb9cf68a3d8f72ddf37abbe"

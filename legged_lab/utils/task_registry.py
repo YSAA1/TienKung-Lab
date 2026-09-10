@@ -46,6 +46,9 @@ class TaskRegistry:
         Scripts routinely tune ``num_envs``/seeds/manifests on the returned cfgs;
         sharing the stored object let one task's edits contaminate every later
         ``get_cfgs`` call in the same process (seen across eval/probe scripts).
+        Note: dataclass ``MISSING`` sentinels do not survive deepcopy by identity
+        (``deepcopy(MISSING) is not MISSING``); no consumer in this repo or the
+        vendored rsl_rl compares instance values with ``is``, so this is safe.
         """
         return deepcopy(self.env_cfgs[name]), deepcopy(self.train_cfgs[name])
 
