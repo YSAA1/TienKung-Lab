@@ -1,0 +1,779 @@
+{
+  "source_dataset": "lvhaidong/LAFAN1_Retargeting_Dataset",
+  "urdf_sha256": "c0ae739c640c3e2c00d1bdd8810b5d6e59601487bd1a3995859f9543269ee5c8",
+  "generator_sha256": "66bcd3d6914428894901e79e10068d13e7998065659387ccd8eb859685a60093",
+  "fps": 30,
+  "frame_dim": 70,
+  "status": "kinematic_candidate_pending_isaac_and_visual_validation",
+  "limits": "Kinematic selection only; not a dynamics or learned-policy acceptance test.",
+  "selection": {
+    "walk_min_smoothed_forward_m_s": 0.3,
+    "run_min_smoothed_forward_m_s": 0.85,
+    "max_smoothed_yaw_rate_rad_s": 1.2,
+    "min_duration_s": 2.5,
+    "min_complete_stride_cycles": 3,
+    "maximum_low_speed_fraction": 0.01,
+    "max_root_tilt_rad": 0.45,
+    "minimum_sole_height_m": -0.025,
+    "max_support_speed_proxy_p95_m_s": 0.5,
+    "max_walk_sole_height_m": 0.15
+  },
+  "class_probabilities": {
+    "walk_forward": 0.625,
+    "run": 0.375
+  },
+  "sources": {
+    "walk1_subject1": {
+      "path": "legged_lab/envs/g1/datasets/motion_source/walk1_subject1.csv",
+      "sha256": "68c7887438e94f1f3d9ebacd3a8ce59251a22c7b05129a0f5d7cacaedc48c28d",
+      "frames": 7840,
+      "old_isaac_endpoint_max_error_m": 9.635216542125402e-07,
+      "old_first_30s": {
+        "duration_s": 29.966666666666665,
+        "speed_mean_m_s": 0.3937911130877469,
+        "forward_speed_mean_m_s": 0.356038924550125,
+        "speed_p10_p50_p90_m_s": [
+          0.020617532073408325,
+          0.47207911730979873,
+          0.6680374433359807
+        ],
+        "fraction_speed_below_0_1": 0.22246941045606228,
+        "hard_joint_limit_excess_rad": 0.0,
+        "max_joint_velocity_limit_ratio": 0.28705200000000003,
+        "lowest_sole_m": -0.00607933344751425,
+        "highest_sole_m": 0.040631344385130753,
+        "max_root_tilt_rad": 0.180610961581247,
+        "support_point_speed_proxy_p50_p95_m_s": [
+          0.0349400418266575,
+          1.8453137529584425
+        ]
+      }
+    },
+    "walk2_subject1": {
+      "path": "legged_lab/envs/g1/datasets/motion_source/walk2_subject1.csv",
+      "sha256": "51cf310f14ecbb8be1f41ea09345df0c89024ff884fb9ab881cac339f820c787",
+      "frames": 7146,
+      "old_isaac_endpoint_max_error_m": 1.2181649702231248e-06,
+      "old_first_30s": {
+        "duration_s": 29.966666666666665,
+        "speed_mean_m_s": 0.4509015237970698,
+        "forward_speed_mean_m_s": 0.34813383453185937,
+        "speed_p10_p50_p90_m_s": [
+          0.011617212157080857,
+          0.4789153622770939,
+          0.8792562927314324
+        ],
+        "fraction_speed_below_0_1": 0.27808676307007785,
+        "hard_joint_limit_excess_rad": 0.0,
+        "max_joint_velocity_limit_ratio": 0.4734134999999998,
+        "lowest_sole_m": -0.0021146913783887484,
+        "highest_sole_m": 0.1287855444319106,
+        "max_root_tilt_rad": 0.21607946277836484,
+        "support_point_speed_proxy_p50_p95_m_s": [
+          0.031004302153036057,
+          0.25866777200152535
+        ]
+      }
+    },
+    "walk3_subject1": {
+      "path": "legged_lab/envs/g1/datasets/motion_source/walk3_subject1.csv",
+      "sha256": "22ab870d9957a62c1dfe3c1ec0a8a9af84c6c965065fff6fc936c3fac21d16eb",
+      "frames": 7399,
+      "old_isaac_endpoint_max_error_m": 1.515867829635087e-06,
+      "old_first_30s": {
+        "duration_s": 29.966666666666665,
+        "speed_mean_m_s": 0.2954088689758794,
+        "forward_speed_mean_m_s": 0.27219969848243813,
+        "speed_p10_p50_p90_m_s": [
+          0.03890156514377155,
+          0.2903821935398242,
+          0.5356190686143864
+        ],
+        "fraction_speed_below_0_1": 0.19132369299221358,
+        "hard_joint_limit_excess_rad": 0.0,
+        "max_joint_velocity_limit_ratio": 0.35135250000000007,
+        "lowest_sole_m": -0.010497193025441356,
+        "highest_sole_m": 0.04523853657465498,
+        "max_root_tilt_rad": 0.1704387950962281,
+        "support_point_speed_proxy_p50_p95_m_s": [
+          0.02506877534225039,
+          1.0641240218645758
+        ]
+      }
+    },
+    "walk4_subject1": {
+      "path": "legged_lab/envs/g1/datasets/motion_source/walk4_subject1.csv",
+      "sha256": "03fe681190873e70d2b5635dc35aa228084136fcd61f1a0dcfcd6c25e12cdbaa",
+      "frames": 4918,
+      "old_isaac_endpoint_max_error_m": 8.857585444277394e-07,
+      "old_first_30s": {
+        "duration_s": 29.966666666666665,
+        "speed_mean_m_s": 0.1553002047463129,
+        "forward_speed_mean_m_s": 0.0955161801913943,
+        "speed_p10_p50_p90_m_s": [
+          0.013546960970561375,
+          0.08657776114568912,
+          0.46892321361255257
+        ],
+        "fraction_speed_below_0_1": 0.5561735261401557,
+        "hard_joint_limit_excess_rad": 0.0,
+        "max_joint_velocity_limit_ratio": 0.3272415000000001,
+        "lowest_sole_m": -0.0026411918664017526,
+        "highest_sole_m": 0.03934459118287242,
+        "max_root_tilt_rad": 0.3683513051582177,
+        "support_point_speed_proxy_p50_p95_m_s": [
+          0.01898776474758526,
+          0.10726286687328716
+        ]
+      }
+    },
+    "run1_subject2": {
+      "path": "legged_lab/envs/g1/datasets/motion_source/run1_subject2.csv",
+      "sha256": "ec02af4447a62214a6fec6afff60c75d0ecc8f80f8fb45e3cd4119fed9ceac8d",
+      "frames": 7135,
+      "old_isaac_endpoint_max_error_m": 8.03287020012533e-07,
+      "old_first_30s": {
+        "duration_s": 29.966666666666665,
+        "speed_mean_m_s": 0.46670083353273767,
+        "forward_speed_mean_m_s": 0.21669816596634853,
+        "speed_p10_p50_p90_m_s": [
+          0.012780250363105667,
+          0.501798349240011,
+          0.8766304883186824
+        ],
+        "fraction_speed_below_0_1": 0.1935483870967742,
+        "hard_joint_limit_excess_rad": 0.0,
+        "max_joint_velocity_limit_ratio": 0.4241250000000001,
+        "lowest_sole_m": -0.007853567397406166,
+        "highest_sole_m": 0.11489419541318083,
+        "max_root_tilt_rad": 0.2901834971920658,
+        "support_point_speed_proxy_p50_p95_m_s": [
+          0.041665575089623354,
+          0.22073182468846692
+        ]
+      }
+    },
+    "run2_subject1": {
+      "path": "legged_lab/envs/g1/datasets/motion_source/run2_subject1.csv",
+      "sha256": "ae64767c4b4e8f59578c22c5848cefc569923fea8bd3755c8dfb02b5313773da",
+      "frames": 7345,
+      "old_isaac_endpoint_max_error_m": 1.7201197964888948e-06,
+      "old_first_30s": {
+        "duration_s": 29.966666666666665,
+        "speed_mean_m_s": 1.5243020793587119,
+        "forward_speed_mean_m_s": 1.4653129141305439,
+        "speed_p10_p50_p90_m_s": [
+          0.009402293762299526,
+          1.8372948827148015,
+          2.422720328893377
+        ],
+        "fraction_speed_below_0_1": 0.17130144605116795,
+        "hard_joint_limit_excess_rad": 0.0,
+        "max_joint_velocity_limit_ratio": 0.6612479999999998,
+        "lowest_sole_m": -0.010614423452361684,
+        "highest_sole_m": 0.31716173114017976,
+        "max_root_tilt_rad": 0.4851019427145313,
+        "support_point_speed_proxy_p50_p95_m_s": [
+          0.05859488058050106,
+          0.3948817012362772
+        ]
+      }
+    }
+  },
+  "clips": {
+    "walk2_subject1_02254_02385": {
+      "duration_s": 4.366666666666666,
+      "speed_mean_m_s": 0.584205151636653,
+      "forward_speed_mean_m_s": 0.579548701948946,
+      "speed_p10_p50_p90_m_s": [
+        0.4981688300415827,
+        0.5785647129967448,
+        0.6723673227671025
+      ],
+      "fraction_speed_below_0_1": 0.0,
+      "hard_joint_limit_excess_rad": 0.0,
+      "max_joint_velocity_limit_ratio": 0.364164,
+      "lowest_sole_m": -0.004133166604025527,
+      "highest_sole_m": 0.06788104924496585,
+      "max_root_tilt_rad": 0.1250875701651478,
+      "support_point_speed_proxy_p50_p95_m_s": [
+        0.04843192294621432,
+        0.18836251682395344
+      ],
+      "source": "walk2_subject1",
+      "source_start": 2254,
+      "source_stop": 2385,
+      "full_stride_cycles": 4,
+      "motion_class": "walk_forward",
+      "motion_weight": 0.11564265536723164,
+      "sha256": "97a2e558eeca33fa861e792ccd09f5a9b2518827a82dba7aa954d656b6ea9bb3",
+      "frames": 131
+    },
+    "walk4_subject1_02403_02552": {
+      "duration_s": 4.966666666666667,
+      "speed_mean_m_s": 0.44611961374626685,
+      "forward_speed_mean_m_s": 0.4416267761485947,
+      "speed_p10_p50_p90_m_s": [
+        0.35033871192649213,
+        0.4520600658375044,
+        0.5350539213374045
+      ],
+      "fraction_speed_below_0_1": 0.0,
+      "hard_joint_limit_excess_rad": 0.0,
+      "max_joint_velocity_limit_ratio": 0.36155699999999996,
+      "lowest_sole_m": 0.0012966893232006895,
+      "highest_sole_m": 0.03820605083133865,
+      "max_root_tilt_rad": 0.40235917440473956,
+      "support_point_speed_proxy_p50_p95_m_s": [
+        0.041526995942420875,
+        0.3462805445457401
+      ],
+      "source": "walk4_subject1",
+      "source_start": 2403,
+      "source_stop": 2552,
+      "full_stride_cycles": 5,
+      "motion_class": "walk_forward",
+      "motion_weight": 0.13153248587570623,
+      "sha256": "efbec7e789b5e07ddb77cb0a2b6ab891d52d47d12fd4e55a1be2097c417e76a7",
+      "frames": 149
+    },
+    "walk4_subject1_02648_02770": {
+      "duration_s": 4.066666666666666,
+      "speed_mean_m_s": 0.40718238658756245,
+      "forward_speed_mean_m_s": 0.40157257202385976,
+      "speed_p10_p50_p90_m_s": [
+        0.3365071662544992,
+        0.4056806426462096,
+        0.4728746909578458
+      ],
+      "fraction_speed_below_0_1": 0.0,
+      "hard_joint_limit_excess_rad": 0.0,
+      "max_joint_velocity_limit_ratio": 0.277821,
+      "lowest_sole_m": 0.0006202341507008215,
+      "highest_sole_m": 0.03478726790584607,
+      "max_root_tilt_rad": 0.2572396447696983,
+      "support_point_speed_proxy_p50_p95_m_s": [
+        0.034012864075598156,
+        0.2617617791165024
+      ],
+      "source": "walk4_subject1",
+      "source_start": 2648,
+      "source_stop": 2770,
+      "full_stride_cycles": 4,
+      "motion_class": "walk_forward",
+      "motion_weight": 0.10769774011299435,
+      "sha256": "3b963ff4af18188141efec3c1ed4463bedb4e5da715f3389449ea9a02f8dc69b",
+      "frames": 122
+    },
+    "walk4_subject1_03495_03582": {
+      "duration_s": 2.9,
+      "speed_mean_m_s": 0.4991453813334968,
+      "forward_speed_mean_m_s": 0.4924498139470415,
+      "speed_p10_p50_p90_m_s": [
+        0.3833695857784334,
+        0.4999985631229272,
+        0.61704035548964
+      ],
+      "fraction_speed_below_0_1": 0.0,
+      "hard_joint_limit_excess_rad": 0.0,
+      "max_joint_velocity_limit_ratio": 0.3457645945945947,
+      "lowest_sole_m": 0.0013576987790077143,
+      "highest_sole_m": 0.04216431933764344,
+      "max_root_tilt_rad": 0.33806476210339415,
+      "support_point_speed_proxy_p50_p95_m_s": [
+        0.04083677721917435,
+        0.11769033700838771
+      ],
+      "source": "walk4_subject1",
+      "source_start": 3495,
+      "source_stop": 3582,
+      "full_stride_cycles": 3,
+      "motion_class": "walk_forward",
+      "motion_weight": 0.07680084745762712,
+      "sha256": "f48ad8d2901d1cb92ac27a3fbe4cb7bcb05688673a8ad26d6d992479b87412f5",
+      "frames": 87
+    },
+    "walk4_subject1_04486_04599": {
+      "duration_s": 3.7666666666666666,
+      "speed_mean_m_s": 0.5736359811654211,
+      "forward_speed_mean_m_s": 0.5685813491052721,
+      "speed_p10_p50_p90_m_s": [
+        0.49508412170732535,
+        0.5733670512202431,
+        0.6598444769684059
+      ],
+      "fraction_speed_below_0_1": 0.0,
+      "hard_joint_limit_excess_rad": 0.0,
+      "max_joint_velocity_limit_ratio": 0.39398849999999996,
+      "lowest_sole_m": 0.00029559606118119853,
+      "highest_sole_m": 0.045987987462379025,
+      "max_root_tilt_rad": 0.36794016326525675,
+      "support_point_speed_proxy_p50_p95_m_s": [
+        0.04127688064873396,
+        0.14219827236995627
+      ],
+      "source": "walk4_subject1",
+      "source_start": 4486,
+      "source_stop": 4599,
+      "full_stride_cycles": 5,
+      "motion_class": "walk_forward",
+      "motion_weight": 0.09975282485875707,
+      "sha256": "7c09458e98a4e6b5b0d694c34ee80463e2143c94ed1d4a66553cef1a114be6c0",
+      "frames": 113
+    },
+    "walk4_subject1_04639_04745": {
+      "duration_s": 3.533333333333333,
+      "speed_mean_m_s": 0.6639781120662875,
+      "forward_speed_mean_m_s": 0.6534177366029156,
+      "speed_p10_p50_p90_m_s": [
+        0.595567846430597,
+        0.6608233734618023,
+        0.7224405827426783
+      ],
+      "fraction_speed_below_0_1": 0.0,
+      "hard_joint_limit_excess_rad": 0.0,
+      "max_joint_velocity_limit_ratio": 0.4465840540540541,
+      "lowest_sole_m": 0.000529607733525281,
+      "highest_sole_m": 0.047826611172804824,
+      "max_root_tilt_rad": 0.40653130044953806,
+      "support_point_speed_proxy_p50_p95_m_s": [
+        0.05169702839331547,
+        0.1507830217278843
+      ],
+      "source": "walk4_subject1",
+      "source_start": 4639,
+      "source_stop": 4745,
+      "full_stride_cycles": 5,
+      "motion_class": "walk_forward",
+      "motion_weight": 0.09357344632768361,
+      "sha256": "6d78238066e0e92f58b3ca9883fed729818fe818dac9dadf5ad234ab876d7be9",
+      "frames": 106
+    },
+    "run1_subject2_03355_03547": {
+      "duration_s": 6.4,
+      "speed_mean_m_s": 1.8072664190737229,
+      "forward_speed_mean_m_s": 1.8035507263284483,
+      "speed_p10_p50_p90_m_s": [
+        1.5730894896026693,
+        1.8187232158277227,
+        1.9942031193397942
+      ],
+      "fraction_speed_below_0_1": 0.0,
+      "hard_joint_limit_excess_rad": 0.0,
+      "max_joint_velocity_limit_ratio": 0.5575905000000002,
+      "lowest_sole_m": -0.0058757216448253905,
+      "highest_sole_m": 0.22643395180689554,
+      "max_root_tilt_rad": 0.30506475104248126,
+      "support_point_speed_proxy_p50_p95_m_s": [
+        0.08204043792850682,
+        0.2937136720473938
+      ],
+      "source": "run1_subject2",
+      "source_start": 3355,
+      "source_stop": 3547,
+      "full_stride_cycles": 8,
+      "motion_class": "run",
+      "motion_weight": 0.2544169611307421,
+      "sha256": "19f9d6117a5c526e5b2662dafa7bf6df284460d1f4681f704b96df912559ace2",
+      "frames": 192
+    },
+    "run1_subject2_03702_03793": {
+      "duration_s": 3.033333333333333,
+      "speed_mean_m_s": 2.034604712860077,
+      "forward_speed_mean_m_s": 2.0229999470366056,
+      "speed_p10_p50_p90_m_s": [
+        1.7304429216894226,
+        2.0072228594877077,
+        2.3804440295877565
+      ],
+      "fraction_speed_below_0_1": 0.0,
+      "hard_joint_limit_excess_rad": 0.0,
+      "max_joint_velocity_limit_ratio": 0.5732475000000001,
+      "lowest_sole_m": -0.0055894845576168915,
+      "highest_sole_m": 0.21980689849464957,
+      "max_root_tilt_rad": 0.3972573216994654,
+      "support_point_speed_proxy_p50_p95_m_s": [
+        0.10412497201991093,
+        0.35570561812763557
+      ],
+      "source": "run1_subject2",
+      "source_start": 3702,
+      "source_stop": 3793,
+      "full_stride_cycles": 4,
+      "motion_class": "run",
+      "motion_weight": 0.12058303886925795,
+      "sha256": "db0dd65d86864dcffcb9104d2a14b03b6ecabf235fb4e72552bbf72d832da8b0",
+      "frames": 91
+    }
+  },
+  "rejected_segments": {
+    "walk1_subject1_00890_01017": {
+      "duration_s": 4.233333333333333,
+      "speed_mean_m_s": 0.6653882869996279,
+      "forward_speed_mean_m_s": 0.6623377498560921,
+      "speed_p10_p50_p90_m_s": [
+        0.6104976650098847,
+        0.6490365197929933,
+        0.7497901565269943
+      ],
+      "fraction_speed_below_0_1": 0.0,
+      "hard_joint_limit_excess_rad": 0.0,
+      "max_joint_velocity_limit_ratio": 0.2901135000000001,
+      "lowest_sole_m": -0.0020979742004356523,
+      "highest_sole_m": 0.04071319352266129,
+      "max_root_tilt_rad": 0.15732015361869936,
+      "support_point_speed_proxy_p50_p95_m_s": [
+        0.05847613811270341,
+        2.632740346387911
+      ],
+      "source": "walk1_subject1",
+      "source_start": 890,
+      "source_stop": 1017,
+      "full_stride_cycles": 3,
+      "motion_class": "walk_forward",
+      "reasons": [
+        "near-ground foot motion proxy above 0.5 m/s at p95"
+      ]
+    },
+    "walk1_subject1_01452_01640": {
+      "duration_s": 6.266666666666667,
+      "speed_mean_m_s": 0.39354331077092986,
+      "forward_speed_mean_m_s": 0.38478699976766084,
+      "speed_p10_p50_p90_m_s": [
+        0.3304878745466606,
+        0.39210656381388204,
+        0.44832661289953285
+      ],
+      "fraction_speed_below_0_1": 0.0,
+      "hard_joint_limit_excess_rad": 0.0,
+      "max_joint_velocity_limit_ratio": 0.35099249999999993,
+      "lowest_sole_m": -0.0011199864909403013,
+      "highest_sole_m": 0.036480164949231154,
+      "max_root_tilt_rad": 0.1717978800091739,
+      "support_point_speed_proxy_p50_p95_m_s": [
+        0.053075777567131534,
+        1.809019749859541
+      ],
+      "source": "walk1_subject1",
+      "source_start": 1452,
+      "source_stop": 1640,
+      "full_stride_cycles": 4,
+      "motion_class": "walk_forward",
+      "reasons": [
+        "near-ground foot motion proxy above 0.5 m/s at p95"
+      ]
+    },
+    "walk1_subject1_02359_02589": {
+      "duration_s": 7.666666666666667,
+      "speed_mean_m_s": 0.8547072224894902,
+      "forward_speed_mean_m_s": 0.8493269907430302,
+      "speed_p10_p50_p90_m_s": [
+        0.4671338210276768,
+        0.8595489220429979,
+        1.3017930486770577
+      ],
+      "fraction_speed_below_0_1": 0.0,
+      "hard_joint_limit_excess_rad": 0.0,
+      "max_joint_velocity_limit_ratio": 0.3878130000000001,
+      "lowest_sole_m": -0.00149076682331654,
+      "highest_sole_m": 0.058715011995732334,
+      "max_root_tilt_rad": 0.17386386818802838,
+      "support_point_speed_proxy_p50_p95_m_s": [
+        0.06824047323629809,
+        2.4144779214699272
+      ],
+      "source": "walk1_subject1",
+      "source_start": 2359,
+      "source_stop": 2589,
+      "full_stride_cycles": 6,
+      "motion_class": "walk_forward",
+      "reasons": [
+        "near-ground foot motion proxy above 0.5 m/s at p95"
+      ]
+    },
+    "walk1_subject1_02662_02788": {
+      "duration_s": 4.2,
+      "speed_mean_m_s": 1.2705544144490994,
+      "forward_speed_mean_m_s": 1.2618192332116864,
+      "speed_p10_p50_p90_m_s": [
+        1.1675692823397434,
+        1.2698677072385989,
+        1.3768073859376788
+      ],
+      "fraction_speed_below_0_1": 0.0,
+      "hard_joint_limit_excess_rad": 0.0,
+      "max_joint_velocity_limit_ratio": 0.39947249999999995,
+      "lowest_sole_m": 0.0002844588260636398,
+      "highest_sole_m": 0.05595754314181812,
+      "max_root_tilt_rad": 0.18432955450607993,
+      "support_point_speed_proxy_p50_p95_m_s": [
+        0.10530063830923553,
+        4.032344764811025
+      ],
+      "source": "walk1_subject1",
+      "source_start": 2662,
+      "source_stop": 2788,
+      "full_stride_cycles": 4,
+      "motion_class": "walk_forward",
+      "reasons": [
+        "near-ground foot motion proxy above 0.5 m/s at p95"
+      ]
+    },
+    "walk1_subject1_02881_03098": {
+      "duration_s": 7.233333333333333,
+      "speed_mean_m_s": 1.144596472193381,
+      "forward_speed_mean_m_s": 1.1377977620434208,
+      "speed_p10_p50_p90_m_s": [
+        0.9472033845681743,
+        1.1322143108197316,
+        1.3365490666932465
+      ],
+      "fraction_speed_below_0_1": 0.0,
+      "hard_joint_limit_excess_rad": 0.0,
+      "max_joint_velocity_limit_ratio": 0.39601349999999996,
+      "lowest_sole_m": -0.0002076151246399689,
+      "highest_sole_m": 0.05704873187305049,
+      "max_root_tilt_rad": 0.20434283584281251,
+      "support_point_speed_proxy_p50_p95_m_s": [
+        0.08491330444244008,
+        3.554109423708329
+      ],
+      "source": "walk1_subject1",
+      "source_start": 2881,
+      "source_stop": 3098,
+      "full_stride_cycles": 7,
+      "motion_class": "walk_forward",
+      "reasons": [
+        "near-ground foot motion proxy above 0.5 m/s at p95"
+      ]
+    },
+    "walk1_subject1_03185_03274": {
+      "duration_s": 2.966666666666667,
+      "speed_mean_m_s": 1.4248471923295583,
+      "forward_speed_mean_m_s": 1.4153736710113258,
+      "speed_p10_p50_p90_m_s": [
+        1.2922583817495361,
+        1.4360026337893763,
+        1.5279924164844507
+      ],
+      "fraction_speed_below_0_1": 0.0,
+      "hard_joint_limit_excess_rad": 0.0,
+      "max_joint_velocity_limit_ratio": 0.38848049999999995,
+      "lowest_sole_m": -0.0007121580789706356,
+      "highest_sole_m": 0.0558907353813917,
+      "max_root_tilt_rad": 0.20076691619878606,
+      "support_point_speed_proxy_p50_p95_m_s": [
+        0.08259741137568336,
+        4.1893508822485055
+      ],
+      "source": "walk1_subject1",
+      "source_start": 3185,
+      "source_stop": 3274,
+      "full_stride_cycles": 3,
+      "motion_class": "walk_forward",
+      "reasons": [
+        "near-ground foot motion proxy above 0.5 m/s at p95"
+      ]
+    },
+    "walk1_subject1_03424_03547": {
+      "duration_s": 4.1,
+      "speed_mean_m_s": 1.1956639474177564,
+      "forward_speed_mean_m_s": 1.185946507703242,
+      "speed_p10_p50_p90_m_s": [
+        1.0784303325031357,
+        1.211521978442815,
+        1.287374289394831
+      ],
+      "fraction_speed_below_0_1": 0.0,
+      "hard_joint_limit_excess_rad": 0.0,
+      "max_joint_velocity_limit_ratio": 0.38228399999999996,
+      "lowest_sole_m": 0.00016905192710509487,
+      "highest_sole_m": 0.05550637549769911,
+      "max_root_tilt_rad": 0.2110539899248286,
+      "support_point_speed_proxy_p50_p95_m_s": [
+        0.09386089945142251,
+        3.496304533675227
+      ],
+      "source": "walk1_subject1",
+      "source_start": 3424,
+      "source_stop": 3547,
+      "full_stride_cycles": 4,
+      "motion_class": "walk_forward",
+      "reasons": [
+        "near-ground foot motion proxy above 0.5 m/s at p95"
+      ]
+    },
+    "walk1_subject1_04075_04223": {
+      "duration_s": 4.933333333333334,
+      "speed_mean_m_s": 0.515799898744814,
+      "forward_speed_mean_m_s": 0.5090753238410061,
+      "speed_p10_p50_p90_m_s": [
+        0.44599597706684146,
+        0.5164300679744351,
+        0.5905300088073157
+      ],
+      "fraction_speed_below_0_1": 0.0,
+      "hard_joint_limit_excess_rad": 0.0,
+      "max_joint_velocity_limit_ratio": 0.30549599999999993,
+      "lowest_sole_m": -0.002003396358019864,
+      "highest_sole_m": 0.034447812511105715,
+      "max_root_tilt_rad": 0.14617688999052073,
+      "support_point_speed_proxy_p50_p95_m_s": [
+        0.05534724882646484,
+        2.1018409288244606
+      ],
+      "source": "walk1_subject1",
+      "source_start": 4075,
+      "source_stop": 4223,
+      "full_stride_cycles": 3,
+      "motion_class": "walk_forward",
+      "reasons": [
+        "near-ground foot motion proxy above 0.5 m/s at p95"
+      ]
+    },
+    "walk1_subject1_06035_06252": {
+      "duration_s": 7.233333333333333,
+      "speed_mean_m_s": 0.7294221445809834,
+      "forward_speed_mean_m_s": 0.7246091494251375,
+      "speed_p10_p50_p90_m_s": [
+        0.6589024581459179,
+        0.725542584777064,
+        0.8171976613615385
+      ],
+      "fraction_speed_below_0_1": 0.0,
+      "hard_joint_limit_excess_rad": 0.0,
+      "max_joint_velocity_limit_ratio": 0.3594735,
+      "lowest_sole_m": -0.0019864011202293764,
+      "highest_sole_m": 0.059944584672148714,
+      "max_root_tilt_rad": 0.15760645766760817,
+      "support_point_speed_proxy_p50_p95_m_s": [
+        0.07452299211392066,
+        2.575876895768511
+      ],
+      "source": "walk1_subject1",
+      "source_start": 6035,
+      "source_stop": 6252,
+      "full_stride_cycles": 5,
+      "motion_class": "walk_forward",
+      "reasons": [
+        "near-ground foot motion proxy above 0.5 m/s at p95"
+      ]
+    },
+    "walk2_subject1_06509_06632": {
+      "duration_s": 4.1,
+      "speed_mean_m_s": 0.5634212310671849,
+      "forward_speed_mean_m_s": 0.561663790886688,
+      "speed_p10_p50_p90_m_s": [
+        0.44389280542869486,
+        0.5810254695364049,
+        0.6531871975093443
+      ],
+      "fraction_speed_below_0_1": 0.0,
+      "hard_joint_limit_excess_rad": 0.0,
+      "max_joint_velocity_limit_ratio": 0.47845799999999994,
+      "lowest_sole_m": 0.0002615355441547189,
+      "highest_sole_m": 0.3022384749766441,
+      "max_root_tilt_rad": 0.11950401570917965,
+      "support_point_speed_proxy_p50_p95_m_s": [
+        0.03497434400843287,
+        0.09659831780780392
+      ],
+      "source": "walk2_subject1",
+      "source_start": 6509,
+      "source_stop": 6632,
+      "full_stride_cycles": 3,
+      "motion_class": "walk_forward",
+      "reasons": [
+        "high-step walking outside the plain locomotion subset"
+      ]
+    },
+    "walk3_subject1_06930_07098": {
+      "duration_s": 5.6,
+      "speed_mean_m_s": 0.69115407081426,
+      "forward_speed_mean_m_s": 0.6875274113258026,
+      "speed_p10_p50_p90_m_s": [
+        0.6081325785116167,
+        0.6992541038645541,
+        0.7701273456153304
+      ],
+      "fraction_speed_below_0_1": 0.0,
+      "hard_joint_limit_excess_rad": 0.0,
+      "max_joint_velocity_limit_ratio": 0.38267249999999997,
+      "lowest_sole_m": -0.00012785286536546713,
+      "highest_sole_m": 0.062188451930217235,
+      "max_root_tilt_rad": 0.13290550045370894,
+      "support_point_speed_proxy_p50_p95_m_s": [
+        0.047168227955444744,
+        2.4290124178729426
+      ],
+      "source": "walk3_subject1",
+      "source_start": 6930,
+      "source_stop": 7098,
+      "full_stride_cycles": 4,
+      "motion_class": "walk_forward",
+      "reasons": [
+        "near-ground foot motion proxy above 0.5 m/s at p95"
+      ]
+    },
+    "walk4_subject1_01221_01342": {
+      "duration_s": 4.033333333333333,
+      "speed_mean_m_s": 0.5672232348127584,
+      "forward_speed_mean_m_s": 0.5562888874559595,
+      "speed_p10_p50_p90_m_s": [
+        0.4878603239914108,
+        0.5678804877789002,
+        0.6489029888974146
+      ],
+      "fraction_speed_below_0_1": 0.0,
+      "hard_joint_limit_excess_rad": 0.0,
+      "max_joint_velocity_limit_ratio": 0.3292545,
+      "lowest_sole_m": -0.0015502204232240675,
+      "highest_sole_m": 0.0432250577201782,
+      "max_root_tilt_rad": 0.3246848719895976,
+      "support_point_speed_proxy_p50_p95_m_s": [
+        0.03244576338417274,
+        1.5644792769941394
+      ],
+      "source": "walk4_subject1",
+      "source_start": 1221,
+      "source_stop": 1342,
+      "full_stride_cycles": 4,
+      "motion_class": "walk_forward",
+      "reasons": [
+        "near-ground foot motion proxy above 0.5 m/s at p95"
+      ]
+    },
+    "run1_subject2_06042_06127": {
+      "duration_s": 2.8333333333333335,
+      "speed_mean_m_s": 1.1305095804477021,
+      "forward_speed_mean_m_s": 1.126211565096239,
+      "speed_p10_p50_p90_m_s": [
+        0.9748813639956657,
+        1.132568708246877,
+        1.2583276359484035
+      ],
+      "fraction_speed_below_0_1": 0.0,
+      "hard_joint_limit_excess_rad": 0.0,
+      "max_joint_velocity_limit_ratio": 0.37262100000000004,
+      "lowest_sole_m": -0.005494885171004586,
+      "highest_sole_m": 0.0920033787170918,
+      "max_root_tilt_rad": 0.23311747189445609,
+      "support_point_speed_proxy_p50_p95_m_s": [
+        0.06842971288655146,
+        0.5985551188208089
+      ],
+      "source": "run1_subject2",
+      "source_start": 6042,
+      "source_stop": 6127,
+      "full_stride_cycles": 3,
+      "motion_class": "run",
+      "reasons": [
+        "near-ground foot motion proxy above 0.5 m/s at p95"
+      ]
+    }
+  },
+  "duration_by_class_s": {
+    "walk_forward": 23.599999999999998,
+    "run": 9.433333333333334
+  }
+}

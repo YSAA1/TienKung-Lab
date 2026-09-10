@@ -1,0 +1,26 @@
+{
+  "env": {
+    "diff": [
+      {
+        "field": "reward.action_rate_l2.weight",
+        "before": "-0.1",
+        "after": "-0.01"
+      }
+    ],
+    "baseline_sha256": "9be823a9e85ed91ac2da68308938ff713f617ef0d5579261866031dd1f2af9e6",
+    "candidate_sha256": "c011e021148e20add986f775cd9e6c5a2a9265076a37172ce0f1737e2e86786e"
+  },
+  "agent": {
+    "diff": [
+      {
+        "field": "run_name",
+        "before": "z2_source_usd_teacher_v1",
+        "after": "z2_actionrate_001_v1"
+      }
+    ],
+    "baseline_sha256": "5375dfeac32a2958e61c283caeb938c50b6cb23bc59ad3087dfecf08a924a06b",
+    "candidate_sha256": "88eec6064c7773b0d980967465c3e0d8ef44ac69577917a7cdece93f1baaa546"
+  },
+  "pass": true,
+  "normalization": "Only the two absolute project root prefixes normalized to <ROOT>."
+}

@@ -18,10 +18,11 @@
 
 from legged_lab.envs.base.base_env import BaseEnv
 from legged_lab.envs.base.base_env_config import BaseAgentCfg, BaseEnvCfg
+from legged_lab.envs.g1.teacher_cfg import G1LocoTeacherAgentCfg, G1LocoTeacherEnvCfg
 from legged_lab.envs.t4.depth_student_cfg import T4SparseDepthStudentAgentCfg
-from legged_lab.envs.t4.depth_student_env import T4LocoSparseDepthStudentEnvCfg  # noqa: E402
-from legged_lab.locomotion.depth_env import LightLPDepthDistillationEnv  # noqa: E402
-from legged_lab.locomotion.env import LocomotionEnv
+from legged_lab.envs.t4.depth_student_env import (  # noqa: E402
+    T4LocoSparseDepthStudentEnvCfg,
+)
 from legged_lab.envs.t4.teacher_cfg import (
     T4LocoSparseTeacherAgentCfg,
     T4LocoSparseTeacherEnvCfg,
@@ -42,7 +43,9 @@ from legged_lab.envs.tienkung.walk_with_sensor_cfg import (
     TienKungWalkWithSensorAgentCfg,
     TienKungWalkWithSensorFlatEnvCfg,
 )
-from legged_lab.envs.g1.teacher_cfg import G1LocoTeacherAgentCfg, G1LocoTeacherEnvCfg
+from legged_lab.envs.z2.teacher_cfg import Z2LocoTeacherAgentCfg, Z2LocoTeacherEnvCfg
+from legged_lab.locomotion.depth_env import LightLPDepthDistillationEnv  # noqa: E402
+from legged_lab.locomotion.env import LocomotionEnv
 from legged_lab.utils.task_registry import task_registry
 
 task_registry.register("walk", TienKungEnv, TienKungWalkFlatEnvCfg(), TienKungWalkAgentCfg())
@@ -54,6 +57,7 @@ task_registry.register(
     "run_with_sensor", TienKungEnv, TienKungRunWithSensorFlatEnvCfg(), TienKungRunWithSensorAgentCfg()
 )
 task_registry.register("g1_loco_teacher", LocomotionEnv, G1LocoTeacherEnvCfg(), G1LocoTeacherAgentCfg())
+task_registry.register("z2_loco_teacher", LocomotionEnv, Z2LocoTeacherEnvCfg(), Z2LocoTeacherAgentCfg())
 task_registry.register("t4_loco_teacher", LocomotionEnv, T4LocoTeacherEnvCfg(), T4LocoTeacherAgentCfg())
 task_registry.register(
     "t4_loco_teacher_sparse", LocomotionEnv, T4LocoSparseTeacherEnvCfg(), T4LocoSparseTeacherAgentCfg()

@@ -84,6 +84,131 @@ def test_motion_experiment_profiles_are_single_factor(profile, action_rate, acce
     assert cfg.sparse_command_min_speed_scale == 1.0
 
 
+def _domain_rand_stub(*, delay_enabled=False):
+    return NS(
+        action_delay=NS(enable=delay_enabled, params={"min_delay": 0, "max_delay": 5}),
+        events=NS(
+            physics_material=NS(
+                params={
+                    "static_friction_range": (0.6, 1.0),
+                    "dynamic_friction_range": (0.4, 0.8),
+                }
+            ),
+            reset_base=NS(params={"velocity_range": {}}),
+            reset_robot_joints=NS(params={"position_range": (1.0, 1.0)}),
+        ),
+    )
+
+
+def test_vital_v1_does_not_enable_plant_dr():
+    spec = importlib.util.spec_from_file_location("motion_profile", ROOT / "legged_lab/envs/g1/motion_experiment.py")
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    domain = _domain_rand_stub()
+    cfg = NS(
+        robot_spec=NS(name="g1"),
+        acceleration_termination_enabled=True,
+        deterministic_fall_limits=None,
+        gait=NS(tracking_gate_enabled=True),
+        reward=NS(action_rate_l2=NS(weight=-0.1)),
+        domain_rand=domain,
+    )
+    module.apply_vital_motion_experiment(cfg, "vital_v1")
+    assert cfg.domain_rand.action_delay.enable is False
+    assert cfg.domain_rand.action_delay.params == {"min_delay": 0, "max_delay": 5}
+    assert cfg.domain_rand.events.physics_material.params["static_friction_range"] == (0.6, 1.0)
+    assert cfg.domain_rand.events.reset_base.params["velocity_range"] == {}
+    assert not hasattr(cfg.domain_rand.events, "actuator_gains")
+
+
+def test_vital_v2_applies_recommended_plant_dr_and_keeps_vital_rewards():
+    spec = importlib.util.spec_from_file_location("motion_profile", ROOT / "legged_lab/envs/g1/motion_experiment.py")
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    domain = _domain_rand_stub()
+    cfg = NS(
+        robot_spec=NS(name="g1"),
+        acceleration_termination_enabled=True,
+        deterministic_fall_limits=None,
+        gait=NS(tracking_gate_enabled=True),
+        reward=NS(
+            action_rate_l2=NS(weight=-0.1),
+            upright_orientation=NS(weight=1.0),
+            velocity_slack=NS(weight=1.5),
+        ),
+        domain_rand=domain,
+    )
+    module.apply_vital_motion_experiment(cfg, "vital_v2")
+    assert cfg.reward.action_rate_l2.weight == -0.01
+    assert cfg.reward.upright_orientation.weight == 1.0
+    assert cfg.acceleration_termination_enabled is False
+    assert cfg.deterministic_fall_limits == (0.8, 1.0)
+    assert cfg.gait.tracking_gate_enabled is False
+    assert cfg.domain_rand.action_delay.enable is True
+    assert cfg.domain_rand.action_delay.params == {"min_delay": 0, "max_delay": 2}
+    assert cfg.domain_rand.events.physics_material.params["static_friction_range"] == (0.4, 1.2)
+    assert cfg.domain_rand.events.physics_material.params["dynamic_friction_range"] == (0.3, 1.0)
+    assert cfg.domain_rand.events.reset_base.params["velocity_range"] == {
+        "x": (-0.3, 0.3),
+        "y": (-0.3, 0.3),
+        "yaw": (-0.3, 0.3),
+    }
+    assert cfg.domain_rand.events.reset_robot_joints.params["position_range"] == (1.0, 1.0)
+    gains = cfg.domain_rand.events.actuator_gains.params
+    assert gains["stiffness_distribution_params"] == (0.9, 1.1)
+    assert gains["damping_distribution_params"] == (0.9, 1.1)
+    assert gains["operation"] == "scale"
+
+
+def test_vital_v3_applies_ramped_plant_dr_and_keeps_vital_rewards():
+    spec = importlib.util.spec_from_file_location("motion_profile", ROOT / "legged_lab/envs/g1/motion_experiment.py")
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    domain = _domain_rand_stub()
+    cfg = NS(
+        robot_spec=NS(name="g1"),
+        acceleration_termination_enabled=True,
+        deterministic_fall_limits=None,
+        gait=NS(tracking_gate_enabled=True),
+        reward=NS(
+            action_rate_l2=NS(weight=-0.1),
+            upright_orientation=NS(weight=1.0),
+            velocity_slack=NS(weight=1.5),
+        ),
+        domain_rand=domain,
+    )
+    module.apply_vital_motion_experiment(cfg, "vital_v3")
+    # identical VITAL reward/termination package to vital_v1
+    assert cfg.reward.action_rate_l2.weight == -0.01
+    assert cfg.acceleration_termination_enabled is False
+    assert cfg.deterministic_fall_limits == (0.8, 1.0)
+    assert cfg.gait.tracking_gate_enabled is False
+    # latency DR is capped at one control step and active from construction
+    assert cfg.domain_rand.action_delay.enable is True
+    assert cfg.domain_rand.action_delay.params == {"min_delay": 0, "max_delay": 1}
+    # the startup friction term keeps the vital_v1 ranges; the ramp widens them later
+    assert cfg.domain_rand.events.physics_material.params["static_friction_range"] == (0.6, 1.0)
+    assert cfg.domain_rand.events.physics_material.params["dynamic_friction_range"] == (0.4, 0.8)
+    ramp = cfg.domain_rand.events.physics_material_ramp
+    assert ramp.mode == "interval"
+    assert ramp.params["static_friction_source"] == (0.6, 1.0)
+    assert ramp.params["static_friction_target"] == (0.6, 1.2)
+    assert ramp.params["dynamic_friction_source"] == (0.4, 0.8)
+    assert ramp.params["dynamic_friction_target"] == (0.5, 1.0)
+    assert ramp.params["ramp_steps"] == module.VITAL_V3_RAMP_STEPS
+    gains = cfg.domain_rand.events.actuator_gains
+    assert gains.mode == "reset"
+    assert gains.params["stiffness_distribution_params"] == (0.9, 1.1)
+    assert gains.params["damping_distribution_params"] == (0.9, 1.1)
+    assert gains.params["ramp_steps"] == module.VITAL_V3_RAMP_STEPS
+    delay_reset = cfg.domain_rand.events.action_delay_reset
+    assert delay_reset.mode == "reset"
+    assert delay_reset.params == {"min_delay": 0, "max_delay": 1, "ramp_steps": module.VITAL_V3_RAMP_STEPS}
+    # vital_v2 regression to drop: no reset-velocity randomization, joints stay nominal
+    assert cfg.domain_rand.events.reset_base.params["velocity_range"] == {}
+    assert cfg.domain_rand.events.reset_robot_joints.params["position_range"] == (1.0, 1.0)
+
+
 @pytest.mark.parametrize("experimental", [False, True])
 def test_accel_override_preserves_timeout_and_physical_failure(experimental):
     fn = production_method(

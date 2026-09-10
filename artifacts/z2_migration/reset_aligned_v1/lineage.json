@@ -1,0 +1,31 @@
+{
+  "source_commit": "105164f5d75ce018309598ef79a1786927538311",
+  "remote_root": "/home/nubot/phn_ws/t4_train/TienKung-Lab-z2-reset-20260909",
+  "run_dir": "/home/nubot/phn_ws/t4_train/TienKung-Lab-z2-reset-20260909/logs/z2_loco_teacher_sparse/2026-09-09_10-33-53_z2_reset_aligned_v1",
+  "training_tmux": "z2-reset-formal-20260909",
+  "torchrun_pid": 1621478,
+  "worker_pids": [
+    1621494,
+    1621495
+  ],
+  "gpus": [
+    0,
+    2
+  ],
+  "num_envs_per_rank": 2048,
+  "seed": 42,
+  "max_iterations": 30000,
+  "resume": false,
+  "startup_model_0_exists": true,
+  "old_vital_job_stopped": true,
+  "old_vital_torchrun_pid": 1588610,
+  "teacher_cfg_sha256": "298db2a804d362cc567fa0380dc17cccc93bde138eb10e16b3fe00073a272f6d",
+  "validation": "42 passed, 1 skipped (historical G1 replay missing); scoped teacher precommit pass; all 8 requested saved-config values match G1; full env diff contains only 5 authorized changes.",
+  "behavior_status": "Not yet evaluated",
+  "tensorboard": "http://127.0.0.1:8050/",
+  "monitor_milestones": [
+    1000,
+    2000,
+    3000
+  ]
+}

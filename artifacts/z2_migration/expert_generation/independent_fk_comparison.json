@@ -1,0 +1,28 @@
+{
+  "scope": "Independent original-URDF comparison of all frames in the selected expert directory; not behavior acceptance",
+  "original_urdf_sha256": "58772dbedbe89a00f721a503463dbcb4f95586368400a1eafdb95822e196c2b0",
+  "clips": {
+    "run": {
+      "frames": 39,
+      "q_max_abs_rad": 5.551115123125783e-17,
+      "dq_max_abs_rad_s": 2.3400342019641585e-07,
+      "site_max_abs_m": 4.3616591771655777e-07,
+      "pass": true
+    },
+    "walk": {
+      "frames": 74,
+      "q_max_abs_rad": 4.440892098500626e-16,
+      "dq_max_abs_rad_s": 3.952520604144638e-07,
+      "site_max_abs_m": 4.398414646389348e-07,
+      "pass": true
+    },
+    "walk_l": {
+      "frames": 280,
+      "q_max_abs_rad": 5.945069458945795e-08,
+      "dq_max_abs_rad_s": 2.3745016530796192e-07,
+      "site_max_abs_m": 1.4019688271155878e-06,
+      "pass": true
+    }
+  },
+  "pass": true
+}

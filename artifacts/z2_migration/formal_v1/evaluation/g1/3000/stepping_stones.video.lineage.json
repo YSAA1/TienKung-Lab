@@ -1,0 +1,183 @@
+{
+  "wrapper": "run-milestone-evidence.py",
+  "mode": "play",
+  "profile": "vital_v1",
+  "seed": 42,
+  "project_root": "/home/nubot/phn_ws/t4_train/TienKung-Lab-g1-vital-motion-20260908",
+  "target_script": "/home/nubot/phn_ws/t4_train/TienKung-Lab-g1-vital-motion-20260908/legged_lab/scripts/play.py",
+  "full_argv": [
+    "/home/nubot/phn_ws/t4_train/TienKung-Lab-z2-teacher-20260909/artifacts/z2_migration/formal_v1/evaluation/run-milestone-evidence.py",
+    "--mode",
+    "play",
+    "--profile",
+    "vital_v1",
+    "--project-root",
+    "/home/nubot/phn_ws/t4_train/TienKung-Lab-g1-vital-motion-20260908",
+    "--evidence-manifest",
+    "/home/nubot/phn_ws/t4_train/TienKung-Lab-z2-teacher-20260909/artifacts/z2_migration/formal_v1/evaluation/g1/3000/stepping_stones.video.lineage.json",
+    "--amp-expert-manifest",
+    "/home/nubot/phn_ws/t4_train/TienKung-Lab-g1-vital-motion-20260908/legged_lab/envs/g1/datasets/motion_amp_expert_t4_rob2rob_full17_v1/_manifest.json",
+    "--task",
+    "g1_loco_teacher",
+    "--checkpoint_path",
+    "/home/nubot/phn_ws/t4_train/TienKung-Lab-g1-vital-motion-20260908/logs/g1_vital_motion/2026-09-08_16-25-01_vital_motion_v1/model_3000.pt",
+    "--terrain",
+    "--terrain_types",
+    "stepping_stones",
+    "--difficulty",
+    "0.0",
+    "--command_vx",
+    "0.7",
+    "--num_envs",
+    "1",
+    "--seed",
+    "42",
+    "--duration",
+    "20",
+    "--record",
+    "/home/nubot/phn_ws/t4_train/TienKung-Lab-z2-teacher-20260909/artifacts/z2_migration/formal_v1/evaluation/g1/3000/stepping_stones.mp4",
+    "--device",
+    "cuda:0",
+    "--headless"
+  ],
+  "downstream_argv": [
+    "--task",
+    "g1_loco_teacher",
+    "--checkpoint_path",
+    "/home/nubot/phn_ws/t4_train/TienKung-Lab-g1-vital-motion-20260908/logs/g1_vital_motion/2026-09-08_16-25-01_vital_motion_v1/model_3000.pt",
+    "--terrain",
+    "--terrain_types",
+    "stepping_stones",
+    "--difficulty",
+    "0.0",
+    "--command_vx",
+    "0.7",
+    "--num_envs",
+    "1",
+    "--seed",
+    "42",
+    "--duration",
+    "20",
+    "--record",
+    "/home/nubot/phn_ws/t4_train/TienKung-Lab-z2-teacher-20260909/artifacts/z2_migration/formal_v1/evaluation/g1/3000/stepping_stones.mp4",
+    "--device",
+    "cuda:0",
+    "--headless"
+  ],
+  "wrapper_flags_in_downstream_argv": false,
+  "checkpoint": {
+    "path": "/home/nubot/phn_ws/t4_train/TienKung-Lab-g1-vital-motion-20260908/logs/g1_vital_motion/2026-09-08_16-25-01_vital_motion_v1/model_3000.pt",
+    "exists": true,
+    "sha256": "6d1573d51b1b417ec9e898f4281b01729caafe44ea332764ec9665d044f4ab53"
+  },
+  "source_file_hashes": {
+    "run-milestone-evidence.py": {
+      "path": "/home/nubot/phn_ws/t4_train/TienKung-Lab-z2-teacher-20260909/artifacts/z2_migration/formal_v1/evaluation/run-milestone-evidence.py",
+      "exists": true,
+      "sha256": "73d04efc7cc8da81d41c0533b428f5fd32ec47b7ee30b39d00ad6face4612de2"
+    },
+    "eval_locomotion.py": {
+      "path": "/home/nubot/phn_ws/t4_train/TienKung-Lab-g1-vital-motion-20260908/legged_lab/scripts/eval_locomotion.py",
+      "exists": true,
+      "sha256": "38a69034e185274d9a49d8d8cd86381442bd33c0da6bcaa64a3fbaa9fd5be4a4"
+    },
+    "play.py": {
+      "path": "/home/nubot/phn_ws/t4_train/TienKung-Lab-g1-vital-motion-20260908/legged_lab/scripts/play.py",
+      "exists": true,
+      "sha256": "a0b6db8235891009425fb4450f1470ae1f84ba4402e0fa28df6ad522dddbe8a5"
+    },
+    "train.py": {
+      "path": "/home/nubot/phn_ws/t4_train/TienKung-Lab-g1-vital-motion-20260908/legged_lab/scripts/train.py",
+      "exists": true,
+      "sha256": "be71eb79338c956ccb14a7e25b87bf10e013a56a5b863e2ff784a74fa4a85887"
+    },
+    "motion_experiment.py": {
+      "path": "/home/nubot/phn_ws/t4_train/TienKung-Lab-g1-vital-motion-20260908/legged_lab/envs/g1/motion_experiment.py",
+      "exists": true,
+      "sha256": "0f486f9710ca97dfff598e36bd13c5cce3ddd73909f2d95d2b57379a173bba54"
+    },
+    "task_registry.py": {
+      "path": "/home/nubot/phn_ws/t4_train/TienKung-Lab-g1-vital-motion-20260908/legged_lab/utils/task_registry.py",
+      "exists": true,
+      "sha256": "d3f4d70b8d307ea29d0aec5563b9659ff789480c85421cbec506701e56c0ace3"
+    }
+  },
+  "amp_expert_manifest": {
+    "path": "/home/nubot/phn_ws/t4_train/TienKung-Lab-g1-vital-motion-20260908/legged_lab/envs/g1/datasets/motion_amp_expert_t4_rob2rob_full17_v1/_manifest.json",
+    "exists": true,
+    "sha256": "49f2c8b3d7ed3e01992e1ac1c6532ed26e32e5403d174560a3188579c87a57ef"
+  },
+  "effective_profile": {
+    "task": "g1_loco_teacher",
+    "profile": "vital_v1",
+    "seed": 42,
+    "robot_spec_name": "g1",
+    "acceleration_termination_enabled": false,
+    "deterministic_fall_limits": [
+      0.8,
+      1.0
+    ],
+    "gait_tracking_gate_enabled": false,
+    "action_rate_l2_weight": -0.01,
+    "lightlp_promotion_distance": "max_radial",
+    "progress_monitor_enabled": true,
+    "sparse_command_min_speed_scale": 1.0,
+    "actor_hidden_dims": [
+      512,
+      256,
+      128
+    ],
+    "critic_hidden_dims": [
+      512,
+      256,
+      128
+    ],
+    "amp_frame_dim": 70,
+    "amp_discr_hidden_dims": [
+      1024,
+      512,
+      256
+    ],
+    "amp": {
+      "manifest_supplied": true,
+      "manifest_path": "/home/nubot/phn_ws/t4_train/TienKung-Lab-g1-vital-motion-20260908/legged_lab/envs/g1/datasets/motion_amp_expert_t4_rob2rob_full17_v1/_manifest.json",
+      "motion_file_count": 17,
+      "clip_sha256": {
+        "g1_from_B10_-__Walk_turn_left_45_stageii_0000_0178": "abbead7aa48037f3a10e0f888b8bbacc163a068992c98327ffc96841c61a0473",
+        "g1_from_B13_-__Walk_turn_right_90_stageii_0000_0167": "25d20e7bc7c4413e89b2e733a198e19a385be87e5eb6d117bdc17dabcde4d7c4",
+        "g1_from_B14_-__Walk_turn_right_45_t2_stageii_0000_0173": "5899b5fef712812232de55e5c933c361a518ff0df8bcb41ecc61c11ba7e8fa12",
+        "g1_from_B15_-__Walk_turn_around_stageii_0000_0224": "92d743f573bbebaaf1d12d991b92da5b6a6067bdcc5db08b051ea7864077aa5f",
+        "g1_from_B4_-_Stand_to_Walk_backwards_stageii_0000_0137": "058f8eb6ae763c226f23c0ca4b376f8450c3b824b55eb8af3d72a42295d90962",
+        "g1_from_B9_-__Walk_turn_left_90_stageii_0000_0150": "e9c0a217fa2653d815f068b29fdbe6a391b1a265e1a103fb79fb9eea7809c66f",
+        "g1_from_t4_jog_backward_0000_0170": "0ccce07ed3658c94bea3c1931bbc8fbb3b9d22c70fb22ef23dfdcbc2784cb7df",
+        "g1_from_t4_jog_forward_0000_0151": "aea3d58abf9d616a19f9da293849d79e9c7540028cfc7d5eea5e1fab86e06c77",
+        "g1_from_t4_jog_left_0000_0206": "a0ddb3e7474784ec70495ea8d4903fd6d3b82efc2d6156af66d3abc7a0b4335c",
+        "g1_from_t4_jog_right_0000_0226": "9cf50001c896825f55e921385793effa197544321389b2a216df2dba62a66d46",
+        "g1_from_t4_left_rotate_0000_0231": "5006a138cd0254db40506741bfcf3703fc6f3ba2c552cb8863308a67ab30eed9",
+        "g1_from_t4_right_rotate_0000_0193": "436745a8017f2df9a325c1292ad52d10535abdeefea605d36b81df76c7e4ca71",
+        "g1_from_t4_side_left_0000_0137": "04bf1a82e18cfa39d7d0a92ba4d7cd4a29bb7bf51175cf02216b063e8ad69295",
+        "g1_from_t4_side_right_0000_0150": "bbcec641d0b22b87b016ff183226b1efdc62f7cab9dc52f328e61f75b8cb4a5d",
+        "g1_from_t4_stand_0000_0149": "c175cae169e1c6366980c280eac72b07ba15c5a552b46300eb676bda2fb81f5d",
+        "g1_from_t4_walk_forward_0000_0289": "016ddeb1aaedf3bdb952a07282877cafca5a05c6c41fd77216e3f5c2e4102697",
+        "g1_from_t4_walk_left_0000_0372": "4a5378c07a879c3738f6e3f13268f36d6a8bc273ebd546e95ff22ed0ba55a790"
+      }
+    },
+    "get_cfgs_consumed": true
+  },
+  "get_cfgs_consumed": true,
+  "eval_output": null,
+  "play_record": "/home/nubot/phn_ws/t4_train/TienKung-Lab-z2-teacher-20260909/artifacts/z2_migration/formal_v1/evaluation/g1/3000/stepping_stones.mp4",
+  "success": true,
+  "status": "success",
+  "exception_type": null,
+  "exception_message": null,
+  "exit_code": 0,
+  "close_timeout_s": 90.0,
+  "notes": [
+    "eval_locomotion.py / play.py / train.py were not modified.",
+    "vital_v1 is G1-only via apply_vital_motion_v1(env_cfg).",
+    "AMP files are taken from registry unless --amp-expert-manifest is supplied.",
+    "G1 training env.yaml / full17 datapaths are not guessed here.",
+    "Runtime simulation validation is parent-owned."
+  ]
+}

@@ -1,0 +1,189 @@
+{
+  "captured_utc": "2026-09-08T19:55:34.311186+00:00",
+  "run_dir": "/home/nubot/phn_ws/t4_train/TienKung-Lab-z2-teacher-20260909/logs/z2_loco_teacher_sparse/2026-09-09_03-45-12_z2_source_usd_teacher_v1",
+  "env_yaml_sha256": "9be823a9e85ed91ac2da68308938ff713f617ef0d5579261866031dd1f2af9e6",
+  "agent_yaml_sha256": "5375dfeac32a2958e61c283caeb938c50b6cb23bc59ad3087dfecf08a924a06b",
+  "saved": {
+    "resume": "false",
+    "max_iterations": "30000",
+    "num_envs_rank0": "2048",
+    "device_rank0": "cuda:0",
+    "sim_dt": "0.005",
+    "decimation": "4",
+    "action_scale": "0.25",
+    "usd_path": "/home/nubot/phn_ws/t4_train/TienKung-Lab-z2-teacher-20260909/legged_lab/assets/z2/usd/assembly.usd",
+    "amp_frame_dim": "70",
+    "amp_motion_files": [
+      "/home/nubot/phn_ws/t4_train/TienKung-Lab-z2-teacher-20260909/legged_lab/envs/z2/datasets/motion_amp_expert/run.txt",
+      "/home/nubot/phn_ws/t4_train/TienKung-Lab-z2-teacher-20260909/legged_lab/envs/z2/datasets/motion_amp_expert/walk.txt",
+      "/home/nubot/phn_ws/t4_train/TienKung-Lab-z2-teacher-20260909/legged_lab/envs/z2/datasets/motion_amp_expert/walk_l.txt"
+    ],
+    "lightlp_promotion_distance": "max_radial",
+    "progress_monitor_enabled": "true"
+  },
+  "processes": [
+    {
+      "pid": 1479419,
+      "argv": [
+        "/bin/bash",
+        "/home/nubot/isaac-sim-standalone-5.1.0-linux-x86_64/python.sh",
+        "-m",
+        "torch.distributed.run",
+        "--nproc_per_node=2",
+        "--master_port=29653",
+        "legged_lab/scripts/train.py",
+        "--task",
+        "z2_loco_teacher",
+        "--num_envs",
+        "2048",
+        "--seed",
+        "42",
+        "--distributed",
+        "--headless",
+        "--max_iterations",
+        "30000",
+        "--logger",
+        "tensorboard",
+        "--experiment_name",
+        "z2_loco_teacher_sparse",
+        "--run_name",
+        "z2_source_usd_teacher_v1",
+        "--amp_expert_manifest",
+        "/home/nubot/phn_ws/t4_train/TienKung-Lab-z2-teacher-20260909/legged_lab/envs/z2/datasets/motion_amp_expert/_manifest.json"
+      ]
+    },
+    {
+      "pid": 1479426,
+      "argv": [
+        "/home/nubot/isaac-sim-standalone-5.1.0-linux-x86_64/kit/python/bin/python3",
+        "-m",
+        "torch.distributed.run",
+        "--nproc_per_node=2",
+        "--master_port=29653",
+        "legged_lab/scripts/train.py",
+        "--task",
+        "z2_loco_teacher",
+        "--num_envs",
+        "2048",
+        "--seed",
+        "42",
+        "--distributed",
+        "--headless",
+        "--max_iterations",
+        "30000",
+        "--logger",
+        "tensorboard",
+        "--experiment_name",
+        "z2_loco_teacher_sparse",
+        "--run_name",
+        "z2_source_usd_teacher_v1",
+        "--amp_expert_manifest",
+        "/home/nubot/phn_ws/t4_train/TienKung-Lab-z2-teacher-20260909/legged_lab/envs/z2/datasets/motion_amp_expert/_manifest.json"
+      ]
+    },
+    {
+      "pid": 1479436,
+      "argv": [
+        "/home/nubot/isaac-sim-standalone-5.1.0-linux-x86_64/kit/python/bin/python3",
+        "-u",
+        "legged_lab/scripts/train.py",
+        "--task",
+        "z2_loco_teacher",
+        "--num_envs",
+        "2048",
+        "--seed",
+        "42",
+        "--distributed",
+        "--headless",
+        "--max_iterations",
+        "30000",
+        "--logger",
+        "tensorboard",
+        "--experiment_name",
+        "z2_loco_teacher_sparse",
+        "--run_name",
+        "z2_source_usd_teacher_v1",
+        "--amp_expert_manifest",
+        "/home/nubot/phn_ws/t4_train/TienKung-Lab-z2-teacher-20260909/legged_lab/envs/z2/datasets/motion_amp_expert/_manifest.json"
+      ]
+    },
+    {
+      "pid": 1479437,
+      "argv": [
+        "/home/nubot/isaac-sim-standalone-5.1.0-linux-x86_64/kit/python/bin/python3",
+        "-u",
+        "legged_lab/scripts/train.py",
+        "--task",
+        "z2_loco_teacher",
+        "--num_envs",
+        "2048",
+        "--seed",
+        "42",
+        "--distributed",
+        "--headless",
+        "--max_iterations",
+        "30000",
+        "--logger",
+        "tensorboard",
+        "--experiment_name",
+        "z2_loco_teacher_sparse",
+        "--run_name",
+        "z2_source_usd_teacher_v1",
+        "--amp_expert_manifest",
+        "/home/nubot/phn_ws/t4_train/TienKung-Lab-z2-teacher-20260909/legged_lab/envs/z2/datasets/motion_amp_expert/_manifest.json"
+      ]
+    }
+  ],
+  "startup_health_only": {
+    "Loss/value_function": {
+      "step": 151,
+      "value": 0.15451785922050476,
+      "finite": true
+    },
+    "Loss/surrogate": {
+      "step": 151,
+      "value": -0.007022469770163298,
+      "finite": true
+    },
+    "Loss/entropy": {
+      "step": 151,
+      "value": 32.86467742919922,
+      "finite": true
+    },
+    "Loss/amp": {
+      "step": 151,
+      "value": 0.022684434428811073,
+      "finite": true
+    },
+    "Loss/amp_grad_pen": {
+      "step": 151,
+      "value": 0.07766402512788773,
+      "finite": true
+    },
+    "Loss/amp_policy_pred": {
+      "step": 151,
+      "value": -0.8964356780052185,
+      "finite": true
+    },
+    "Loss/amp_expert_pred": {
+      "step": 151,
+      "value": 0.8966366648674011,
+      "finite": true
+    },
+    "Loss/symmetry": {
+      "step": 151,
+      "value": 0.0017081312835216522,
+      "finite": true
+    },
+    "Loss/learning_rate": {
+      "step": 151,
+      "value": 0.00017085937724914402,
+      "finite": true
+    },
+    "Policy/mean_noise_std": {
+      "step": 151,
+      "value": 0.7532179355621338,
+      "finite": true
+    }
+  }
+}

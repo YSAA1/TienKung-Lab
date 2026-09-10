@@ -48,6 +48,8 @@ parser.add_argument(
     "--g1_motion_experiment",
     choices=(
         "vital_v1",
+        "vital_v2",
+        "vital_v3",
         "vital_termination_only",
         "vital_gait_gate_off_only",
         "vital_action_rate_only",

@@ -4,8 +4,10 @@
 
 | Work surface | Status | Active slice | Source |
 | --- | --- | --- | --- |
+| 项目统一整理 | active | `D:/TienKung-Lab` 的 `develop`；整合 T4/G1/Z2、公共接口与测试，最终 main + develop、单工作树；远端训练不热覆盖 | `docs/plans/2026-09-09--project-consolidation.md` |
+| Z2 29DoF teacher | active / reset-aligned formal training | 105164f；nubot `TienKung-Lab-z2-reset-20260909`；GPU0/2；tmux z2-reset-formal-20260909；TB8050 | `docs/plans/2026-09-09--z2-teacher-migration.md`；`artifacts/z2_migration/reset_aligned_v1/lineage.json` |
 | T4 梅花桩 LightLP teacher | paused | G1 老师开训优先。T4 plant DR 计划仍在 `docs/plans/2026-09-02--t4-s12-teacher-plant-retrain-plan.md`，不开 | `docs/plans/2026-09-02--t4-s12-teacher-plant-retrain-plan.md` |
-| Unitree G1 越障 teacher | active / training + experiment | G1 portability 里程碑已合并回 t4-train；核心修复B30000在GPU0/2、TB8042保持；VITAL起步实验已在GPU1/3冷启动30k，TB8043，run `2026-09-08_16-25-01_vital_motion_v1`。保留LightLP奖励，仅改动作变化惩罚、终止和步态门控；行为待 evaluator JSON、lineage 与连续回放验收 | `docs/plans/2026-09-07--robot-neutral-locomotion.md` |
+| Unitree G1 越障 teacher | independent training lineage | 代码已合入统一开发面；VITAL run `2026-09-08_16-25-01_vital_motion_v1`，历史核心修复与实验见计划。远端进程和 GPU 占用须现场核对；行为仍需 evaluator JSON、lineage 与连续回放 | `docs/plans/2026-09-07--robot-neutral-locomotion.md` |
 | T4 梅花桩 GRU 深度学生 | done | `s12_repr_first` `model_13999` Isaac hard 过门；MuJoCo 稀疏仍摔。下一刀跟新老师，不续 14k 蒸馏 | `docs/plans/2026-09-01--t4-s12-repr-first-distill-plan.md` |
 | T4 梅花桩学生 LightLP 成本 | done | warp + 3168/MLP + 单次 backward；collection p50 ~2.2 s。质量未过，已转配方修复 | `docs/archive/plans/2026-08-23--t4-sparse-s12-student-lightlp-distill-cost-plan.md` |
 | T4 学生 headless RTX 出图正确性 | done | `sim.render()` 调度 + checksum probe 绿；`s12_gru_ppo_rtx167` 已按 16.7 Hz 真出图 | `docs/archive/plans/2026-08-23--t4-sparse-s12-student-rtx-correctness-plan.md` |

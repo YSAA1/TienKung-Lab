@@ -1,0 +1,17 @@
+{
+  "walk": {
+    "frames": 75,
+    "hard_limit_max_excess_rad": 0.0,
+    "violating_joints": []
+  },
+  "walk_l": {
+    "frames": 281,
+    "hard_limit_max_excess_rad": 0.0,
+    "violating_joints": []
+  },
+  "run": {
+    "frames": 40,
+    "hard_limit_max_excess_rad": 0.0,
+    "violating_joints": []
+  }
+}

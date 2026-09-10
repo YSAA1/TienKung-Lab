@@ -1,0 +1,3785 @@
+{
+  "milestone": 1000,
+  "captured_utc": "2026-09-08T20:50:30.114478+00:00",
+  "run_dir": "logs/z2_loco_teacher_sparse/2026-09-09_03-45-12_z2_source_usd_teacher_v1",
+  "checkpoint": "logs/z2_loco_teacher_sparse/2026-09-09_03-45-12_z2_source_usd_teacher_v1/model_1000.pt",
+  "checkpoint_sha256": "7e31b82df77d6826b192e94e52d5ae1faef33b1472e55e81be6ae9370b5d58f0",
+  "window": [
+    901,
+    1000
+  ],
+  "nonfinite_tags": [],
+  "scalars": {
+    "Command/bin_standing": {
+      "last_step": 1000,
+      "last": 0.2128397673368454,
+      "mean_last100": 0.21104665160179137,
+      "min": 0.2020467072725296,
+      "max": 0.222686767578125,
+      "count": 100,
+      "nonfinite_count": 0
+    },
+    "Command/bin_vx_low_forward": {
+      "last_step": 1000,
+      "last": 0.14385986328125,
+      "mean_last100": 0.1388966879248619,
+      "min": 0.1291605681180954,
+      "max": 0.1565348356962204,
+      "count": 100,
+      "nonfinite_count": 0
+    },
+    "Command/bin_vx_reverse": {
+      "last_step": 1000,
+      "last": 0.1352030485868454,
+      "mean_last100": 0.1495778402686119,
+      "min": 0.13372802734375,
+      "max": 0.163055419921875,
+      "count": 100,
+      "nonfinite_count": 0
+    },
+    "Command/bin_vx_sparse_forward": {
+      "last_step": 1000,
+      "last": 0.51220703125,
+      "mean_last100": 0.5041064450144768,
+      "min": 0.4929097592830658,
+      "max": 0.5145060420036316,
+      "count": 100,
+      "nonfinite_count": 0
+    },
+    "Command/bin_yaw_full": {
+      "last_step": 1000,
+      "last": 0.27166748046875,
+      "mean_last100": 0.270854187309742,
+      "min": 0.2589009702205658,
+      "max": 0.282135009765625,
+      "count": 100,
+      "nonfinite_count": 0
+    },
+    "Command/bin_yaw_gentle": {
+      "last_step": 1000,
+      "last": 0.2769266664981842,
+      "mean_last100": 0.2871666458249092,
+      "min": 0.2736002504825592,
+      "max": 0.3041788637638092,
+      "count": 100,
+      "nonfinite_count": 0
+    },
+    "Command/bin_yaw_straight": {
+      "last_step": 1000,
+      "last": 0.4514058530330658,
+      "mean_last100": 0.4419791668653488,
+      "min": 0.4273172914981842,
+      "max": 0.4561665952205658,
+      "count": 100,
+      "nonfinite_count": 0
+    },
+    "Command/generated_ang_vel_z": {
+      "last_step": 1000,
+      "last": 0.009657017886638641,
+      "mean_last100": 0.003988491536438233,
+      "min": -0.010114026255905628,
+      "max": 0.014663961715996265,
+      "count": 100,
+      "nonfinite_count": 0
+    },
+    "Command/generated_lin_vel_x": {
+      "last_step": 1000,
+      "last": 0.6458006501197815,
+      "mean_last100": 0.628498163819313,
+      "min": 0.6088194847106934,
+      "max": 0.6458006501197815,
+      "count": 100,
+      "nonfinite_count": 0
+    },
+    "Command/generated_lin_vel_y": {
+      "last_step": 1000,
+      "last": -0.0004685372405219823,
+      "mean_last100": 0.0007414793391217245,
+      "min": -0.0054114460945129395,
+      "max": 0.006090228911489248,
+      "count": 100,
+      "nonfinite_count": 0
+    },
+    "Command/nonsparse_reverse_frac": {
+      "last_step": 1000,
+      "last": 0.22530174255371094,
+      "mean_last100": 0.24925583109259605,
+      "min": 0.22284378111362457,
+      "max": 0.27171480655670166,
+      "count": 100,
+      "nonfinite_count": 0
+    },
+    "Command/nonsparse_standing_frac": {
+      "last_step": 1000,
+      "last": 0.35467520356178284,
+      "mean_last100": 0.3516871780157089,
+      "min": 0.33668971061706543,
+      "max": 0.37108421325683594,
+      "count": 100,
+      "nonfinite_count": 0
+    },
+    "Command/sparse_env_fraction": {
+      "last_step": 1000,
+      "last": 0.39990234375,
+      "mean_last100": 0.39990234375,
+      "min": 0.39990234375,
+      "max": 0.39990234375,
+      "count": 100,
+      "nonfinite_count": 0
+    },
+    "Command/sparse_mean_vx": {
+      "last_step": 1000,
+      "last": 1.2582430839538574,
+      "mean_last100": 1.2536120986938477,
+      "min": 1.2305413484573364,
+      "max": 1.2742483615875244,
+      "count": 100,
+      "nonfinite_count": 0
+    },
+    "Command/sparse_standing_frac": {
+      "last_step": 1000,
+      "last": 0.0,
+      "mean_last100": 0.0,
+      "min": 0.0,
+      "max": 0.0,
+      "count": 100,
+      "nonfinite_count": 0
+    },
+    "Command/sparse_zero_yaw_frac": {
+      "last_step": 1000,
+      "last": 0.6187677979469299,
+      "mean_last100": 0.5984243988990784,
+      "min": 0.5754222869873047,
+      "max": 0.6318935751914978,
+      "count": 100,
+      "nonfinite_count": 0
+    },
+    "Command/standing_env_fraction": {
+      "last_step": 1000,
+      "last": 0.2128397673368454,
+      "mean_last100": 0.21104665160179137,
+      "min": 0.2020467072725296,
+      "max": 0.222686767578125,
+      "count": 100,
+      "nonfinite_count": 0
+    },
+    "Curriculum/amp_reward_coef_scale": {
+      "last_step": 1000,
+      "last": 0.5582767128944397,
+      "mean_last100": 0.5588404405117035,
+      "min": 0.5559117197990417,
+      "max": 0.561637818813324,
+      "count": 100,
+      "nonfinite_count": 0
+    },
+    "Curriculum/episode_max_radial_dist": {
+      "last_step": 1000,
+      "last": 0.9091044068336487,
+      "mean_last100": 0.9145190382003784,
+      "min": 0.8931865692138672,
+      "max": 0.9408240914344788,
+      "count": 100,
+      "nonfinite_count": 0
+    },
+    "Curriculum/episode_path_length": {
+      "last_step": 1000,
+      "last": 1.0457048416137695,
+      "mean_last100": 1.0348967373371125,
+      "min": 1.0108225345611572,
+      "max": 1.0646476745605469,
+      "count": 100,
+      "nonfinite_count": 0
+    },
+    "Curriculum/episode_tracking_mean": {
+      "last_step": 1000,
+      "last": 0.30199316143989563,
+      "mean_last100": 0.30090605586767194,
+      "min": 0.2822037637233734,
+      "max": 0.31578707695007324,
+      "count": 100,
+      "nonfinite_count": 0
+    },
+    "Curriculum/gait_reward_scale": {
+      "last_step": 1000,
+      "last": 0.15061523020267487,
+      "mean_last100": 0.1521948543190956,
+      "min": 0.14610439538955688,
+      "max": 0.15840916335582733,
+      "count": 100,
+      "nonfinite_count": 0
+    },
+    "Curriculum/gait_tracking_scale": {
+      "last_step": 1000,
+      "last": 0.27864503860473633,
+      "mean_last100": 0.28108366250991823,
+      "min": 0.2682148218154907,
+      "max": 0.2907223701477051,
+      "count": 100,
+      "nonfinite_count": 0
+    },
+    "Curriculum/level_0_frac": {
+      "last_step": 1000,
+      "last": 0.6148579716682434,
+      "mean_last100": 0.6051872783899307,
+      "min": 0.5964253544807434,
+      "max": 0.6157734990119934,
+      "count": 100,
+      "nonfinite_count": 0
+    },
+    "Curriculum/level_1_frac": {
+      "last_step": 1000,
+      "last": 0.062255859375,
+      "mean_last100": 0.06980194099247455,
+      "min": 0.060394287109375,
+      "max": 0.080718994140625,
+      "count": 100,
+      "nonfinite_count": 0
+    },
+    "Curriculum/level_2_frac": {
+      "last_step": 1000,
+      "last": 0.0643208846449852,
+      "mean_last100": 0.06259592682123184,
+      "min": 0.0539143867790699,
+      "max": 0.069671630859375,
+      "count": 100,
+      "nonfinite_count": 0
+    },
+    "Curriculum/level_3_frac": {
+      "last_step": 1000,
+      "last": 0.0562235526740551,
+      "mean_last100": 0.05773050915449858,
+      "min": 0.0522867850959301,
+      "max": 0.0646158829331398,
+      "count": 100,
+      "nonfinite_count": 0
+    },
+    "Curriculum/level_4_frac": {
+      "last_step": 1000,
+      "last": 0.054656982421875,
+      "mean_last100": 0.05286956802010536,
+      "min": 0.0466817207634449,
+      "max": 0.0582478828728199,
+      "count": 100,
+      "nonfinite_count": 0
+    },
+    "Curriculum/level_5_frac": {
+      "last_step": 1000,
+      "last": 0.0489705391228199,
+      "mean_last100": 0.0479951986297965,
+      "min": 0.04302978515625,
+      "max": 0.05303955078125,
+      "count": 100,
+      "nonfinite_count": 0
+    },
+    "Curriculum/level_6_frac": {
+      "last_step": 1000,
+      "last": 0.0388387031853199,
+      "mean_last100": 0.03890726737678051,
+      "min": 0.0338541679084301,
+      "max": 0.0434468574821949,
+      "count": 100,
+      "nonfinite_count": 0
+    },
+    "Curriculum/level_7_frac": {
+      "last_step": 1000,
+      "last": 0.030853271484375,
+      "mean_last100": 0.030372823178768157,
+      "min": 0.02544148825109005,
+      "max": 0.0364583320915699,
+      "count": 100,
+      "nonfinite_count": 0
+    },
+    "Curriculum/level_8_frac": {
+      "last_step": 1000,
+      "last": 0.01921590231359005,
+      "mean_last100": 0.022971089612692595,
+      "min": 0.01738484762609005,
+      "max": 0.028350830078125,
+      "count": 100,
+      "nonfinite_count": 0
+    },
+    "Curriculum/level_9_frac": {
+      "last_step": 1000,
+      "last": 0.009806315414607525,
+      "mean_last100": 0.01156840005889535,
+      "min": 0.008646647445857525,
+      "max": 0.016387939453125,
+      "count": 100,
+      "nonfinite_count": 0
+    },
+    "Curriculum/promotion_rate": {
+      "last_step": 1000,
+      "last": 0.0,
+      "mean_last100": 0.0,
+      "min": 0.0,
+      "max": 0.0,
+      "count": 100,
+      "nonfinite_count": 0
+    },
+    "Curriculum/random_level_after_mean": {
+      "last_step": 1000,
+      "last": 4.387499809265137,
+      "mean_last100": 4.483121774196625,
+      "min": 3.4487178325653076,
+      "max": 5.194805145263672,
+      "count": 100,
+      "nonfinite_count": 0
+    },
+    "Curriculum/random_level_before_mean": {
+      "last_step": 1000,
+      "last": 1.037500023841858,
+      "mean_last100": 1.3198133146762847,
+      "min": 0.8852459192276001,
+      "max": 2.0549449920654297,
+      "count": 100,
+      "nonfinite_count": 0
+    },
+    "Curriculum/random_level_reset_frac": {
+      "last_step": 1000,
+      "last": 0.09791921824216843,
+      "mean_last100": 0.10013695798814297,
+      "min": 0.07474226504564285,
+      "max": 0.12515337765216827,
+      "count": 100,
+      "nonfinite_count": 0
+    },
+    "Curriculum/terrain_difficulty": {
+      "last_step": 1000,
+      "last": 0.1682264655828476,
+      "mean_last100": 0.17261970266699792,
+      "min": 0.16631515324115753,
+      "max": 0.17743146419525146,
+      "count": 100,
+      "nonfinite_count": 0
+    },
+    "Curriculum/terrain_levels": {
+      "last_step": 1000,
+      "last": 1.5140380859375,
+      "mean_last100": 1.5535772693157197,
+      "min": 1.4968363046646118,
+      "max": 1.5968831777572632,
+      "count": 100,
+      "nonfinite_count": 0
+    },
+    "Curriculum/timeout_success_rate": {
+      "last_step": 1000,
+      "last": 0.0,
+      "mean_last100": 0.0,
+      "min": 0.0,
+      "max": 0.0,
+      "count": 100,
+      "nonfinite_count": 0
+    },
+    "Episode_Reward/action_rate_l2": {
+      "last_step": 1000,
+      "last": -0.09481364488601685,
+      "mean_last100": -0.08728637479245663,
+      "min": -0.0980754867196083,
+      "max": -0.07839813083410263,
+      "count": 100,
+      "nonfinite_count": 0
+    },
+    "Episode_Reward/ang_vel_xy_l2": {
+      "last_step": 1000,
+      "last": -0.015281816013157368,
+      "mean_last100": -0.015000603441148997,
+      "min": -0.016210338100790977,
+      "max": -0.014202992431819439,
+      "count": 100,
+      "nonfinite_count": 0
+    },
+    "Episode_Reward/ankle_action": {
+      "last_step": 1000,
+      "last": -0.00036356490454636514,
+      "mean_last100": -0.00035287448728922756,
+      "min": -0.0003922345058526844,
+      "max": -0.0003236114571336657,
+      "count": 100,
+      "nonfinite_count": 0
+    },
+    "Episode_Reward/ankle_torque": {
+      "last_step": 1000,
+      "last": -0.024919942021369934,
+      "mean_last100": -0.025185362454503774,
+      "min": -0.027802109718322754,
+      "max": -0.023387322202324867,
+      "count": 100,
+      "nonfinite_count": 0
+    },
+    "Episode_Reward/body_orientation_l2": {
+      "last_step": 1000,
+      "last": 0.0,
+      "mean_last100": 0.0,
+      "min": 0.0,
+      "max": 0.0,
+      "count": 100,
+      "nonfinite_count": 0
+    },
+    "Episode_Reward/dof_acc_l2": {
+      "last_step": 1000,
+      "last": -0.0057078474201262,
+      "mean_last100": -0.005470334547571838,
+      "min": -0.005946603137999773,
+      "max": -0.004913293290883303,
+      "count": 100,
+      "nonfinite_count": 0
+    },
+    "Episode_Reward/dof_pos_limits": {
+      "last_step": 1000,
+      "last": -0.0020278554875403643,
+      "mean_last100": -0.0017821472208015621,
+      "min": -0.0028443150222301483,
+      "max": -0.0010362784378230572,
+      "count": 100,
+      "nonfinite_count": 0
+    },
+    "Episode_Reward/energy": {
+      "last_step": 1000,
+      "last": -0.007124738302081823,
+      "mean_last100": -0.006642062705941499,
+      "min": -0.007244620472192764,
+      "max": -0.0061608608812093735,
+      "count": 100,
+      "nonfinite_count": 0
+    },
+    "Episode_Reward/feet_force": {
+      "last_step": 1000,
+      "last": -0.0014306664234027267,
+      "mean_last100": -0.0013858386978972703,
+      "min": -0.0016630664467811584,
+      "max": -0.0012506179045885801,
+      "count": 100,
+      "nonfinite_count": 0
+    },
+    "Episode_Reward/feet_slide": {
+      "last_step": 1000,
+      "last": -0.005605470854789019,
+      "mean_last100": -0.0052918884810060265,
+      "min": -0.0058324504643678665,
+      "max": -0.004862059373408556,
+      "count": 100,
+      "nonfinite_count": 0
+    },
+    "Episode_Reward/feet_stumble": {
+      "last_step": 1000,
+      "last": -0.00017582713917363435,
+      "mean_last100": -0.0002520231203379808,
+      "min": -0.0005633712280541658,
+      "max": -9.010185021907091e-05,
+      "count": 100,
+      "nonfinite_count": 0
+    },
+    "Episode_Reward/feet_too_near": {
+      "last_step": 1000,
+      "last": -0.000462937168776989,
+      "mean_last100": -0.0005583129881415516,
+      "min": -0.0007599579985253513,
+      "max": -0.0004267563344910741,
+      "count": 100,
+      "nonfinite_count": 0
+    },
+    "Episode_Reward/feet_y_distance": {
+      "last_step": 1000,
+      "last": -0.004713799804449081,
+      "mean_last100": -0.004061236043926328,
+      "min": -0.005178011488169432,
+      "max": -0.0033312186133116484,
+      "count": 100,
+      "nonfinite_count": 0
+    },
+    "Episode_Reward/foot_touchdown_impact": {
+      "last_step": 1000,
+      "last": -0.003583458485081792,
+      "mean_last100": -0.003371234512887895,
+      "min": -0.004228046163916588,
+      "max": -0.003028715727850795,
+      "count": 100,
+      "nonfinite_count": 0
+    },
+    "Episode_Reward/gait_feet_frc_perio": {
+      "last_step": 1000,
+      "last": 0.0006056184065528214,
+      "mean_last100": 0.0005229511455399915,
+      "min": 0.00041327232611365616,
+      "max": 0.0006970186368562281,
+      "count": 100,
+      "nonfinite_count": 0
+    },
+    "Episode_Reward/gait_feet_frc_support_perio": {
+      "last_step": 1000,
+      "last": 0.015254002995789051,
+      "mean_last100": 0.013004349851980805,
+      "min": 0.00890276674181223,
+      "max": 0.01834200881421566,
+      "count": 100,
+      "nonfinite_count": 0
+    },
+    "Episode_Reward/gait_feet_spd_perio": {
+      "last_step": 1000,
+      "last": 0.0164334774017334,
+      "mean_last100": 0.013901689844205976,
+      "min": 0.008708407171070576,
+      "max": 0.020895471796393394,
+      "count": 100,
+      "nonfinite_count": 0
+    },
+    "Episode_Reward/heading_error": {
+      "last_step": 1000,
+      "last": -0.05463637039065361,
+      "mean_last100": -0.05329945467412472,
+      "min": -0.0693700835108757,
+      "max": -0.04083605110645294,
+      "count": 100,
+      "nonfinite_count": 0
+    },
+    "Episode_Reward/hurdle_bar_contact": {
+      "last_step": 1000,
+      "last": -3.8036097976146266e-05,
+      "mean_last100": -3.35834025463555e-05,
+      "min": -0.00024378643138334155,
+      "max": 0.0,
+      "count": 100,
+      "nonfinite_count": 0
+    },
+    "Episode_Reward/illegal_footstep": {
+      "last_step": 1000,
+      "last": -9.422784933121875e-05,
+      "mean_last100": -0.0001762197818425193,
+      "min": -0.0006775981746613979,
+      "max": -2.0526575099211186e-05,
+      "count": 100,
+      "nonfinite_count": 0
+    },
+    "Episode_Reward/joint_deviation_arms": {
+      "last_step": 1000,
+      "last": -0.006279844790697098,
+      "mean_last100": -0.006061435113660991,
+      "min": -0.009264469146728516,
+      "max": -0.004033165518194437,
+      "count": 100,
+      "nonfinite_count": 0
+    },
+    "Episode_Reward/joint_deviation_hip": {
+      "last_step": 1000,
+      "last": -0.0007837454904802144,
+      "mean_last100": -0.0007478996907593682,
+      "min": -0.001112774945795536,
+      "max": -0.0005184205365367234,
+      "count": 100,
+      "nonfinite_count": 0
+    },
+    "Episode_Reward/joint_deviation_legs": {
+      "last_step": 1000,
+      "last": -0.0004181914555374533,
+      "mean_last100": -0.0004128125627175905,
+      "min": -0.0006168651743791997,
+      "max": -0.00028021351317875087,
+      "count": 100,
+      "nonfinite_count": 0
+    },
+    "Episode_Reward/joint_deviation_wrist_waist": {
+      "last_step": 1000,
+      "last": -0.005022573750466108,
+      "mean_last100": -0.005276068507228047,
+      "min": -0.008114106953144073,
+      "max": -0.0034857746213674545,
+      "count": 100,
+      "nonfinite_count": 0
+    },
+    "Episode_Reward/lin_vel_z_l2": {
+      "last_step": 1000,
+      "last": -0.0015296622877940536,
+      "mean_last100": -0.001510082605527714,
+      "min": -0.0016579655930399895,
+      "max": -0.0013975872425362468,
+      "count": 100,
+      "nonfinite_count": 0
+    },
+    "Episode_Reward/opposite_direction": {
+      "last_step": 1000,
+      "last": -0.004378058016300201,
+      "mean_last100": -0.004455810650251806,
+      "min": -0.005517715122550726,
+      "max": -0.003791453316807747,
+      "count": 100,
+      "nonfinite_count": 0
+    },
+    "Episode_Reward/shank_contacts": {
+      "last_step": 1000,
+      "last": 0.0,
+      "mean_last100": 0.0,
+      "min": 0.0,
+      "max": 0.0,
+      "count": 100,
+      "nonfinite_count": 0
+    },
+    "Episode_Reward/termination_penalty": {
+      "last_step": 1000,
+      "last": 0.0,
+      "mean_last100": 0.0,
+      "min": 0.0,
+      "max": 0.0,
+      "count": 100,
+      "nonfinite_count": 0
+    },
+    "Episode_Reward/track_ang_vel_z_exp": {
+      "last_step": 1000,
+      "last": 0.10464594513177872,
+      "mean_last100": 0.09818566389381886,
+      "min": 0.0884305015206337,
+      "max": 0.11191850900650024,
+      "count": 100,
+      "nonfinite_count": 0
+    },
+    "Episode_Reward/track_lin_vel_xy_exp": {
+      "last_step": 1000,
+      "last": 0.11924600601196289,
+      "mean_last100": 0.10982383489608764,
+      "min": 0.08888905495405197,
+      "max": 0.1344456970691681,
+      "count": 100,
+      "nonfinite_count": 0
+    },
+    "Episode_Reward/undesired_contacts": {
+      "last_step": 1000,
+      "last": -0.02864651195704937,
+      "mean_last100": -0.02193717191927135,
+      "min": -0.03177940100431442,
+      "max": -0.014124412089586258,
+      "count": 100,
+      "nonfinite_count": 0
+    },
+    "Episode_Reward/upright_orientation": {
+      "last_step": 1000,
+      "last": 0.11924479156732559,
+      "mean_last100": 0.1124683739989996,
+      "min": 0.10159075260162354,
+      "max": 0.12727521359920502,
+      "count": 100,
+      "nonfinite_count": 0
+    },
+    "Episode_Reward/velocity_slack": {
+      "last_step": 1000,
+      "last": 0.07624498754739761,
+      "mean_last100": 0.07208531707525254,
+      "min": 0.06781048327684402,
+      "max": 0.07624498754739761,
+      "count": 100,
+      "nonfinite_count": 0
+    },
+    "Progress/all/moving/command_completion": {
+      "last_step": 1000,
+      "last": 0.38080644607543945,
+      "mean_last100": 0.38226281106472015,
+      "min": 0.33864501118659973,
+      "max": 0.4053152799606323,
+      "count": 100,
+      "nonfinite_count": 0
+    },
+    "Progress/all/moving/command_progress_m": {
+      "last_step": 1000,
+      "last": 0.6730803847312927,
+      "mean_last100": 0.6619792801141738,
+      "min": 0.6165820360183716,
+      "max": 0.6968463659286499,
+      "count": 100,
+      "nonfinite_count": 0
+    },
+    "Progress/all/moving/command_speed_mps": {
+      "last_step": 1000,
+      "last": 1.1809000968933105,
+      "mean_last100": 1.1666823959350585,
+      "min": 1.136817216873169,
+      "max": 1.2123507261276245,
+      "count": 100,
+      "nonfinite_count": 0
+    },
+    "Progress/all/moving/directed_speed_mps": {
+      "last_step": 1000,
+      "last": 0.4653772711753845,
+      "mean_last100": 0.45929344952106477,
+      "min": 0.4291573166847229,
+      "max": 0.48328718543052673,
+      "count": 100,
+      "nonfinite_count": 0
+    },
+    "Progress/all/moving/max_spawn_displacement_m": {
+      "last_step": 1000,
+      "last": 0.8427702188491821,
+      "mean_last100": 0.8520425182580947,
+      "min": 0.840031623840332,
+      "max": 0.8650303483009338,
+      "count": 100,
+      "nonfinite_count": 0
+    },
+    "Progress/all/moving/net_displacement_m": {
+      "last_step": 1000,
+      "last": 0.8410424590110779,
+      "mean_last100": 0.8506381344795227,
+      "min": 0.8388615250587463,
+      "max": 0.8633448481559753,
+      "count": 100,
+      "nonfinite_count": 0
+    },
+    "Progress/all/moving/net_path_ratio": {
+      "last_step": 1000,
+      "last": 0.8471958041191101,
+      "mean_last100": 0.8579358267784118,
+      "min": 0.8455432057380676,
+      "max": 0.870442807674408,
+      "count": 100,
+      "nonfinite_count": 0
+    },
+    "Progress/all/moving/path_length_m": {
+      "last_step": 1000,
+      "last": 1.044567346572876,
+      "mean_last100": 1.0336041069030761,
+      "min": 1.009303331375122,
+      "max": 1.0638405084609985,
+      "count": 100,
+      "nonfinite_count": 0
+    },
+    "Progress/all/moving/window_net_speed_mps": {
+      "last_step": 1000,
+      "last": 0.4509008824825287,
+      "mean_last100": 0.45720499515533447,
+      "min": 0.440664678812027,
+      "max": 0.4738147556781769,
+      "count": 100,
+      "nonfinite_count": 0
+    },
+    "Progress/all/standing/command_completion": {
+      "last_step": 1000,
+      "last": 0.0,
+      "mean_last100": 0.0,
+      "min": 0.0,
+      "max": 0.0,
+      "count": 97,
+      "nonfinite_count": 0
+    },
+    "Progress/all/standing/command_progress_m": {
+      "last_step": 1000,
+      "last": 0.0,
+      "mean_last100": 0.0,
+      "min": 0.0,
+      "max": 0.0,
+      "count": 97,
+      "nonfinite_count": 0
+    },
+    "Progress/all/standing/command_speed_mps": {
+      "last_step": 1000,
+      "last": 0.0,
+      "mean_last100": 0.0,
+      "min": 0.0,
+      "max": 0.0,
+      "count": 97,
+      "nonfinite_count": 0
+    },
+    "Progress/all/standing/directed_speed_mps": {
+      "last_step": 1000,
+      "last": 0.0,
+      "mean_last100": 0.0,
+      "min": 0.0,
+      "max": 0.0,
+      "count": 97,
+      "nonfinite_count": 0
+    },
+    "Progress/all/standing/max_spawn_displacement_m": {
+      "last_step": 1000,
+      "last": 0.971222996711731,
+      "mean_last100": 0.8230054999135205,
+      "min": 0.6094411611557007,
+      "max": 0.971222996711731,
+      "count": 97,
+      "nonfinite_count": 0
+    },
+    "Progress/all/standing/net_displacement_m": {
+      "last_step": 1000,
+      "last": 0.971222996711731,
+      "mean_last100": 0.8211168671391674,
+      "min": 0.5991013646125793,
+      "max": 0.971222996711731,
+      "count": 97,
+      "nonfinite_count": 0
+    },
+    "Progress/all/standing/net_path_ratio": {
+      "last_step": 1000,
+      "last": 0.4920273423194885,
+      "mean_last100": 0.7183827776269814,
+      "min": 0.3838776648044586,
+      "max": 0.9786193370819092,
+      "count": 97,
+      "nonfinite_count": 0
+    },
+    "Progress/all/standing/path_length_m": {
+      "last_step": 1000,
+      "last": 1.9739208221435547,
+      "mean_last100": 1.3135538217947655,
+      "min": 0.7083842754364014,
+      "max": 2.015375852584839,
+      "count": 97,
+      "nonfinite_count": 0
+    },
+    "Progress/all/standing/window_net_speed_mps": {
+      "last_step": 1000,
+      "last": 0.1298816055059433,
+      "mean_last100": 0.26148163988110945,
+      "min": 0.09890449047088623,
+      "max": 0.5755494832992554,
+      "count": 97,
+      "nonfinite_count": 0
+    },
+    "Progress/boxes/moving/command_completion": {
+      "last_step": 1000,
+      "last": 0.26226717233657837,
+      "mean_last100": 0.2687911160290241,
+      "min": 0.08518115431070328,
+      "max": 0.5723162293434143,
+      "count": 100,
+      "nonfinite_count": 0
+    },
+    "Progress/boxes/moving/command_progress_m": {
+      "last_step": 1000,
+      "last": 0.3845178484916687,
+      "mean_last100": 0.48913837254047393,
+      "min": 0.17806538939476013,
+      "max": 0.7820451855659485,
+      "count": 100,
+      "nonfinite_count": 0
+    },
+    "Progress/boxes/moving/command_speed_mps": {
+      "last_step": 1000,
+      "last": 0.8359379172325134,
+      "mean_last100": 0.9260173857212066,
+      "min": 0.6146069169044495,
+      "max": 1.2840993404388428,
+      "count": 100,
+      "nonfinite_count": 0
+    },
+    "Progress/boxes/moving/directed_speed_mps": {
+      "last_step": 1000,
+      "last": 0.22310350835323334,
+      "mean_last100": 0.2814500281214714,
+      "min": 0.13662682473659515,
+      "max": 0.5730094313621521,
+      "count": 100,
+      "nonfinite_count": 0
+    },
+    "Progress/boxes/moving/max_spawn_displacement_m": {
+      "last_step": 1000,
+      "last": 0.7927150130271912,
+      "mean_last100": 0.8638353890180588,
+      "min": 0.7023626565933228,
+      "max": 0.9212705492973328,
+      "count": 100,
+      "nonfinite_count": 0
+    },
+    "Progress/boxes/moving/net_displacement_m": {
+      "last_step": 1000,
+      "last": 0.7882052063941956,
+      "mean_last100": 0.8630305874347687,
+      "min": 0.6905250549316406,
+      "max": 0.9212705492973328,
+      "count": 100,
+      "nonfinite_count": 0
+    },
+    "Progress/boxes/moving/net_path_ratio": {
+      "last_step": 1000,
+      "last": 0.6132698059082031,
+      "mean_last100": 0.7217906343936921,
+      "min": 0.5727919936180115,
+      "max": 0.8844207525253296,
+      "count": 100,
+      "nonfinite_count": 0
+    },
+    "Progress/boxes/moving/path_length_m": {
+      "last_step": 1000,
+      "last": 1.4874541759490967,
+      "mean_last100": 1.3453868448734283,
+      "min": 1.0795328617095947,
+      "max": 1.6859776973724365,
+      "count": 100,
+      "nonfinite_count": 0
+    },
+    "Progress/boxes/moving/window_net_speed_mps": {
+      "last_step": 1000,
+      "last": 0.26463302969932556,
+      "mean_last100": 0.3038260979950428,
+      "min": 0.20430046319961548,
+      "max": 0.4901457726955414,
+      "count": 100,
+      "nonfinite_count": 0
+    },
+    "Progress/flat/moving/command_completion": {
+      "last_step": 1000,
+      "last": 0.2701955735683441,
+      "mean_last100": 0.2400994600728154,
+      "min": -0.08460360020399094,
+      "max": 0.407405287027359,
+      "count": 100,
+      "nonfinite_count": 0
+    },
+    "Progress/flat/moving/command_progress_m": {
+      "last_step": 1000,
+      "last": 0.5066463947296143,
+      "mean_last100": 0.44954527750611306,
+      "min": 0.1906011402606964,
+      "max": 0.7405903339385986,
+      "count": 100,
+      "nonfinite_count": 0
+    },
+    "Progress/flat/moving/command_speed_mps": {
+      "last_step": 1000,
+      "last": 0.7334489226341248,
+      "mean_last100": 0.9164355027675629,
+      "min": 0.6290339231491089,
+      "max": 1.2929739952087402,
+      "count": 100,
+      "nonfinite_count": 0
+    },
+    "Progress/flat/moving/directed_speed_mps": {
+      "last_step": 1000,
+      "last": 0.2601938247680664,
+      "mean_last100": 0.268172118216753,
+      "min": 0.13760679960250854,
+      "max": 0.5082659721374512,
+      "count": 100,
+      "nonfinite_count": 0
+    },
+    "Progress/flat/moving/max_spawn_displacement_m": {
+      "last_step": 1000,
+      "last": 0.8547079563140869,
+      "mean_last100": 0.8530177915096283,
+      "min": 0.788040816783905,
+      "max": 0.9088032245635986,
+      "count": 100,
+      "nonfinite_count": 0
+    },
+    "Progress/flat/moving/net_displacement_m": {
+      "last_step": 1000,
+      "last": 0.8545892238616943,
+      "mean_last100": 0.8519748902320862,
+      "min": 0.7849758267402649,
+      "max": 0.9086967706680298,
+      "count": 100,
+      "nonfinite_count": 0
+    },
+    "Progress/flat/moving/net_path_ratio": {
+      "last_step": 1000,
+      "last": 0.6949594020843506,
+      "mean_last100": 0.71379165828228,
+      "min": 0.5461229085922241,
+      "max": 0.8695451021194458,
+      "count": 100,
+      "nonfinite_count": 0
+    },
+    "Progress/flat/moving/path_length_m": {
+      "last_step": 1000,
+      "last": 1.3965247869491577,
+      "mean_last100": 1.350261756181717,
+      "min": 1.101116418838501,
+      "max": 1.7382309436798096,
+      "count": 100,
+      "nonfinite_count": 0
+    },
+    "Progress/flat/moving/window_net_speed_mps": {
+      "last_step": 1000,
+      "last": 0.26574909687042236,
+      "mean_last100": 0.2949550561606884,
+      "min": 0.19802279770374298,
+      "max": 0.46466001868247986,
+      "count": 100,
+      "nonfinite_count": 0
+    },
+    "Progress/hurdles/moving/command_completion": {
+      "last_step": 1000,
+      "last": 0.39062052965164185,
+      "mean_last100": 0.2542595173418522,
+      "min": -0.08726309984922409,
+      "max": 0.47245585918426514,
+      "count": 100,
+      "nonfinite_count": 0
+    },
+    "Progress/hurdles/moving/command_progress_m": {
+      "last_step": 1000,
+      "last": 0.699641764163971,
+      "mean_last100": 0.4706877367198467,
+      "min": 0.13646139204502106,
+      "max": 0.699641764163971,
+      "count": 100,
+      "nonfinite_count": 0
+    },
+    "Progress/hurdles/moving/command_speed_mps": {
+      "last_step": 1000,
+      "last": 0.7153784036636353,
+      "mean_last100": 0.8983985334634781,
+      "min": 0.5887770056724548,
+      "max": 1.2415074110031128,
+      "count": 100,
+      "nonfinite_count": 0
+    },
+    "Progress/hurdles/moving/directed_speed_mps": {
+      "last_step": 1000,
+      "last": 0.31120893359184265,
+      "mean_last100": 0.27316974781453607,
+      "min": 0.06714566797018051,
+      "max": 0.48654717206954956,
+      "count": 100,
+      "nonfinite_count": 0
+    },
+    "Progress/hurdles/moving/max_spawn_displacement_m": {
+      "last_step": 1000,
+      "last": 0.8641809225082397,
+      "mean_last100": 0.8538091963529587,
+      "min": 0.7381240725517273,
+      "max": 0.9058104157447815,
+      "count": 100,
+      "nonfinite_count": 0
+    },
+    "Progress/hurdles/moving/net_displacement_m": {
+      "last_step": 1000,
+      "last": 0.8637937903404236,
+      "mean_last100": 0.8526930457353592,
+      "min": 0.7267197966575623,
+      "max": 0.9042985439300537,
+      "count": 100,
+      "nonfinite_count": 0
+    },
+    "Progress/hurdles/moving/net_path_ratio": {
+      "last_step": 1000,
+      "last": 0.7213292717933655,
+      "mean_last100": 0.7227378970384598,
+      "min": 0.5744760036468506,
+      "max": 0.8723551034927368,
+      "count": 100,
+      "nonfinite_count": 0
+    },
+    "Progress/hurdles/moving/path_length_m": {
+      "last_step": 1000,
+      "last": 1.4079962968826294,
+      "mean_last100": 1.3313400423526764,
+      "min": 1.0352965593338013,
+      "max": 1.6435960531234741,
+      "count": 100,
+      "nonfinite_count": 0
+    },
+    "Progress/hurdles/moving/window_net_speed_mps": {
+      "last_step": 1000,
+      "last": 0.28462502360343933,
+      "mean_last100": 0.29881960943341257,
+      "min": 0.1723395437002182,
+      "max": 0.4460723102092743,
+      "count": 100,
+      "nonfinite_count": 0
+    },
+    "Progress/raised_pillars/moving/command_completion": {
+      "last_step": 1000,
+      "last": 0.4753718972206116,
+      "mean_last100": 0.48663257151842115,
+      "min": 0.4625014364719391,
+      "max": 0.5143170356750488,
+      "count": 100,
+      "nonfinite_count": 0
+    },
+    "Progress/raised_pillars/moving/command_progress_m": {
+      "last_step": 1000,
+      "last": 0.8224552273750305,
+      "mean_last100": 0.8276524859666824,
+      "min": 0.8031833171844482,
+      "max": 0.8457955121994019,
+      "count": 100,
+      "nonfinite_count": 0
+    },
+    "Progress/raised_pillars/moving/command_speed_mps": {
+      "last_step": 1000,
+      "last": 1.3039557933807373,
+      "mean_last100": 1.2983431017398834,
+      "min": 1.2408175468444824,
+      "max": 1.3572723865509033,
+      "count": 100,
+      "nonfinite_count": 0
+    },
+    "Progress/raised_pillars/moving/directed_speed_mps": {
+      "last_step": 1000,
+      "last": 0.5919384360313416,
+      "mean_last100": 0.5933720916509628,
+      "min": 0.5659250020980835,
+      "max": 0.6165850758552551,
+      "count": 100,
+      "nonfinite_count": 0
+    },
+    "Progress/raised_pillars/moving/max_spawn_displacement_m": {
+      "last_step": 1000,
+      "last": 0.839585542678833,
+      "mean_last100": 0.8504925364255905,
+      "min": 0.8318380117416382,
+      "max": 0.8670669794082642,
+      "count": 100,
+      "nonfinite_count": 0
+    },
+    "Progress/raised_pillars/moving/net_displacement_m": {
+      "last_step": 1000,
+      "last": 0.8382389545440674,
+      "mean_last100": 0.8489812409877777,
+      "min": 0.8308084011077881,
+      "max": 0.864224910736084,
+      "count": 100,
+      "nonfinite_count": 0
+    },
+    "Progress/raised_pillars/moving/net_path_ratio": {
+      "last_step": 1000,
+      "last": 0.886362612247467,
+      "mean_last100": 0.890748673081398,
+      "min": 0.8776213526725769,
+      "max": 0.9003391265869141,
+      "count": 100,
+      "nonfinite_count": 0
+    },
+    "Progress/raised_pillars/moving/path_length_m": {
+      "last_step": 1000,
+      "last": 0.9494476318359375,
+      "mean_last100": 0.955737487077713,
+      "min": 0.9346407651901245,
+      "max": 0.9821013808250427,
+      "count": 100,
+      "nonfinite_count": 0
+    },
+    "Progress/raised_pillars/moving/window_net_speed_mps": {
+      "last_step": 1000,
+      "last": 0.5091414451599121,
+      "mean_last100": 0.514036457836628,
+      "min": 0.4980948269367218,
+      "max": 0.5304222106933594,
+      "count": 100,
+      "nonfinite_count": 0
+    },
+    "Progress/random_rough/moving/command_completion": {
+      "last_step": 1000,
+      "last": 0.10935639590024948,
+      "mean_last100": 0.1161832198407501,
+      "min": -0.05660843476653099,
+      "max": 0.27275973558425903,
+      "count": 100,
+      "nonfinite_count": 0
+    },
+    "Progress/random_rough/moving/command_progress_m": {
+      "last_step": 1000,
+      "last": 0.24031156301498413,
+      "mean_last100": 0.21288214020431043,
+      "min": 0.09339118748903275,
+      "max": 0.3619394600391388,
+      "count": 100,
+      "nonfinite_count": 0
+    },
+    "Progress/random_rough/moving/command_speed_mps": {
+      "last_step": 1000,
+      "last": 0.9991804361343384,
+      "mean_last100": 0.9289591431617736,
+      "min": 0.8268879652023315,
+      "max": 1.1111135482788086,
+      "count": 100,
+      "nonfinite_count": 0
+    },
+    "Progress/random_rough/moving/directed_speed_mps": {
+      "last_step": 1000,
+      "last": 0.15329435467720032,
+      "mean_last100": 0.1340717175975442,
+      "min": 0.05418321117758751,
+      "max": 0.23508711159229279,
+      "count": 100,
+      "nonfinite_count": 0
+    },
+    "Progress/random_rough/moving/max_spawn_displacement_m": {
+      "last_step": 1000,
+      "last": 0.8476302027702332,
+      "mean_last100": 0.8412807828187943,
+      "min": 0.8222514986991882,
+      "max": 0.8577999472618103,
+      "count": 100,
+      "nonfinite_count": 0
+    },
+    "Progress/random_rough/moving/net_displacement_m": {
+      "last_step": 1000,
+      "last": 0.8469366431236267,
+      "mean_last100": 0.8401500153541565,
+      "min": 0.8199955821037292,
+      "max": 0.856855034828186,
+      "count": 100,
+      "nonfinite_count": 0
+    },
+    "Progress/random_rough/moving/net_path_ratio": {
+      "last_step": 1000,
+      "last": 0.9102112054824829,
+      "mean_last100": 0.9127108055353165,
+      "min": 0.9011574387550354,
+      "max": 0.9273512363433838,
+      "count": 100,
+      "nonfinite_count": 0
+    },
+    "Progress/random_rough/moving/path_length_m": {
+      "last_step": 1000,
+      "last": 0.935998797416687,
+      "mean_last100": 0.9242436861991883,
+      "min": 0.8962029218673706,
+      "max": 0.9480815529823303,
+      "count": 100,
+      "nonfinite_count": 0
+    },
+    "Progress/random_rough/moving/window_net_speed_mps": {
+      "last_step": 1000,
+      "last": 0.42686066031455994,
+      "mean_last100": 0.42125740557909014,
+      "min": 0.3916982114315033,
+      "max": 0.4486424922943115,
+      "count": 100,
+      "nonfinite_count": 0
+    },
+    "Progress/random_rough/standing/command_completion": {
+      "last_step": 999,
+      "last": 0.0,
+      "mean_last100": 0.0,
+      "min": 0.0,
+      "max": 0.0,
+      "count": 79,
+      "nonfinite_count": 0
+    },
+    "Progress/random_rough/standing/command_progress_m": {
+      "last_step": 999,
+      "last": 0.0,
+      "mean_last100": 0.0,
+      "min": 0.0,
+      "max": 0.0,
+      "count": 79,
+      "nonfinite_count": 0
+    },
+    "Progress/random_rough/standing/command_speed_mps": {
+      "last_step": 999,
+      "last": 0.0,
+      "mean_last100": 0.0,
+      "min": 0.0,
+      "max": 0.0,
+      "count": 79,
+      "nonfinite_count": 0
+    },
+    "Progress/random_rough/standing/directed_speed_mps": {
+      "last_step": 999,
+      "last": 0.0,
+      "mean_last100": 0.0,
+      "min": 0.0,
+      "max": 0.0,
+      "count": 79,
+      "nonfinite_count": 0
+    },
+    "Progress/random_rough/standing/max_spawn_displacement_m": {
+      "last_step": 999,
+      "last": 0.8220237493515015,
+      "mean_last100": 0.8241511673866948,
+      "min": 0.6517251133918762,
+      "max": 0.9527743458747864,
+      "count": 79,
+      "nonfinite_count": 0
+    },
+    "Progress/random_rough/standing/net_displacement_m": {
+      "last_step": 999,
+      "last": 0.8220237493515015,
+      "mean_last100": 0.8222476613672474,
+      "min": 0.6517251133918762,
+      "max": 0.9340674877166748,
+      "count": 79,
+      "nonfinite_count": 0
+    },
+    "Progress/random_rough/standing/net_path_ratio": {
+      "last_step": 999,
+      "last": 0.9515224695205688,
+      "mean_last100": 0.9215733929525448,
+      "min": 0.6753220558166504,
+      "max": 0.9817407131195068,
+      "count": 79,
+      "nonfinite_count": 0
+    },
+    "Progress/random_rough/standing/path_length_m": {
+      "last_step": 999,
+      "last": 0.8677539229393005,
+      "mean_last100": 0.8997916156732584,
+      "min": 0.6943349242210388,
+      "max": 1.3660515546798706,
+      "count": 79,
+      "nonfinite_count": 0
+    },
+    "Progress/random_rough/standing/window_net_speed_mps": {
+      "last_step": 999,
+      "last": 0.45294860005378723,
+      "mean_last100": 0.38870160206209253,
+      "min": 0.2122856229543686,
+      "max": 0.560065746307373,
+      "count": 79,
+      "nonfinite_count": 0
+    },
+    "Progress/slope_down/moving/command_completion": {
+      "last_step": 1000,
+      "last": 0.2712632417678833,
+      "mean_last100": 0.24245500119403005,
+      "min": 0.008890504017472267,
+      "max": 0.45812663435935974,
+      "count": 100,
+      "nonfinite_count": 0
+    },
+    "Progress/slope_down/moving/command_progress_m": {
+      "last_step": 1000,
+      "last": 0.4542063772678375,
+      "mean_last100": 0.45576639741659164,
+      "min": 0.20576255023479462,
+      "max": 0.714874267578125,
+      "count": 100,
+      "nonfinite_count": 0
+    },
+    "Progress/slope_down/moving/command_speed_mps": {
+      "last_step": 1000,
+      "last": 0.965053379535675,
+      "mean_last100": 0.9253009980916977,
+      "min": 0.5635937452316284,
+      "max": 1.5637459754943848,
+      "count": 100,
+      "nonfinite_count": 0
+    },
+    "Progress/slope_down/moving/directed_speed_mps": {
+      "last_step": 1000,
+      "last": 0.3121108114719391,
+      "mean_last100": 0.27008046887814996,
+      "min": 0.10364649444818497,
+      "max": 0.502007007598877,
+      "count": 100,
+      "nonfinite_count": 0
+    },
+    "Progress/slope_down/moving/max_spawn_displacement_m": {
+      "last_step": 1000,
+      "last": 0.8693392872810364,
+      "mean_last100": 0.8611968618631363,
+      "min": 0.7685333490371704,
+      "max": 0.9293044805526733,
+      "count": 100,
+      "nonfinite_count": 0
+    },
+    "Progress/slope_down/moving/net_displacement_m": {
+      "last_step": 1000,
+      "last": 0.8693392872810364,
+      "mean_last100": 0.860230113863945,
+      "min": 0.7660498023033142,
+      "max": 0.9286500811576843,
+      "count": 100,
+      "nonfinite_count": 0
+    },
+    "Progress/slope_down/moving/net_path_ratio": {
+      "last_step": 1000,
+      "last": 0.7053463459014893,
+      "mean_last100": 0.7101729553937912,
+      "min": 0.5604674816131592,
+      "max": 0.8728383183479309,
+      "count": 100,
+      "nonfinite_count": 0
+    },
+    "Progress/slope_down/moving/path_length_m": {
+      "last_step": 1000,
+      "last": 1.3953980207443237,
+      "mean_last100": 1.3717680919170379,
+      "min": 1.0200713872909546,
+      "max": 1.694841980934143,
+      "count": 100,
+      "nonfinite_count": 0
+    },
+    "Progress/slope_down/moving/window_net_speed_mps": {
+      "last_step": 1000,
+      "last": 0.29935336112976074,
+      "mean_last100": 0.29789323166012766,
+      "min": 0.19067589938640594,
+      "max": 0.4559459090232849,
+      "count": 100,
+      "nonfinite_count": 0
+    },
+    "Progress/slope_up/moving/command_completion": {
+      "last_step": 1000,
+      "last": 0.16498515009880066,
+      "mean_last100": 0.24446272738277913,
+      "min": 0.035531412810087204,
+      "max": 0.39653903245925903,
+      "count": 100,
+      "nonfinite_count": 0
+    },
+    "Progress/slope_up/moving/command_progress_m": {
+      "last_step": 1000,
+      "last": 0.3008460998535156,
+      "mean_last100": 0.4473684449493885,
+      "min": 0.2327999621629715,
+      "max": 0.7785425186157227,
+      "count": 100,
+      "nonfinite_count": 0
+    },
+    "Progress/slope_up/moving/command_speed_mps": {
+      "last_step": 1000,
+      "last": 0.7779402136802673,
+      "mean_last100": 0.9407559365034104,
+      "min": 0.6785356402397156,
+      "max": 1.2817970514297485,
+      "count": 100,
+      "nonfinite_count": 0
+    },
+    "Progress/slope_up/moving/directed_speed_mps": {
+      "last_step": 1000,
+      "last": 0.1665109395980835,
+      "mean_last100": 0.2801313676685095,
+      "min": 0.11077462136745453,
+      "max": 0.5390274524688721,
+      "count": 100,
+      "nonfinite_count": 0
+    },
+    "Progress/slope_up/moving/max_spawn_displacement_m": {
+      "last_step": 1000,
+      "last": 0.8915371894836426,
+      "mean_last100": 0.857143070101738,
+      "min": 0.7022106051445007,
+      "max": 0.91529780626297,
+      "count": 100,
+      "nonfinite_count": 0
+    },
+    "Progress/slope_up/moving/net_displacement_m": {
+      "last_step": 1000,
+      "last": 0.8914487957954407,
+      "mean_last100": 0.8559334701299668,
+      "min": 0.6964367032051086,
+      "max": 0.9144827127456665,
+      "count": 100,
+      "nonfinite_count": 0
+    },
+    "Progress/slope_up/moving/net_path_ratio": {
+      "last_step": 1000,
+      "last": 0.6131748557090759,
+      "mean_last100": 0.7096815854310989,
+      "min": 0.5719020962715149,
+      "max": 0.8660023808479309,
+      "count": 100,
+      "nonfinite_count": 0
+    },
+    "Progress/slope_up/moving/path_length_m": {
+      "last_step": 1000,
+      "last": 1.6725214719772339,
+      "mean_last100": 1.3781978511810302,
+      "min": 1.099798321723938,
+      "max": 1.741963505744934,
+      "count": 100,
+      "nonfinite_count": 0
+    },
+    "Progress/slope_up/moving/window_net_speed_mps": {
+      "last_step": 1000,
+      "last": 0.2170041799545288,
+      "mean_last100": 0.30314660504460333,
+      "min": 0.18773485720157623,
+      "max": 0.46160146594047546,
+      "count": 100,
+      "nonfinite_count": 0
+    },
+    "Progress/stairs_down_30/moving/command_completion": {
+      "last_step": 1000,
+      "last": 0.3207402229309082,
+      "mean_last100": 0.25104496605694293,
+      "min": -0.010110251605510712,
+      "max": 0.39270150661468506,
+      "count": 100,
+      "nonfinite_count": 0
+    },
+    "Progress/stairs_down_30/moving/command_progress_m": {
+      "last_step": 1000,
+      "last": 0.586765706539154,
+      "mean_last100": 0.4702041971683502,
+      "min": 0.17688480019569397,
+      "max": 0.7073135375976562,
+      "count": 100,
+      "nonfinite_count": 0
+    },
+    "Progress/stairs_down_30/moving/command_speed_mps": {
+      "last_step": 1000,
+      "last": 1.3416616916656494,
+      "mean_last100": 0.9240359720587731,
+      "min": 0.4508795440196991,
+      "max": 1.3416616916656494,
+      "count": 100,
+      "nonfinite_count": 0
+    },
+    "Progress/stairs_down_30/moving/directed_speed_mps": {
+      "last_step": 1000,
+      "last": 0.47399473190307617,
+      "mean_last100": 0.27542285796254873,
+      "min": 0.033645521849393845,
+      "max": 0.47399473190307617,
+      "count": 100,
+      "nonfinite_count": 0
+    },
+    "Progress/stairs_down_30/moving/max_spawn_displacement_m": {
+      "last_step": 1000,
+      "last": 0.7714255452156067,
+      "mean_last100": 0.8575638753175735,
+      "min": 0.7588239312171936,
+      "max": 0.928860604763031,
+      "count": 100,
+      "nonfinite_count": 0
+    },
+    "Progress/stairs_down_30/moving/net_displacement_m": {
+      "last_step": 1000,
+      "last": 0.7685297727584839,
+      "mean_last100": 0.8566216510534287,
+      "min": 0.754265308380127,
+      "max": 0.928860604763031,
+      "count": 100,
+      "nonfinite_count": 0
+    },
+    "Progress/stairs_down_30/moving/net_path_ratio": {
+      "last_step": 1000,
+      "last": 0.783279299736023,
+      "mean_last100": 0.7215802180767059,
+      "min": 0.5488579869270325,
+      "max": 0.8547115325927734,
+      "count": 100,
+      "nonfinite_count": 0
+    },
+    "Progress/stairs_down_30/moving/path_length_m": {
+      "last_step": 1000,
+      "last": 1.1577807664871216,
+      "mean_last100": 1.3345148932933808,
+      "min": 1.033158779144287,
+      "max": 1.694746732711792,
+      "count": 100,
+      "nonfinite_count": 0
+    },
+    "Progress/stairs_down_30/moving/window_net_speed_mps": {
+      "last_step": 1000,
+      "last": 0.40524306893348694,
+      "mean_last100": 0.3075078885257244,
+      "min": 0.14161477982997894,
+      "max": 0.4612657129764557,
+      "count": 100,
+      "nonfinite_count": 0
+    },
+    "Progress/stairs_down_34/moving/command_completion": {
+      "last_step": 1000,
+      "last": 0.25015825033187866,
+      "mean_last100": 0.24985262372530997,
+      "min": -0.01006319560110569,
+      "max": 0.5063576102256775,
+      "count": 100,
+      "nonfinite_count": 0
+    },
+    "Progress/stairs_down_34/moving/command_progress_m": {
+      "last_step": 1000,
+      "last": 0.38501089811325073,
+      "mean_last100": 0.45386498771607875,
+      "min": 0.06344787031412125,
+      "max": 0.7641586065292358,
+      "count": 100,
+      "nonfinite_count": 0
+    },
+    "Progress/stairs_down_34/moving/command_speed_mps": {
+      "last_step": 1000,
+      "last": 0.7698345184326172,
+      "mean_last100": 0.9238252860307693,
+      "min": 0.6231867074966431,
+      "max": 1.4093735218048096,
+      "count": 100,
+      "nonfinite_count": 0
+    },
+    "Progress/stairs_down_34/moving/directed_speed_mps": {
+      "last_step": 1000,
+      "last": 0.2674254775047302,
+      "mean_last100": 0.2793583557009697,
+      "min": 0.0740191638469696,
+      "max": 0.5211866497993469,
+      "count": 100,
+      "nonfinite_count": 0
+    },
+    "Progress/stairs_down_34/moving/max_spawn_displacement_m": {
+      "last_step": 1000,
+      "last": 0.7988770008087158,
+      "mean_last100": 0.8535336983203888,
+      "min": 0.697412371635437,
+      "max": 0.9197490215301514,
+      "count": 100,
+      "nonfinite_count": 0
+    },
+    "Progress/stairs_down_34/moving/net_displacement_m": {
+      "last_step": 1000,
+      "last": 0.79483962059021,
+      "mean_last100": 0.8521453952789306,
+      "min": 0.6863852739334106,
+      "max": 0.9186682105064392,
+      "count": 100,
+      "nonfinite_count": 0
+    },
+    "Progress/stairs_down_34/moving/net_path_ratio": {
+      "last_step": 1000,
+      "last": 0.6425314545631409,
+      "mean_last100": 0.7217980635166168,
+      "min": 0.5850903391838074,
+      "max": 0.8538280129432678,
+      "count": 100,
+      "nonfinite_count": 0
+    },
+    "Progress/stairs_down_34/moving/path_length_m": {
+      "last_step": 1000,
+      "last": 1.468372106552124,
+      "mean_last100": 1.3273865699768066,
+      "min": 1.0354505777359009,
+      "max": 1.5814517736434937,
+      "count": 100,
+      "nonfinite_count": 0
+    },
+    "Progress/stairs_down_34/moving/window_net_speed_mps": {
+      "last_step": 1000,
+      "last": 0.2759588956832886,
+      "mean_last100": 0.3073540738224983,
+      "min": 0.19943827390670776,
+      "max": 0.4655945599079132,
+      "count": 100,
+      "nonfinite_count": 0
+    },
+    "Progress/stairs_up_30/moving/command_completion": {
+      "last_step": 1000,
+      "last": 0.3569672107696533,
+      "mean_last100": 0.26991776306182147,
+      "min": 0.02911406382918358,
+      "max": 0.4171103835105896,
+      "count": 100,
+      "nonfinite_count": 0
+    },
+    "Progress/stairs_up_30/moving/command_progress_m": {
+      "last_step": 1000,
+      "last": 0.6773303747177124,
+      "mean_last100": 0.4737040217220783,
+      "min": 0.07814580202102661,
+      "max": 0.7344357967376709,
+      "count": 100,
+      "nonfinite_count": 0
+    },
+    "Progress/stairs_up_30/moving/command_speed_mps": {
+      "last_step": 1000,
+      "last": 1.0658009052276611,
+      "mean_last100": 0.9311911857128143,
+      "min": 0.5897504091262817,
+      "max": 1.2128374576568604,
+      "count": 100,
+      "nonfinite_count": 0
+    },
+    "Progress/stairs_up_30/moving/directed_speed_mps": {
+      "last_step": 1000,
+      "last": 0.4095451235771179,
+      "mean_last100": 0.2877418881654739,
+      "min": 0.028228148818016052,
+      "max": 0.45417532324790955,
+      "count": 100,
+      "nonfinite_count": 0
+    },
+    "Progress/stairs_up_30/moving/max_spawn_displacement_m": {
+      "last_step": 1000,
+      "last": 0.8782339096069336,
+      "mean_last100": 0.8411613768339157,
+      "min": 0.7091647386550903,
+      "max": 0.8955580592155457,
+      "count": 100,
+      "nonfinite_count": 0
+    },
+    "Progress/stairs_up_30/moving/net_displacement_m": {
+      "last_step": 1000,
+      "last": 0.8768998980522156,
+      "mean_last100": 0.8393731987476349,
+      "min": 0.7018266916275024,
+      "max": 0.8954610824584961,
+      "count": 100,
+      "nonfinite_count": 0
+    },
+    "Progress/stairs_up_30/moving/net_path_ratio": {
+      "last_step": 1000,
+      "last": 0.8634111285209656,
+      "mean_last100": 0.7352493411302566,
+      "min": 0.5699007511138916,
+      "max": 0.8684200644493103,
+      "count": 100,
+      "nonfinite_count": 0
+    },
+    "Progress/stairs_up_30/moving/path_length_m": {
+      "last_step": 1000,
+      "last": 1.0526096820831299,
+      "mean_last100": 1.2860368394851684,
+      "min": 1.0443511009216309,
+      "max": 1.640156865119934,
+      "count": 100,
+      "nonfinite_count": 0
+    },
+    "Progress/stairs_up_30/moving/window_net_speed_mps": {
+      "last_step": 1000,
+      "last": 0.38228434324264526,
+      "mean_last100": 0.3036010429263115,
+      "min": 0.1708311289548874,
+      "max": 0.39871904253959656,
+      "count": 100,
+      "nonfinite_count": 0
+    },
+    "Progress/stairs_up_34/moving/command_completion": {
+      "last_step": 1000,
+      "last": 0.11042361706495285,
+      "mean_last100": 0.2510149598494172,
+      "min": 0.05498505011200905,
+      "max": 0.45213109254837036,
+      "count": 100,
+      "nonfinite_count": 0
+    },
+    "Progress/stairs_up_34/moving/command_progress_m": {
+      "last_step": 1000,
+      "last": 0.15002375841140747,
+      "mean_last100": 0.4576732683181763,
+      "min": 0.13386249542236328,
+      "max": 0.7402521967887878,
+      "count": 100,
+      "nonfinite_count": 0
+    },
+    "Progress/stairs_up_34/moving/command_speed_mps": {
+      "last_step": 1000,
+      "last": 0.6864200830459595,
+      "mean_last100": 0.921620055437088,
+      "min": 0.6096633672714233,
+      "max": 1.2433750629425049,
+      "count": 100,
+      "nonfinite_count": 0
+    },
+    "Progress/stairs_up_34/moving/directed_speed_mps": {
+      "last_step": 1000,
+      "last": 0.1350841522216797,
+      "mean_last100": 0.27982387915253637,
+      "min": 0.0948326513171196,
+      "max": 0.4785393178462982,
+      "count": 100,
+      "nonfinite_count": 0
+    },
+    "Progress/stairs_up_34/moving/max_spawn_displacement_m": {
+      "last_step": 1000,
+      "last": 0.847164511680603,
+      "mean_last100": 0.8479269373416901,
+      "min": 0.7421746253967285,
+      "max": 0.8977392911911011,
+      "count": 100,
+      "nonfinite_count": 0
+    },
+    "Progress/stairs_up_34/moving/net_displacement_m": {
+      "last_step": 1000,
+      "last": 0.8464158177375793,
+      "mean_last100": 0.8464629530906678,
+      "min": 0.731844961643219,
+      "max": 0.8962777853012085,
+      "count": 100,
+      "nonfinite_count": 0
+    },
+    "Progress/stairs_up_34/moving/net_path_ratio": {
+      "last_step": 1000,
+      "last": 0.6593855619430542,
+      "mean_last100": 0.7262318539619446,
+      "min": 0.5474056005477905,
+      "max": 0.8506863117218018,
+      "count": 100,
+      "nonfinite_count": 0
+    },
+    "Progress/stairs_up_34/moving/path_length_m": {
+      "last_step": 1000,
+      "last": 1.412529706954956,
+      "mean_last100": 1.3139211237430573,
+      "min": 1.0614488124847412,
+      "max": 1.6360220909118652,
+      "count": 100,
+      "nonfinite_count": 0
+    },
+    "Progress/stairs_up_34/moving/window_net_speed_mps": {
+      "last_step": 1000,
+      "last": 0.21815162897109985,
+      "mean_last100": 0.3015387269854546,
+      "min": 0.17420843243598938,
+      "max": 0.429067999124527,
+      "count": 100,
+      "nonfinite_count": 0
+    },
+    "Progress/stepping_stones/moving/command_completion": {
+      "last_step": 1000,
+      "last": 0.46547257900238037,
+      "mean_last100": 0.48266777575016023,
+      "min": 0.4570029079914093,
+      "max": 0.502780556678772,
+      "count": 100,
+      "nonfinite_count": 0
+    },
+    "Progress/stepping_stones/moving/command_progress_m": {
+      "last_step": 1000,
+      "last": 0.824445366859436,
+      "mean_last100": 0.8303824096918107,
+      "min": 0.8058396577835083,
+      "max": 0.8538150191307068,
+      "count": 100,
+      "nonfinite_count": 0
+    },
+    "Progress/stepping_stones/moving/command_speed_mps": {
+      "last_step": 1000,
+      "last": 1.3209937810897827,
+      "mean_last100": 1.3025275540351868,
+      "min": 1.245932698249817,
+      "max": 1.3585742712020874,
+      "count": 100,
+      "nonfinite_count": 0
+    },
+    "Progress/stepping_stones/moving/directed_speed_mps": {
+      "last_step": 1000,
+      "last": 0.575766384601593,
+      "mean_last100": 0.5904833501577378,
+      "min": 0.5567528605461121,
+      "max": 0.6182991862297058,
+      "count": 100,
+      "nonfinite_count": 0
+    },
+    "Progress/stepping_stones/moving/max_spawn_displacement_m": {
+      "last_step": 1000,
+      "last": 0.8433964848518372,
+      "mean_last100": 0.855233992934227,
+      "min": 0.8428322076797485,
+      "max": 0.8708702921867371,
+      "count": 100,
+      "nonfinite_count": 0
+    },
+    "Progress/stepping_stones/moving/net_displacement_m": {
+      "last_step": 1000,
+      "last": 0.840778648853302,
+      "mean_last100": 0.8536460208892822,
+      "min": 0.840778648853302,
+      "max": 0.8695833086967468,
+      "count": 100,
+      "nonfinite_count": 0
+    },
+    "Progress/stepping_stones/moving/net_path_ratio": {
+      "last_step": 1000,
+      "last": 0.8807370066642761,
+      "mean_last100": 0.8888134479522705,
+      "min": 0.8719278573989868,
+      "max": 0.8991977572441101,
+      "count": 100,
+      "nonfinite_count": 0
+    },
+    "Progress/stepping_stones/moving/path_length_m": {
+      "last_step": 1000,
+      "last": 0.9595059752464294,
+      "mean_last100": 0.9631671720743179,
+      "min": 0.9378389716148376,
+      "max": 0.9856362342834473,
+      "count": 100,
+      "nonfinite_count": 0
+    },
+    "Progress/stepping_stones/moving/window_net_speed_mps": {
+      "last_step": 1000,
+      "last": 0.5046333074569702,
+      "mean_last100": 0.5163618898391724,
+      "min": 0.4958459138870239,
+      "max": 0.5345883369445801,
+      "count": 100,
+      "nonfinite_count": 0
+    },
+    "Progress/wave/moving/command_completion": {
+      "last_step": 1000,
+      "last": 0.1773860603570938,
+      "mean_last100": 0.22665110984584316,
+      "min": -0.15028133988380432,
+      "max": 0.49538931250572205,
+      "count": 100,
+      "nonfinite_count": 0
+    },
+    "Progress/wave/moving/command_progress_m": {
+      "last_step": 1000,
+      "last": 0.3455788493156433,
+      "mean_last100": 0.3976160354167223,
+      "min": -0.016113445162773132,
+      "max": 0.6663662195205688,
+      "count": 100,
+      "nonfinite_count": 0
+    },
+    "Progress/wave/moving/command_speed_mps": {
+      "last_step": 1000,
+      "last": 0.9060423970222473,
+      "mean_last100": 0.9172566324472428,
+      "min": 0.6411134600639343,
+      "max": 1.1831330060958862,
+      "count": 100,
+      "nonfinite_count": 0
+    },
+    "Progress/wave/moving/directed_speed_mps": {
+      "last_step": 1000,
+      "last": 0.2056802660226822,
+      "mean_last100": 0.2529098664596677,
+      "min": 0.026334773749113083,
+      "max": 0.41584375500679016,
+      "count": 100,
+      "nonfinite_count": 0
+    },
+    "Progress/wave/moving/max_spawn_displacement_m": {
+      "last_step": 1000,
+      "last": 0.8433498740196228,
+      "mean_last100": 0.8691569703817368,
+      "min": 0.814680278301239,
+      "max": 0.9102900624275208,
+      "count": 100,
+      "nonfinite_count": 0
+    },
+    "Progress/wave/moving/net_displacement_m": {
+      "last_step": 1000,
+      "last": 0.8422273397445679,
+      "mean_last100": 0.8683925449848175,
+      "min": 0.8099461197853088,
+      "max": 0.9074668884277344,
+      "count": 100,
+      "nonfinite_count": 0
+    },
+    "Progress/wave/moving/net_path_ratio": {
+      "last_step": 1000,
+      "last": 0.7246708273887634,
+      "mean_last100": 0.7892417013645172,
+      "min": 0.6480922698974609,
+      "max": 0.889895498752594,
+      "count": 100,
+      "nonfinite_count": 0
+    },
+    "Progress/wave/moving/path_length_m": {
+      "last_step": 1000,
+      "last": 1.3237546682357788,
+      "mean_last100": 1.2154156041145325,
+      "min": 1.017305612564087,
+      "max": 1.4991892576217651,
+      "count": 100,
+      "nonfinite_count": 0
+    },
+    "Progress/wave/moving/window_net_speed_mps": {
+      "last_step": 1000,
+      "last": 0.3246210813522339,
+      "mean_last100": 0.35445237696170806,
+      "min": 0.2530505657196045,
+      "max": 0.44028136134147644,
+      "count": 100,
+      "nonfinite_count": 0
+    },
+    "Reset/accel": {
+      "last_step": 1000,
+      "last": 0.9241126179695129,
+      "mean_last100": 0.9124847131967545,
+      "min": 0.8864197731018066,
+      "max": 0.9343675374984741,
+      "count": 100,
+      "nonfinite_count": 0
+    },
+    "Reset/fall_over": {
+      "last_step": 1000,
+      "last": 0.0771113857626915,
+      "mean_last100": 0.0881251883506775,
+      "min": 0.06324582546949387,
+      "max": 0.11358024924993515,
+      "count": 100,
+      "nonfinite_count": 0
+    },
+    "Reset/horizon": {
+      "last_step": 1000,
+      "last": 0.004895960912108421,
+      "mean_last100": 0.004062231782590971,
+      "min": 0.0,
+      "max": 0.011250000447034836,
+      "count": 100,
+      "nonfinite_count": 0
+    },
+    "Reset/immune_skip": {
+      "last_step": 1000,
+      "last": 0.0012239902280271053,
+      "mean_last100": 0.0019482069322839378,
+      "min": 0.0,
+      "max": 0.007067137863487005,
+      "count": 100,
+      "nonfinite_count": 0
+    },
+    "Reset/joint_vel": {
+      "last_step": 1000,
+      "last": 0.0,
+      "mean_last100": 0.0,
+      "min": 0.0,
+      "max": 0.0,
+      "count": 100,
+      "nonfinite_count": 0
+    },
+    "Reset/n": {
+      "last_step": 1000,
+      "last": 17.02083396911621,
+      "mean_last100": 17.136874933242797,
+      "min": 15.625,
+      "max": 18.22916603088379,
+      "count": 100,
+      "nonfinite_count": 0
+    },
+    "Reset/oob": {
+      "last_step": 1000,
+      "last": 0.0,
+      "mean_last100": 0.0,
+      "min": 0.0,
+      "max": 0.0,
+      "count": 100,
+      "nonfinite_count": 0
+    },
+    "Reset/pit_fall": {
+      "last_step": 1000,
+      "last": 0.0,
+      "mean_last100": 1.215066877193749e-05,
+      "min": 0.0,
+      "max": 0.001215066877193749,
+      "count": 100,
+      "nonfinite_count": 0
+    },
+    "Reset/timeout": {
+      "last_step": 1000,
+      "last": 0.004895960912108421,
+      "mean_last100": 0.004062231782590971,
+      "min": 0.0,
+      "max": 0.011250000447034836,
+      "count": 100,
+      "nonfinite_count": 0
+    },
+    "Reset/torso": {
+      "last_step": 1000,
+      "last": 0.0,
+      "mean_last100": 0.0,
+      "min": 0.0,
+      "max": 0.0,
+      "count": 100,
+      "nonfinite_count": 0
+    },
+    "RewardMix/all/moving/style_per_step": {
+      "last_step": 1000,
+      "last": 0.010818427428603172,
+      "mean_last100": 0.010952059496194124,
+      "min": 0.010483562014997005,
+      "max": 0.011443882249295712,
+      "count": 100,
+      "nonfinite_count": 0
+    },
+    "RewardMix/all/moving/task_per_step": {
+      "last_step": 1000,
+      "last": 0.018905164673924446,
+      "mean_last100": 0.018196337092667818,
+      "min": 0.01645542122423649,
+      "max": 0.0193353109061718,
+      "count": 100,
+      "nonfinite_count": 0
+    },
+    "RewardMix/all/standing/style_per_step": {
+      "last_step": 1000,
+      "last": 0.025185907259583473,
+      "mean_last100": 0.02655354868620634,
+      "min": 0.025185907259583473,
+      "max": 0.028179137036204338,
+      "count": 100,
+      "nonfinite_count": 0
+    },
+    "RewardMix/all/standing/task_per_step": {
+      "last_step": 1000,
+      "last": 0.026427069678902626,
+      "mean_last100": 0.025578649584203958,
+      "min": 0.024031249806284904,
+      "max": 0.027090037241578102,
+      "count": 100,
+      "nonfinite_count": 0
+    },
+    "RewardMix/flat/moving/style_per_step": {
+      "last_step": 1000,
+      "last": 0.022600702941417694,
+      "mean_last100": 0.022467801105231045,
+      "min": 0.02075599506497383,
+      "max": 0.024204684421420097,
+      "count": 100,
+      "nonfinite_count": 0
+    },
+    "RewardMix/flat/moving/task_per_step": {
+      "last_step": 1000,
+      "last": 0.01953783631324768,
+      "mean_last100": 0.01943170798011124,
+      "min": 0.015057962387800217,
+      "max": 0.0244700089097023,
+      "count": 100,
+      "nonfinite_count": 0
+    },
+    "RewardMix/flat/standing/style_per_step": {
+      "last_step": 1000,
+      "last": 0.025872955098748207,
+      "mean_last100": 0.026717412527650596,
+      "min": 0.024543575942516327,
+      "max": 0.028780629858374596,
+      "count": 100,
+      "nonfinite_count": 0
+    },
+    "RewardMix/flat/standing/task_per_step": {
+      "last_step": 1000,
+      "last": 0.03039291314780712,
+      "mean_last100": 0.028126577995717526,
+      "min": 0.020977063104510307,
+      "max": 0.0311160646378994,
+      "count": 100,
+      "nonfinite_count": 0
+    },
+    "RewardMix/raised_pillars/moving/style_per_step": {
+      "last_step": 1000,
+      "last": 0.0,
+      "mean_last100": 0.0,
+      "min": 0.0,
+      "max": 0.0,
+      "count": 100,
+      "nonfinite_count": 0
+    },
+    "RewardMix/raised_pillars/moving/task_per_step": {
+      "last_step": 1000,
+      "last": 0.024103891104459763,
+      "mean_last100": 0.024071059972047806,
+      "min": 0.02182178758084774,
+      "max": 0.0256250761449337,
+      "count": 100,
+      "nonfinite_count": 0
+    },
+    "RewardMix/stepping_stones/moving/style_per_step": {
+      "last_step": 1000,
+      "last": 0.0,
+      "mean_last100": 0.0,
+      "min": 0.0,
+      "max": 0.0,
+      "count": 100,
+      "nonfinite_count": 0
+    },
+    "RewardMix/stepping_stones/moving/task_per_step": {
+      "last_step": 1000,
+      "last": 0.024262553080916405,
+      "mean_last100": 0.023267208579927683,
+      "min": 0.020991645753383636,
+      "max": 0.0252011027187109,
+      "count": 100,
+      "nonfinite_count": 0
+    },
+    "Terrain/boxes/episodes": {
+      "last_step": 1000,
+      "last": 20849.958984375,
+      "mean_last100": 20418.60380859375,
+      "min": 19995.8125,
+      "max": 20849.958984375,
+      "count": 100,
+      "nonfinite_count": 0
+    },
+    "Terrain/boxes/progress_m": {
+      "last_step": 1000,
+      "last": 0.9477565288543701,
+      "mean_last100": 0.9251741260290146,
+      "min": 0.9002377390861511,
+      "max": 0.9543326497077942,
+      "count": 100,
+      "nonfinite_count": 0
+    },
+    "Terrain/boxes/reach_2m_rate": {
+      "last_step": 1000,
+      "last": 0.0,
+      "mean_last100": 0.0,
+      "min": 0.0,
+      "max": 0.0,
+      "count": 100,
+      "nonfinite_count": 0
+    },
+    "Terrain/boxes/reach_4m_rate": {
+      "last_step": 1000,
+      "last": 0.0,
+      "mean_last100": 0.0,
+      "min": 0.0,
+      "max": 0.0,
+      "count": 100,
+      "nonfinite_count": 0
+    },
+    "Terrain/flat/episodes": {
+      "last_step": 1000,
+      "last": 21045.291015625,
+      "mean_last100": 20627.237734375,
+      "min": 20208.875,
+      "max": 21045.291015625,
+      "count": 100,
+      "nonfinite_count": 0
+    },
+    "Terrain/flat/progress_m": {
+      "last_step": 1000,
+      "last": 0.9325085282325745,
+      "mean_last100": 0.9195012629032135,
+      "min": 0.9020299911499023,
+      "max": 0.9430686831474304,
+      "count": 100,
+      "nonfinite_count": 0
+    },
+    "Terrain/flat/reach_2m_rate": {
+      "last_step": 1000,
+      "last": 0.0,
+      "mean_last100": 0.0,
+      "min": 0.0,
+      "max": 0.0,
+      "count": 100,
+      "nonfinite_count": 0
+    },
+    "Terrain/flat/reach_4m_rate": {
+      "last_step": 1000,
+      "last": 0.0,
+      "mean_last100": 0.0,
+      "min": 0.0,
+      "max": 0.0,
+      "count": 100,
+      "nonfinite_count": 0
+    },
+    "Terrain/hurdles/episodes": {
+      "last_step": 1000,
+      "last": 20922.208984375,
+      "mean_last100": 20494.92560546875,
+      "min": 20087.6875,
+      "max": 20922.208984375,
+      "count": 100,
+      "nonfinite_count": 0
+    },
+    "Terrain/hurdles/progress_m": {
+      "last_step": 1000,
+      "last": 0.9194127917289734,
+      "mean_last100": 0.9213311767578125,
+      "min": 0.8987154364585876,
+      "max": 0.9547100067138672,
+      "count": 100,
+      "nonfinite_count": 0
+    },
+    "Terrain/hurdles/reach_2m_rate": {
+      "last_step": 1000,
+      "last": 0.0,
+      "mean_last100": 0.0,
+      "min": 0.0,
+      "max": 0.0,
+      "count": 100,
+      "nonfinite_count": 0
+    },
+    "Terrain/hurdles/reach_4m_rate": {
+      "last_step": 1000,
+      "last": 0.0,
+      "mean_last100": 0.0,
+      "min": 0.0,
+      "max": 0.0,
+      "count": 100,
+      "nonfinite_count": 0
+    },
+    "Terrain/raised_pillars/easy_episodes": {
+      "last_step": 1000,
+      "last": 113530.6484375,
+      "mean_last100": 108396.142265625,
+      "min": 103200.8984375,
+      "max": 113530.6484375,
+      "count": 100,
+      "nonfinite_count": 0
+    },
+    "Terrain/raised_pillars/easy_progress_m": {
+      "last_step": 1000,
+      "last": 0.9008042216300964,
+      "mean_last100": 0.911561558842659,
+      "min": 0.8735163807868958,
+      "max": 0.9433581233024597,
+      "count": 100,
+      "nonfinite_count": 0
+    },
+    "Terrain/raised_pillars/easy_reach_2m_rate": {
+      "last_step": 1000,
+      "last": 0.0,
+      "mean_last100": 0.0,
+      "min": 0.0,
+      "max": 0.0,
+      "count": 100,
+      "nonfinite_count": 0
+    },
+    "Terrain/raised_pillars/episodes": {
+      "last_step": 1000,
+      "last": 142601.640625,
+      "mean_last100": 136039.24765625,
+      "min": 129487.625,
+      "max": 142601.640625,
+      "count": 100,
+      "nonfinite_count": 0
+    },
+    "Terrain/raised_pillars/hard_episodes": {
+      "last_step": 1000,
+      "last": 9407.875,
+      "mean_last100": 8924.70896484375,
+      "min": 8476.25,
+      "max": 9407.875,
+      "count": 100,
+      "nonfinite_count": 0
+    },
+    "Terrain/raised_pillars/hard_progress_m": {
+      "last_step": 1000,
+      "last": 0.8922908902168274,
+      "mean_last100": 0.9069345998764038,
+      "min": 0.8922908902168274,
+      "max": 0.9229092597961426,
+      "count": 100,
+      "nonfinite_count": 0
+    },
+    "Terrain/raised_pillars/hard_reach_2m_rate": {
+      "last_step": 1000,
+      "last": 0.0,
+      "mean_last100": 0.0,
+      "min": 0.0,
+      "max": 0.0,
+      "count": 100,
+      "nonfinite_count": 0
+    },
+    "Terrain/raised_pillars/mid_episodes": {
+      "last_step": 1000,
+      "last": 19663.125,
+      "mean_last100": 18718.396796875,
+      "min": 17810.478515625,
+      "max": 19663.125,
+      "count": 100,
+      "nonfinite_count": 0
+    },
+    "Terrain/raised_pillars/mid_progress_m": {
+      "last_step": 1000,
+      "last": 0.8999651074409485,
+      "mean_last100": 0.9045369321107865,
+      "min": 0.8727371096611023,
+      "max": 0.932601273059845,
+      "count": 100,
+      "nonfinite_count": 0
+    },
+    "Terrain/raised_pillars/mid_reach_2m_rate": {
+      "last_step": 1000,
+      "last": 0.0,
+      "mean_last100": 0.0,
+      "min": 0.0,
+      "max": 0.0,
+      "count": 100,
+      "nonfinite_count": 0
+    },
+    "Terrain/raised_pillars/progress_m": {
+      "last_step": 1000,
+      "last": 0.8892715573310852,
+      "mean_last100": 0.9093844473361969,
+      "min": 0.8742734789848328,
+      "max": 0.9463009834289551,
+      "count": 100,
+      "nonfinite_count": 0
+    },
+    "Terrain/raised_pillars/promotion_rate": {
+      "last_step": 1000,
+      "last": 0.0,
+      "mean_last100": 0.0,
+      "min": 0.0,
+      "max": 0.0,
+      "count": 100,
+      "nonfinite_count": 0
+    },
+    "Terrain/raised_pillars/reach_2m_rate": {
+      "last_step": 1000,
+      "last": 0.0,
+      "mean_last100": 0.0,
+      "min": 0.0,
+      "max": 0.0,
+      "count": 100,
+      "nonfinite_count": 0
+    },
+    "Terrain/raised_pillars/reach_4m_rate": {
+      "last_step": 1000,
+      "last": 0.0,
+      "mean_last100": 0.0,
+      "min": 0.0,
+      "max": 0.0,
+      "count": 100,
+      "nonfinite_count": 0
+    },
+    "Terrain/random_rough/episodes": {
+      "last_step": 1000,
+      "last": 61008.76953125,
+      "mean_last100": 58195.59125,
+      "min": 55397.48046875,
+      "max": 61008.76953125,
+      "count": 100,
+      "nonfinite_count": 0
+    },
+    "Terrain/random_rough/progress_m": {
+      "last_step": 1000,
+      "last": 0.9126567840576172,
+      "mean_last100": 0.9189434313774109,
+      "min": 0.8916643261909485,
+      "max": 0.9559127688407898,
+      "count": 100,
+      "nonfinite_count": 0
+    },
+    "Terrain/random_rough/reach_2m_rate": {
+      "last_step": 1000,
+      "last": 0.0,
+      "mean_last100": 0.0,
+      "min": 0.0,
+      "max": 0.0,
+      "count": 100,
+      "nonfinite_count": 0
+    },
+    "Terrain/random_rough/reach_4m_rate": {
+      "last_step": 1000,
+      "last": 0.0,
+      "mean_last100": 0.0,
+      "min": 0.0,
+      "max": 0.0,
+      "count": 100,
+      "nonfinite_count": 0
+    },
+    "Terrain/slope_down/episodes": {
+      "last_step": 1000,
+      "last": 20595.228515625,
+      "mean_last100": 20186.8137890625,
+      "min": 19784.853515625,
+      "max": 20595.228515625,
+      "count": 100,
+      "nonfinite_count": 0
+    },
+    "Terrain/slope_down/progress_m": {
+      "last_step": 1000,
+      "last": 0.9354323744773865,
+      "mean_last100": 0.9292922270298004,
+      "min": 0.8972557187080383,
+      "max": 0.9542204737663269,
+      "count": 100,
+      "nonfinite_count": 0
+    },
+    "Terrain/slope_down/reach_2m_rate": {
+      "last_step": 1000,
+      "last": 0.0,
+      "mean_last100": 0.0,
+      "min": 0.0,
+      "max": 0.0,
+      "count": 100,
+      "nonfinite_count": 0
+    },
+    "Terrain/slope_down/reach_4m_rate": {
+      "last_step": 1000,
+      "last": 0.0,
+      "mean_last100": 0.0,
+      "min": 0.0,
+      "max": 0.0,
+      "count": 100,
+      "nonfinite_count": 0
+    },
+    "Terrain/slope_up/episodes": {
+      "last_step": 1000,
+      "last": 20902.916015625,
+      "mean_last100": 20477.5005859375,
+      "min": 20074.5,
+      "max": 20902.916015625,
+      "count": 100,
+      "nonfinite_count": 0
+    },
+    "Terrain/slope_up/progress_m": {
+      "last_step": 1000,
+      "last": 0.9308882355690002,
+      "mean_last100": 0.9215766882896423,
+      "min": 0.8926277756690979,
+      "max": 0.9498786330223083,
+      "count": 100,
+      "nonfinite_count": 0
+    },
+    "Terrain/slope_up/reach_2m_rate": {
+      "last_step": 1000,
+      "last": 0.0,
+      "mean_last100": 0.0,
+      "min": 0.0,
+      "max": 0.0,
+      "count": 100,
+      "nonfinite_count": 0
+    },
+    "Terrain/slope_up/reach_4m_rate": {
+      "last_step": 1000,
+      "last": 0.0,
+      "mean_last100": 0.0,
+      "min": 0.0,
+      "max": 0.0,
+      "count": 100,
+      "nonfinite_count": 0
+    },
+    "Terrain/stairs_down_30/episodes": {
+      "last_step": 1000,
+      "last": 20787.0,
+      "mean_last100": 20340.50484375,
+      "min": 19920.5,
+      "max": 20787.0,
+      "count": 100,
+      "nonfinite_count": 0
+    },
+    "Terrain/stairs_down_30/progress_m": {
+      "last_step": 1000,
+      "last": 0.9205507636070251,
+      "mean_last100": 0.9220499169826507,
+      "min": 0.8914749026298523,
+      "max": 0.9471638202667236,
+      "count": 100,
+      "nonfinite_count": 0
+    },
+    "Terrain/stairs_down_30/reach_2m_rate": {
+      "last_step": 1000,
+      "last": 0.0,
+      "mean_last100": 0.0,
+      "min": 0.0,
+      "max": 0.0,
+      "count": 100,
+      "nonfinite_count": 0
+    },
+    "Terrain/stairs_down_30/reach_4m_rate": {
+      "last_step": 1000,
+      "last": 0.0,
+      "mean_last100": 0.0,
+      "min": 0.0,
+      "max": 0.0,
+      "count": 100,
+      "nonfinite_count": 0
+    },
+    "Terrain/stairs_down_34/episodes": {
+      "last_step": 1000,
+      "last": 20776.541015625,
+      "mean_last100": 20341.22611328125,
+      "min": 19915.083984375,
+      "max": 20776.541015625,
+      "count": 100,
+      "nonfinite_count": 0
+    },
+    "Terrain/stairs_down_34/progress_m": {
+      "last_step": 1000,
+      "last": 0.9297230243682861,
+      "mean_last100": 0.9197013634443283,
+      "min": 0.8865203857421875,
+      "max": 0.9516957402229309,
+      "count": 100,
+      "nonfinite_count": 0
+    },
+    "Terrain/stairs_down_34/reach_2m_rate": {
+      "last_step": 1000,
+      "last": 0.0,
+      "mean_last100": 0.0,
+      "min": 0.0,
+      "max": 0.0,
+      "count": 100,
+      "nonfinite_count": 0
+    },
+    "Terrain/stairs_down_34/reach_4m_rate": {
+      "last_step": 1000,
+      "last": 0.0,
+      "mean_last100": 0.0,
+      "min": 0.0,
+      "max": 0.0,
+      "count": 100,
+      "nonfinite_count": 0
+    },
+    "Terrain/stairs_up_30/episodes": {
+      "last_step": 1000,
+      "last": 20857.166015625,
+      "mean_last100": 20404.2015234375,
+      "min": 19951.416015625,
+      "max": 20857.166015625,
+      "count": 100,
+      "nonfinite_count": 0
+    },
+    "Terrain/stairs_up_30/progress_m": {
+      "last_step": 1000,
+      "last": 0.9081759452819824,
+      "mean_last100": 0.9095639604330062,
+      "min": 0.8902339339256287,
+      "max": 0.9275509715080261,
+      "count": 100,
+      "nonfinite_count": 0
+    },
+    "Terrain/stairs_up_30/reach_2m_rate": {
+      "last_step": 1000,
+      "last": 0.0,
+      "mean_last100": 0.0,
+      "min": 0.0,
+      "max": 0.0,
+      "count": 100,
+      "nonfinite_count": 0
+    },
+    "Terrain/stairs_up_30/reach_4m_rate": {
+      "last_step": 1000,
+      "last": 0.0,
+      "mean_last100": 0.0,
+      "min": 0.0,
+      "max": 0.0,
+      "count": 100,
+      "nonfinite_count": 0
+    },
+    "Terrain/stairs_up_34/episodes": {
+      "last_step": 1000,
+      "last": 21162.103515625,
+      "mean_last100": 20722.9937109375,
+      "min": 20271.646484375,
+      "max": 21162.103515625,
+      "count": 100,
+      "nonfinite_count": 0
+    },
+    "Terrain/stairs_up_34/progress_m": {
+      "last_step": 1000,
+      "last": 0.9032061696052551,
+      "mean_last100": 0.9049031072854996,
+      "min": 0.8764724731445312,
+      "max": 0.9340011477470398,
+      "count": 100,
+      "nonfinite_count": 0
+    },
+    "Terrain/stairs_up_34/reach_2m_rate": {
+      "last_step": 1000,
+      "last": 0.0,
+      "mean_last100": 0.0,
+      "min": 0.0,
+      "max": 0.0,
+      "count": 100,
+      "nonfinite_count": 0
+    },
+    "Terrain/stairs_up_34/reach_4m_rate": {
+      "last_step": 1000,
+      "last": 0.0,
+      "mean_last100": 0.0,
+      "min": 0.0,
+      "max": 0.0,
+      "count": 100,
+      "nonfinite_count": 0
+    },
+    "Terrain/stepping_stones/easy_episodes": {
+      "last_step": 1000,
+      "last": 112034.4609375,
+      "mean_last100": 106928.724765625,
+      "min": 101836.7734375,
+      "max": 112034.4609375,
+      "count": 100,
+      "nonfinite_count": 0
+    },
+    "Terrain/stepping_stones/easy_progress_m": {
+      "last_step": 1000,
+      "last": 0.9248359799385071,
+      "mean_last100": 0.9155937069654465,
+      "min": 0.890200138092041,
+      "max": 0.945790708065033,
+      "count": 100,
+      "nonfinite_count": 0
+    },
+    "Terrain/stepping_stones/easy_reach_2m_rate": {
+      "last_step": 1000,
+      "last": 0.0,
+      "mean_last100": 0.0,
+      "min": 0.0,
+      "max": 0.0,
+      "count": 100,
+      "nonfinite_count": 0
+    },
+    "Terrain/stepping_stones/episodes": {
+      "last_step": 1000,
+      "last": 141695.5625,
+      "mean_last100": 135193.342265625,
+      "min": 128687.8984375,
+      "max": 141695.5625,
+      "count": 100,
+      "nonfinite_count": 0
+    },
+    "Terrain/stepping_stones/hard_episodes": {
+      "last_step": 1000,
+      "last": 9562.0830078125,
+      "mean_last100": 9116.0443359375,
+      "min": 8663.4794921875,
+      "max": 9562.0830078125,
+      "count": 100,
+      "nonfinite_count": 0
+    },
+    "Terrain/stepping_stones/hard_progress_m": {
+      "last_step": 1000,
+      "last": 0.9107232093811035,
+      "mean_last100": 0.9171753704547883,
+      "min": 0.8966572880744934,
+      "max": 0.9300787448883057,
+      "count": 100,
+      "nonfinite_count": 0
+    },
+    "Terrain/stepping_stones/hard_reach_2m_rate": {
+      "last_step": 1000,
+      "last": 8.688050478813866e-44,
+      "mean_last100": 8.413058266876299e-41,
+      "min": 8.688050478813866e-44,
+      "max": 7.811902626979417e-40,
+      "count": 100,
+      "nonfinite_count": 0
+    },
+    "Terrain/stepping_stones/mid_episodes": {
+      "last_step": 1000,
+      "last": 20099.021484375,
+      "mean_last100": 19148.572734375,
+      "min": 18187.646484375,
+      "max": 20099.021484375,
+      "count": 100,
+      "nonfinite_count": 0
+    },
+    "Terrain/stepping_stones/mid_progress_m": {
+      "last_step": 1000,
+      "last": 0.8979511260986328,
+      "mean_last100": 0.9129824697971344,
+      "min": 0.8817329406738281,
+      "max": 0.9344258308410645,
+      "count": 100,
+      "nonfinite_count": 0
+    },
+    "Terrain/stepping_stones/mid_reach_2m_rate": {
+      "last_step": 1000,
+      "last": 0.0,
+      "mean_last100": 0.0,
+      "min": 0.0,
+      "max": 0.0,
+      "count": 100,
+      "nonfinite_count": 0
+    },
+    "Terrain/stepping_stones/progress_m": {
+      "last_step": 1000,
+      "last": 0.9235460162162781,
+      "mean_last100": 0.9156484639644623,
+      "min": 0.8900987505912781,
+      "max": 0.9536902904510498,
+      "count": 100,
+      "nonfinite_count": 0
+    },
+    "Terrain/stepping_stones/promotion_rate": {
+      "last_step": 1000,
+      "last": 0.0,
+      "mean_last100": 0.0,
+      "min": 0.0,
+      "max": 0.0,
+      "count": 100,
+      "nonfinite_count": 0
+    },
+    "Terrain/stepping_stones/reach_2m_rate": {
+      "last_step": 1000,
+      "last": 1.401298464324817e-45,
+      "mean_last100": 1.401298464324817e-45,
+      "min": 1.401298464324817e-45,
+      "max": 1.401298464324817e-45,
+      "count": 100,
+      "nonfinite_count": 0
+    },
+    "Terrain/stepping_stones/reach_4m_rate": {
+      "last_step": 1000,
+      "last": 0.0,
+      "mean_last100": 0.0,
+      "min": 0.0,
+      "max": 0.0,
+      "count": 100,
+      "nonfinite_count": 0
+    },
+    "Terrain/wave/episodes": {
+      "last_step": 1000,
+      "last": 22945.291015625,
+      "mean_last100": 22373.79458984375,
+      "min": 21812.708984375,
+      "max": 22945.291015625,
+      "count": 100,
+      "nonfinite_count": 0
+    },
+    "Terrain/wave/progress_m": {
+      "last_step": 1000,
+      "last": 0.8880231380462646,
+      "mean_last100": 0.8964845669269562,
+      "min": 0.8682167530059814,
+      "max": 0.9277942180633545,
+      "count": 100,
+      "nonfinite_count": 0
+    },
+    "Terrain/wave/reach_2m_rate": {
+      "last_step": 1000,
+      "last": 0.0,
+      "mean_last100": 0.0,
+      "min": 0.0,
+      "max": 0.0,
+      "count": 100,
+      "nonfinite_count": 0
+    },
+    "Terrain/wave/reach_4m_rate": {
+      "last_step": 1000,
+      "last": 0.0,
+      "mean_last100": 0.0,
+      "min": 0.0,
+      "max": 0.0,
+      "count": 100,
+      "nonfinite_count": 0
+    },
+    "Loss/value_function": {
+      "last_step": 1000,
+      "last": 0.11628895252943039,
+      "mean_last100": 0.114085116609931,
+      "min": 0.07039283215999603,
+      "max": 0.18123385310173035,
+      "count": 100,
+      "nonfinite_count": 0
+    },
+    "Loss/surrogate": {
+      "last_step": 1000,
+      "last": 0.004894888494163752,
+      "mean_last100": 0.004074368974543176,
+      "min": -0.00014766579261049628,
+      "max": 0.012042498216032982,
+      "count": 100,
+      "nonfinite_count": 0
+    },
+    "Loss/entropy": {
+      "last_step": 1000,
+      "last": 10.071919441223145,
+      "mean_last100": 10.031014738082886,
+      "min": 9.955639839172363,
+      "max": 10.130108833312988,
+      "count": 100,
+      "nonfinite_count": 0
+    },
+    "Loss/amp": {
+      "last_step": 1000,
+      "last": 0.06713840365409851,
+      "mean_last100": 0.06993588492274284,
+      "min": 0.06634357571601868,
+      "max": 0.07268450409173965,
+      "count": 100,
+      "nonfinite_count": 0
+    },
+    "Loss/amp_grad_pen": {
+      "last_step": 1000,
+      "last": 0.1415402740240097,
+      "mean_last100": 0.14609433427453042,
+      "min": 0.1415402740240097,
+      "max": 0.14957843720912933,
+      "count": 100,
+      "nonfinite_count": 0
+    },
+    "Loss/amp_policy_pred": {
+      "last_step": 1000,
+      "last": -0.7857347726821899,
+      "mean_last100": -0.778008114695549,
+      "min": -0.7857347726821899,
+      "max": -0.7731059193611145,
+      "count": 100,
+      "nonfinite_count": 0
+    },
+    "Loss/amp_expert_pred": {
+      "last_step": 1000,
+      "last": 0.7839327454566956,
+      "mean_last100": 0.7770816379785538,
+      "min": 0.7712042927742004,
+      "max": 0.7849863767623901,
+      "count": 100,
+      "nonfinite_count": 0
+    },
+    "Loss/symmetry": {
+      "last_step": 1000,
+      "last": 0.00044872521539218724,
+      "mean_last100": 0.00046819237060844896,
+      "min": 0.0004219146503601223,
+      "max": 0.0005308747058734298,
+      "count": 100,
+      "nonfinite_count": 0
+    },
+    "Loss/learning_rate": {
+      "last_step": 1000,
+      "last": 7.593750342493877e-05,
+      "mean_last100": 8.125312786432914e-05,
+      "min": 3.375000233063474e-05,
+      "max": 0.00011390625149942935,
+      "count": 100,
+      "nonfinite_count": 0
+    },
+    "Policy/mean_noise_std": {
+      "last_step": 1000,
+      "last": 0.35214799642562866,
+      "mean_last100": 0.3519080647826195,
+      "min": 0.35079097747802734,
+      "max": 0.3532126843929291,
+      "count": 100,
+      "nonfinite_count": 0
+    },
+    "Amp/mean_reward_coef_scale": {
+      "last_step": 1000,
+      "last": 0.5592230558395386,
+      "mean_last100": 0.5581721949577332,
+      "min": 0.5552571415901184,
+      "max": 0.5625759363174438,
+      "count": 100,
+      "nonfinite_count": 0
+    },
+    "Perf/total_fps": {
+      "last_step": 1000,
+      "last": 28595.0,
+      "mean_last100": 26576.13,
+      "min": 18121.0,
+      "max": 28595.0,
+      "count": 100,
+      "nonfinite_count": 0
+    },
+    "Perf/collection time": {
+      "last_step": 1000,
+      "last": 2.968557596206665,
+      "mean_last100": 3.2402092695236204,
+      "min": 2.9089324474334717,
+      "max": 4.941827774047852,
+      "count": 100,
+      "nonfinite_count": 0
+    },
+    "Perf/learning_time": {
+      "last_step": 1000,
+      "last": 0.46917152404785156,
+      "mean_last100": 0.5302693891525269,
+      "min": 0.4257943630218506,
+      "max": 0.777414083480835,
+      "count": 100,
+      "nonfinite_count": 0
+    },
+    "Train/mean_reward": {
+      "last_step": 1000,
+      "last": 5.967731475830078,
+      "mean_last100": 4.1394124245643615,
+      "min": 2.085935115814209,
+      "max": 6.763895034790039,
+      "count": 100,
+      "nonfinite_count": 0
+    },
+    "Train/mean_episode_length": {
+      "last_step": 1000,
+      "last": 145.6699981689453,
+      "mean_last100": 121.04260009765625,
+      "min": 81.61000061035156,
+      "max": 161.49000549316406,
+      "count": 100,
+      "nonfinite_count": 0
+    },
+    "Train/mean_reward/time": {
+      "last_step": 998,
+      "last": 0.380964457988739,
+      "mean_last100": 0.08907979975144069,
+      "min": -0.7865763902664185,
+      "max": 0.6055256128311157,
+      "count": 27,
+      "nonfinite_count": 0
+    },
+    "Train/mean_episode_length/time": {
+      "last_step": 998,
+      "last": 68.97000122070312,
+      "mean_last100": 71.02444458007812,
+      "min": 63.15999984741211,
+      "max": 81.66000366210938,
+      "count": 27,
+      "nonfinite_count": 0
+    },
+    "Progress/slope_down/standing/command_completion": {
+      "last_step": 993,
+      "last": 0.0,
+      "mean_last100": 0.0,
+      "min": 0.0,
+      "max": 0.0,
+      "count": 19,
+      "nonfinite_count": 0
+    },
+    "Progress/slope_down/standing/command_progress_m": {
+      "last_step": 993,
+      "last": 0.0,
+      "mean_last100": 0.0,
+      "min": 0.0,
+      "max": 0.0,
+      "count": 19,
+      "nonfinite_count": 0
+    },
+    "Progress/slope_down/standing/command_speed_mps": {
+      "last_step": 993,
+      "last": 0.0,
+      "mean_last100": 0.0,
+      "min": 0.0,
+      "max": 0.0,
+      "count": 19,
+      "nonfinite_count": 0
+    },
+    "Progress/slope_down/standing/directed_speed_mps": {
+      "last_step": 993,
+      "last": 0.0,
+      "mean_last100": 0.0,
+      "min": 0.0,
+      "max": 0.0,
+      "count": 19,
+      "nonfinite_count": 0
+    },
+    "Progress/slope_down/standing/max_spawn_displacement_m": {
+      "last_step": 993,
+      "last": 0.9156940579414368,
+      "mean_last100": 0.8311660728956524,
+      "min": 0.6377661228179932,
+      "max": 0.9550195336341858,
+      "count": 19,
+      "nonfinite_count": 0
+    },
+    "Progress/slope_down/standing/net_displacement_m": {
+      "last_step": 993,
+      "last": 0.9156940579414368,
+      "mean_last100": 0.8311660728956524,
+      "min": 0.6377661228179932,
+      "max": 0.9550195336341858,
+      "count": 19,
+      "nonfinite_count": 0
+    },
+    "Progress/slope_down/standing/net_path_ratio": {
+      "last_step": 993,
+      "last": 0.4177706837654114,
+      "mean_last100": 0.5748379387353596,
+      "min": 0.29879647493362427,
+      "max": 0.8394562602043152,
+      "count": 19,
+      "nonfinite_count": 0
+    },
+    "Progress/slope_down/standing/path_length_m": {
+      "last_step": 993,
+      "last": 2.1918580532073975,
+      "mean_last100": 1.5737741934625726,
+      "min": 1.029071569442749,
+      "max": 2.4093880653381348,
+      "count": 19,
+      "nonfinite_count": 0
+    },
+    "Progress/slope_down/standing/window_net_speed_mps": {
+      "last_step": 993,
+      "last": 0.09812363982200623,
+      "mean_last100": 0.1435268282106048,
+      "min": 0.08723551034927368,
+      "max": 0.24933642148971558,
+      "count": 19,
+      "nonfinite_count": 0
+    },
+    "Progress/flat/standing/command_completion": {
+      "last_step": 996,
+      "last": 0.0,
+      "mean_last100": 0.0,
+      "min": 0.0,
+      "max": 0.0,
+      "count": 19,
+      "nonfinite_count": 0
+    },
+    "Progress/flat/standing/command_progress_m": {
+      "last_step": 996,
+      "last": 0.0,
+      "mean_last100": 0.0,
+      "min": 0.0,
+      "max": 0.0,
+      "count": 19,
+      "nonfinite_count": 0
+    },
+    "Progress/flat/standing/command_speed_mps": {
+      "last_step": 996,
+      "last": 0.0,
+      "mean_last100": 0.0,
+      "min": 0.0,
+      "max": 0.0,
+      "count": 19,
+      "nonfinite_count": 0
+    },
+    "Progress/flat/standing/directed_speed_mps": {
+      "last_step": 996,
+      "last": 0.0,
+      "mean_last100": 0.0,
+      "min": 0.0,
+      "max": 0.0,
+      "count": 19,
+      "nonfinite_count": 0
+    },
+    "Progress/flat/standing/max_spawn_displacement_m": {
+      "last_step": 996,
+      "last": 0.7842205762863159,
+      "mean_last100": 0.8104844501144007,
+      "min": 0.4831463098526001,
+      "max": 1.0553107261657715,
+      "count": 19,
+      "nonfinite_count": 0
+    },
+    "Progress/flat/standing/net_displacement_m": {
+      "last_step": 996,
+      "last": 0.7842205762863159,
+      "mean_last100": 0.8072449188483389,
+      "min": 0.4434422254562378,
+      "max": 1.0395963191986084,
+      "count": 19,
+      "nonfinite_count": 0
+    },
+    "Progress/flat/standing/net_path_ratio": {
+      "last_step": 996,
+      "last": 0.3235699534416199,
+      "mean_last100": 0.4894239604473114,
+      "min": 0.3235699534416199,
+      "max": 0.833633542060852,
+      "count": 19,
+      "nonfinite_count": 0
+    },
+    "Progress/flat/standing/path_length_m": {
+      "last_step": 996,
+      "last": 2.4236507415771484,
+      "mean_last100": 1.7700663083478023,
+      "min": 0.8680977821350098,
+      "max": 2.463229179382324,
+      "count": 19,
+      "nonfinite_count": 0
+    },
+    "Progress/flat/standing/window_net_speed_mps": {
+      "last_step": 996,
+      "last": 0.09578672051429749,
+      "mean_last100": 0.12140120840386341,
+      "min": 0.07903333008289337,
+      "max": 0.2315121293067932,
+      "count": 19,
+      "nonfinite_count": 0
+    },
+    "Progress/slope_up/standing/command_completion": {
+      "last_step": 989,
+      "last": 0.0,
+      "mean_last100": 0.0,
+      "min": 0.0,
+      "max": 0.0,
+      "count": 13,
+      "nonfinite_count": 0
+    },
+    "Progress/slope_up/standing/command_progress_m": {
+      "last_step": 989,
+      "last": 0.0,
+      "mean_last100": 0.0,
+      "min": 0.0,
+      "max": 0.0,
+      "count": 13,
+      "nonfinite_count": 0
+    },
+    "Progress/slope_up/standing/command_speed_mps": {
+      "last_step": 989,
+      "last": 0.0,
+      "mean_last100": 0.0,
+      "min": 0.0,
+      "max": 0.0,
+      "count": 13,
+      "nonfinite_count": 0
+    },
+    "Progress/slope_up/standing/directed_speed_mps": {
+      "last_step": 989,
+      "last": 0.0,
+      "mean_last100": 0.0,
+      "min": 0.0,
+      "max": 0.0,
+      "count": 13,
+      "nonfinite_count": 0
+    },
+    "Progress/slope_up/standing/max_spawn_displacement_m": {
+      "last_step": 989,
+      "last": 0.7507427930831909,
+      "mean_last100": 0.7762470680933732,
+      "min": 0.09155556559562683,
+      "max": 0.9888374209403992,
+      "count": 13,
+      "nonfinite_count": 0
+    },
+    "Progress/slope_up/standing/net_displacement_m": {
+      "last_step": 989,
+      "last": 0.7507427930831909,
+      "mean_last100": 0.7737417920277669,
+      "min": 0.06571121513843536,
+      "max": 0.9888374209403992,
+      "count": 13,
+      "nonfinite_count": 0
+    },
+    "Progress/slope_up/standing/net_path_ratio": {
+      "last_step": 989,
+      "last": 0.5333163738250732,
+      "mean_last100": 0.40347621962428093,
+      "min": 0.03185903653502464,
+      "max": 0.5819488763809204,
+      "count": 13,
+      "nonfinite_count": 0
+    },
+    "Progress/slope_up/standing/path_length_m": {
+      "last_step": 989,
+      "last": 1.4076874256134033,
+      "mean_last100": 1.9610806703567505,
+      "min": 1.4076874256134033,
+      "max": 2.2787437438964844,
+      "count": 13,
+      "nonfinite_count": 0
+    },
+    "Progress/slope_up/standing/window_net_speed_mps": {
+      "last_step": 989,
+      "last": 0.1220867782831192,
+      "mean_last100": 0.10079342900560452,
+      "min": 0.044636134058237076,
+      "max": 0.1406581997871399,
+      "count": 13,
+      "nonfinite_count": 0
+    },
+    "Progress/stairs_down_34/standing/command_completion": {
+      "last_step": 989,
+      "last": 0.0,
+      "mean_last100": 0.0,
+      "min": 0.0,
+      "max": 0.0,
+      "count": 16,
+      "nonfinite_count": 0
+    },
+    "Progress/stairs_down_34/standing/command_progress_m": {
+      "last_step": 989,
+      "last": 0.0,
+      "mean_last100": 0.0,
+      "min": 0.0,
+      "max": 0.0,
+      "count": 16,
+      "nonfinite_count": 0
+    },
+    "Progress/stairs_down_34/standing/command_speed_mps": {
+      "last_step": 989,
+      "last": 0.0,
+      "mean_last100": 0.0,
+      "min": 0.0,
+      "max": 0.0,
+      "count": 16,
+      "nonfinite_count": 0
+    },
+    "Progress/stairs_down_34/standing/directed_speed_mps": {
+      "last_step": 989,
+      "last": 0.0,
+      "mean_last100": 0.0,
+      "min": 0.0,
+      "max": 0.0,
+      "count": 16,
+      "nonfinite_count": 0
+    },
+    "Progress/stairs_down_34/standing/max_spawn_displacement_m": {
+      "last_step": 989,
+      "last": 0.8878980875015259,
+      "mean_last100": 0.7914078235626221,
+      "min": 0.08850303292274475,
+      "max": 0.9329935908317566,
+      "count": 16,
+      "nonfinite_count": 0
+    },
+    "Progress/stairs_down_34/standing/net_displacement_m": {
+      "last_step": 989,
+      "last": 0.8878980875015259,
+      "mean_last100": 0.7884731758385897,
+      "min": 0.04314887523651123,
+      "max": 0.9329935908317566,
+      "count": 16,
+      "nonfinite_count": 0
+    },
+    "Progress/stairs_down_34/standing/net_path_ratio": {
+      "last_step": 989,
+      "last": 0.4676038324832916,
+      "mean_last100": 0.4606694635003805,
+      "min": 0.020576655864715576,
+      "max": 0.8436710238456726,
+      "count": 16,
+      "nonfinite_count": 0
+    },
+    "Progress/stairs_down_34/standing/path_length_m": {
+      "last_step": 989,
+      "last": 1.8988255262374878,
+      "mean_last100": 1.8556876182556152,
+      "min": 1.0125476121902466,
+      "max": 2.6809844970703125,
+      "count": 16,
+      "nonfinite_count": 0
+    },
+    "Progress/stairs_down_34/standing/window_net_speed_mps": {
+      "last_step": 989,
+      "last": 0.09757613390684128,
+      "mean_last100": 0.10721038212068379,
+      "min": 0.045277033001184464,
+      "max": 0.2550482153892517,
+      "count": 16,
+      "nonfinite_count": 0
+    },
+    "Progress/stairs_up_30/standing/command_completion": {
+      "last_step": 1000,
+      "last": 0.0,
+      "mean_last100": 0.0,
+      "min": 0.0,
+      "max": 0.0,
+      "count": 18,
+      "nonfinite_count": 0
+    },
+    "Progress/stairs_up_30/standing/command_progress_m": {
+      "last_step": 1000,
+      "last": 0.0,
+      "mean_last100": 0.0,
+      "min": 0.0,
+      "max": 0.0,
+      "count": 18,
+      "nonfinite_count": 0
+    },
+    "Progress/stairs_up_30/standing/command_speed_mps": {
+      "last_step": 1000,
+      "last": 0.0,
+      "mean_last100": 0.0,
+      "min": 0.0,
+      "max": 0.0,
+      "count": 18,
+      "nonfinite_count": 0
+    },
+    "Progress/stairs_up_30/standing/directed_speed_mps": {
+      "last_step": 1000,
+      "last": 0.0,
+      "mean_last100": 0.0,
+      "min": 0.0,
+      "max": 0.0,
+      "count": 18,
+      "nonfinite_count": 0
+    },
+    "Progress/stairs_up_30/standing/max_spawn_displacement_m": {
+      "last_step": 1000,
+      "last": 0.971222996711731,
+      "mean_last100": 0.87316409084532,
+      "min": 0.7208801507949829,
+      "max": 1.0464123487472534,
+      "count": 18,
+      "nonfinite_count": 0
+    },
+    "Progress/stairs_up_30/standing/net_displacement_m": {
+      "last_step": 1000,
+      "last": 0.971222996711731,
+      "mean_last100": 0.8721809453434415,
+      "min": 0.7208801507949829,
+      "max": 1.0418556928634644,
+      "count": 18,
+      "nonfinite_count": 0
+    },
+    "Progress/stairs_up_30/standing/net_path_ratio": {
+      "last_step": 1000,
+      "last": 0.4920273423194885,
+      "mean_last100": 0.5376232978370454,
+      "min": 0.2933558225631714,
+      "max": 0.9411414265632629,
+      "count": 18,
+      "nonfinite_count": 0
+    },
+    "Progress/stairs_up_30/standing/path_length_m": {
+      "last_step": 1000,
+      "last": 1.9739208221435547,
+      "mean_last100": 1.7795951664447784,
+      "min": 0.8034283518791199,
+      "max": 2.9494845867156982,
+      "count": 18,
+      "nonfinite_count": 0
+    },
+    "Progress/stairs_up_30/standing/window_net_speed_mps": {
+      "last_step": 1000,
+      "last": 0.1298816055059433,
+      "mean_last100": 0.1803832339743773,
+      "min": 0.08116643130779266,
+      "max": 1.0033471584320068,
+      "count": 18,
+      "nonfinite_count": 0
+    },
+    "Progress/stairs_up_34/standing/command_completion": {
+      "last_step": 996,
+      "last": 0.0,
+      "mean_last100": 0.0,
+      "min": 0.0,
+      "max": 0.0,
+      "count": 18,
+      "nonfinite_count": 0
+    },
+    "Progress/stairs_up_34/standing/command_progress_m": {
+      "last_step": 996,
+      "last": 0.0,
+      "mean_last100": 0.0,
+      "min": 0.0,
+      "max": 0.0,
+      "count": 18,
+      "nonfinite_count": 0
+    },
+    "Progress/stairs_up_34/standing/command_speed_mps": {
+      "last_step": 996,
+      "last": 0.0,
+      "mean_last100": 0.0,
+      "min": 0.0,
+      "max": 0.0,
+      "count": 18,
+      "nonfinite_count": 0
+    },
+    "Progress/stairs_up_34/standing/directed_speed_mps": {
+      "last_step": 996,
+      "last": 0.0,
+      "mean_last100": 0.0,
+      "min": 0.0,
+      "max": 0.0,
+      "count": 18,
+      "nonfinite_count": 0
+    },
+    "Progress/stairs_up_34/standing/max_spawn_displacement_m": {
+      "last_step": 996,
+      "last": 0.8554089069366455,
+      "mean_last100": 0.8463258544603983,
+      "min": 0.5273735523223877,
+      "max": 0.9997952580451965,
+      "count": 18,
+      "nonfinite_count": 0
+    },
+    "Progress/stairs_up_34/standing/net_displacement_m": {
+      "last_step": 996,
+      "last": 0.8554089069366455,
+      "mean_last100": 0.8463258544603983,
+      "min": 0.5273735523223877,
+      "max": 0.9997952580451965,
+      "count": 18,
+      "nonfinite_count": 0
+    },
+    "Progress/stairs_up_34/standing/net_path_ratio": {
+      "last_step": 996,
+      "last": 0.41167008876800537,
+      "mean_last100": 0.48353537254863316,
+      "min": 0.3797600567340851,
+      "max": 0.7181012034416199,
+      "count": 18,
+      "nonfinite_count": 0
+    },
+    "Progress/stairs_up_34/standing/path_length_m": {
+      "last_step": 996,
+      "last": 2.1556894779205322,
+      "mean_last100": 1.8527541425493028,
+      "min": 0.9089432954788208,
+      "max": 2.3184876441955566,
+      "count": 18,
+      "nonfinite_count": 0
+    },
+    "Progress/stairs_up_34/standing/window_net_speed_mps": {
+      "last_step": 996,
+      "last": 0.11384868621826172,
+      "mean_last100": 0.11147572928004795,
+      "min": 0.08766302466392517,
+      "max": 0.1649145931005478,
+      "count": 18,
+      "nonfinite_count": 0
+    },
+    "Progress/wave/standing/command_completion": {
+      "last_step": 995,
+      "last": 0.0,
+      "mean_last100": 0.0,
+      "min": 0.0,
+      "max": 0.0,
+      "count": 19,
+      "nonfinite_count": 0
+    },
+    "Progress/wave/standing/command_progress_m": {
+      "last_step": 995,
+      "last": 0.0,
+      "mean_last100": 0.0,
+      "min": 0.0,
+      "max": 0.0,
+      "count": 19,
+      "nonfinite_count": 0
+    },
+    "Progress/wave/standing/command_speed_mps": {
+      "last_step": 995,
+      "last": 0.0,
+      "mean_last100": 0.0,
+      "min": 0.0,
+      "max": 0.0,
+      "count": 19,
+      "nonfinite_count": 0
+    },
+    "Progress/wave/standing/directed_speed_mps": {
+      "last_step": 995,
+      "last": 0.0,
+      "mean_last100": 0.0,
+      "min": 0.0,
+      "max": 0.0,
+      "count": 19,
+      "nonfinite_count": 0
+    },
+    "Progress/wave/standing/max_spawn_displacement_m": {
+      "last_step": 995,
+      "last": 0.7888212203979492,
+      "mean_last100": 0.833662001710189,
+      "min": 0.6929782629013062,
+      "max": 0.9382820725440979,
+      "count": 19,
+      "nonfinite_count": 0
+    },
+    "Progress/wave/standing/net_displacement_m": {
+      "last_step": 995,
+      "last": 0.7888212203979492,
+      "mean_last100": 0.8334211675744307,
+      "min": 0.6929782629013062,
+      "max": 0.9382820725440979,
+      "count": 19,
+      "nonfinite_count": 0
+    },
+    "Progress/wave/standing/net_path_ratio": {
+      "last_step": 995,
+      "last": 0.48380666971206665,
+      "mean_last100": 0.7868980279094294,
+      "min": 0.4702063798904419,
+      "max": 0.9639585614204407,
+      "count": 19,
+      "nonfinite_count": 0
+    },
+    "Progress/wave/standing/path_length_m": {
+      "last_step": 995,
+      "last": 1.6580235958099365,
+      "mean_last100": 1.1668117454177456,
+      "min": 0.7710243463516235,
+      "max": 1.9855998754501343,
+      "count": 19,
+      "nonfinite_count": 0
+    },
+    "Progress/wave/standing/window_net_speed_mps": {
+      "last_step": 995,
+      "last": 0.10670116543769836,
+      "mean_last100": 0.2879131667708096,
+      "min": 0.09862835705280304,
+      "max": 0.5361043810844421,
+      "count": 19,
+      "nonfinite_count": 0
+    },
+    "Progress/stairs_down_30/standing/command_completion": {
+      "last_step": 997,
+      "last": 0.0,
+      "mean_last100": 0.0,
+      "min": 0.0,
+      "max": 0.0,
+      "count": 15,
+      "nonfinite_count": 0
+    },
+    "Progress/stairs_down_30/standing/command_progress_m": {
+      "last_step": 997,
+      "last": 0.0,
+      "mean_last100": 0.0,
+      "min": 0.0,
+      "max": 0.0,
+      "count": 15,
+      "nonfinite_count": 0
+    },
+    "Progress/stairs_down_30/standing/command_speed_mps": {
+      "last_step": 997,
+      "last": 0.0,
+      "mean_last100": 0.0,
+      "min": 0.0,
+      "max": 0.0,
+      "count": 15,
+      "nonfinite_count": 0
+    },
+    "Progress/stairs_down_30/standing/directed_speed_mps": {
+      "last_step": 997,
+      "last": 0.0,
+      "mean_last100": 0.0,
+      "min": 0.0,
+      "max": 0.0,
+      "count": 15,
+      "nonfinite_count": 0
+    },
+    "Progress/stairs_down_30/standing/max_spawn_displacement_m": {
+      "last_step": 997,
+      "last": 0.8556816577911377,
+      "mean_last100": 0.8228054960568746,
+      "min": 0.739143967628479,
+      "max": 0.9080090522766113,
+      "count": 15,
+      "nonfinite_count": 0
+    },
+    "Progress/stairs_down_30/standing/net_displacement_m": {
+      "last_step": 997,
+      "last": 0.8556816577911377,
+      "mean_last100": 0.8227869868278503,
+      "min": 0.739143967628479,
+      "max": 0.9080090522766113,
+      "count": 15,
+      "nonfinite_count": 0
+    },
+    "Progress/stairs_down_30/standing/net_path_ratio": {
+      "last_step": 997,
+      "last": 0.466251939535141,
+      "mean_last100": 0.5358209113279978,
+      "min": 0.346783310174942,
+      "max": 0.9038354158401489,
+      "count": 15,
+      "nonfinite_count": 0
+    },
+    "Progress/stairs_down_30/standing/path_length_m": {
+      "last_step": 997,
+      "last": 1.835234522819519,
+      "mean_last100": 1.6955558101336161,
+      "min": 0.8833608031272888,
+      "max": 2.426938533782959,
+      "count": 15,
+      "nonfinite_count": 0
+    },
+    "Progress/stairs_down_30/standing/window_net_speed_mps": {
+      "last_step": 997,
+      "last": 0.10079509764909744,
+      "mean_last100": 0.1361654336253802,
+      "min": 0.07769182324409485,
+      "max": 0.37673234939575195,
+      "count": 15,
+      "nonfinite_count": 0
+    },
+    "Progress/hurdles/standing/command_completion": {
+      "last_step": 999,
+      "last": 0.0,
+      "mean_last100": 0.0,
+      "min": 0.0,
+      "max": 0.0,
+      "count": 19,
+      "nonfinite_count": 0
+    },
+    "Progress/hurdles/standing/command_progress_m": {
+      "last_step": 999,
+      "last": 0.0,
+      "mean_last100": 0.0,
+      "min": 0.0,
+      "max": 0.0,
+      "count": 19,
+      "nonfinite_count": 0
+    },
+    "Progress/hurdles/standing/command_speed_mps": {
+      "last_step": 999,
+      "last": 0.0,
+      "mean_last100": 0.0,
+      "min": 0.0,
+      "max": 0.0,
+      "count": 19,
+      "nonfinite_count": 0
+    },
+    "Progress/hurdles/standing/directed_speed_mps": {
+      "last_step": 999,
+      "last": 0.0,
+      "mean_last100": 0.0,
+      "min": 0.0,
+      "max": 0.0,
+      "count": 19,
+      "nonfinite_count": 0
+    },
+    "Progress/hurdles/standing/max_spawn_displacement_m": {
+      "last_step": 999,
+      "last": 0.8848780393600464,
+      "mean_last100": 0.7838172010685268,
+      "min": 0.0754418820142746,
+      "max": 0.9359893798828125,
+      "count": 19,
+      "nonfinite_count": 0
+    },
+    "Progress/hurdles/standing/net_displacement_m": {
+      "last_step": 999,
+      "last": 0.8205877542495728,
+      "mean_last100": 0.7756050181035933,
+      "min": 0.019499963149428368,
+      "max": 0.9359893798828125,
+      "count": 19,
+      "nonfinite_count": 0
+    },
+    "Progress/hurdles/standing/net_path_ratio": {
+      "last_step": 999,
+      "last": 0.4139213562011719,
+      "mean_last100": 0.4902484450783384,
+      "min": 0.008946933783590794,
+      "max": 0.8573090434074402,
+      "count": 19,
+      "nonfinite_count": 0
+    },
+    "Progress/hurdles/standing/path_length_m": {
+      "last_step": 999,
+      "last": 1.9824726581573486,
+      "mean_last100": 1.7644629415712858,
+      "min": 1.0279868841171265,
+      "max": 2.5938560962677,
+      "count": 19,
+      "nonfinite_count": 0
+    },
+    "Progress/hurdles/standing/window_net_speed_mps": {
+      "last_step": 999,
+      "last": 0.08929439634084702,
+      "mean_last100": 0.12914719667873883,
+      "min": 0.05456095561385155,
+      "max": 0.3104722201824188,
+      "count": 19,
+      "nonfinite_count": 0
+    },
+    "Progress/boxes/standing/command_completion": {
+      "last_step": 999,
+      "last": 0.0,
+      "mean_last100": 0.0,
+      "min": 0.0,
+      "max": 0.0,
+      "count": 12,
+      "nonfinite_count": 0
+    },
+    "Progress/boxes/standing/command_progress_m": {
+      "last_step": 999,
+      "last": 0.0,
+      "mean_last100": 0.0,
+      "min": 0.0,
+      "max": 0.0,
+      "count": 12,
+      "nonfinite_count": 0
+    },
+    "Progress/boxes/standing/command_speed_mps": {
+      "last_step": 999,
+      "last": 0.0,
+      "mean_last100": 0.0,
+      "min": 0.0,
+      "max": 0.0,
+      "count": 12,
+      "nonfinite_count": 0
+    },
+    "Progress/boxes/standing/directed_speed_mps": {
+      "last_step": 999,
+      "last": 0.0,
+      "mean_last100": 0.0,
+      "min": 0.0,
+      "max": 0.0,
+      "count": 12,
+      "nonfinite_count": 0
+    },
+    "Progress/boxes/standing/max_spawn_displacement_m": {
+      "last_step": 999,
+      "last": 0.8745373487472534,
+      "mean_last100": 0.7695332076400518,
+      "min": 0.06502804905176163,
+      "max": 0.9703372716903687,
+      "count": 12,
+      "nonfinite_count": 0
+    },
+    "Progress/boxes/standing/net_displacement_m": {
+      "last_step": 999,
+      "last": 0.8664459586143494,
+      "mean_last100": 0.7623473613833388,
+      "min": 0.024688851088285446,
+      "max": 0.9703372716903687,
+      "count": 12,
+      "nonfinite_count": 0
+    },
+    "Progress/boxes/standing/net_path_ratio": {
+      "last_step": 999,
+      "last": 0.3448745906352997,
+      "mean_last100": 0.4420954097683231,
+      "min": 0.012378361076116562,
+      "max": 0.7925809025764465,
+      "count": 12,
+      "nonfinite_count": 0
+    },
+    "Progress/boxes/standing/path_length_m": {
+      "last_step": 999,
+      "last": 2.5123507976531982,
+      "mean_last100": 1.9118554691473644,
+      "min": 1.116847038269043,
+      "max": 2.7094573974609375,
+      "count": 12,
+      "nonfinite_count": 0
+    },
+    "Progress/boxes/standing/window_net_speed_mps": {
+      "last_step": 999,
+      "last": 0.0967932939529419,
+      "mean_last100": 0.11762798111885786,
+      "min": 0.046358805149793625,
+      "max": 0.2288219928741455,
+      "count": 12,
+      "nonfinite_count": 0
+    }
+  }
+}
