@@ -217,7 +217,10 @@ def test_g1_sparse_obs_width_and_mjcf_scene():
     assert model.body("pelvis").id >= 0
     assert model.body("torso_link").id >= 0
     assert model.geom("sparse_pit_floor").pos[2] == pytest.approx(-2.05)
-    assert int(model.geom_group[model.geom("stone_0_0").id]) == 0
+    # course terrain shares the depth-camera terrain group (see
+    # sim2sim_t4_depth_student.DEPTH_TERRAIN_GEOM_GROUP); the live viewer
+    # enables it explicitly.
+    assert int(model.geom_group[model.geom("stone_0_0").id]) == 3
     assert model.geom("stone_39_14").id >= 0
     pit = model.geom("sparse_pit_floor")
     assert pit.size[0] > 8.0

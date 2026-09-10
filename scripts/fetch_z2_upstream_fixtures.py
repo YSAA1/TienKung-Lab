@@ -49,6 +49,8 @@ def main() -> int:
         DEST.parent.mkdir(parents=True, exist_ok=True)
         print(f"cloning {REPO_URL} into {DEST}")
         run(["git", "clone", REPO_URL, str(DEST)])
+    # the asset-contract tests compare raw bytes against our LF-canonical tree
+    run(["git", "config", "core.autocrlf", "false"], cwd=DEST)
     head = subprocess.run(
         ["git", "rev-parse", "HEAD"], cwd=DEST, check=True, capture_output=True, text=True
     ).stdout.strip()

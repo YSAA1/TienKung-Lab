@@ -820,119 +820,119 @@
       "original_sha256": "92381306af58b0d65ca16b1a4c01900982b9ab3110aef6d952b294d2ec58cf3d",
       "source_frames": 179,
       "path": "legged_lab/envs/g1/datasets/motion_source_t4_rob2rob_full17_v1/g1_from_B10_-__Walk_turn_left_45_stageii.csv",
-      "sha256": "36382098b22f5ff8513e76f81140a2b3f5e708f80f152568eb139c26e51da908"
+      "sha256": "cdb15321ddf37a329877127198bb9eed26648b01f07337be835add0ea5d0f5bb"
     },
     "B13_-__Walk_turn_right_90_stageii": {
       "original_path": "legged_lab/envs/t4/datasets/motion_source/B13_-__Walk_turn_right_90_stageii.csv",
       "original_sha256": "cad50149eed9a59ad7e384235c086e5634bdedadf991dd6150714305d524c938",
       "source_frames": 168,
       "path": "legged_lab/envs/g1/datasets/motion_source_t4_rob2rob_full17_v1/g1_from_B13_-__Walk_turn_right_90_stageii.csv",
-      "sha256": "5dd7d22e1916845be241f484e26ecee128cfa8ce57156d74dd18de06cf86f60d"
+      "sha256": "74c0b1882bcd28a7770e006fd52ffc14caaae5ffda99964169b2e915efbb2c2d"
     },
     "B14_-__Walk_turn_right_45_t2_stageii": {
       "original_path": "legged_lab/envs/t4/datasets/motion_source/B14_-__Walk_turn_right_45_t2_stageii.csv",
       "original_sha256": "ebfaa2756b519cbe3352c7e5ac86af83c18897229e2c3e8cdf5f706fe87f1e36",
       "source_frames": 174,
       "path": "legged_lab/envs/g1/datasets/motion_source_t4_rob2rob_full17_v1/g1_from_B14_-__Walk_turn_right_45_t2_stageii.csv",
-      "sha256": "dfed1c6d89a166085b072adf0efa78e83be73a1fef25b2ad29e89548480e8eec"
+      "sha256": "0f08580faf1946deb006666eeea6ea66d359e2aeb159aabbe34188af69f22b56"
     },
     "B15_-__Walk_turn_around_stageii": {
       "original_path": "legged_lab/envs/t4/datasets/motion_source/B15_-__Walk_turn_around_stageii.csv",
       "original_sha256": "6ca0114d77f85550a04440f093d4ec4b0febfc79d55c0d940a85f768f7d454b1",
       "source_frames": 225,
       "path": "legged_lab/envs/g1/datasets/motion_source_t4_rob2rob_full17_v1/g1_from_B15_-__Walk_turn_around_stageii.csv",
-      "sha256": "d7e4401cf87831cb9cb648e3e7831197f7d1570be683d8bd2fa9df49884d0151"
+      "sha256": "fe6c9ef911d5726c31f1acae7db003acca88342c056b71da443f39b072393a50"
     },
     "B4_-_Stand_to_Walk_backwards_stageii": {
       "original_path": "legged_lab/envs/t4/datasets/motion_source/B4_-_Stand_to_Walk_backwards_stageii.csv",
       "original_sha256": "a34a75d268ac50f3f0728c1e1ec8977ea9a65c55a470253229313af668bcf73b",
       "source_frames": 138,
       "path": "legged_lab/envs/g1/datasets/motion_source_t4_rob2rob_full17_v1/g1_from_B4_-_Stand_to_Walk_backwards_stageii.csv",
-      "sha256": "d19869d9a206a01eebe2c33d6c81aa4ee6f9ce4ec48689196ddcea73342eee6b"
+      "sha256": "26b95c7eab138e25c6c67f0a1db58cff86fada0c5b86d147bcab26366ee754b8"
     },
     "B9_-__Walk_turn_left_90_stageii": {
       "original_path": "legged_lab/envs/t4/datasets/motion_source/B9_-__Walk_turn_left_90_stageii.csv",
       "original_sha256": "10bfbce5d6b7e4f78b32bd36a432cf747a049fa21a6d44bd01b469a493faaa4a",
       "source_frames": 151,
       "path": "legged_lab/envs/g1/datasets/motion_source_t4_rob2rob_full17_v1/g1_from_B9_-__Walk_turn_left_90_stageii.csv",
-      "sha256": "ef99b7277f299f3fba78d99b426140d43df87aad3df4ec921b1516cff21884c3"
+      "sha256": "895d31fe04c1c8d263b608eac6dcc9891ab05c3e822adcade8d09ebf9669d768"
     },
     "t4_jog_backward": {
       "original_path": "legged_lab/envs/t4/datasets/motion_source/t4_jog_backward.csv",
       "original_sha256": "74c07d41161afbb693e3dc99e5482b1648c1e09f1e594e6f6528acd95f0ad8b1",
       "source_frames": 171,
       "path": "legged_lab/envs/g1/datasets/motion_source_t4_rob2rob_full17_v1/g1_from_t4_jog_backward.csv",
-      "sha256": "d156677bf146f81323c5aeac051931f74d1e961436223064f73226689d7b3d18"
+      "sha256": "557451ce13a98135d4268fb1d37925173e002ed388fee639fba9b9faa434a693"
     },
     "t4_jog_forward": {
       "original_path": "legged_lab/envs/t4/datasets/motion_source/t4_jog_forward.csv",
       "original_sha256": "de4185c6a77c15b9610f9fb553790d9104c4899c31a8906e8b03cf067d50d2fb",
       "source_frames": 152,
       "path": "legged_lab/envs/g1/datasets/motion_source_t4_rob2rob_full17_v1/g1_from_t4_jog_forward.csv",
-      "sha256": "df3ae5a8480298db142e0712c3987fd6bf9019c7fb5d338069c63d115d3693c3"
+      "sha256": "2b06ce0d8ca2d5ac10b640f60e55ffbeb80fd67b01a0143af392d46310d00a12"
     },
     "t4_jog_left": {
       "original_path": "legged_lab/envs/t4/datasets/motion_source/t4_jog_left.csv",
       "original_sha256": "508345615b0a205a3cf662e2715c375f063fc3f9a939f9521b0476d69565a73b",
       "source_frames": 207,
       "path": "legged_lab/envs/g1/datasets/motion_source_t4_rob2rob_full17_v1/g1_from_t4_jog_left.csv",
-      "sha256": "dfa7023dea001e4e395dc228c7fb04cb5675cc69b4e39fa8d6560952ab1c31ba"
+      "sha256": "c95fe3bfd3d82752a8bb293e483749a3b29d51fab3b402909f9482ae22829686"
     },
     "t4_jog_right": {
       "original_path": "legged_lab/envs/t4/datasets/motion_source/t4_jog_right.csv",
       "original_sha256": "01066781de7e2835124f12175bd3d61855acd8af580a3c1498cf1d46fe1f8f7f",
       "source_frames": 227,
       "path": "legged_lab/envs/g1/datasets/motion_source_t4_rob2rob_full17_v1/g1_from_t4_jog_right.csv",
-      "sha256": "135d464fc0325c5d2d096333abcfa543de2034e1ed9096d2f801c3c2fcf0f729"
+      "sha256": "e5079d65572c2a9737d9d0ff1b23511b1dc9260c89abf54e9dd3c392729bb6f1"
     },
     "t4_left_rotate": {
       "original_path": "legged_lab/envs/t4/datasets/motion_source/t4_left_rotate.csv",
       "original_sha256": "cb31a6c6887bc5d425a79f856c282466e4bed472b23c043433049d7b74ab5d8b",
       "source_frames": 232,
       "path": "legged_lab/envs/g1/datasets/motion_source_t4_rob2rob_full17_v1/g1_from_t4_left_rotate.csv",
-      "sha256": "a6dcb2ce7ef81596c75e2ddb4b15528f819c811eb913c5bb82349d3a17882364"
+      "sha256": "bea0a79827807e3407fa7f24c37051bd18ec111080da45398791e1e282a9061f"
     },
     "t4_right_rotate": {
       "original_path": "legged_lab/envs/t4/datasets/motion_source/t4_right_rotate.csv",
       "original_sha256": "a5825368eee118e6dd59ce40c22083a1c83f7e3be0dcf7e814287f2c361167af",
       "source_frames": 194,
       "path": "legged_lab/envs/g1/datasets/motion_source_t4_rob2rob_full17_v1/g1_from_t4_right_rotate.csv",
-      "sha256": "7ac46b0e78b7d408ed14afa407a7599bc17c2df647426e9aaf70fe84d6b90315"
+      "sha256": "29e40c97df3f31f5a985e794e0fa9b12337b6c4f8e637e990fb6403721c51014"
     },
     "t4_side_left": {
       "original_path": "legged_lab/envs/t4/datasets/motion_source/t4_side_left.csv",
       "original_sha256": "74b5d1c557dd5c2e65cd76c780307b76298b02e7c7c16e38fd7bc47930382592",
       "source_frames": 138,
       "path": "legged_lab/envs/g1/datasets/motion_source_t4_rob2rob_full17_v1/g1_from_t4_side_left.csv",
-      "sha256": "6dfd93301534ae19aa5507afd79c28d22427783fb6dd94230529241471f41a23"
+      "sha256": "96602a8c7a4fa81e0ee626c74fde96116f17e29a05df666dfd469145ee8f5b99"
     },
     "t4_side_right": {
       "original_path": "legged_lab/envs/t4/datasets/motion_source/t4_side_right.csv",
       "original_sha256": "55389ca06b2d954494efdd968c028e4c26570397bdb48c5d385dbbe1b7610abe",
       "source_frames": 151,
       "path": "legged_lab/envs/g1/datasets/motion_source_t4_rob2rob_full17_v1/g1_from_t4_side_right.csv",
-      "sha256": "2121cd9350b1932734c01353f93c06c9e67f4d4c14726799e90e1b6f3e188ee6"
+      "sha256": "877184edebb1454554b1e06a10d348d80d19dca6071183ab4f28cfeb8b1caf65"
     },
     "t4_stand": {
       "original_path": "legged_lab/envs/t4/datasets/motion_source/t4_stand.csv",
       "original_sha256": "0c6e6e23c5f389431edc1bacec575f8918948afaba9201d76d954a9b5134815d",
       "source_frames": 150,
       "path": "legged_lab/envs/g1/datasets/motion_source_t4_rob2rob_full17_v1/g1_from_t4_stand.csv",
-      "sha256": "669c571f18d924abfe5d39e9ca404d2044ce010e8a7f7e5888e651981327ed28"
+      "sha256": "af6396b167b12598a61cf17a9821f248d0793cc13046ef502788051f770fd28b"
     },
     "t4_walk_forward": {
       "original_path": "legged_lab/envs/t4/datasets/motion_source/t4_walk_forward.csv",
       "original_sha256": "c2ebf40a47fdd2efd58d297325368f465707f7920d34c9c2504e593038c4f7ce",
       "source_frames": 290,
       "path": "legged_lab/envs/g1/datasets/motion_source_t4_rob2rob_full17_v1/g1_from_t4_walk_forward.csv",
-      "sha256": "0f78e1a4bf598969d18bcc8e4c9bcc253f0bbce93f9a4d1abcf7ce674729da85"
+      "sha256": "4188b3addc751a04ef315aa3448c3ab69a5a7137ffd186148c6d47b030695609"
     },
     "t4_walk_left": {
       "original_path": "legged_lab/envs/t4/datasets/motion_source/t4_walk_left.csv",
       "original_sha256": "8cf834b5e1141018e62639a7fb46582d294d19bc19c3063c909d5782b11d5e83",
       "source_frames": 373,
       "path": "legged_lab/envs/g1/datasets/motion_source_t4_rob2rob_full17_v1/g1_from_t4_walk_left.csv",
-      "sha256": "1abd98fd780a263e671f460566a15a89eb42e66a4bbde35368e0c2993c8533b7"
+      "sha256": "7367e05a89eabe09181e37b836062ce068e134b30a022bcf936bf71848a1ad88"
     }
   },
   "clips": {
@@ -966,7 +966,7 @@
       "lateral_speed_mean_m_s": 0.07604195960578783,
       "yaw_rate_mean_rad_s": 0.015573680806772471,
       "root_vertical_shift_m": 0.04780025443533523,
-      "sha256": "abbead7aa48037f3a10e0f888b8bbacc163a068992c98327ffc96841c61a0473",
+      "sha256": "e9c46ccc137366048d0316ee94b65cc91950283f8c555eeeb1406f660d6a7566",
       "motion_weight": 0.1142857142857143,
       "frames": 178
     },
@@ -1000,7 +1000,7 @@
       "lateral_speed_mean_m_s": 0.02406676299327394,
       "yaw_rate_mean_rad_s": -0.2217266653706555,
       "root_vertical_shift_m": 0.04177609211739447,
-      "sha256": "25d20e7bc7c4413e89b2e733a198e19a385be87e5eb6d117bdc17dabcde4d7c4",
+      "sha256": "61ce51beb87336ae54256c82951b1c0165c4d99bd117727eb1053e5c8b32f506",
       "motion_weight": 0.1142857142857143,
       "frames": 167
     },
@@ -1034,7 +1034,7 @@
       "lateral_speed_mean_m_s": 0.07952302358675167,
       "yaw_rate_mean_rad_s": -0.13612596312254843,
       "root_vertical_shift_m": 0.05403389123740995,
-      "sha256": "5899b5fef712812232de55e5c933c361a518ff0df8bcb41ecc61c11ba7e8fa12",
+      "sha256": "a7486905c8132ea900b9f59cca228c8e08c0072bc00a84d88a6213ed7dfc41bd",
       "motion_weight": 0.1142857142857143,
       "frames": 173
     },
@@ -1068,7 +1068,7 @@
       "lateral_speed_mean_m_s": 0.06373299666282294,
       "yaw_rate_mean_rad_s": 0.3911950394673201,
       "root_vertical_shift_m": 0.04500183745893551,
-      "sha256": "92d743f573bbebaaf1d12d991b92da5b6a6067bdcc5db08b051ea7864077aa5f",
+      "sha256": "d97f59a345b4cdc92a5b0cfefab283b3220ee5bac919aeef4eec241edc52597f",
       "motion_weight": 0.1142857142857143,
       "frames": 224
     },
@@ -1102,7 +1102,7 @@
       "lateral_speed_mean_m_s": -0.016897130596791387,
       "yaw_rate_mean_rad_s": -0.000499467304045361,
       "root_vertical_shift_m": 0.0563745853028909,
-      "sha256": "058f8eb6ae763c226f23c0ca4b376f8450c3b824b55eb8af3d72a42295d90962",
+      "sha256": "2c9dd66ef5db0838cdb5a814f9950af63dc4247c2441a65bf146d5b838146e1b",
       "motion_weight": 0.6,
       "frames": 137
     },
@@ -1136,7 +1136,7 @@
       "lateral_speed_mean_m_s": 0.07550426691121348,
       "yaw_rate_mean_rad_s": 0.26464834080597116,
       "root_vertical_shift_m": 0.04400420132109896,
-      "sha256": "e9c0a217fa2653d815f068b29fdbe6a391b1a265e1a103fb79fb9eea7809c66f",
+      "sha256": "929abff6f8b04b067d89efedb1b3276c243b0d00dcabfc398cba1be08edae418",
       "motion_weight": 0.1142857142857143,
       "frames": 150
     },
@@ -1170,7 +1170,7 @@
       "lateral_speed_mean_m_s": -0.03723267632273741,
       "yaw_rate_mean_rad_s": 0.02130808893986942,
       "root_vertical_shift_m": -0.03699718545163378,
-      "sha256": "0ccce07ed3658c94bea3c1931bbc8fbb3b9d22c70fb22ef23dfdcbc2784cb7df",
+      "sha256": "e6d614a744cd95075ae110d2f32cfa482ef8dde41a77de8feb871a1531458f94",
       "motion_weight": 0.15,
       "frames": 170
     },
@@ -1204,7 +1204,7 @@
       "lateral_speed_mean_m_s": -0.0677368846240975,
       "yaw_rate_mean_rad_s": 0.01438205282816103,
       "root_vertical_shift_m": 0.03902101292334351,
-      "sha256": "aea3d58abf9d616a19f9da293849d79e9c7540028cfc7d5eea5e1fab86e06c77",
+      "sha256": "58891e68476277d01f88a4676b4b1cf6663385060fb1f2781cf4c805bea91c42",
       "motion_weight": 0.15,
       "frames": 151
     },
@@ -1238,7 +1238,7 @@
       "lateral_speed_mean_m_s": -0.1242548842923802,
       "yaw_rate_mean_rad_s": 0.9966607997892211,
       "root_vertical_shift_m": 0.018219784030479174,
-      "sha256": "a0ddb3e7474784ec70495ea8d4903fd6d3b82efc2d6156af66d3abc7a0b4335c",
+      "sha256": "c7282f5763876d4dfc653a0a2f1d9460f40720994258480b1d62eb406888fcd9",
       "motion_weight": 0.15,
       "frames": 206
     },
@@ -1272,7 +1272,7 @@
       "lateral_speed_mean_m_s": 0.06475324031644963,
       "yaw_rate_mean_rad_s": -0.9205615696624627,
       "root_vertical_shift_m": 0.02116655471466032,
-      "sha256": "9cf50001c896825f55e921385793effa197544321389b2a216df2dba62a66d46",
+      "sha256": "6dc8d4c313960973ec5e6b7a4a5e8099ab1bbbbd04333a9e1d6701faaa119dc0",
       "motion_weight": 0.15,
       "frames": 226
     },
@@ -1306,7 +1306,7 @@
       "lateral_speed_mean_m_s": -0.04957921225212691,
       "yaw_rate_mean_rad_s": 1.6401807729223516,
       "root_vertical_shift_m": 0.014331076969839835,
-      "sha256": "5006a138cd0254db40506741bfcf3703fc6f3ba2c552cb8863308a67ab30eed9",
+      "sha256": "406640fa8072d51617c86b1922598c699f2586e36e8c2cfb1c358d06746ca46d",
       "motion_weight": 0.1142857142857143,
       "frames": 231
     },
@@ -1340,7 +1340,7 @@
       "lateral_speed_mean_m_s": 0.042418227990800625,
       "yaw_rate_mean_rad_s": -1.4847145318499586,
       "root_vertical_shift_m": 0.015987267867919416,
-      "sha256": "436745a8017f2df9a325c1292ad52d10535abdeefea605d36b81df76c7e4ca71",
+      "sha256": "58f9a6399d31dddbc2e90ef74a783f81cb208343cae44bd5631e5a1828cfb4f7",
       "motion_weight": 0.1142857142857143,
       "frames": 193
     },
@@ -1374,7 +1374,7 @@
       "lateral_speed_mean_m_s": 0.32593578580979454,
       "yaw_rate_mean_rad_s": 0.029651324387988637,
       "root_vertical_shift_m": 0.03959730389452472,
-      "sha256": "04bf1a82e18cfa39d7d0a92ba4d7cd4a29bb7bf51175cf02216b063e8ad69295",
+      "sha256": "eb2f0e018e30f339fe749051e14e41b7de7cb238012be8beb6e33b6200db4c51",
       "motion_weight": 0.26666666666666666,
       "frames": 137
     },
@@ -1408,7 +1408,7 @@
       "lateral_speed_mean_m_s": -0.26946836852525724,
       "yaw_rate_mean_rad_s": -0.03917481403680702,
       "root_vertical_shift_m": 0.03365002711562131,
-      "sha256": "bbcec641d0b22b87b016ff183226b1efdc62f7cab9dc52f328e61f75b8cb4a5d",
+      "sha256": "692b76e90a6040384ba3472afb66f3dc7b6024c11e3c1e43735e48c77ca2fd88",
       "motion_weight": 0.26666666666666666,
       "frames": 150
     },
@@ -1442,7 +1442,7 @@
       "lateral_speed_mean_m_s": 0.0,
       "yaw_rate_mean_rad_s": 0.0,
       "root_vertical_shift_m": 0.00149496625145331,
-      "sha256": "c175cae169e1c6366980c280eac72b07ba15c5a552b46300eb676bda2fb81f5d",
+      "sha256": "e5ad70e9d023bf953ce0a4185dca84651184a41afae41a92953fc5439f50ae49",
       "motion_weight": 1.0,
       "frames": 149
     },
@@ -1476,7 +1476,7 @@
       "lateral_speed_mean_m_s": 0.03582212120400778,
       "yaw_rate_mean_rad_s": 0.0006401089193271208,
       "root_vertical_shift_m": 0.027555009814612737,
-      "sha256": "016ddeb1aaedf3bdb952a07282877cafca5a05c6c41fd77216e3f5c2e4102697",
+      "sha256": "e6c2721366e3fda04c2902d96102bf6794de3d864e3c80c675904fab90770afe",
       "motion_weight": 1.0,
       "frames": 289
     },
@@ -1510,7 +1510,7 @@
       "lateral_speed_mean_m_s": -0.07710582883880052,
       "yaw_rate_mean_rad_s": 0.5958034559024162,
       "root_vertical_shift_m": 0.028647306832390935,
-      "sha256": "4a5378c07a879c3738f6e3f13268f36d6a8bc273ebd546e95ff22ed0ba55a790",
+      "sha256": "bfba255765015393b70dde12ba95b4eb5ddaf6020ac47080bbb47fc0ca80d7ca",
       "motion_weight": 0.26666666666666666,
       "frames": 372
     }

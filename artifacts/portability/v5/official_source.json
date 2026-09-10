@@ -6,7 +6,7 @@
   "description_repo": "unitreerobotics/unitree_ros",
   "description_commit": "7d6075f7f58588b189b940130e3edab3c839b2df",
   "urdf_path": "robots/g1_description/g1_29dof_rev_1_0.urdf",
-  "urdf_sha256": "c0ae739c640c3e2c00d1bdd8810b5d6e59601487bd1a3995859f9543269ee5c8",
+  "urdf_sha256": "4aa267edc4eb2458f43c15efb4a29590006112fa188005e8c5a79867f46eb629",
   "meshes": [
     {
       "name": "head_link.STL",

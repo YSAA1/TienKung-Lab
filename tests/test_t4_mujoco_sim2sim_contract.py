@@ -110,6 +110,10 @@ def test_zl_t4_sim_ground_matches_direct_sim2sim_friction() -> None:
     assert world_geoms == ["ground"]
 
 
+@pytest.mark.skipif(
+    not ZL_T4_MJCF.exists(),
+    reason="zl_deploy T4_std_add_head.xml not present on this host (zhuoqun deploy parity check)",
+)
 def test_direct_and_zl_stair_probe_geometries_match() -> None:
     from legged_lab.scripts import eval_t4_depth_plant_gap as gap_eval
     from legged_lab.scripts import sim2sim_t4_depth_student as sim2sim
