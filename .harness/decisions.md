@@ -1,3 +1,5 @@
+- 2026-09-11：项目整合合同。全库文本 LF 为唯一真值（`.gitattributes` 强制），一切数据集 manifest/溯源 sha256 按 LF 字节记录；nubot 冻结训练树为 CRLF 哈希时代，两套文件禁止跨树混拷。`tests/` 必须保持真包（`__init__.py`），否则 IsaacLab 源码根的 `tests` 包会在 PYTHONPATH 上遮蔽本仓库测试；mujoco/warp/zl 部署等主机绑定依赖一律 `importorskip` 显式跳过，不允许隐性失败。任务注册表 `get_cfgs` 返回深拷贝，脚本改参不得污染注册表。分支只保留 `main`+`develop`，历史分歧以 `archive/*` 标签归档（t4-walk、origin/dev、pre-g1-merge backup）。
+
 - 2026-09-10：用户覆盖「G1 冷启动不要 delay+执行器 DR」（v6/v7 历史）。本轮 `vital_v2` 显式打开 delay 0–2 与 kp/kd 0.9–1.1，并换成 LAFAN AMP；不改默认 `teacher_cfg.py`。不重做 T4 IK。不占 GPU0/2。
 
 - 2026-09-06：g1term 40k 后的蹲坐/摔倒**不是**终止漏洞。策略踏石 + 随机踏石 + 随机平地三条单环境 trace 都是 clearance < 0.20 当帧 reset。plantfix 那种 16 s 坐下混时长已经堵住。梅花桩失败是 G1 折腰后 2–4 s 内走不完 2 m，不是漏 reset。不改 0.20 / 63° / `torso_link`。40k 僵尸已杀并冷启动同配方；不 resume `model_39999`。
