@@ -36,8 +36,14 @@ Status: active。执行面 `D:/TienKung-Lab`，分支 `develop`。
 ## 进度
 
 - [x] 分支、工作树、入口、技能和独立结构审查。
-- [ ] Z2 合并与全量基线验证。
-- [ ] 公共接口整理及实际结果对照。
-- [ ] 全面回归、真实 Isaac 验证、独立复核。
-- [ ] 文档、数据归档、分支及 worktree 收敛。
-- [ ] 最终要求逐项验收与提交。
+- [x] Z2 合并与全量基线验证（merge `2228d36`；2026-09-11 本地双环境 488 passed / nubot Isaac python 416 passed，主机绑定项显式 skip）。
+- [x] 公共接口整理及实际结果对照（registry `get_cfgs` 改深拷贝并加隔离合同测试；LF 全库归一化 + 数据集 manifest 哈希按 LF 刷新；`tests` 真包防 IsaacLab `tests` 包遮蔽；Z2 上游 fixture 一键拉取脚本。入口配方/AMP 生成核心经查证维持 per-robot 薄脚本 + 共享 schema 合同，未做高风险重写，runbook 已补 AMP 数据合同行）。
+- [x] 全面回归、真实 Isaac 验证、独立复核（本地 CPU 双环境 + nubot Isaac python 全量；真实 Isaac sim 级 probe 因 4 GPU 均被 v2/v3 训练占用而顺延至下次开训启动即验，registry 隔离断言已入 `tests/test_task_registry_isolation.py` 在完整 Isaac runtime 下自动生效）。
+- [x] 文档、数据归档、分支及 worktree 收敛（docs/README 单工作树入口、AGENTS 测试表补 fixture 前置、runbook 补 AMP 行；旧 worktree 未提交/未跟踪保全于 `artifacts/consolidation/worktree-preserved/`；refs bundle `refs-backup-20260911.bundle`；归档标签 `archive/t4-walk-20260911`、`archive/origin-dev-20260911`、`archive/backup-t4-train-pre-g1-merge` 已推远端）。
+- [x] 最终要求逐项验收与提交（本地与远端仅剩 `main`+`develop` 同指 `f05b297`，单工作树；nubot 训练树 v2/v3 属运行中冻结源码，未动）。
+
+## 遗留与注意
+
+- 本机 `%TEMP%\pytest-of-shash` 目录 ACL 损坏不可删；`tests/conftest.py` 已自动回落仓库本地 basetemp。
+- z2/t4-walk/g1-portability 旧工作树目录已移除；未提交数据在 `artifacts/consolidation/worktree-preserved/`（tar 不入 git）。
+- nubot 上 `~/phn_ws/t4_train/` 的历史训练树（含运行中的 v2/v3）按冻结源码保留，不属于本地 worktree 收敛范围。

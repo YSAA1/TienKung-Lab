@@ -2,6 +2,14 @@
 
 2026-08-22 以前的 TB 逐窗流水已从本文件删掉，仍在 git 历史。本文件只留能接住当前切片的证据。
 
+## 2026-09-11：项目整合收敛（main+develop 单工作树）
+
+- 测试：本地双环境 488 passed（.gitattributes 强制 LF；manifest 哈希按 LF 刷新；`tests` 真包防 IsaacLab `tests` 遮蔽；mujoco/warp/zl 部署/上游 fixture 缺失主机显式 skip；conftest 引导 sys.path + basetemp 回落）；nubot Isaac python 416 passed。
+- 代码：registry `get_cfgs` 深拷贝防引用污染（`tests/test_task_registry_isolation.py` 合同）；恢复稀疏课程地形 depth 组 group=3（缺口分析会话误改 0）。
+- 分支：删除已合并 t4-train / g1-portability / z2-teacher / backup；t4-walk 与 origin/dev 以 `archive/*` 标签归档后删除；本地+远端仅剩 `main`+`develop` 同指 `f05b297`；单工作树 `D:/TienKung-Lab`。
+- 保全：旧 worktree 未提交/未跟踪 → `artifacts/consolidation/worktree-preserved/`；全引用 bundle → `artifacts/consolidation/refs-backup-20260911.bundle`（均不入 git）。
+- 遗留：真实 Isaac sim 级旧新对照 probe 顺延（4 GPU 被 v2/v3 训练占用）；nubot 训练树为冻结源码未动。计划 `docs/plans/2026-09-09--project-consolidation.md` 已全部勾选。
+
 ## 2026-09-11：Z2 reset_aligned_v1 训练完成与双仿真器验收
 
 - 训练：30k 跑满，`model_29999` SHA256 `491ff4c830694f5614da6e407581feafb6d48cf17335c14348f752dd8d0a76b9`；本机 `artifacts/checkpoints/nubot/z2_reset_aligned_v1/`（ckpt+agent/env params，与远端哈希一致）。
