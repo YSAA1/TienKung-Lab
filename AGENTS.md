@@ -37,11 +37,12 @@
 | --- | --- |
 | T4 资产 / motion | `python -m pytest tests/test_t4_asset_migration.py` |
 | G1 资产 / LAFAN AMP | `python -m pytest tests/test_g1_asset_contract.py` |
-| Z2 资产 / AMP | `python -m pytest tests/test_z2_asset_contract.py` |
+| Z2 资产 / AMP | `python scripts/fetch_z2_upstream_fixtures.py`（一次性，gitignored 上游克隆）后 `python -m pytest tests/test_z2_asset_contract.py` |
 | 共享 locomotion / 机器人接入 | `python -m pytest tests/test_robot_neutral_locomotion.py tests/test_g1_motion_experiment.py` |
 | 共享深度学生运行时 | `python -m pytest tests/test_robot_neutral_depth_env.py tests/test_t4_sparse_depth_student_gru_contract.py`（需要 torch） |
 | 共享跟踪 / RSL 适配 | `python -m pytest tests/test_robot_neutral_tracking.py tests/test_t4_vault_rsl_rl_compat.py` |
 | T4 观测 | `python -m pytest tests/test_t4_observation_contracts.py` |
+| 全量本地回归 | `python -m pytest tests`（conftest 自动引导仓库路径；zl 部署/上游 fixture 缺失时显式 skip） |
 | 稀疏奖励、监控、命令、地形或分布式日志 | 从 `docs/README.md` 的稀疏合同测试组合中选择受影响项；跨合同修改运行相关组合 |
 | 格式与静态检查 | `pre-commit run --files <本次修改的文件>`；`pre-commit run --all-files` 用于需要全量检查时 |
 

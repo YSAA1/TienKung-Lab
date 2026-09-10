@@ -1,21 +1,19 @@
 # 运动训练文档入口
 
-Z2 29DoF 新迁移轨道仅在 `D:/TienKung-Lab-z2-teacher-20260909` 执行，权威计划为
-[Z2 教师迁移](plans/2026-09-09--z2-teacher-migration.md)。迁移、原始USD物理参数和393帧完整专家已验收，
-当前已补齐G1倾倒/塌陷重置与接触奖励：roll/pitch=(0.8,1.0)rad、塌陷高度0.20m/持续0.20s/遵守碰撞免疫、接触权重-1；保留action rate -0.01、加速度终止false、gait gate false。源码105164f，nubot GPU0/2冷启动30000 iter、4096环境，tmux `z2-reset-formal-20260909`。八项实际配置与G1对照一致，model_0已生成。1000/2000/3000监控，无逐项对比实验；行为待验收。
-
-本 checkout 在上游 TienKung-Lab 上维护共享 AMP/LightLP 运动算法，以及 **T4 27DoF、Unitree G1 29DoF、Z2 29DoF** 的独立机器人配置。共享教师、深度学生运行时与参考动作跟踪按算法组织；[新机器人接入方法](runbooks/robot-locomotion-adapter.md) 是代码边界入口。
+本仓库已收敛为单工作树 `D:/TienKung-Lab`（分支 `develop`，最终只保留 `main` + `develop`），维护共享
+AMP/LightLP 运动算法以及 **T4 27DoF、Unitree G1 29DoF、Z2 29DoF** 的独立机器人配置。共享教师、深度学生
+运行时与参考动作跟踪按算法组织；[新机器人接入方法](runbooks/robot-locomotion-adapter.md) 是代码边界入口。
 先读本文，再进代码。`docs/archive/` 与 `docs/research/` **不是**开训或接票权威。
 
 ## 当前工作面
 
-当前执行轨道：宇树 G1 `vital_v2` 教师（LAFAN AMP + 训练期 DR）、Z2 教师，以及 T4 翻箱 G1/G2。T4 S12 老师 plant 重训暂停。表示先行学生 `model_13999` 是 Isaac 对照候选，不是部署包。
+当前执行轨道：宇树 G1 `vital_v3` 教师（curated `unitree_v6` AMP + 端到端 ramp DR）与 `vital_v2` 对照双跑；Z2 教师 30k 已完成、行为待验收；T4 翻箱 G1/G2 在 zhuoqun。T4 S12 老师 plant 重训暂停。
 
 | 轨道 | 现在做什么 | 执行计划 | 规格 |
 | --- | --- | --- | --- |
 | 梅花桩 | paused：G1 越障老师优先。T4 plant DR 计划仍在 | [老师 plant 重训](plans/2026-09-02--t4-s12-teacher-plant-retrain-plan.md) | [表示先行蒸馏](specs/2026-09-01--t4-s12-repr-first-distill.md)（学生对照） |
-| Unitree G1 越障 teacher | 当前执行 `vital_v2`：LAFAN `unitree_v5` + 训练期 plant DR，30k 冷启动。VITAL `model_29999` 仅对照 | [VITAL v2 开训](plans/2026-09-10--g1-vital-v2-lafan-dr-plan.md) | [规格](specs/2026-09-10--g1-vital-v2-lafan-dr.md)；旧终检 `artifacts/eval/g1_vital_v1_m29999/` |
-| Z2 29DoF 越障 teacher | reset/接触奖励补齐后正式训练：105164f，GPU0/2；行为待验收 | [Z2 迁移](plans/2026-09-09--z2-teacher-migration.md) | 见 reset_aligned_v1/lineage.json |
+| Unitree G1 越障 teacher | 当前执行 `vital_v3`：curated `unitree_v6` AMP + ramp DR（GPU0/2）；`vital_v2` 全量 DR 对照（GPU1/3）。VITAL `model_29999` 仅对照 | [VITAL v3 开训](plans/2026-09-11--g1-vital-v3-curated-amp-ramped-dr-plan.md) | [规格](specs/2026-09-11--g1-vital-v3-curated-amp-ramped-dr.md)；gap 定位 `artifacts/g1_gap_20260910/FINDINGS.md` |
+| Z2 29DoF 越障 teacher | `reset_aligned_v1` 30k 完成（model_29999），行为验收待做 | [Z2 迁移](plans/2026-09-09--z2-teacher-migration.md) | 见 reset_aligned_v1/lineage.json |
 | 翻箱 | G1 跟踪专家 → G2 heightscan 技能（zhuoqun）。**G2 学生与 G3 合并（走跑+翻箱成一条策略）等 G2 过箱后再开。** | [翻箱 recovery](plans/2026-08-15--t4-vault-g1-g2-recovery-plan.md) | [合并规格](specs/2026-08-13--t4-vault-loco-merge.md) |
 
 运行时切片与机器占用：`.harness/work_index.md`、`.harness/state.md`。

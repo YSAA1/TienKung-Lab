@@ -16,6 +16,7 @@
 # with additional modifications by the TienKung-Lab Project,
 # and is distributed under the BSD-3-Clause license.
 
+from copy import deepcopy
 from typing import TYPE_CHECKING, Tuple
 
 from rsl_rl.env import VecEnv
@@ -40,9 +41,13 @@ class TaskRegistry:
         return self.task_classes[name]
 
     def get_cfgs(self, name) -> Tuple["BaseEnvConfig", "BaseAgentConfig"]:
-        train_cfg = self.train_cfgs[name]
-        env_cfg = self.env_cfgs[name]
-        return env_cfg, train_cfg
+        """Return per-call deep copies so caller mutations never leak into the registry.
+
+        Scripts routinely tune ``num_envs``/seeds/manifests on the returned cfgs;
+        sharing the stored object let one task's edits contaminate every later
+        ``get_cfgs`` call in the same process (seen across eval/probe scripts).
+        """
+        return deepcopy(self.env_cfgs[name]), deepcopy(self.train_cfgs[name])
 
 
 # make global task registry
