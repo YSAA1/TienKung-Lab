@@ -1,3 +1,6 @@
+import pytest
+
+pytest.importorskip("mujoco")
 import mujoco
 import numpy as np
 

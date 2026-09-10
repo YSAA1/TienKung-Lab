@@ -1,6 +1,9 @@
 import importlib
 from pathlib import Path
 
+import pytest
+
+pytest.importorskip("mujoco")
 import mujoco
 import numpy as np
 import pytest

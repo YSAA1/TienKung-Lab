@@ -901,6 +901,7 @@ def test_final_main_pg_waits_for_mix_zero_and_critic_warmup():
 
 def test_sparse_distill_cfg_objects_match_gated_three_phase_recipe():
     pytest.importorskip("isaaclab")
+    pytest.importorskip("warp")
     from legged_lab.envs.t4.depth_student_cfg import (
         T4SparseDepthStudentDeployFtAgentCfg,
         T4SparseDepthStudentAgentCfg,

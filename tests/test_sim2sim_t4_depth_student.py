@@ -5,6 +5,8 @@ from types import SimpleNamespace
 import numpy as np
 import pytest
 
+pytest.importorskip("mujoco")
+
 from legged_lab.assets.t4 import schemas
 from legged_lab.assets.t4.navigation import CourseNavigator as SharedCourseNavigator
 from legged_lab.scripts.sim2sim_t4_depth_student import (

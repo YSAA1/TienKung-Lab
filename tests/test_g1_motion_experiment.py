@@ -24,7 +24,7 @@ from types import SimpleNamespace as NS
 
 import pytest
 import torch
-from test_core_transition_fixes import production_method
+from tests.test_core_transition_fixes import production_method
 
 from legged_lab.locomotion.mdp import sparse_signals as sig
 

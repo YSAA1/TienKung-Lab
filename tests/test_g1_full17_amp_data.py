@@ -24,6 +24,7 @@ import xml.etree.ElementTree as ET
 from pathlib import Path
 
 import numpy as np
+import pytest
 
 from legged_lab.assets.t4.schemas import AMP_MOTION_CLASSES
 from legged_lab.assets.unitree_g1.constants import G1_29DOF_JOINT_NAMES
@@ -78,6 +79,7 @@ def test_all_actual_t4_training_frames_and_weights_are_preserved():
 
 
 def test_backward_jog_does_not_switch_to_hyperextended_knee_branch():
+    pytest.importorskip("mujoco")
     from legged_lab.scripts.retarget_t4_g1_amp import RobotRetargeter
 
     source = np.loadtxt(ROOT / "legged_lab/envs/t4/datasets/motion_source/t4_jog_backward.csv", delimiter=",")
