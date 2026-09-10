@@ -38,6 +38,8 @@ def test_amp_runner_uses_pre_reset_terminal_state(width):
         torch=torch,
         self=SimpleNamespace(env=env, device="cpu"),
         next_amp_obs=reset_state,
+        rewards=torch.zeros(3),
+        reward_masks=None,
         infos={"terminal_amp_obs": terminal},
     )
     exec(

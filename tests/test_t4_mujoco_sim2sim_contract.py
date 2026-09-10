@@ -93,6 +93,10 @@ def test_t4_std_ground_has_isaac_friction() -> None:
     assert np.allclose(model.geom_friction[gid], ISAAC_FRICTION)
 
 
+@pytest.mark.skipif(
+    not ZL_T4_MJCF.exists(),
+    reason="zl_deploy T4_std_add_head.xml not present on this host (zhuoqun deploy parity check)",
+)
 def test_zl_t4_sim_ground_matches_direct_sim2sim_friction() -> None:
     model = mujoco.MjModel.from_xml_path(str(ZL_T4_MJCF))
     gid = int(model.geom("ground").id)

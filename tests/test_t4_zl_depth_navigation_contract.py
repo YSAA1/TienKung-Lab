@@ -3,11 +3,19 @@ from pathlib import Path
 import subprocess
 
 import numpy as np
+import pytest
 import yaml
 import xml.etree.ElementTree as ET
 
 
 ROOT = Path(__file__).resolve().parents[1]
+
+# These contracts verify the zhuoqun-machine ``zl_deploy`` tree and the AME
+# overlay tar; they only run on hosts that carry that deployment.
+pytest.skip(
+    "zl_deploy deployment tree not present on this host (zhuoqun contract tests)",
+    allow_module_level=True,
+) if not (ROOT / "zl_deploy").is_dir() else None
 
 
 def test_zl_depth_course_nav_uses_shared_heading_command_contract():

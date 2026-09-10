@@ -75,6 +75,14 @@ ROOT = Path(__file__).resolve().parents[1]
 UP = ROOT / "work/upstream-z2"
 Z2_ASSET = ROOT / "legged_lab/assets/z2"
 
+# The upstream provenance fixture is fetched once by
+# ``scripts/fetch_z2_upstream_fixtures.py`` (pinned commit) into the git-ignored
+# ``work/upstream-z2``; without it these lineage checks cannot run.
+pytest.skip(
+    "work/upstream-z2 fixture missing; run `python scripts/fetch_z2_upstream_fixtures.py` first",
+    allow_module_level=True,
+) if not UP.is_dir() else None
+
 
 def _list_assign(src: str, name: str) -> list:
     tree = ast.parse(src)
