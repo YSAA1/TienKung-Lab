@@ -1,7 +1,7 @@
 import importlib
+from pathlib import Path
 
 import mujoco
-import pytest
 import numpy as np
 import pytest
 
@@ -25,7 +25,9 @@ def test_sparse_course_uses_training_layout_and_supports_both_teacher_contracts(
     start_platform = next(
         geom for geom in layout["geoms"] if geom["name"] == "start_platform"
     )
-    assert 2.0 * start_platform["size"][1] == module._LAYOUT.LIGHTLP_STONE_PLATFORM_WIDTH
+    stones = [geom for geom in layout["geoms"] if geom["kind"] == "stone"]
+    stone_half_y = max(abs(geom["pos"][1]) + geom["size"][1] for geom in stones)
+    assert start_platform["size"][1] >= stone_half_y
 
     for kind in ("stone", "pillar"):
         footholds = [geom for geom in layout["geoms"] if geom["kind"] == kind]
@@ -194,3 +196,69 @@ def test_teacher_scan_points_match_isaac_xy_flatten_order():
     np.testing.assert_allclose(points[1], (0.3, -0.6))
     np.testing.assert_allclose(points[module.TEACHER_SCAN_SHAPE[0] - 1], (1.6, -0.6))
     np.testing.assert_allclose(points[module.TEACHER_SCAN_SHAPE[0]], (0.2, -0.5))
+
+
+def test_g1_sparse_obs_width_and_mjcf_scene():
+    module = importlib.import_module("legged_lab.scripts.play_t4_sparse_teacher_mujoco")
+
+    assert module.G1_SPARSE_ACTOR_OBS_DIM == 1997
+    assert module.supported_actor_obs_dim(1997)
+    assert module.resolve_sparse_robot(1997, 29, "g1") is module.G1_SPARSE_ROBOT
+
+    xml = module.build_sparse_model_xml(
+        0.0,
+        terrain="stepping_stones",
+        robot=module.G1_SPARSE_ROBOT,
+        lane_count=module.G1_LANE_COUNT,
+        foothold_rows=module.G1_FOOTHOLD_ROWS,
+    )
+    model = mujoco.MjModel.from_xml_string(xml)
+    assert model.nbody > 1
+    assert model.body("pelvis").id >= 0
+    assert model.body("torso_link").id >= 0
+    assert model.geom("sparse_pit_floor").pos[2] == pytest.approx(-2.05)
+    assert int(model.geom_group[model.geom("stone_0_0").id]) == 0
+    assert model.geom("stone_39_14").id >= 0
+    pit = model.geom("sparse_pit_floor")
+    assert pit.size[0] > 8.0
+    assert pit.size[1] > 3.0
+    assert 'type="skybox"' in xml
+    assert 'directional="true"' in xml
+    module.g1_mujoco.apply_isaac_pd(model)
+    hip = model.actuator("left_hip_pitch_joint")
+    assert hip.gainprm[0] == pytest.approx(100.0)
+    assert hip.forcerange[1] == pytest.approx(88.0)
+
+    flat = module.build_sparse_model_xml(0.0, terrain="flat", robot=module.G1_SPARSE_ROBOT)
+    flat_model = mujoco.MjModel.from_xml_string(flat)
+    assert flat_model.geom("ground").id >= 0
+
+
+@pytest.mark.skipif(
+    not (
+        Path(__file__).resolve().parents[1]
+        / "artifacts/checkpoints/nubot/g1_vital_motion_v1/model_29999.pt"
+    ).exists(),
+    reason="G1 teacher checkpoint is not on this machine",
+)
+def test_g1_teacher_checkpoint_takes_one_finite_mujoco_step():
+    from legged_lab.scripts.play_t4_sparse_teacher_mujoco import T4SparseTeacherMujocoRunner
+
+    checkpoint = (
+        Path(__file__).resolve().parents[1]
+        / "artifacts/checkpoints/nubot/g1_vital_motion_v1/model_29999.pt"
+    )
+    runner = T4SparseTeacherMujocoRunner(
+        str(checkpoint),
+        difficulty=0.0,
+        terrain="flat",
+        robot="g1",
+    )
+    runner.command[:] = [0.7, 0.0, 0.0]
+    runner.step()
+    assert runner.robot.name == "g1"
+    assert runner.actor_obs_dim == 1997
+    assert np.isfinite(runner.data.qpos).all()
+    assert not runner.fallen
+
+

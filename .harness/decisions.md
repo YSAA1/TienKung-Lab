@@ -1,4 +1,5 @@
-- 2026-09-06：同配方再冷启动无用。探针已证 collapse 无漏杀；`model_39999` 连续地形会走、梅花桩不会。用户否决「不改配方再开一趟」。已停 `2026-09-06_10-08-08`。下一刀必须改课表/地形/奖励之一，不能再烧相同 40k。
+- 2026-09-10：用户覆盖「G1 冷启动不要 delay+执行器 DR」（v6/v7 历史）。本轮 `vital_v2` 显式打开 delay 0–2 与 kp/kd 0.9–1.1，并换成 LAFAN AMP；不改默认 `teacher_cfg.py`。不重做 T4 IK。不占 GPU0/2。
+
 - 2026-09-06：g1term 40k 后的蹲坐/摔倒**不是**终止漏洞。策略踏石 + 随机踏石 + 随机平地三条单环境 trace 都是 clearance < 0.20 当帧 reset。plantfix 那种 16 s 坐下混时长已经堵住。梅花桩失败是 G1 折腰后 2–4 s 内走不完 2 m，不是漏 reset。不改 0.20 / 63° / `torso_link`。40k 僵尸已杀并冷启动同配方；不 resume `model_39999`。
 - 2026-09-04：G1 终止不再当 T4 Trunk-only。mjlab G1 velocity：`fell_over` 70°，无 torso illegal_contact。unitree_rl_lab G1 29DoF：`root_height_below_minimum=0.2`、`bad_orientation=0.8`、非踝 `undesired_contacts`。稀疏用地形相对支撑脚的同一 0.2 m（世界坐标 0.2 会误杀下楼）。正式 run `g1_sparse_teacher_g1term`。不续 plantfix。v8 的 0.40 m 不是这份合同。
 - 2026-09-04：`Reset/oob=0` + `ep_len≈900` 不是学会走，是 horizon timeout 混时长。plantfix `model_6000` 踏石回放 16 s 零 reset：pelvis z 0.77→0.17（~0.7 s），tilt max 42°，`torso_link`/`knee` 接触全程 0 N。T4 `Trunk` 是骨盆+躯干一体的 10×16×34 cm 盒；G1 `torso_link` 只是腰 3 轴之上的胸胶囊。已改用 unitree_rl_lab G1 的 0.2 m 根高度终止（相对支撑脚），不续 plantfix。

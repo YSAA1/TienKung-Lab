@@ -1,0 +1,31 @@
+[t0 obs] max|diff|=1.93715e-06
+[t0 obs] scan0: max|diff|=1.93715e-06
+[t0 obs] scan1: max|diff|=1.93715e-06
+[t0 obs] scan2: max|diff|=1.93715e-06
+[t0 obs] scan3: max|diff|=1.93715e-06
+[t0 obs] scan4: max|diff|=1.93715e-06
+[t0 action] max|diff|=8.64267e-07 (obs parity implies policy parity)
+[first step |Δ|>tol, per channel (latest frame)]
+  hist9.base_ang_vel               first=     1  peak=1.121
+  hist9.joint_pos                  first=     1  peak=0.4056
+  hist9.joint_vel                  first=     1  peak=6.597
+  hist9.previous_action            first=     2  peak=2.633
+  contact                          first=     2  peak=1
+  hist9.projected_gravity          first=    11  peak=0.1163
+  hist9.velocity_command           first= never  peak=0
+  hist9.gait_phase_sin             first= never  peak=0.0001754
+  hist9.gait_phase_cos             first= never  peak=0.0001817
+  hist9.gait_air_ratio             first= never  peak=0
+[joint breakdown] Δq, Δdq, Δctrl, analytic τ (Isaac / MuJoCo) at probe steps
+  t=   0 worst Δq=+0.0413 (right_elbow_joint), saturated joints (either side)=4, |Δaction|max=0.0000
+  t=   1 worst Δq=+0.0388 (right_elbow_joint), saturated joints (either side)=3, |Δaction|max=0.2212
+  t=   2 worst Δq=-0.0507 (right_ankle_roll_joint), saturated joints (either side)=4, |Δaction|max=0.5467
+  t=   5 worst Δq=-0.1247 (right_elbow_joint), saturated joints (either side)=5, |Δaction|max=1.1541
+  t=  10 worst Δq=+0.1967 (right_knee_joint), saturated joints (either side)=6, |Δaction|max=0.9439
+  t=  25 worst Δq=-0.2090 (right_shoulder_pitch_joint), saturated joints (either side)=4, |Δaction|max=0.6286
+  t=  50 worst Δq=+0.1963 (right_shoulder_pitch_joint), saturated joints (either side)=6, |Δaction|max=0.7591
+  t= 100 worst Δq=-0.2079 (left_elbow_joint), saturated joints (either side)=5, |Δaction|max=0.8927
+  t= 399 worst Δq=-0.2499 (right_shoulder_pitch_joint), saturated joints (either side)=4, |Δaction|max=1.0253
+[contact] steps with any contact-flag mismatch: 126/400
+[contact] first mismatch at step 1
+[root] Isaac x=4.068 z=0.770 | MuJoCo x=5.026 z=0.784

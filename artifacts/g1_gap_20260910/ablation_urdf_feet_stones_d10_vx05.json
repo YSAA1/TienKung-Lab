@@ -1,0 +1,52 @@
+{
+  "variant": "urdf_sphere_feet",
+  "terrain": "stepping_stones",
+  "difficulty": 1.0,
+  "vx": 0.5,
+  "episodes": 5,
+  "reached_2m": 0,
+  "reached_3m": 0,
+  "falls": 5,
+  "episode_details": [
+    {
+      "max_forward_x_m": 1.201240845022085,
+      "final_z_m": 0.34618016974872357,
+      "fall_step": 174,
+      "reached_2m": false,
+      "reached_3m": false,
+      "steps_run": 175
+    },
+    {
+      "max_forward_x_m": 1.201240845022085,
+      "final_z_m": 0.34618016974872357,
+      "fall_step": 174,
+      "reached_2m": false,
+      "reached_3m": false,
+      "steps_run": 175
+    },
+    {
+      "max_forward_x_m": 1.201240845022085,
+      "final_z_m": 0.34618016974872357,
+      "fall_step": 174,
+      "reached_2m": false,
+      "reached_3m": false,
+      "steps_run": 175
+    },
+    {
+      "max_forward_x_m": 1.201240845022085,
+      "final_z_m": 0.34618016974872357,
+      "fall_step": 174,
+      "reached_2m": false,
+      "reached_3m": false,
+      "steps_run": 175
+    },
+    {
+      "max_forward_x_m": 1.201240845022085,
+      "final_z_m": 0.34618016974872357,
+      "fall_step": 174,
+      "reached_2m": false,
+      "reached_3m": false,
+      "steps_run": 175
+    }
+  ]
+}

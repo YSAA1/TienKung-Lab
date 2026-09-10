@@ -61,5 +61,27 @@ G1_STANDING_JOINT_POS.update(
     }
 )
 
+# Official Unitree 29DoF velocity init (Isaac training plant). Not the MJCF keyframe.
+G1_VELOCITY_PELVIS_Z: float = 0.80
+G1_VELOCITY_JOINT_POS: dict[str, float] = dict.fromkeys(G1_29DOF_JOINT_NAMES, 0.0)
+G1_VELOCITY_JOINT_POS.update(
+    {
+        "left_hip_pitch_joint": -0.1,
+        "right_hip_pitch_joint": -0.1,
+        "left_knee_joint": 0.3,
+        "right_knee_joint": 0.3,
+        "left_ankle_pitch_joint": -0.2,
+        "right_ankle_pitch_joint": -0.2,
+        "left_shoulder_pitch_joint": 0.3,
+        "right_shoulder_pitch_joint": 0.3,
+        "left_shoulder_roll_joint": 0.25,
+        "right_shoulder_roll_joint": -0.25,
+        "left_elbow_joint": 0.97,
+        "right_elbow_joint": 0.97,
+        "left_wrist_roll_joint": 0.15,
+        "right_wrist_roll_joint": -0.15,
+    }
+)
+
 # Nominal lateral foot spacing in the default standing pose.
 G1_NOMINAL_FEET_Y_DISTANCE: float = 0.22

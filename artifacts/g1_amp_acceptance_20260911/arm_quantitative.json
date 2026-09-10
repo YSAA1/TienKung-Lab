@@ -1,0 +1,1410 @@
+{
+  "clips": {
+    "run1_subject2": {
+      "frames": 899,
+      "q29_match_max_err": 5.9577941913246946e-08,
+      "root_z_min_max_m": [
+        0.698,
+        0.799
+      ],
+      "speed_mean_m_s": 0.467,
+      "arms": {
+        "left_arm": {
+          "shoulder_pitch": {
+            "min_rad": -0.106,
+            "max_rad": 0.926,
+            "mean_rad": 0.275,
+            "std_rad": 0.174,
+            "at_limit_frac": 0.0,
+            "max_dq_rad_s": 4.5,
+            "limit": [
+              -3.089,
+              2.67
+            ]
+          },
+          "shoulder_roll": {
+            "min_rad": 0.074,
+            "max_rad": 1.67,
+            "mean_rad": 0.42,
+            "std_rad": 0.364,
+            "at_limit_frac": 0.0,
+            "max_dq_rad_s": 3.06,
+            "limit": [
+              -1.588,
+              2.252
+            ]
+          },
+          "shoulder_yaw": {
+            "min_rad": -0.841,
+            "max_rad": 0.451,
+            "mean_rad": -0.399,
+            "std_rad": 0.28,
+            "at_limit_frac": 0.0,
+            "max_dq_rad_s": 2.96,
+            "limit": [
+              -2.618,
+              2.618
+            ]
+          },
+          "elbow": {
+            "min_rad": -0.657,
+            "max_rad": 1.244,
+            "mean_rad": -0.236,
+            "std_rad": 0.35,
+            "at_limit_frac": 0.0,
+            "max_dq_rad_s": 3.11,
+            "limit": [
+              -1.047,
+              2.094
+            ]
+          },
+          "wrist_roll": {
+            "min_rad": 0.077,
+            "max_rad": 0.746,
+            "mean_rad": 0.52,
+            "std_rad": 0.089,
+            "at_limit_frac": 0.0,
+            "max_dq_rad_s": 3.1,
+            "limit": [
+              -1.972,
+              1.972
+            ]
+          },
+          "wrist_pitch": {
+            "min_rad": -0.15,
+            "max_rad": 0.338,
+            "mean_rad": 0.002,
+            "std_rad": 0.115,
+            "at_limit_frac": 0.0,
+            "max_dq_rad_s": 3.18,
+            "limit": [
+              -1.614,
+              1.614
+            ]
+          },
+          "wrist_yaw": {
+            "min_rad": -0.184,
+            "max_rad": 0.428,
+            "mean_rad": 0.071,
+            "std_rad": 0.109,
+            "at_limit_frac": 0.0,
+            "max_dq_rad_s": 1.67,
+            "limit": [
+              -1.614,
+              1.614
+            ]
+          }
+        },
+        "right_arm": {
+          "shoulder_pitch": {
+            "min_rad": -0.058,
+            "max_rad": 0.863,
+            "mean_rad": 0.371,
+            "std_rad": 0.166,
+            "at_limit_frac": 0.0,
+            "max_dq_rad_s": 3.88,
+            "limit": [
+              -3.089,
+              2.67
+            ]
+          },
+          "shoulder_roll": {
+            "min_rad": -1.561,
+            "max_rad": -0.054,
+            "mean_rad": -0.347,
+            "std_rad": 0.289,
+            "at_limit_frac": 0.0,
+            "max_dq_rad_s": 2.27,
+            "limit": [
+              -2.252,
+              1.588
+            ]
+          },
+          "shoulder_yaw": {
+            "min_rad": -0.905,
+            "max_rad": 0.798,
+            "mean_rad": 0.254,
+            "std_rad": 0.376,
+            "at_limit_frac": 0.0,
+            "max_dq_rad_s": 2.93,
+            "limit": [
+              -2.618,
+              2.618
+            ]
+          },
+          "elbow": {
+            "min_rad": -0.396,
+            "max_rad": 1.353,
+            "mean_rad": -0.028,
+            "std_rad": 0.29,
+            "at_limit_frac": 0.0,
+            "max_dq_rad_s": 2.94,
+            "limit": [
+              -1.047,
+              2.094
+            ]
+          },
+          "wrist_roll": {
+            "min_rad": -0.734,
+            "max_rad": 0.084,
+            "mean_rad": -0.527,
+            "std_rad": 0.104,
+            "at_limit_frac": 0.0,
+            "max_dq_rad_s": 1.77,
+            "limit": [
+              -1.972,
+              1.972
+            ]
+          },
+          "wrist_pitch": {
+            "min_rad": -0.316,
+            "max_rad": 0.242,
+            "mean_rad": -0.153,
+            "std_rad": 0.127,
+            "at_limit_frac": 0.0,
+            "max_dq_rad_s": 1.94,
+            "limit": [
+              -1.614,
+              1.614
+            ]
+          },
+          "wrist_yaw": {
+            "min_rad": -0.449,
+            "max_rad": 0.127,
+            "mean_rad": -0.089,
+            "std_rad": 0.096,
+            "at_limit_frac": 0.0,
+            "max_dq_rad_s": 2.46,
+            "limit": [
+              -1.614,
+              1.614
+            ]
+          }
+        },
+        "waist": {
+          "waist_yaw": {
+            "min_rad": -0.187,
+            "max_rad": 0.132,
+            "mean_rad": -0.028,
+            "std_rad": 0.061,
+            "at_limit_frac": 0.0,
+            "max_dq_rad_s": 1.2,
+            "limit": [
+              -2.618,
+              2.618
+            ]
+          },
+          "waist_roll": {
+            "min_rad": -0.074,
+            "max_rad": 0.077,
+            "mean_rad": 0.017,
+            "std_rad": 0.033,
+            "at_limit_frac": 0.0,
+            "max_dq_rad_s": 0.64,
+            "limit": [
+              -0.52,
+              0.52
+            ]
+          },
+          "waist_pitch": {
+            "min_rad": -0.04,
+            "max_rad": 0.152,
+            "mean_rad": 0.039,
+            "std_rad": 0.043,
+            "at_limit_frac": 0.0,
+            "max_dq_rad_s": 0.69,
+            "limit": [
+              -0.52,
+              0.52
+            ]
+          }
+        },
+        "arm_swing_correlation_L_vs_R_shoulder_pitch": -0.505
+      },
+      "hand_feature_max_err_m": 1e-06,
+      "hand_height_m": {
+        "left_min_max": [
+          0.026,
+          0.357
+        ],
+        "right_min_max": [
+          0.01,
+          0.3
+        ]
+      },
+      "hands_min_separation_m": 0.206
+    },
+    "run2_subject1": {
+      "frames": 899,
+      "q29_match_max_err": 1.1824035661689436e-07,
+      "root_z_min_max_m": [
+        0.545,
+        0.797
+      ],
+      "speed_mean_m_s": 1.524,
+      "arms": {
+        "left_arm": {
+          "shoulder_pitch": {
+            "min_rad": -0.679,
+            "max_rad": 1.231,
+            "mean_rad": 0.345,
+            "std_rad": 0.36,
+            "at_limit_frac": 0.0,
+            "max_dq_rad_s": 8.02,
+            "limit": [
+              -3.089,
+              2.67
+            ]
+          },
+          "shoulder_roll": {
+            "min_rad": -0.089,
+            "max_rad": 1.534,
+            "mean_rad": 0.256,
+            "std_rad": 0.318,
+            "at_limit_frac": 0.0,
+            "max_dq_rad_s": 6.69,
+            "limit": [
+              -1.588,
+              2.252
+            ]
+          },
+          "shoulder_yaw": {
+            "min_rad": -0.848,
+            "max_rad": 0.906,
+            "mean_rad": -0.156,
+            "std_rad": 0.377,
+            "at_limit_frac": 0.0,
+            "max_dq_rad_s": 6.01,
+            "limit": [
+              -2.618,
+              2.618
+            ]
+          },
+          "elbow": {
+            "min_rad": -0.808,
+            "max_rad": 1.364,
+            "mean_rad": 0.053,
+            "std_rad": 0.406,
+            "at_limit_frac": 0.0,
+            "max_dq_rad_s": 7.6,
+            "limit": [
+              -1.047,
+              2.094
+            ]
+          },
+          "wrist_roll": {
+            "min_rad": 0.173,
+            "max_rad": 1.517,
+            "mean_rad": 0.855,
+            "std_rad": 0.233,
+            "at_limit_frac": 0.0,
+            "max_dq_rad_s": 7.66,
+            "limit": [
+              -1.972,
+              1.972
+            ]
+          },
+          "wrist_pitch": {
+            "min_rad": -0.354,
+            "max_rad": 0.448,
+            "mean_rad": 0.086,
+            "std_rad": 0.175,
+            "at_limit_frac": 0.0,
+            "max_dq_rad_s": 4.18,
+            "limit": [
+              -1.614,
+              1.614
+            ]
+          },
+          "wrist_yaw": {
+            "min_rad": -0.282,
+            "max_rad": 0.575,
+            "mean_rad": 0.168,
+            "std_rad": 0.149,
+            "at_limit_frac": 0.0,
+            "max_dq_rad_s": 4.13,
+            "limit": [
+              -1.614,
+              1.614
+            ]
+          }
+        },
+        "right_arm": {
+          "shoulder_pitch": {
+            "min_rad": -0.583,
+            "max_rad": 1.157,
+            "mean_rad": 0.438,
+            "std_rad": 0.313,
+            "at_limit_frac": 0.0,
+            "max_dq_rad_s": 9.33,
+            "limit": [
+              -3.089,
+              2.67
+            ]
+          },
+          "shoulder_roll": {
+            "min_rad": -1.546,
+            "max_rad": 0.198,
+            "mean_rad": -0.296,
+            "std_rad": 0.33,
+            "at_limit_frac": 0.0,
+            "max_dq_rad_s": 4.8,
+            "limit": [
+              -2.252,
+              1.588
+            ]
+          },
+          "shoulder_yaw": {
+            "min_rad": -0.906,
+            "max_rad": 0.898,
+            "mean_rad": 0.066,
+            "std_rad": 0.355,
+            "at_limit_frac": 0.0,
+            "max_dq_rad_s": 5.98,
+            "limit": [
+              -2.618,
+              2.618
+            ]
+          },
+          "elbow": {
+            "min_rad": -0.973,
+            "max_rad": 1.397,
+            "mean_rad": 0.172,
+            "std_rad": 0.403,
+            "at_limit_frac": 0.0,
+            "max_dq_rad_s": 7.16,
+            "limit": [
+              -1.047,
+              2.094
+            ]
+          },
+          "wrist_roll": {
+            "min_rad": -1.538,
+            "max_rad": -0.018,
+            "mean_rad": -0.759,
+            "std_rad": 0.192,
+            "at_limit_frac": 0.0,
+            "max_dq_rad_s": 7.42,
+            "limit": [
+              -1.972,
+              1.972
+            ]
+          },
+          "wrist_pitch": {
+            "min_rad": -0.385,
+            "max_rad": 0.453,
+            "mean_rad": 0.093,
+            "std_rad": 0.157,
+            "at_limit_frac": 0.0,
+            "max_dq_rad_s": 4.97,
+            "limit": [
+              -1.614,
+              1.614
+            ]
+          },
+          "wrist_yaw": {
+            "min_rad": -0.635,
+            "max_rad": 0.766,
+            "mean_rad": -0.22,
+            "std_rad": 0.25,
+            "at_limit_frac": 0.0,
+            "max_dq_rad_s": 6.62,
+            "limit": [
+              -1.614,
+              1.614
+            ]
+          }
+        },
+        "waist": {
+          "waist_yaw": {
+            "min_rad": -0.199,
+            "max_rad": 0.273,
+            "mean_rad": 0.02,
+            "std_rad": 0.098,
+            "at_limit_frac": 0.0,
+            "max_dq_rad_s": 2.02,
+            "limit": [
+              -2.618,
+              2.618
+            ]
+          },
+          "waist_roll": {
+            "min_rad": -0.171,
+            "max_rad": 0.157,
+            "mean_rad": -0.015,
+            "std_rad": 0.065,
+            "at_limit_frac": 0.0,
+            "max_dq_rad_s": 1.31,
+            "limit": [
+              -0.52,
+              0.52
+            ]
+          },
+          "waist_pitch": {
+            "min_rad": 0.006,
+            "max_rad": 0.498,
+            "mean_rad": 0.207,
+            "std_rad": 0.107,
+            "at_limit_frac": 0.0,
+            "max_dq_rad_s": 1.84,
+            "limit": [
+              -0.52,
+              0.52
+            ]
+          }
+        },
+        "arm_swing_correlation_L_vs_R_shoulder_pitch": -0.679
+      },
+      "hand_feature_max_err_m": 2e-06,
+      "hand_height_m": {
+        "left_min_max": [
+          -0.08,
+          0.275
+        ],
+        "right_min_max": [
+          -0.056,
+          0.288
+        ]
+      },
+      "hands_min_separation_m": 0.224
+    },
+    "walk1_subject1": {
+      "frames": 899,
+      "q29_match_max_err": 5.9387206929883973e-08,
+      "root_z_min_max_m": [
+        0.755,
+        0.806
+      ],
+      "speed_mean_m_s": 0.394,
+      "arms": {
+        "left_arm": {
+          "shoulder_pitch": {
+            "min_rad": -0.238,
+            "max_rad": 0.336,
+            "mean_rad": 0.041,
+            "std_rad": 0.113,
+            "at_limit_frac": 0.0,
+            "max_dq_rad_s": 1.85,
+            "limit": [
+              -3.089,
+              2.67
+            ]
+          },
+          "shoulder_roll": {
+            "min_rad": -0.026,
+            "max_rad": 1.668,
+            "mean_rad": 0.235,
+            "std_rad": 0.418,
+            "at_limit_frac": 0.0,
+            "max_dq_rad_s": 3.5,
+            "limit": [
+              -1.588,
+              2.252
+            ]
+          },
+          "shoulder_yaw": {
+            "min_rad": -0.623,
+            "max_rad": 0.908,
+            "mean_rad": -0.202,
+            "std_rad": 0.237,
+            "at_limit_frac": 0.0,
+            "max_dq_rad_s": 3.19,
+            "limit": [
+              -2.618,
+              2.618
+            ]
+          },
+          "elbow": {
+            "min_rad": 0.072,
+            "max_rad": 1.406,
+            "mean_rad": 0.88,
+            "std_rad": 0.152,
+            "at_limit_frac": 0.0,
+            "max_dq_rad_s": 3.9,
+            "limit": [
+              -1.047,
+              2.094
+            ]
+          },
+          "wrist_roll": {
+            "min_rad": 0.068,
+            "max_rad": 1.042,
+            "mean_rad": 0.789,
+            "std_rad": 0.126,
+            "at_limit_frac": 0.0,
+            "max_dq_rad_s": 2.36,
+            "limit": [
+              -1.972,
+              1.972
+            ]
+          },
+          "wrist_pitch": {
+            "min_rad": -0.144,
+            "max_rad": 0.387,
+            "mean_rad": 0.15,
+            "std_rad": 0.092,
+            "at_limit_frac": 0.0,
+            "max_dq_rad_s": 2.78,
+            "limit": [
+              -1.614,
+              1.614
+            ]
+          },
+          "wrist_yaw": {
+            "min_rad": -0.25,
+            "max_rad": 0.465,
+            "mean_rad": 0.187,
+            "std_rad": 0.113,
+            "at_limit_frac": 0.0,
+            "max_dq_rad_s": 3.77,
+            "limit": [
+              -1.614,
+              1.614
+            ]
+          }
+        },
+        "right_arm": {
+          "shoulder_pitch": {
+            "min_rad": -0.075,
+            "max_rad": 0.544,
+            "mean_rad": 0.145,
+            "std_rad": 0.126,
+            "at_limit_frac": 0.0,
+            "max_dq_rad_s": 1.95,
+            "limit": [
+              -3.089,
+              2.67
+            ]
+          },
+          "shoulder_roll": {
+            "min_rad": -1.621,
+            "max_rad": 0.054,
+            "mean_rad": -0.222,
+            "std_rad": 0.357,
+            "at_limit_frac": 0.0,
+            "max_dq_rad_s": 5.15,
+            "limit": [
+              -2.252,
+              1.588
+            ]
+          },
+          "shoulder_yaw": {
+            "min_rad": -1.276,
+            "max_rad": 0.439,
+            "mean_rad": 0.017,
+            "std_rad": 0.343,
+            "at_limit_frac": 0.0,
+            "max_dq_rad_s": 3.49,
+            "limit": [
+              -2.618,
+              2.618
+            ]
+          },
+          "elbow": {
+            "min_rad": -0.257,
+            "max_rad": 1.499,
+            "mean_rad": 0.799,
+            "std_rad": 0.151,
+            "at_limit_frac": 0.0,
+            "max_dq_rad_s": 5.97,
+            "limit": [
+              -1.047,
+              2.094
+            ]
+          },
+          "wrist_roll": {
+            "min_rad": -0.993,
+            "max_rad": 0.174,
+            "mean_rad": -0.782,
+            "std_rad": 0.144,
+            "at_limit_frac": 0.0,
+            "max_dq_rad_s": 2.71,
+            "limit": [
+              -1.972,
+              1.972
+            ]
+          },
+          "wrist_pitch": {
+            "min_rad": -0.041,
+            "max_rad": 0.427,
+            "mean_rad": 0.145,
+            "std_rad": 0.081,
+            "at_limit_frac": 0.0,
+            "max_dq_rad_s": 1.99,
+            "limit": [
+              -1.614,
+              1.614
+            ]
+          },
+          "wrist_yaw": {
+            "min_rad": -0.355,
+            "max_rad": 0.082,
+            "mean_rad": -0.141,
+            "std_rad": 0.063,
+            "at_limit_frac": 0.0,
+            "max_dq_rad_s": 2.23,
+            "limit": [
+              -1.614,
+              1.614
+            ]
+          }
+        },
+        "waist": {
+          "waist_yaw": {
+            "min_rad": -0.12,
+            "max_rad": 0.133,
+            "mean_rad": 0.025,
+            "std_rad": 0.047,
+            "at_limit_frac": 0.0,
+            "max_dq_rad_s": 0.68,
+            "limit": [
+              -2.618,
+              2.618
+            ]
+          },
+          "waist_roll": {
+            "min_rad": -0.162,
+            "max_rad": 0.195,
+            "mean_rad": 0.017,
+            "std_rad": 0.075,
+            "at_limit_frac": 0.0,
+            "max_dq_rad_s": 0.81,
+            "limit": [
+              -0.52,
+              0.52
+            ]
+          },
+          "waist_pitch": {
+            "min_rad": -0.083,
+            "max_rad": 0.105,
+            "mean_rad": 0.001,
+            "std_rad": 0.038,
+            "at_limit_frac": 0.0,
+            "max_dq_rad_s": 0.4,
+            "limit": [
+              -0.52,
+              0.52
+            ]
+          }
+        },
+        "arm_swing_correlation_L_vs_R_shoulder_pitch": -0.557
+      },
+      "hand_feature_max_err_m": 1e-06,
+      "hand_height_m": {
+        "left_min_max": [
+          -0.092,
+          0.353
+        ],
+        "right_min_max": [
+          -0.083,
+          0.313
+        ]
+      },
+      "hands_min_separation_m": 0.273
+    },
+    "walk2_subject1": {
+      "frames": 899,
+      "q29_match_max_err": 5.960083004907801e-08,
+      "root_z_min_max_m": [
+        0.731,
+        0.799
+      ],
+      "speed_mean_m_s": 0.451,
+      "arms": {
+        "left_arm": {
+          "shoulder_pitch": {
+            "min_rad": -0.636,
+            "max_rad": 0.662,
+            "mean_rad": 0.105,
+            "std_rad": 0.202,
+            "at_limit_frac": 0.0,
+            "max_dq_rad_s": 2.69,
+            "limit": [
+              -3.089,
+              2.67
+            ]
+          },
+          "shoulder_roll": {
+            "min_rad": -0.118,
+            "max_rad": 1.625,
+            "mean_rad": 0.264,
+            "std_rad": 0.395,
+            "at_limit_frac": 0.0,
+            "max_dq_rad_s": 4.14,
+            "limit": [
+              -1.588,
+              2.252
+            ]
+          },
+          "shoulder_yaw": {
+            "min_rad": -1.025,
+            "max_rad": 0.611,
+            "mean_rad": -0.029,
+            "std_rad": 0.333,
+            "at_limit_frac": 0.0,
+            "max_dq_rad_s": 5.74,
+            "limit": [
+              -2.618,
+              2.618
+            ]
+          },
+          "elbow": {
+            "min_rad": -0.165,
+            "max_rad": 1.21,
+            "mean_rad": 0.64,
+            "std_rad": 0.235,
+            "at_limit_frac": 0.0,
+            "max_dq_rad_s": 4.0,
+            "limit": [
+              -1.047,
+              2.094
+            ]
+          },
+          "wrist_roll": {
+            "min_rad": 0.263,
+            "max_rad": 1.477,
+            "mean_rad": 1.159,
+            "std_rad": 0.157,
+            "at_limit_frac": 0.0,
+            "max_dq_rad_s": 4.1,
+            "limit": [
+              -1.972,
+              1.972
+            ]
+          },
+          "wrist_pitch": {
+            "min_rad": -0.362,
+            "max_rad": 0.484,
+            "mean_rad": 0.175,
+            "std_rad": 0.158,
+            "at_limit_frac": 0.0,
+            "max_dq_rad_s": 3.85,
+            "limit": [
+              -1.614,
+              1.614
+            ]
+          },
+          "wrist_yaw": {
+            "min_rad": -0.434,
+            "max_rad": 0.549,
+            "mean_rad": -0.075,
+            "std_rad": 0.144,
+            "at_limit_frac": 0.0,
+            "max_dq_rad_s": 4.2,
+            "limit": [
+              -1.614,
+              1.614
+            ]
+          }
+        },
+        "right_arm": {
+          "shoulder_pitch": {
+            "min_rad": -0.09,
+            "max_rad": 0.768,
+            "mean_rad": 0.271,
+            "std_rad": 0.176,
+            "at_limit_frac": 0.0,
+            "max_dq_rad_s": 2.77,
+            "limit": [
+              -3.089,
+              2.67
+            ]
+          },
+          "shoulder_roll": {
+            "min_rad": -1.501,
+            "max_rad": 0.181,
+            "mean_rad": -0.249,
+            "std_rad": 0.371,
+            "at_limit_frac": 0.0,
+            "max_dq_rad_s": 2.75,
+            "limit": [
+              -2.252,
+              1.588
+            ]
+          },
+          "shoulder_yaw": {
+            "min_rad": -0.768,
+            "max_rad": 0.808,
+            "mean_rad": 0.014,
+            "std_rad": 0.328,
+            "at_limit_frac": 0.0,
+            "max_dq_rad_s": 4.32,
+            "limit": [
+              -2.618,
+              2.618
+            ]
+          },
+          "elbow": {
+            "min_rad": -0.259,
+            "max_rad": 1.297,
+            "mean_rad": 0.543,
+            "std_rad": 0.252,
+            "at_limit_frac": 0.0,
+            "max_dq_rad_s": 5.18,
+            "limit": [
+              -1.047,
+              2.094
+            ]
+          },
+          "wrist_roll": {
+            "min_rad": -1.244,
+            "max_rad": -0.07,
+            "mean_rad": -0.884,
+            "std_rad": 0.126,
+            "at_limit_frac": 0.0,
+            "max_dq_rad_s": 4.47,
+            "limit": [
+              -1.972,
+              1.972
+            ]
+          },
+          "wrist_pitch": {
+            "min_rad": -0.386,
+            "max_rad": 0.437,
+            "mean_rad": 0.137,
+            "std_rad": 0.156,
+            "at_limit_frac": 0.0,
+            "max_dq_rad_s": 3.35,
+            "limit": [
+              -1.614,
+              1.614
+            ]
+          },
+          "wrist_yaw": {
+            "min_rad": -0.778,
+            "max_rad": 0.441,
+            "mean_rad": -0.007,
+            "std_rad": 0.168,
+            "at_limit_frac": 0.0,
+            "max_dq_rad_s": 5.17,
+            "limit": [
+              -1.614,
+              1.614
+            ]
+          }
+        },
+        "waist": {
+          "waist_yaw": {
+            "min_rad": -0.222,
+            "max_rad": 0.217,
+            "mean_rad": 0.029,
+            "std_rad": 0.067,
+            "at_limit_frac": 0.0,
+            "max_dq_rad_s": 0.89,
+            "limit": [
+              -2.618,
+              2.618
+            ]
+          },
+          "waist_roll": {
+            "min_rad": -0.2,
+            "max_rad": 0.159,
+            "mean_rad": -0.029,
+            "std_rad": 0.062,
+            "at_limit_frac": 0.0,
+            "max_dq_rad_s": 0.97,
+            "limit": [
+              -0.52,
+              0.52
+            ]
+          },
+          "waist_pitch": {
+            "min_rad": -0.004,
+            "max_rad": 0.197,
+            "mean_rad": 0.12,
+            "std_rad": 0.042,
+            "at_limit_frac": 0.0,
+            "max_dq_rad_s": 0.81,
+            "limit": [
+              -0.52,
+              0.52
+            ]
+          }
+        },
+        "arm_swing_correlation_L_vs_R_shoulder_pitch": -0.595
+      },
+      "hand_feature_max_err_m": 1e-06,
+      "hand_height_m": {
+        "left_min_max": [
+          -0.102,
+          0.306
+        ],
+        "right_min_max": [
+          -0.072,
+          0.277
+        ]
+      },
+      "hands_min_separation_m": 0.282
+    },
+    "walk3_subject1": {
+      "frames": 899,
+      "q29_match_max_err": 5.950927728370914e-08,
+      "root_z_min_max_m": [
+        0.738,
+        0.8
+      ],
+      "speed_mean_m_s": 0.295,
+      "arms": {
+        "left_arm": {
+          "shoulder_pitch": {
+            "min_rad": -0.303,
+            "max_rad": 0.47,
+            "mean_rad": 0.108,
+            "std_rad": 0.146,
+            "at_limit_frac": 0.0,
+            "max_dq_rad_s": 2.01,
+            "limit": [
+              -3.089,
+              2.67
+            ]
+          },
+          "shoulder_roll": {
+            "min_rad": -0.259,
+            "max_rad": 1.417,
+            "mean_rad": 0.1,
+            "std_rad": 0.264,
+            "at_limit_frac": 0.0,
+            "max_dq_rad_s": 2.33,
+            "limit": [
+              -1.588,
+              2.252
+            ]
+          },
+          "shoulder_yaw": {
+            "min_rad": -0.326,
+            "max_rad": 0.738,
+            "mean_rad": 0.045,
+            "std_rad": 0.188,
+            "at_limit_frac": 0.0,
+            "max_dq_rad_s": 5.06,
+            "limit": [
+              -2.618,
+              2.618
+            ]
+          },
+          "elbow": {
+            "min_rad": 0.354,
+            "max_rad": 1.239,
+            "mean_rad": 0.758,
+            "std_rad": 0.091,
+            "at_limit_frac": 0.0,
+            "max_dq_rad_s": 2.89,
+            "limit": [
+              -1.047,
+              2.094
+            ]
+          },
+          "wrist_roll": {
+            "min_rad": 0.329,
+            "max_rad": 1.749,
+            "mean_rad": 1.329,
+            "std_rad": 0.146,
+            "at_limit_frac": 0.0,
+            "max_dq_rad_s": 5.63,
+            "limit": [
+              -1.972,
+              1.972
+            ]
+          },
+          "wrist_pitch": {
+            "min_rad": 0.03,
+            "max_rad": 0.482,
+            "mean_rad": 0.255,
+            "std_rad": 0.075,
+            "at_limit_frac": 0.0,
+            "max_dq_rad_s": 4.31,
+            "limit": [
+              -1.614,
+              1.614
+            ]
+          },
+          "wrist_yaw": {
+            "min_rad": -0.336,
+            "max_rad": 0.256,
+            "mean_rad": -0.101,
+            "std_rad": 0.086,
+            "at_limit_frac": 0.0,
+            "max_dq_rad_s": 4.38,
+            "limit": [
+              -1.614,
+              1.614
+            ]
+          }
+        },
+        "right_arm": {
+          "shoulder_pitch": {
+            "min_rad": -0.158,
+            "max_rad": 0.497,
+            "mean_rad": 0.134,
+            "std_rad": 0.138,
+            "at_limit_frac": 0.0,
+            "max_dq_rad_s": 2.41,
+            "limit": [
+              -3.089,
+              2.67
+            ]
+          },
+          "shoulder_roll": {
+            "min_rad": -1.413,
+            "max_rad": 0.112,
+            "mean_rad": -0.105,
+            "std_rad": 0.261,
+            "at_limit_frac": 0.0,
+            "max_dq_rad_s": 2.7,
+            "limit": [
+              -2.252,
+              1.588
+            ]
+          },
+          "shoulder_yaw": {
+            "min_rad": -0.912,
+            "max_rad": 0.523,
+            "mean_rad": -0.072,
+            "std_rad": 0.263,
+            "at_limit_frac": 0.0,
+            "max_dq_rad_s": 3.63,
+            "limit": [
+              -2.618,
+              2.618
+            ]
+          },
+          "elbow": {
+            "min_rad": 0.454,
+            "max_rad": 1.368,
+            "mean_rad": 0.76,
+            "std_rad": 0.102,
+            "at_limit_frac": 0.0,
+            "max_dq_rad_s": 2.77,
+            "limit": [
+              -1.047,
+              2.094
+            ]
+          },
+          "wrist_roll": {
+            "min_rad": -1.176,
+            "max_rad": 0.003,
+            "mean_rad": -0.904,
+            "std_rad": 0.116,
+            "at_limit_frac": 0.0,
+            "max_dq_rad_s": 3.26,
+            "limit": [
+              -1.972,
+              1.972
+            ]
+          },
+          "wrist_pitch": {
+            "min_rad": 0.032,
+            "max_rad": 0.393,
+            "mean_rad": 0.21,
+            "std_rad": 0.054,
+            "at_limit_frac": 0.0,
+            "max_dq_rad_s": 2.41,
+            "limit": [
+              -1.614,
+              1.614
+            ]
+          },
+          "wrist_yaw": {
+            "min_rad": -0.274,
+            "max_rad": 0.384,
+            "mean_rad": 0.045,
+            "std_rad": 0.086,
+            "at_limit_frac": 0.0,
+            "max_dq_rad_s": 2.63,
+            "limit": [
+              -1.614,
+              1.614
+            ]
+          }
+        },
+        "waist": {
+          "waist_yaw": {
+            "min_rad": -0.039,
+            "max_rad": 0.139,
+            "mean_rad": 0.046,
+            "std_rad": 0.033,
+            "at_limit_frac": 0.0,
+            "max_dq_rad_s": 0.74,
+            "limit": [
+              -2.618,
+              2.618
+            ]
+          },
+          "waist_roll": {
+            "min_rad": -0.149,
+            "max_rad": 0.162,
+            "mean_rad": -0.004,
+            "std_rad": 0.079,
+            "at_limit_frac": 0.0,
+            "max_dq_rad_s": 0.82,
+            "limit": [
+              -0.52,
+              0.52
+            ]
+          },
+          "waist_pitch": {
+            "min_rad": -0.02,
+            "max_rad": 0.229,
+            "mean_rad": 0.134,
+            "std_rad": 0.05,
+            "at_limit_frac": 0.0,
+            "max_dq_rad_s": 0.52,
+            "limit": [
+              -0.52,
+              0.52
+            ]
+          }
+        },
+        "arm_swing_correlation_L_vs_R_shoulder_pitch": -0.325
+      },
+      "hand_feature_max_err_m": 1e-06,
+      "hand_height_m": {
+        "left_min_max": [
+          -0.088,
+          0.233
+        ],
+        "right_min_max": [
+          -0.088,
+          0.24
+        ]
+      },
+      "hands_min_separation_m": 0.253
+    },
+    "walk4_subject1": {
+      "frames": 899,
+      "q29_match_max_err": 5.959320059645279e-08,
+      "root_z_min_max_m": [
+        0.74,
+        0.799
+      ],
+      "speed_mean_m_s": 0.155,
+      "arms": {
+        "left_arm": {
+          "shoulder_pitch": {
+            "min_rad": -0.33,
+            "max_rad": 0.329,
+            "mean_rad": 0.155,
+            "std_rad": 0.106,
+            "at_limit_frac": 0.0,
+            "max_dq_rad_s": 1.8,
+            "limit": [
+              -3.089,
+              2.67
+            ]
+          },
+          "shoulder_roll": {
+            "min_rad": -0.177,
+            "max_rad": 1.476,
+            "mean_rad": 0.21,
+            "std_rad": 0.323,
+            "at_limit_frac": 0.0,
+            "max_dq_rad_s": 2.74,
+            "limit": [
+              -1.588,
+              2.252
+            ]
+          },
+          "shoulder_yaw": {
+            "min_rad": -0.853,
+            "max_rad": 0.846,
+            "mean_rad": -0.434,
+            "std_rad": 0.43,
+            "at_limit_frac": 0.0,
+            "max_dq_rad_s": 2.15,
+            "limit": [
+              -2.618,
+              2.618
+            ]
+          },
+          "elbow": {
+            "min_rad": -0.464,
+            "max_rad": 1.327,
+            "mean_rad": -0.016,
+            "std_rad": 0.396,
+            "at_limit_frac": 0.0,
+            "max_dq_rad_s": 3.41,
+            "limit": [
+              -1.047,
+              2.094
+            ]
+          },
+          "wrist_roll": {
+            "min_rad": 0.12,
+            "max_rad": 1.537,
+            "mean_rad": 1.209,
+            "std_rad": 0.183,
+            "at_limit_frac": 0.0,
+            "max_dq_rad_s": 3.85,
+            "limit": [
+              -1.972,
+              1.972
+            ]
+          },
+          "wrist_pitch": {
+            "min_rad": -0.312,
+            "max_rad": 0.428,
+            "mean_rad": 0.006,
+            "std_rad": 0.151,
+            "at_limit_frac": 0.0,
+            "max_dq_rad_s": 3.2,
+            "limit": [
+              -1.614,
+              1.614
+            ]
+          },
+          "wrist_yaw": {
+            "min_rad": -0.345,
+            "max_rad": 0.379,
+            "mean_rad": -0.134,
+            "std_rad": 0.094,
+            "at_limit_frac": 0.0,
+            "max_dq_rad_s": 3.13,
+            "limit": [
+              -1.614,
+              1.614
+            ]
+          }
+        },
+        "right_arm": {
+          "shoulder_pitch": {
+            "min_rad": 0.005,
+            "max_rad": 0.761,
+            "mean_rad": 0.356,
+            "std_rad": 0.175,
+            "at_limit_frac": 0.0,
+            "max_dq_rad_s": 1.84,
+            "limit": [
+              -3.089,
+              2.67
+            ]
+          },
+          "shoulder_roll": {
+            "min_rad": -1.464,
+            "max_rad": 0.028,
+            "mean_rad": -0.285,
+            "std_rad": 0.293,
+            "at_limit_frac": 0.0,
+            "max_dq_rad_s": 1.79,
+            "limit": [
+              -2.252,
+              1.588
+            ]
+          },
+          "shoulder_yaw": {
+            "min_rad": -0.997,
+            "max_rad": 0.645,
+            "mean_rad": 0.227,
+            "std_rad": 0.392,
+            "at_limit_frac": 0.0,
+            "max_dq_rad_s": 2.2,
+            "limit": [
+              -2.618,
+              2.618
+            ]
+          },
+          "elbow": {
+            "min_rad": -0.677,
+            "max_rad": 1.418,
+            "mean_rad": -0.213,
+            "std_rad": 0.472,
+            "at_limit_frac": 0.0,
+            "max_dq_rad_s": 2.9,
+            "limit": [
+              -1.047,
+              2.094
+            ]
+          },
+          "wrist_roll": {
+            "min_rad": -1.608,
+            "max_rad": 0.044,
+            "mean_rad": -1.101,
+            "std_rad": 0.236,
+            "at_limit_frac": 0.0,
+            "max_dq_rad_s": 3.45,
+            "limit": [
+              -1.972,
+              1.972
+            ]
+          },
+          "wrist_pitch": {
+            "min_rad": -0.226,
+            "max_rad": 0.378,
+            "mean_rad": -0.021,
+            "std_rad": 0.158,
+            "at_limit_frac": 0.0,
+            "max_dq_rad_s": 2.09,
+            "limit": [
+              -1.614,
+              1.614
+            ]
+          },
+          "wrist_yaw": {
+            "min_rad": -0.248,
+            "max_rad": 0.524,
+            "mean_rad": 0.181,
+            "std_rad": 0.12,
+            "at_limit_frac": 0.0,
+            "max_dq_rad_s": 3.34,
+            "limit": [
+              -1.614,
+              1.614
+            ]
+          }
+        },
+        "waist": {
+          "waist_yaw": {
+            "min_rad": -0.068,
+            "max_rad": 0.156,
+            "mean_rad": 0.048,
+            "std_rad": 0.041,
+            "at_limit_frac": 0.0,
+            "max_dq_rad_s": 0.51,
+            "limit": [
+              -2.618,
+              2.618
+            ]
+          },
+          "waist_roll": {
+            "min_rad": -0.069,
+            "max_rad": 0.137,
+            "mean_rad": 0.023,
+            "std_rad": 0.043,
+            "at_limit_frac": 0.0,
+            "max_dq_rad_s": 0.36,
+            "limit": [
+              -0.52,
+              0.52
+            ]
+          },
+          "waist_pitch": {
+            "min_rad": 0.006,
+            "max_rad": 0.504,
+            "mean_rad": 0.421,
+            "std_rad": 0.124,
+            "at_limit_frac": 0.0,
+            "max_dq_rad_s": 0.53,
+            "limit": [
+              -0.52,
+              0.52
+            ]
+          }
+        },
+        "arm_swing_correlation_L_vs_R_shoulder_pitch": 0.285
+      },
+      "hand_feature_max_err_m": 1e-06,
+      "hand_height_m": {
+        "left_min_max": [
+          -0.085,
+          0.255
+        ],
+        "right_min_max": [
+          -0.063,
+          0.261
+        ]
+      },
+      "hands_min_separation_m": 0.118
+    }
+  },
+  "passed_q_match": true,
+  "max_feature_error_m": 1.6852992177351922e-06
+}

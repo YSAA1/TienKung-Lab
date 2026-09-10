@@ -1,0 +1,19 @@
+{
+  "jobs": [
+    {
+      "name": "z2",
+      "url": "http://100.100.188.39:8050/#timeseries",
+      "listening": false,
+      "listen": "",
+      "log_tail": "/usr/lib/python3/dist-packages/requests/__init__.py:89: RequestsDependencyWarning: urllib3 (2.2.3) or chardet (3.0.4) doesn't match a supported version!\n  warnings.warn(\"urllib3 ({}) or chardet ({}) doesn't match a supported \"\n/home/nubot/.local/lib/python3.8/site-packages/google/auth/__init__.py:52: FutureWarning: You are using a Python version 3.8 past its end of life. Google will update google-auth with critical bug fixes on a best-effort basis, but not with any other fixes or features. Please upgrade your Python version, and then update google-auth.\n  warnings.warn(eol_message.format(\"3.8\"), FutureWarning)\n/home/nubot/.local/lib/python3.8/site-packages/google/oauth2/__init__.py:38: FutureWarning: You are using a Python version 3.8 past its end of life. Google will update google-auth with critical bug fixes on a best-effort basis, but not with any other fixes or features. Please upgrade your Python version, and then update google-auth.\n  warnings.warn(eol_message.format(\"3.8\"), FutureWarning)\nTensorFlow installation not found - running with reduced feature set.\nOption --load_fast=true not available: TensorBoard data server not supported on this platform.\n"
+    },
+    {
+      "name": "g1_v2",
+      "url": "http://100.100.188.39:8045/#timeseries",
+      "listening": false,
+      "listen": "",
+      "log_tail": "/usr/lib/python3/dist-packages/requests/__init__.py:89: RequestsDependencyWarning: urllib3 (2.2.3) or chardet (3.0.4) doesn't match a supported version!\n  warnings.warn(\"urllib3 ({}) or chardet ({}) doesn't match a supported \"\n/home/nubot/.local/lib/python3.8/site-packages/google/auth/__init__.py:52: FutureWarning: You are using a Python version 3.8 past its end of life. Google will update google-auth with critical bug fixes on a best-effort basis, but not with any other fixes or features. Please upgrade your Python version, and then update google-auth.\n  warnings.warn(eol_message.format(\"3.8\"), FutureWarning)\n/home/nubot/.local/lib/python3.8/site-packages/google/oauth2/__init__.py:38: FutureWarning: You are using a Python version 3.8 past its end of life. Google will update google-auth with critical bug fixes on a best-effort basis, but not with any other fixes or features. Please upgrade your Python version, and then update google-auth.\n  warnings.warn(eol_message.format(\"3.8\"), FutureWarning)\nTensorFlow installation not found - running with reduced feature set.\nOption --load_fast=true not available: TensorBoard data server not supported on this platform.\n"
+    }
+  ],
+  "gpu": "0, 0 %, 47 MiB\n1, 48 %, 8744 MiB\n2, 6 %, 394 MiB\n3, 48 %, 8474 MiB\n"
+}

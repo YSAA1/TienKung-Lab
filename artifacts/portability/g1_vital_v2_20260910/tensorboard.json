@@ -1,0 +1,9 @@
+{
+  "url": "http://100.100.188.39:8045/#scalars",
+  "tmux": "g1-vital-v2-tb",
+  "port": 8045,
+  "logdir": "/home/nubot/phn_ws/t4_train/TienKung-Lab-g1-vital-v2-20260910/logs/g1_vital_motion",
+  "run": "/home/nubot/phn_ws/t4_train/TienKung-Lab-g1-vital-v2-20260910/logs/g1_vital_motion/2026-09-10_01-05-50_vital_motion_v2",
+  "http_ok": true,
+  "http_last": "200"
+}

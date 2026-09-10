@@ -19,6 +19,8 @@
 from __future__ import annotations
 
 import csv
+import hashlib
+import json
 import math
 import xml.etree.ElementTree as ET
 from pathlib import Path
@@ -61,6 +63,7 @@ def test_g1_teacher_is_sparse_obstacle_task() -> None:
     assert "self.domain_rand.action_delay.enable = False" in text
     assert "randomize_actuator_gains" not in text
     assert "G1PlantEventCfg" not in text
+    assert "vital_v2" not in text
     t4_sparse = (ROOT / "legged_lab/locomotion/teacher_cfg.py").read_text(encoding="utf-8")
     assert "action_delay=ActionDelayCfg(enable=False" in t4_sparse
     assert "collapse_reset_pelvis_above_feet_m" not in t4_sparse
@@ -109,6 +112,21 @@ def test_g1_teacher_uses_lafan_amp() -> None:
     env_text = (ROOT / "legged_lab/locomotion/env.py").read_text(encoding="utf-8")
     assert "AmpFeatureBuilder(self.robot, self.device, self.cfg.robot_spec)" in env_text
     assert "G1AmpFeatureBuilder" not in env_text
+
+
+def test_unitree_v5_train_manifest_pins_lafan_clip_hashes() -> None:
+    from legged_lab.assets.unitree_g1.schemas import AMP_FORMAL_EXPERT_DIR, AMP_MOTION_CLASSES, AMP_HELD_OUT_MOTIONS
+
+    dataset = ROOT / AMP_FORMAL_EXPERT_DIR
+    manifest = json.loads((dataset / "_manifest.json").read_text(encoding="utf-8"))
+    expected = {stem for stem in AMP_MOTION_CLASSES if stem not in AMP_HELD_OUT_MOTIONS}
+    assert set(manifest["clips"]) == expected
+    assert "g1_from_t4_walk_forward" not in manifest["clips"]
+    train_src = (ROOT / "legged_lab/scripts/train.py").read_text(encoding="utf-8")
+    assert '"vital_v2"' in train_src
+    for name, clip in manifest["clips"].items():
+        path = dataset / f"{name}.txt"
+        assert hashlib.sha256(path.read_bytes()).hexdigest() == clip["sha256"]
 
 
 def test_g1_amp_schema_is_70d_and_does_not_change_t4() -> None:

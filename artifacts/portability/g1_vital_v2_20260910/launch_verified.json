@@ -1,0 +1,27 @@
+{
+  "time": "2026-09-10T01:07:00+08:00",
+  "scope": "startup only; no locomotion capability claim",
+  "tmux": "g1-vital-v2",
+  "remote_root": "/home/nubot/phn_ws/t4_train/TienKung-Lab-g1-vital-v2-20260910",
+  "run": "/home/nubot/phn_ws/t4_train/TienKung-Lab-g1-vital-v2-20260910/logs/g1_vital_motion/2026-09-10_01-05-50_vital_motion_v2",
+  "profile": "vital_v2",
+  "amp": "motion_amp_expert_unitree_v5",
+  "gpus": [1, 3],
+  "untouched_gpus": [0, 2],
+  "envs_per_rank": 2048,
+  "max_iterations": 30000,
+  "resume": false,
+  "model_0": true,
+  "tensorboard": "http://100.100.188.39:8045/#timeseries",
+  "tensorboard_tmux": "g1-vital-v2-tb",
+  "verified": {
+    "action_delay": "enable true, min 0 max 2",
+    "static_friction": [0.4, 1.2],
+    "reset_velocity": "x/y/yaw +-0.3",
+    "actuator_gains": "kp/kd 0.9-1.1",
+    "action_rate_l2": -0.01,
+    "acceleration_termination_enabled": false,
+    "tracking_gate_enabled": false,
+    "amp_is_rob2rob_full17": false
+  }
+}

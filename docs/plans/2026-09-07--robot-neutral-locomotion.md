@@ -1,5 +1,7 @@
 # 机器人无关的运动训练算法整理
 
+Status: superseded for G1 teacher execution. G1 现行开训计划是 `docs/plans/2026-09-10--g1-vital-v2-lafan-dr-plan.md`。下文保留 VITAL v1 与核心修复历史。
+
 ## 2026-09-08：G1 VITAL 起步配方实验（与核心修复主训练并行）
 
 用户授权使用空闲GPU1/3尽快启动真实训练实验，检验G1是否更愿意迈步；固定checkpoint取消终止的回放不能回答训练诱导问题。

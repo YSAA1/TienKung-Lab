@@ -39,6 +39,11 @@ def main():
     parser.add_argument("--data-dir", type=Path, required=True)
     parser.add_argument("--record", type=Path)
     parser.add_argument("--snapshot-dir", type=Path)
+    parser.add_argument(
+        "--start",
+        default="",
+        help="Substring of the clip name to start on, e.g. walk_forward. N/P still cycle clips.",
+    )
     args = parser.parse_args()
     model, joint_ids, _ = load_model()
     with tempfile.TemporaryDirectory(prefix="g1_curated_view_") as temp:
@@ -89,7 +94,16 @@ def main():
         writer.close()
         renderer.close()
         return
-    state = {"clip": 0, "paused": False, "frame": 0}
+    start_clip = 0
+    if args.start:
+        matches = [i for i, (name, _, _) in enumerate(clips) if args.start in name]
+        if not matches:
+            known = ", ".join(name for name, _, _ in clips)
+            raise SystemExit(f"--start {args.start!r} matched no clip; known={known}")
+        start_clip = matches[0]
+    state = {"clip": start_clip, "paused": False, "frame": 0}
+    print("clips:", *[name for name, _, _ in clips], sep="\n  ", flush=True)
+    print(f"starting {clips[start_clip][0]} | Space pause | N next | P previous", flush=True)
 
     def on_key(key):
         if key == 32:
@@ -105,14 +119,18 @@ def main():
             name, rows, frames = clips[state["clip"]]
             pose(rows, frames, state["frame"])
             viewer.cam.lookat[:] = rows[state["frame"], :3] + [0, 0, -0.15]
-            viewer.set_texts(
-                (
-                    mujoco.mjtFontScale.mjFONTSCALE_150,
-                    mujoco.mjtGridPos.mjGRID_TOPLEFT,
-                    f"{name}\nKinematic expert | Space pause | N/P clip",
-                    "",
+            overlay = f"{name}\nKinematic expert | Space pause | N/P clip"
+            try:
+                viewer.set_texts(
+                    (
+                        mujoco.mjtFontScale.mjFONTSCALE_150,
+                        mujoco.mjtGridPos.mjGRID_TOPLEFT,
+                        overlay,
+                        "",
+                    )
                 )
-            )
+            except AttributeError:
+                viewer.set_title(overlay.replace("\n", " | "))
             viewer.sync()
             if not state["paused"]:
                 state["frame"] += 1

@@ -21,3 +21,7 @@ wandb
 MUJOCO_LOG.TXT
 .history
 t4_vault_student_minimal_20260812.zip
+
+# z2 upstream provenance fixture (fetched by scripts/fetch_z2_upstream_fixtures.py)
+work/upstream-z2/
+artifacts/checkpoints/nubot/

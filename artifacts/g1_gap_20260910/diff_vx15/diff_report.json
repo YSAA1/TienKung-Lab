@@ -1,0 +1,47 @@
+{
+  "steps": 400,
+  "vx": 1.5,
+  "tol": 0.02,
+  "first_divergence": {
+    "hist9.base_ang_vel": {
+      "step": 2,
+      "peak": 3.3031327724456787
+    },
+    "hist9.projected_gravity": {
+      "step": 12,
+      "peak": 0.1900242567062378
+    },
+    "hist9.velocity_command": {
+      "step": null,
+      "peak": 0.0
+    },
+    "hist9.joint_pos": {
+      "step": 1,
+      "peak": 1.968010663986206
+    },
+    "hist9.joint_vel": {
+      "step": 1,
+      "peak": 19.083141326904297
+    },
+    "hist9.previous_action": {
+      "step": 2,
+      "peak": 8.845352172851562
+    },
+    "hist9.gait_phase_sin": {
+      "step": 225,
+      "peak": 1.5024999380111694
+    },
+    "hist9.gait_phase_cos": {
+      "step": 225,
+      "peak": 1.5026535987854004
+    },
+    "hist9.gait_air_ratio": {
+      "step": null,
+      "peak": 0.0
+    },
+    "contact": {
+      "step": 7,
+      "peak": 1.0
+    }
+  }
+}
