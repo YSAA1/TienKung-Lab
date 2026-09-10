@@ -86,5 +86,49 @@
   "simulator": "isaaclab",
   "source_dataset": "lvhaidong/LAFAN1_Retargeting_Dataset",
   "status": "lafan1_retarget_provisional",
-  "transition_dim": 140
+  "transition_dim": 140,
+  "clips": {
+    "run1_subject2": {
+      "sha256": "ee2eec13e876e9fb41e3cb1921b70af7d2dff0b1f4787a91e3bbecc9fc1ea462",
+      "frames": 899,
+      "motion_class": "run",
+      "motion_weight": 0.3,
+      "frame_duration": 0.03333333333333333
+    },
+    "run2_subject1": {
+      "sha256": "5482b6088771b08abbaee1aa56f969cbe219f658ea5aaf022aa6a642f1714e8a",
+      "frames": 899,
+      "motion_class": "run",
+      "motion_weight": 0.3,
+      "frame_duration": 0.03333333333333333
+    },
+    "walk1_subject1": {
+      "sha256": "73f5c347fdef14c654376c4810dfffab934fd908745c2e392a09c4341bb9bba7",
+      "frames": 899,
+      "motion_class": "walk_forward",
+      "motion_weight": 0.25,
+      "frame_duration": 0.03333333333333333
+    },
+    "walk2_subject1": {
+      "sha256": "f8a3e449812e237ad00901c052ad177c326a681db031cfbb1505a02aa0b26bc3",
+      "frames": 899,
+      "motion_class": "walk_forward",
+      "motion_weight": 0.25,
+      "frame_duration": 0.03333333333333333
+    },
+    "walk3_subject1": {
+      "sha256": "240f29c7eece037641bc4bbdb4931a3760eebe8b7b511c4f67012d5db5af6701",
+      "frames": 899,
+      "motion_class": "walk_forward",
+      "motion_weight": 0.25,
+      "frame_duration": 0.03333333333333333
+    },
+    "walk4_subject1": {
+      "sha256": "9f15369f703d27eb1a6bd12cb9ce53e551a5fa589a692254ef8d98b72f1602f6",
+      "frames": 899,
+      "motion_class": "walk_forward",
+      "motion_weight": 0.25,
+      "frame_duration": 0.03333333333333333
+    }
+  }
 }

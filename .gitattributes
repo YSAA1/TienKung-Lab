@@ -1,0 +1,41 @@
+# Canonical line endings: this repository is executed on Linux training servers
+# and hashes dataset/manifest bytes verbatim, so text must round-trip as LF on
+# every platform. Binary assets are pinned explicitly.
+* text=auto eol=lf
+
+*.sh text eol=lf
+*.py text eol=lf
+*.md text eol=lf
+*.txt text eol=lf
+*.json text eol=lf
+*.yaml text eol=lf
+*.yml text eol=lf
+*.toml text eol=lf
+*.cfg text eol=lf
+*.xml text eol=lf
+*.urdf text eol=lf
+*.csv text eol=lf
+.gitignore text eol=lf
+.gitattributes text eol=lf
+
+*.pt binary
+*.npz binary
+*.npy binary
+*.pkl binary
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.mp4 binary
+*.onnx binary
+*.usd binary
+*.usda binary
+*.usdc binary
+*.stl binary
+*.dae binary
+*.obj binary
+*.mtl binary
+*.zip binary
+*.tar binary
+*.tar.gz binary
+*.bundle binary
+*.pdf binary

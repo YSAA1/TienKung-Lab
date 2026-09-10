@@ -25,7 +25,7 @@
   "sources": {
     "walk1_subject1": {
       "path": "legged_lab/envs/g1/datasets/motion_source/walk1_subject1.csv",
-      "sha256": "68c7887438e94f1f3d9ebacd3a8ce59251a22c7b05129a0f5d7cacaedc48c28d",
+      "sha256": "79e1c935af738bf2d2392bcb9fbe6381a6394f4f930ec5d933296aaca3f2dcd3",
       "frames": 7840,
       "old_isaac_endpoint_max_error_m": 9.635216542125402e-07,
       "old_first_30s": {
@@ -51,7 +51,7 @@
     },
     "walk2_subject1": {
       "path": "legged_lab/envs/g1/datasets/motion_source/walk2_subject1.csv",
-      "sha256": "51cf310f14ecbb8be1f41ea09345df0c89024ff884fb9ab881cac339f820c787",
+      "sha256": "b43902953e9c58d7ccec206c57275d4a290ba7adf355b0783294399bfc39f27a",
       "frames": 7146,
       "old_isaac_endpoint_max_error_m": 1.2181649702231248e-06,
       "old_first_30s": {
@@ -77,7 +77,7 @@
     },
     "walk3_subject1": {
       "path": "legged_lab/envs/g1/datasets/motion_source/walk3_subject1.csv",
-      "sha256": "22ab870d9957a62c1dfe3c1ec0a8a9af84c6c965065fff6fc936c3fac21d16eb",
+      "sha256": "d23a6bcb4e750a08a70848b593ac363c746ec8a3b37f75fd8f0c562bf4ec5f76",
       "frames": 7399,
       "old_isaac_endpoint_max_error_m": 1.515867829635087e-06,
       "old_first_30s": {
@@ -103,7 +103,7 @@
     },
     "walk4_subject1": {
       "path": "legged_lab/envs/g1/datasets/motion_source/walk4_subject1.csv",
-      "sha256": "03fe681190873e70d2b5635dc35aa228084136fcd61f1a0dcfcd6c25e12cdbaa",
+      "sha256": "690f76df575927c9545460441039da021c1c2e6f741a45214e50a8ce6b09762e",
       "frames": 4918,
       "old_isaac_endpoint_max_error_m": 8.857585444277394e-07,
       "old_first_30s": {
@@ -129,7 +129,7 @@
     },
     "run1_subject2": {
       "path": "legged_lab/envs/g1/datasets/motion_source/run1_subject2.csv",
-      "sha256": "ec02af4447a62214a6fec6afff60c75d0ecc8f80f8fb45e3cd4119fed9ceac8d",
+      "sha256": "05e17399f5055b813a7c5f158cfd3f2789d38624b7169048287ce54981ae7e31",
       "frames": 7135,
       "old_isaac_endpoint_max_error_m": 8.03287020012533e-07,
       "old_first_30s": {
@@ -155,7 +155,7 @@
     },
     "run2_subject1": {
       "path": "legged_lab/envs/g1/datasets/motion_source/run2_subject1.csv",
-      "sha256": "ae64767c4b4e8f59578c22c5848cefc569923fea8bd3755c8dfb02b5313773da",
+      "sha256": "c5e0bc73cc0fcc893f7867cee7e61c2fe636f09253ce777b89959d0847a84bf1",
       "frames": 7345,
       "old_isaac_endpoint_max_error_m": 1.7201197964888948e-06,
       "old_first_30s": {
@@ -206,7 +206,7 @@
       "full_stride_cycles": 4,
       "motion_class": "walk_forward",
       "motion_weight": 0.11564265536723164,
-      "sha256": "97a2e558eeca33fa861e792ccd09f5a9b2518827a82dba7aa954d656b6ea9bb3",
+      "sha256": "95263a8c9d2815d67958846a2a57865cbd2da2a8fada5d46a377c5ec2f6f0e3a",
       "frames": 131
     },
     "walk4_subject1_02403_02552": {
@@ -234,7 +234,7 @@
       "full_stride_cycles": 5,
       "motion_class": "walk_forward",
       "motion_weight": 0.13153248587570623,
-      "sha256": "efbec7e789b5e07ddb77cb0a2b6ab891d52d47d12fd4e55a1be2097c417e76a7",
+      "sha256": "6af9b9630bb2132c3ceefe857af7cd17439e26a0033455d859de1e46b78f3e4b",
       "frames": 149
     },
     "walk4_subject1_02648_02770": {
@@ -262,7 +262,7 @@
       "full_stride_cycles": 4,
       "motion_class": "walk_forward",
       "motion_weight": 0.10769774011299435,
-      "sha256": "3b963ff4af18188141efec3c1ed4463bedb4e5da715f3389449ea9a02f8dc69b",
+      "sha256": "33a860ec32dc83ee8d6ccc4891ca0a82648a47d68667faf0f144cf15f2434704",
       "frames": 122
     },
     "walk4_subject1_03495_03582": {
@@ -290,7 +290,7 @@
       "full_stride_cycles": 3,
       "motion_class": "walk_forward",
       "motion_weight": 0.07680084745762712,
-      "sha256": "f48ad8d2901d1cb92ac27a3fbe4cb7bcb05688673a8ad26d6d992479b87412f5",
+      "sha256": "b0d8326c9c42c7f35e1a9467a1224520e1bf04b2b1efd74d5d74c8a336f3cdc4",
       "frames": 87
     },
     "walk4_subject1_04486_04599": {
@@ -318,7 +318,7 @@
       "full_stride_cycles": 5,
       "motion_class": "walk_forward",
       "motion_weight": 0.09975282485875707,
-      "sha256": "7c09458e98a4e6b5b0d694c34ee80463e2143c94ed1d4a66553cef1a114be6c0",
+      "sha256": "7f67767ac013354f272f2ba03e0510418c87057c015ce915d9f6ce02dc54e385",
       "frames": 113
     },
     "walk4_subject1_04639_04745": {
@@ -346,7 +346,7 @@
       "full_stride_cycles": 5,
       "motion_class": "walk_forward",
       "motion_weight": 0.09357344632768361,
-      "sha256": "6d78238066e0e92f58b3ca9883fed729818fe818dac9dadf5ad234ab876d7be9",
+      "sha256": "87f1ec8b710cd7edfe33bff83d031aebb849ae384235cc9330ea9d415a6f73fa",
       "frames": 106
     },
     "run1_subject2_03355_03547": {
@@ -374,7 +374,7 @@
       "full_stride_cycles": 8,
       "motion_class": "run",
       "motion_weight": 0.2544169611307421,
-      "sha256": "19f9d6117a5c526e5b2662dafa7bf6df284460d1f4681f704b96df912559ace2",
+      "sha256": "4d14ea4ba64a31d059140a5e9f1a67319c251447210a15128d83eb96e11a4764",
       "frames": 192
     },
     "run1_subject2_03702_03793": {
@@ -402,7 +402,7 @@
       "full_stride_cycles": 4,
       "motion_class": "run",
       "motion_weight": 0.12058303886925795,
-      "sha256": "db0dd65d86864dcffcb9104d2a14b03b6ecabf235fb4e72552bbf72d832da8b0",
+      "sha256": "6ca1306d3995afd402631e540263383612fb98a0d87892f50670746f9be0376b",
       "frames": 91
     }
   },
