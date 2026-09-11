@@ -200,11 +200,19 @@ def convert_file(path: Path, output_csv: Path, weight_stems: tuple[str, ...] = A
     rows = motion_to_csv_rows(motion)
     write_csv(output_csv, rows)
     stem = output_csv.stem
+    # Record repo-relative paths when possible so manifests stay portable
+    # across checkouts (absolute paths break generation on remote hosts).
+    try:
+        source_record = path.resolve().relative_to(ROOT).as_posix()
+        csv_record = output_csv.resolve().relative_to(ROOT).as_posix()
+    except ValueError:
+        source_record = path.as_posix()
+        csv_record = output_csv.as_posix()
     return {
         "stem": stem,
-        "source": str(path.as_posix()),
+        "source": source_record,
         "source_sha256": sha256(path),
-        "csv": str(output_csv.as_posix()),
+        "csv": csv_record,
         "csv_sha256": sha256(output_csv),
         "fps": float(motion["fps"]),
         "frames": int(rows.shape[0]),

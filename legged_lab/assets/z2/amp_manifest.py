@@ -51,7 +51,15 @@ def resolve_raw_source_path(item: dict, motion_dir: Path) -> Path:
     declared = Path(str(item.get("source", "")))
     if declared.is_file():
         return declared
-    fallback = motion_dir.parent / "motion_source_raw" / Path(str(item.get("source", ""))).name
+    # Portable fallback: keep the declared path's suffix below the last
+    # ``motion_source_raw`` marker (preserving subdirectories like ``liyang/``);
+    # fall back to the bare file name for legacy flat manifests.
+    parts = declared.parts
+    if "motion_source_raw" in parts:
+        suffix = Path(*parts[parts.index("motion_source_raw") + 1 :])
+    else:
+        suffix = Path(declared.name)
+    fallback = motion_dir.parent / "motion_source_raw" / suffix
     if fallback.is_file():
         return fallback
     raise FileNotFoundError(f"raw source missing at declared {declared} and fallback {fallback}")

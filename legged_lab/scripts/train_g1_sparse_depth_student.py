@@ -26,12 +26,6 @@ from legged_lab.scripts.isaaclab_runtime_compat import (
 parser = argparse.ArgumentParser(description="Distill the G1 sparse teacher into a GRU depth student.")
 parser.add_argument("--teacher_checkpoint", type=str, required=True)
 parser.add_argument(
-    "--student_warmstart_checkpoint",
-    type=str,
-    default="",
-    help="Optional student control-stack warm start; resets critic/Adam/std like the T4 lineage gate.",
-)
-parser.add_argument(
     "--teacher_eval_manifest",
     action="append",
     default=[],
@@ -73,7 +67,12 @@ def _require_g1_sparse_teacher(path: Path, eval_manifests, allow_ungated: bool) 
     if not path.is_file():
         raise FileNotFoundError(path)
     blob = torch.load(path, map_location="cpu", weights_only=False)
-    model_state = blob.get("model_state_dict", blob)
+    model_state = blob.get("model_state_dict")
+    if model_state is None:
+        raise ValueError(f"{path} is not an OnPolicyRunner checkpoint (no model_state_dict)")
+    student_keys = [key for key in model_state if key.startswith(("student.", "depth_encoder."))]
+    if student_keys:
+        raise ValueError(f"{path} looks like a depth-student checkpoint ({student_keys[:3]}...); refusing")
     obs_dim = int(model_state["actor.0.weight"].shape[1])
     if obs_dim != G1_SPARSE_TEACHER_ACTOR_OBS_DIM:
         raise ValueError(
@@ -102,7 +101,7 @@ def _require_g1_sparse_teacher(path: Path, eval_manifests, allow_ungated: bool) 
             listed_path = manifest_path.parent / listed_path
         if listed_path.resolve() != teacher_resolved:
             raise ValueError(f"{manifest_path} points at {listed_path}, not the frozen teacher {path}")
-        if payload.get("checkpoint_sha256") not in (None, digest):
+        if str(payload.get("checkpoint_sha256", "")).lower() not in ("", digest):
             raise ValueError(f"{manifest_path} checkpoint_sha256 mismatch for {path}")
     info["manifests"] = [str(item) for item in manifests]
     return info

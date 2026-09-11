@@ -105,3 +105,9 @@ def test_g1_student_env_uses_shared_runtime_and_robot_spec_boundary():
         "(STUDENT_DEPTH_HISTORY_LENGTH, *DEPTH_POLICY_SIZE)" in cfg_source
     )
     assert STUDENT_DEPTH_HISTORY_LENGTH == 1 and STUDENT_PROPRIO_HISTORY_LENGTH == 1
+
+
+def test_g1_camera_quat_matches_t4_schema_camera_bitwise():
+    from legged_lab.assets.t4.schemas import depth_camera_ros_quat_wxyz as t4_quat
+
+    assert g1_depth_camera_ros_quat_wxyz() == t4_quat()

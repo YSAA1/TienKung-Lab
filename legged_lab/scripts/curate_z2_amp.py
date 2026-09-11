@@ -32,9 +32,12 @@ def main() -> None:
         destination = raw_dir / filename
         if destination.is_file():
             continue
-        source = args.upstream_dir / filename
-        if not source.is_file():
-            raise FileNotFoundError(f"upstream fixture missing {source}; run fetch_z2_upstream_fixtures.py")
+        # upstream layout is not uniform (e.g. walk_l lives under liyang/ but
+        # was migrated to the flat raw dir); try both candidate locations
+        candidates = [args.upstream_dir / filename, args.upstream_dir / "liyang" / Path(filename).name]
+        source = next((candidate for candidate in candidates if candidate.is_file()), None)
+        if source is None:
+            raise FileNotFoundError(f"upstream fixture missing {filename}; run fetch_z2_upstream_fixtures.py")
         destination.parent.mkdir(parents=True, exist_ok=True)
         shutil.copyfile(source, destination)
         copied.append(str(destination.relative_to(ROOT)))

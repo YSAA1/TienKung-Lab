@@ -1111,7 +1111,7 @@ def test_z2_vital_v31_layers_shared_plant_dr_without_touching_rewards():
     module = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(module)
     cfg = SimpleNamespace(
-        robot_spec=SimpleNamespace(name="z2", torso="waist_yaw_link"),
+        robot_spec=SimpleNamespace(name="z2", torso="waist_roll_link"),
         domain_rand=SimpleNamespace(
             action_delay=SimpleNamespace(enable=False, params={"min_delay": 0, "max_delay": 5}),
             encoder_bias=SimpleNamespace(enable=False, params={"bias_range": (-0.015, 0.015), "ramp_steps": 0}),
@@ -1178,3 +1178,37 @@ def test_curated_v2_sources_all_move_forward():
         net = np.linalg.norm(rows[-1, :2] - rows[0, :2])
         speed = net / (rows.shape[0] / item["fps"])
         assert speed > 0.5, f"{item['stem']} is not sustained forward motion ({speed:.2f} m/s)"
+
+
+def test_curated_v2_manifest_is_portable_across_checkouts(tmp_path):
+    """Declared raw paths must resolve on a foreign checkout (P1 regression).
+
+    The manifest records repo-relative sources; absolute paths from the
+    generating machine must fall back to the checkout-local raw tree while
+    preserving subdirectories (liyang/).
+    """
+    from legged_lab.assets.z2.amp_manifest import validate_z2_source_manifest
+
+    source_dir = ROOT / "legged_lab/envs/z2/datasets/motion_source_z2_v2"
+    manifest = json.loads((source_dir / "_manifest.json").read_text(encoding="utf-8"))
+    # sanity: sources are repo-relative, not machine-bound
+    for item in manifest["motions"]:
+        assert not Path(item["source"]).is_absolute(), item["source"]
+    # simulate a foreign checkout: prefix every declared source with another root
+    foreign = json.loads(json.dumps(manifest))
+    for item in foreign["motions"]:
+        item["source"] = f"/foreign/checkout/{item['source']}"
+    checked = validate_z2_source_manifest(foreign, source_dir)
+    assert set(checked) == {"walk_l", "run2", "run_l", "run_140_l"}
+    assert checked["run_l"]["source"].name == "run_l.pkl"
+    assert "liyang" in checked["run_l"]["source"].parts
+
+
+def test_curated_v2_expert_tree_validates_with_expected_stems(tmp_path):
+    from legged_lab.assets.z2.amp_manifest import validate_z2_source_manifest
+    from legged_lab.assets.z2.schemas import AMP_CURATED_V2_STEMS
+
+    source_dir = ROOT / "legged_lab/envs/z2/datasets/motion_source_z2_v2"
+    manifest = json.loads((source_dir / "_manifest.json").read_text(encoding="utf-8"))
+    checked = validate_z2_source_manifest(manifest, source_dir)
+    assert set(checked) == set(AMP_CURATED_V2_STEMS)

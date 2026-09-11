@@ -21,6 +21,7 @@ from legged_lab.envs.g1.depth_student_contract import (
     G1_STUDENT_RENDER_SIZE,
 )
 from legged_lab.envs.g1.teacher_cfg import G1LocoTeacherEnvCfg
+from legged_lab.locomotion.mdp.camera_extrinsic import LIGHTLP_CAMERA_ORI_JITTER_RAD, LIGHTLP_CAMERA_POS_JITTER_M
 from legged_lab.sensors.camera.camera_cfg import CameraCfg
 from legged_lab.sensors.camera.camera_cfgs import TiledD455CameraCfg
 
@@ -56,6 +57,10 @@ class G1LocoSparseDepthStudentEnvCfg(G1LocoTeacherEnvCfg):
     """G1 sparse teacher MDP with a deployable depth/proprio student stream."""
 
     policy_role: str = "student"
+    # Same per-env camera mounting-tolerance DR as the T4 S12 student line
+    # (consumed by LightLPDepthDistillationEnv's extrinsic jitter).
+    student_camera_pos_jitter_m: float = LIGHTLP_CAMERA_POS_JITTER_M
+    student_camera_ori_jitter_rad: float = LIGHTLP_CAMERA_ORI_JITTER_RAD
 
     def __post_init__(self):
         super().__post_init__()
