@@ -10,6 +10,7 @@
 - B3 部分：dropout 地形调档（`central_band_column_draw` + `student_depth_spare_lateral_for_sparse`，默认关）——踏石 env dropout 块避开两侧 1/4 边距；ResidualFt-G1/辅助头归 B2/B4。
 - 验证：本地 495 passed 6 skipped（含新增遮挡 5 项 + v31 profile 合同 + central band）；black/flake8 干净。默认路径零行为变化（全部旋钮默认关）。
 - 审查：用户指定 KIMI K3 外部对抗审查未达成（kimi CLI 缺失 + MOONSHOT_API_KEY 未设；codex 限额至 9/15、claude 认证失败、gemini 未装、grok 挂起终止）；改为内部对抗审查（self，10 审查点全过，无 Critical/Important；2 项 P2：encoder bias env 级路径待 Isaac 启动即验、`legged_lab.mdp` 是否重导出 `randomize_rigid_body_com` 同为启动即验）。任务包保留 `work/review/vital-v31-review-task.md`（gitignored）可补跑。
+- 审查修复轮（subagent 只读对抗审查，commit `1e58fc6`）：**P0** IsaacLab 2.1.0 正式版无 `randomize_rigid_body_com`（nubot 树有属版本差异）→ `legged_lab/mdp/events.py` 重导出 `motion_tracking` 本地实现 + 来源静态合同测试；**P1** 遮挡掩码展平方向反了（真实布局 y 外 x 内 `iy*nx+ix`，原 view 成斜条纹）→ `scan_occlusion.py` 重写 + 测试按物理布局断言；P2×4：runbook S12 线渲染尺寸澄清（原生 48×64，270×480 是旧线）、reset 防御 getattr 改直连+补 stub、偏置全程恒定语义入 docstring、计划 A2 草案残留清理 + B4 蒸馏输入一致性备注。修复后 496 passed 6 skipped。教训：teacher 观测几何类改动必须对照 `tests/test_t4_observation_contracts.py` 的扫描布局权威。
 
 ## 2026-09-11：项目整合收敛（main+develop 单工作树）
 
