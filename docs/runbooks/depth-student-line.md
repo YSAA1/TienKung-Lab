@@ -49,10 +49,10 @@
 ## 3. 换机器人接入清单（以 G1 为例，B2 执行时照此逐项）
 
 1. **教师就绪**：目标机器人的稀疏教师过 evaluator 门（G1=vital_v3.1，A 轨产物）。学生线入口的 manifest 门控即挂此验收 JSON。
-2. **深度相机 cfg**：在 G1 侧新建 `…_student_depth_camera()`：选真实部署相机（G1 机头 D435 类 87° HFOV 对齐 T4 合同，或按实机改 `DEPTH_POLICY_SIZE`——改尺寸即改合同，须同步 schemas、sim2sim、导出三处）。
-3. **环境 cfg**：`legged_lab/envs/g1/depth_student_env.py` 新建，继承 G1 教师 cfg（`motion_experiment` 的 vital profile），按 T4 的 `T4LocoSparseDepthStudentEnvCfg` 逐段对照抄写；机器人通过 `LocomotionRobotSpec` 接入，不继承 T4 任务实现（AGENTS 合同）。
+2. **深度相机 cfg**（G1 已落地，2026-09-12）：`legged_lab/envs/g1/depth_student_env.py::`_g1_student_depth_camera`——TiledD455 原生 48×64，torso_link 挂载 (0.10, 0, 0.25)、35° 下视（纯合同在 `depth_student_contract.py`，本地可测）。换实机相机时改 contract 常量并同步 sim2sim/导出。
+3. **环境 cfg**（G1 已落地）：`legged_lab/envs/g1/depth_student_env.py`——`G1LocoSparseDepthStudentEnvCfg` 继承 `G1LocoTeacherEnvCfg`（G1 的 LightLP 稀疏教师本体），另含 `…ReprFirstEnvCfg`（hard 行起步）。共享运行时 `LightLPDepthDistillationEnv`，不 import T4 任务代码。
 4. **配方 cfg**：G1 版 agent/algorithm cfg（ReprFirst 主配方 + ResidualFt 变体先行），策略输入维度由 `ObservationLayout` 推导，不手写。
-5. **训练脚本**：克隆 `train_t4_sparse_depth_student.py` 的 G1 版（改教师 lineage 门控与 cfg import），沿用"不走 registry"惯例。
+5. **训练脚本**（G1 已落地）：`legged_lab/scripts/train_g1_sparse_depth_student.py`——repr-first 主配方；教师门=1997D 结构检查 + evaluator manifest 哈希对账（或显式 waiver）。
 6. **sim2sim**：`sim2sim_g1_depth_student.py` + headless 评估器 G1 版：G1 MJCF、伺服增益/力矩限取自 `legged_lab/assets/g1/`、步态时钟参数用 G1 教师合同值。
 7. **测试**：跑 `tests/test_robot_neutral_depth_env.py`（参数化自动覆盖）+ G1 版 GRU/sim2sim 合同测试。
 8. **验收**：B4 训练中期起用 G1 版 headless 评估器做 MuJoCo 探针（Isaac/MuJoCo 双曲线），B5 按 evaluator JSON + lineage + 连续回放出证据（AGENTS 能力声明合同）。
