@@ -1211,7 +1211,7 @@ class LocomotionEnv(VecEnv):
         self.actor_obs_buffer.reset(env_ids)
         self.critic_obs_buffer.reset(env_ids)
         self.scan_obs_buffer.reset(env_ids)
-        if getattr(self, "scan_occlusion_masks", None) is not None:
+        if self.scan_occlusion_masks is not None:
             fresh = sample_column_band_masks(
                 self.num_envs,
                 TEACHER_SCAN_SHAPE,

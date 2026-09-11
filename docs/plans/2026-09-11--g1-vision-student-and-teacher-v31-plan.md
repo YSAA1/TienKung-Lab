@@ -16,14 +16,10 @@
   - 15k 监控点：tracking ≥ 0.5（v1 轨迹对照）；若 promotion 异常按 v1 对照复盘，不改门限。
   - 产物：evaluator JSON + lineage + 证据归档 `artifacts/g1_vital_v3/`。
 - [x] A2 v3.1 三项 DR 增量（代码与单测已落，2026-09-11；重训待 A1 通过）
-  - 编码器偏置 ±0.015 rad：`EncoderBiasCfg`（`legged_lab/config.py`），env 观测组装处 ramp 施加，`VITAL_V31_ENCODER_BIAS` 与 v3 同窗。
-  - 根 COM 偏移：`vital_v31` profile 挂 IsaacLab `randomize_rigid_body_com` startup 事件，torso ±0.05 m 三轴。
-  - 教师特权高度图 dropout：`HeightScannerCfg.occlusion_*` + `legged_lab/locomotion/mdp/scan_occlusion.py`（RPL 式侧向带遮挡，仅 actor 流，critic 保持特权干净）。
-  - 验收：`tests/test_g1_dr_ramp.py`（遮挡纯函数 5 项）+ `tests/test_g1_motion_experiment.py`（v31 profile 合同）通过；本地全量 495 绿；black/flake8 干净。
-  - 编码器偏置 ±0.015 rad：startup per-env 常值偏置，并入 v3 ramp 框架作第四事件（0 → ±0.015）。
-  - 根 COM 偏移：torso ±0.05 m 三轴，startup。
-  - 教师特权高度图 dropout：per-env 概率遮挡（5–10%，步态锁定后渐开，与 v3 同调度思想）。
-  - 验收：`tests/test_g1_dr_ramp.py` 补三事件单测（ramp 数学走 `legged_lab/mdp/ramp.py` 纯函数）；本地合同测试绿。
+  - 编码器偏置 ±0.015 rad：`EncoderBiasCfg`（`legged_lab/config.py`），env 观测组装处 ramp 施加（构造期采样一次、全程恒定），`VITAL_V31_ENCODER_BIAS` 与 v3 同窗。
+  - 根 COM 偏移：`vital_v31` profile 挂 `randomize_rigid_body_com` startup 事件，torso ±0.05 m 三轴；IsaacLab 2.1.0 正式版缺该函数，由 `legged_lab/mdp/events.py` 重导出 `motion_tracking` 的本地实现（静态合同测试锁定来源）。
+  - 教师特权高度图 dropout：`HeightScannerCfg.occlusion_*` + `legged_lab/locomotion/mdp/scan_occlusion.py`（RPL 式侧向带遮挡，按扫描 y 外 x 内展平布局 `iy*nx+ix` 构造，仅 actor 流，critic 保持特权干净）。
+  - 验收：`tests/test_g1_dr_ramp.py`（遮挡纯函数，按物理布局断言）+ `tests/test_g1_motion_experiment.py`（v31 profile 合同 + COM 函数来源合同）通过；本地全量测试绿；black/flake8 干净。审查修复轮（subagent 对抗审查）修正了遮挡展平方向与 COM 函数来源两个缺陷。
 - [ ] A3 v3.1 G1 重训（依赖 A2）：单卡 ~29h；nubot tmux，沿用 v3 启动模板。
   - 验收：同 A1 KPI 对 v3 不回归（MuJoCo 探针是门不是参考）。
 - [ ] A4 T4/Z2 v3.1 跟进（排队，非阻塞，单独开切片时再细化）。
@@ -53,6 +49,7 @@
   - 验收：每项配单测（噪声/遮挡函数纯逻辑可本地测）；不动已验证的 `depth_noise` 既有函数语义。
 - [ ] B4 G1 深度学生训练（依赖 B2+B3+A3：教师用 v3.1 checkpoint）
   - nubot，repr-first 三阶段；训练中期（DAgger 段）即插入 MuJoCo sim2sim 深度探针，不等终训——T4 s12 "Isaac 过门但 MuJoCo 稀疏仍摔"的教训：sim2sim 提前、当门用。
+  - 蒸馏输入一致性（B2 立项时显式决策）：v3.1 教师训练期 actor 流带编码器偏置/扫描遮挡，而 `DepthDistillationEnv` 的 teacher_obs 是干净特权流——B2 的 G1 学生环境需决定是否对教师推理流施加同款腐蚀，避免教师"训时有噪、蒸馏时无噪"的输入分布失配。
 - [ ] B5 双仿真器验收
   - Isaac evaluator：对照 T4 s12 的 Isaac hard 门定 G1 KPI（踏石/圆桩 reach_2m）。
   - MuJoCo sim2sim 深度探针（复用 `sim2sim_t4_depth_student.py` 模式做 G1 版）：稀疏地形 KPI 过门 + 平地不回归。

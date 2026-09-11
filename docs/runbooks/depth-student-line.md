@@ -25,7 +25,7 @@
 
 **T4 特化层（换机器人要对应新建的部分）**
 
-- `legged_lab/envs/t4/depth_student_env.py` — 环境族：`T4LocoSparseDepthStudentEnvCfg`（基）→ `…ReprFirstEnvCfg`（表征阶段上 hard 稀疏行）→ `…FtEnvCfg` → `…ResidualFtEnvCfg` / `…TargetedFtEnvCfg` / `…PlantFtEnvCfg`。机器人差异点全在这里：继承自机器人的教师 cfg、`_t4_student_depth_camera()`（D455 风格躯干相机，87° HFOV，270×480 出图）。
+- `legged_lab/envs/t4/depth_student_env.py` — 环境族：`T4LocoSparseDepthStudentEnvCfg`（基）→ `…ReprFirstEnvCfg`（表征阶段上 hard 稀疏行）→ `…FtEnvCfg` → `…ResidualFtEnvCfg` / `…TargetedFtEnvCfg` / `…PlantFtEnvCfg`。机器人差异点全在这里：继承自机器人的教师 cfg、`_t4_student_depth_camera()`（D455 风格躯干相机，87° HFOV）。出图尺寸注意：**现行 S12 线 Tiled RTX 原生 48×64 直出**（`SPARSE_STUDENT_RENDER_SIZE = DEPTH_POLICY_SIZE`，无 resize）；270×480→resize 是旧 Stage E 走跑线的渲染尺寸，勿抄进新机器人接入。
 - `legged_lab/envs/t4/depth_student_cfg.py` — 配方族（agent/algorithm）：
   - `T4SparseDepthStudentReprFirstAgentCfg/…AlgCfg`：**现行主配方**（一轮式表征先行：教师驱动扫描 → Ross DAgger，无 PPO）；
   - `…FinalMainAlgCfg`（mix 2k + critic 200 + DAgger + pg 0.2 一轮式主蒸馏）；

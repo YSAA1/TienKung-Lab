@@ -342,3 +342,14 @@ def test_vital_v31_adds_encoder_bias_com_and_scan_occlusion_on_top_of_v3():
     assert cfg.acceleration_termination_enabled is False
     assert cfg.deterministic_fall_limits == (0.8, 1.0)
     assert cfg.gait.tracking_gate_enabled is False
+
+
+def test_com_randomization_resolves_through_legged_lab_mdp_on_isaaclab_210():
+    """IsaacLab 2.1.0 releases lack randomize_rigid_body_com; the shared mdp
+    package must re-export the repo implementation so the vital_v31 Isaac path
+    (``mdp.randomize_rigid_body_com``) resolves on contract environments."""
+    events_source = (ROOT / "legged_lab/mdp/events.py").read_text(encoding="utf-8")
+    assert "randomize_rigid_body_com" in events_source
+    assert "legged_lab.motion_tracking.mdp.events import randomize_rigid_body_com" in events_source
+    motion_tracking_source = (ROOT / "legged_lab/motion_tracking/mdp/events.py").read_text(encoding="utf-8")
+    assert "def randomize_rigid_body_com(" in motion_tracking_source

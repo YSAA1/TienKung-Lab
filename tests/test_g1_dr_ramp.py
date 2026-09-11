@@ -118,20 +118,23 @@ def test_sample_column_band_masks_full_probability_max_band_covers_all():
     assert bool(torch.all(masks))
 
 
-def test_sample_column_band_masks_bands_are_lateral_columns():
+def test_sample_column_band_masks_bands_are_lateral_rows_in_scan_layout():
+    # The scanner flattens y-outer/x-inner: flat = iy * nx + ix (see
+    # tests/test_t4_observation_contracts.py). A lateral band therefore masks a
+    # contiguous run of iy across every forward ix.
     torch.manual_seed(7)
-    rows, cols = 15, 13
-    masks = sample_column_band_masks(512, (rows, cols), (0.1, 0.5), 0.5, torch.device("cpu"))
-    grid = masks.view(-1, rows, cols)
+    nx, ny = 15, 13
+    masks = sample_column_band_masks(512, (nx, ny), (0.1, 0.5), 0.5, torch.device("cpu"))
     occluded_envs = masks.any(dim=1)
     assert 0.1 < float(occluded_envs.float().mean()) < 0.9
-    # every occluded env: all rows share one contiguous column band
+    grid = masks.view(-1, ny, nx)
     for env in grid[occluded_envs]:
-        assert bool(torch.all(env == env[0:1]))
-        idx = env[0].nonzero().flatten()
-        assert 0 < len(idx) <= cols
-        if len(idx) > 1:
-            assert bool((idx[1:] - idx[:-1] == 1).all())
+        # every lateral row is fully masked or fully clear: the band spans all ix
+        assert bool(torch.equal(env.all(dim=1), env.any(dim=1)))
+        iy = env.any(dim=1).nonzero().flatten()
+        assert 0 < len(iy) <= ny
+        if len(iy) > 1:
+            assert bool((iy[1:] - iy[:-1] == 1).all())
 
 
 def test_apply_scan_occlusion_preserves_unmasked_and_fills_within_clip():

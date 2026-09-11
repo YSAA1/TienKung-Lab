@@ -179,6 +179,7 @@ def test_reset_seeds_physical_velocity_after_forward_and_preserves_other_envs():
         actor_obs_buffer=buffer,
         critic_obs_buffer=buffer,
         scan_obs_buffer=buffer,
+        scan_occlusion_masks=None,
         action_buffer=buffer,
         robot=NS(
             data=NS(body_lin_vel_w=torch.full((3, 2, 3), 9.0), root_pos_w=torch.zeros(3, 3)),

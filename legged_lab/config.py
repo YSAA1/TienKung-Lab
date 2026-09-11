@@ -258,7 +258,10 @@ class EncoderBiasCfg:
     """Per-env constant joint-position observation bias (encoder miscalibration).
 
     Unlike the zero-mean joint_pos observation noise, this is a constant offset
-    per env and joint, ramped from zero over ``ramp_steps`` policy steps.
+    per env and joint, ramped from zero over ``ramp_steps`` policy steps. The
+    bias is sampled once at construction and held for the whole run (each env
+    models one robot's fixed mounting/encoder miscalibration); it is not
+    resampled per episode.
     """
 
     enable: bool = False

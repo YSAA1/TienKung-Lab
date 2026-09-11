@@ -26,6 +26,9 @@ import torch
 from isaaclab.envs.mdp.events import push_by_setting_velocity
 from isaaclab.managers import SceneEntityCfg
 
+# IsaacLab 2.1.0 releases do not ship ``randomize_rigid_body_com`` (it only
+# exists on newer main); re-export the repo's own implementation so
+# ``legged_lab.mdp`` resolves it on every contract environment.
 from legged_lab.mdp.ramp import (
     covers_all_bodies,
     interpolate_range,
@@ -33,6 +36,7 @@ from legged_lab.mdp.ramp import (
     ramped_time_lags,
     scale_range_around_nominal,
 )
+from legged_lab.motion_tracking.mdp.events import randomize_rigid_body_com  # noqa: F401
 
 if TYPE_CHECKING:
     from isaaclab.envs import ManagerBasedEnv
