@@ -2,6 +2,15 @@
 
 2026-08-22 以前的 TB 逐窗流水已从本文件删掉，仍在 git 历史。本文件只留能接住当前切片的证据。
 
+## 2026-09-11/12：Z2 AMP curated v2 + z2_vital_v31 + B2 G1 学生环境（三任务轮）
+
+- **Z2 AMP 复查不合格**：v1 三段中 `run`/`walk` 为原地踏步（源 root 净位移 0.9–1.1 cm、速度 ~0.01 m/s），仅 `walk_l` 前进（0.76 m/s）；T-pose/哈希/dq 本身合格。证据 `artifacts/z2_amp_recheck_20260912/z2_amp_quantitative.json`。
+- **curated v2**：从 pinned 上游 fixture（c78eb1f8）晋升 `run2`（2.99 m/s）/`run_l`（1.07）/`run_140_l`（1.28），加 `walk_l` 组成 4 段（walk:run 类权重 2:1 与 v1 一致）；v1 lineage 与 `z2_loco_teacher` 默认 `amp_expert_files()` 零变化。expert 在 nubot 新树 Isaac FK 生成（4×70D），本地验收哈希/冻结臂/有限性/权重全 PASS（`motion_amp_expert_z2_v2/`，commit `6a3446d`）。
+- **subagent 对抗审查修复轮**（PASS with issues→修）：P1 v2 manifest 曾记绝对路径+回退剥 `liyang/` 子目录（远端生成必炸）→ 改仓库相对路径+后缀保留回退+可移植性测试；P2：write_csv 固定 LF 行尾（CSV 哈希机器无关，nubot 首次生成即栽在这上面）、curate 上游候选位置、G1 学生相机外参 DR 对齐 T4、教师门 fail-fast+拒学生 ckpt、测试桩 torso 值、G1/T4 四元数等价测试。506 passed 6 skipped。
+- **z2_vital_v31**：plant DR 抽共享层 `locomotion/plant_dr.py`（G1 vital_v3/v31 逐字等价，别名保持），Z2 入口只叠 DR 不动 reset-aligned 奖励/终止；`train.py --z2_motion_experiment`。启动脚本 GPU 参数化（默认 0/2）。
+- **nubot 链**：GitHub 直连慢（~50KB/s）→ 全量 git bundle 442M 走 VPN scp（md5 双端一致）+ 增量 bundle×3；新树 `TienKung-Lab-z2-vital-v31-20260912`@9bc1930。GPU 1/3 被他人任务占用 → `z2-v31-watcher` tmux 自动接力：v3（GPU0/2，~19k/30k）结束后 +2min 启动 Z2 v31 30k。
+- **B2 G1 深度学生**：`depth_student_contract.py`（纯合同 102/1997 维、相机四元数与 T4 逐位等价、扫描区间）+ `depth_student_env.py`（TiledD455 原生 48×64、torso_link 挂载、外参 DR 同 T4）+ `depth_student_cfg.py`（repr-first 配方镜像 T4 数值）+ `train_g1_sparse_depth_student.py`（1997D 教师门+manifest 对账）；4 项合同测试。Isaac 实启待 B4（教师=v3/v31 优胜者）。
+
 ## 2026-09-11：G1 视觉学生主线立项 + vital_v31 三项 DR 落地
 
 - 计划：`docs/plans/2026-09-11--g1-vision-student-and-teacher-v31-plan.md`（brainstorm 收敛：不走盲走档，主轴=G1 深度学生；v3@9500/30000 在训，A1 验收顺延至跑满）。

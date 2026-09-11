@@ -34,7 +34,10 @@
   - 现行链路盘点：`DepthDistillationEnv`（`legged_lab/locomotion/depth_env.py`）→ `legged_lab/envs/t4/depth_student_env.py` + `depth_student_cfg.py`（三阶段配方 ReprFirst/DAgger/FinalMain + ResidualFt/PlantFt/Joint 变体）→ GRU 学生 → `sim2sim_t4_depth_student.py` / `eval_t4_depth_student_sim2sim.py`。
   - 产出 `docs/runbooks/depth-student-line.md`：关键代码地图（哪些是核心、哪些是历史）、训练-验收-导出命令、**换机器人接入清单**（`LocomotionRobotSpec` + 相机配置 + `depth_student_cfg` 平移步骤 + 测试入口，对照 AGENTS.md 测试表"共享深度学生运行时"行）。
   - 验收：文档路径/命令可执行（纯文档按 AGENTS 校对差异与路径）；`artifacts/portability/depth/import_depth_env.json` 探针现状写入文档。不顺手重构旧脚本——只标注，不动代码。
-- [ ] B2 G1 深度学生资产与环境（依赖 B1 的接入清单）
+- [x] B2 G1 深度学生资产与环境（代码落地 2026-09-12，B4 启动前以 Isaac 实启为准）
+  - 纯合同 `legged_lab/envs/g1/depth_student_contract.py`（102/1997 维数、相机四元数、扫描区间，本地可测）；环境 `depth_student_env.py`（TiledD455 原生 48×64，torso_link 挂载 0.10/0/0.25 + 35° 下视）；配方 `depth_student_cfg.py`（repr-first 主配方镜像 T4 数值）；入口 `train_g1_sparse_depth_student.py`（1997D 教师门 + manifest 对账）。
+  - 测试 `tests/test_g1_depth_student_b2_contract.py` 4 项；本地全量 503 绿。
+- [ ] B2 挂起项：G1 版 sim2sim 深度学生脚本（B4 训练中期探针需要，届时按 T4 `sim2sim_t4_depth_student.py` 模式做 G1 MJCF 版）。
   - G1 深度相机配置（模拟真实部署相机 FOV/安装位）；`depth_student_env` 的 G1 版（沿用 `LocomotionRobotSpec` 模式，不继承 T4 任务实现）。
   - 验收：`tests/test_robot_neutral_depth_env.py` + `tests/test_t4_sparse_depth_student_gru_contract.py` 的 G1 对应项通过（需要 torch 的环境）。
 - [ ] B3 感知补齐四项（2026-09-11 部分完成）
