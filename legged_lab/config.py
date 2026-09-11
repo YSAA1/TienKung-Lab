@@ -57,6 +57,12 @@ class HeightScannerCfg:
     offset: tuple = (0.0, 0.0)
     debug_vis: bool = False
     drift_range: tuple = (0.0, 0.0)
+    # RPL-style lateral band occlusion of the privileged scan (teacher DR).
+    # probability == 0.0 disables occlusion; ramp_steps > 0 scales the per-episode
+    # probability from 0 up to ``probability`` over that many policy steps.
+    occlusion_probability: float = 0.0
+    occlusion_band_fraction: tuple = (0.1, 0.3)
+    occlusion_ramp_steps: int = 0
 
 
 @configclass
@@ -248,9 +254,22 @@ class ActionDelayCfg:
 
 
 @configclass
+class EncoderBiasCfg:
+    """Per-env constant joint-position observation bias (encoder miscalibration).
+
+    Unlike the zero-mean joint_pos observation noise, this is a constant offset
+    per env and joint, ramped from zero over ``ramp_steps`` policy steps.
+    """
+
+    enable: bool = False
+    params: dict = {"bias_range": (-0.015, 0.015), "ramp_steps": 0}
+
+
+@configclass
 class DomainRandCfg:
     events: EventCfg = EventCfg()
     action_delay: ActionDelayCfg = ActionDelayCfg()
+    encoder_bias: EncoderBiasCfg = EncoderBiasCfg()
 
 
 @configclass

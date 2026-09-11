@@ -2,6 +2,15 @@
 
 2026-08-22 以前的 TB 逐窗流水已从本文件删掉，仍在 git 历史。本文件只留能接住当前切片的证据。
 
+## 2026-09-11：G1 视觉学生主线立项 + vital_v31 三项 DR 落地
+
+- 计划：`docs/plans/2026-09-11--g1-vision-student-and-teacher-v31-plan.md`（brainstorm 收敛：不走盲走档，主轴=G1 深度学生；v3@9500/30000 在训，A1 验收顺延至跑满）。
+- B1 done：`docs/runbooks/depth-student-line.md`——S12 线判定（`train_t4_sparse_depth_student{,_ft}` 为现行，旧 Stage E 线只标注）、关键代码地图、换机器人接入清单；README 挂链接。澄清：学生线相机**外参 DR 已存在**（`_apply_camera_extrinsic_jitter`），内参 per-env 不可行（渲染器限制）挂 backlog。
+- A2 done：`vital_v31` profile = v3 三事件 + 编码器偏置 ±0.015（`EncoderBiasCfg`，ramp 与 v3 同窗）+ torso COM ±0.05（IsaacLab `randomize_rigid_body_com` startup，NS fallback 双路径）+ 教师特权扫描 RPL 式侧向带遮挡（`legged_lab/locomotion/mdp/scan_occlusion.py`，仅 actor 流，critic 保持特权干净）；`train.py` choices 同步。
+- B3 部分：dropout 地形调档（`central_band_column_draw` + `student_depth_spare_lateral_for_sparse`，默认关）——踏石 env dropout 块避开两侧 1/4 边距；ResidualFt-G1/辅助头归 B2/B4。
+- 验证：本地 495 passed 6 skipped（含新增遮挡 5 项 + v31 profile 合同 + central band）；black/flake8 干净。默认路径零行为变化（全部旋钮默认关）。
+- 审查：用户指定 KIMI K3 外部对抗审查未达成（kimi CLI 缺失 + MOONSHOT_API_KEY 未设；codex 限额至 9/15、claude 认证失败、gemini 未装、grok 挂起终止）；改为内部对抗审查（self，10 审查点全过，无 Critical/Important；2 项 P2：encoder bias env 级路径待 Isaac 启动即验、`legged_lab.mdp` 是否重导出 `randomize_rigid_body_com` 同为启动即验）。任务包保留 `work/review/vital-v31-review-task.md`（gitignored）可补跑。
+
 ## 2026-09-11：项目整合收敛（main+develop 单工作树）
 
 - 测试：本地双环境 488 passed（.gitattributes 强制 LF；manifest 哈希按 LF 刷新；`tests` 真包防 IsaacLab `tests` 遮蔽；mujoco/warp/zl 部署/上游 fixture 缺失主机显式 skip；conftest 引导 sys.path + basetemp 回落）；nubot Isaac python 416 passed。

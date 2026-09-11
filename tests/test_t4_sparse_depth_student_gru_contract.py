@@ -193,9 +193,9 @@ def test_train_scripts_require_sparse_teacher_checkpoint():
     assert 'phase = "residual_ft"' in ft_src
     assert "capability_gate_json" in ft_src
     assert "teacher_eval_manifest" in ft_src
-    assert 'required=True' in ft_src.split("--capability_gate_json", 1)[1].split(")", 1)[0]
-    assert 'required=True' in ft_src.split("--student_checkpoint", 1)[1].split(")", 1)[0]
-    assert 'required=True' in ft_src.split("--teacher_checkpoint", 1)[1].split(")", 1)[0]
+    assert "required=True" in ft_src.split("--capability_gate_json", 1)[1].split(")", 1)[0]
+    assert "required=True" in ft_src.split("--student_checkpoint", 1)[1].split(")", 1)[0]
+    assert "required=True" in ft_src.split("--teacher_checkpoint", 1)[1].split(")", 1)[0]
     assert "allow_ungated" not in ft_src
     assert "load_student_continuation_checkpoint" in ft_src
     assert "require_sparse_teacher_checkpoint" in ft_src
@@ -886,7 +886,7 @@ def test_residual_ft_recipe_is_not_plant_or_d3():
     assert "student_depth_noise = True" in residual_env
     assert "student_depth_boundary_corruption = False" in residual_env
     assert "action_delay.enable = False" in residual_env
-    assert 'sub.proportion = 0.30' in residual_env
+    assert "sub.proportion = 0.30" in residual_env
     assert '("stepping_stones", "raised_pillars")' in residual_env
     assert "targeted_manufacturing_variation = False" in residual_env
     assert "targeted_layout_seed = False" in residual_env
@@ -897,9 +897,9 @@ def test_residual_ft_recipe_is_not_plant_or_d3():
     assert 'phase = "residual_ft"' in ft_src
     assert "teacher_eval_manifest" in ft_src
     assert "load_student_continuation_checkpoint" in ft_src
-    assert 'required=True' in ft_src.split("--capability_gate_json", 1)[1].split(")", 1)[0]
-    assert 'required=True' in ft_src.split("--student_checkpoint", 1)[1].split(")", 1)[0]
-    assert 'required=True' in ft_src.split("--teacher_checkpoint", 1)[1].split(")", 1)[0]
+    assert "required=True" in ft_src.split("--capability_gate_json", 1)[1].split(")", 1)[0]
+    assert "required=True" in ft_src.split("--student_checkpoint", 1)[1].split(")", 1)[0]
+    assert "required=True" in ft_src.split("--teacher_checkpoint", 1)[1].split(")", 1)[0]
     assert "allow_ungated" not in ft_src
     assert "require_sparse_teacher_checkpoint" in ft_src
     assert "pg_coef: float = 0.2" in final_main
@@ -1058,9 +1058,7 @@ def test_camera_extrinsic_jitter_stays_inside_lightlp_table_ii():
     identity = extrinsic.euler_xyz_to_quat_wxyz(0.0, 0.0, 0.0)
     assert identity[0] == pytest.approx(1.0)
     composed = extrinsic.quat_mul_wxyz(identity, extrinsic.euler_xyz_to_quat_wxyz(0.01, -0.02, 0.015))
-    pos, quat = extrinsic.compose_camera_offset(
-        (0.085, 0.0, 0.42), identity, (0.01, -0.01, 0.0), (0.025, 0.0, -0.025)
-    )
+    pos, quat = extrinsic.compose_camera_offset((0.085, 0.0, 0.42), identity, (0.01, -0.01, 0.0), (0.025, 0.0, -0.025))
     assert pos[0] == pytest.approx(0.095)
     assert pos[1] == pytest.approx(-0.01)
     assert abs(quat[0] - 1.0) < 0.01
@@ -1108,6 +1106,17 @@ def test_repr_first_is_default_train_recipe_and_keeps_final_main():
     assert "switch_reason" in train_src
     t4_src = T4_ENV_PY.read_text(encoding="utf-8")
     assert 'fraction = float(getattr(self.cfg, "random_level_reset_fraction", 0.0) or 0.0)' in t4_src
-    assert train_src.find("attach(env, on_switch=on_repr_switch)") < train_src.find(
-        'getattr(runner.alg, "_repr_state"'
-    )
+    assert train_src.find("attach(env, on_switch=on_repr_switch)") < train_src.find('getattr(runner.alg, "_repr_state"')
+
+
+def test_central_band_column_draw_spares_lateral_margins():
+    width, block_w = 64, 6
+    torch.manual_seed(3)
+    cols = noise.central_band_column_draw(torch.rand(512), width, block_w)
+    margin = max(1, int(width * 0.25))
+    assert int(cols.min()) >= margin
+    assert int(cols.max()) <= width - margin - block_w
+    assert len(cols.unique()) > 8
+    # degenerate wide block collapses to the single legal start
+    pinned = noise.central_band_column_draw(torch.rand(8), 16, 14)
+    assert bool((pinned == 4).all())

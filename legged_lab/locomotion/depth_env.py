@@ -42,6 +42,7 @@ from legged_lab.locomotion.mdp.depth_noise import (
     apply_depth_boundary_corruption,
     apply_metric_depth_noise,
     apply_normalized_block_dropout,
+    central_band_column_draw,
     depth_refresh_plan,
     edge_biased_block_rows,
     scaled_block_hw,
@@ -170,6 +171,9 @@ class LightLPDepthDistillationEnv(DepthDistillationEnv):
         self.student_depth_boundary_corruption = bool(getattr(cfg, "student_depth_boundary_corruption", False))
         self.student_depth_boundary_probability = float(getattr(cfg, "student_depth_boundary_probability", 0.0))
         self.student_depth_boundary_threshold_m = float(getattr(cfg, "student_depth_boundary_threshold_m", 0.08))
+        self.student_depth_spare_lateral_for_sparse = bool(
+            getattr(cfg, "student_depth_spare_lateral_for_sparse", False)
+        )
         delay = getattr(cfg, "student_depth_delay_steps", LIGHTLP_DEPTH_DELAY_STEPS)
         self.student_depth_delay_lo = int(delay[0])
         self.student_depth_delay_hi = int(delay[1])
@@ -250,6 +254,12 @@ class LightLPDepthDistillationEnv(DepthDistillationEnv):
             row_draw = torch.rand(len(env_ids), device=self.device)
             row = edge_biased_block_rows(row_draw, height, block_h)
             col = torch.randint(0, max(1, width - block_w + 1), (len(env_ids),), device=self.device)
+            if self.student_depth_spare_lateral_for_sparse:
+                sparse_envs = self.sparse_tile_mask[env_ids]
+                if bool(torch.any(sparse_envs)):
+                    # sparse-foothold envs keep the lateral margins visible
+                    central = central_band_column_draw(torch.rand(len(env_ids), device=self.device), width, block_w)
+                    col = torch.where(sparse_envs, central, col)
             stamp_rectangular_blocks(self._depth_block_mask, env_ids, row, col, block_h, block_w)
 
     def _ingest_metric_depth(self) -> torch.Tensor:

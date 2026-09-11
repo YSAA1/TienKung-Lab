@@ -50,6 +50,7 @@ parser.add_argument(
         "vital_v1",
         "vital_v2",
         "vital_v3",
+        "vital_v31",
         "vital_termination_only",
         "vital_gait_gate_off_only",
         "vital_action_rate_only",

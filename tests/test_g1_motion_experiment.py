@@ -87,6 +87,7 @@ def test_motion_experiment_profiles_are_single_factor(profile, action_rate, acce
 def _domain_rand_stub(*, delay_enabled=False):
     return NS(
         action_delay=NS(enable=delay_enabled, params={"min_delay": 0, "max_delay": 5}),
+        encoder_bias=NS(enable=False, params={"bias_range": (-0.015, 0.015), "ramp_steps": 0}),
         events=NS(
             physics_material=NS(
                 params={
@@ -291,3 +292,53 @@ def test_gait_experiment_preserves_standing_and_sparse_exclusions(gate):
     )
     fn(env)
     torch.testing.assert_close(env.gait_reward_scale, torch.tensor([0.0, 0.001 if gate else 1.0, 0.0]))
+
+
+def test_vital_v31_adds_encoder_bias_com_and_scan_occlusion_on_top_of_v3():
+    spec = importlib.util.spec_from_file_location("motion_profile", ROOT / "legged_lab/envs/g1/motion_experiment.py")
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    cfg = NS(
+        robot_spec=NS(name="g1", torso="torso_link"),
+        acceleration_termination_enabled=True,
+        deterministic_fall_limits=None,
+        gait=NS(tracking_gate_enabled=True),
+        reward=NS(
+            action_rate_l2=NS(weight=-0.1),
+            upright_orientation=NS(weight=1.0),
+            velocity_slack=NS(weight=1.5),
+        ),
+        domain_rand=_domain_rand_stub(),
+        scene=NS(
+            height_scanner=NS(occlusion_probability=0.0, occlusion_band_fraction=(0.1, 0.3), occlusion_ramp_steps=0)
+        ),
+    )
+    module.apply_vital_motion_experiment(cfg, "vital_v31")
+    # v31 inherits the full v3 ramped plant DR package
+    assert cfg.domain_rand.action_delay.params == {"min_delay": 0, "max_delay": 1}
+    assert cfg.domain_rand.events.physics_material_ramp.params["ramp_steps"] == module.VITAL_V3_RAMP_STEPS
+    # encoder bias ramps in over the same v3 window
+    assert cfg.domain_rand.encoder_bias.enable is True
+    assert cfg.domain_rand.encoder_bias.params == dict(module.VITAL_V31_ENCODER_BIAS)
+    assert cfg.domain_rand.encoder_bias.params["ramp_steps"] == module.VITAL_V3_RAMP_STEPS
+    # privileged-scan lateral occlusion on the same ramp
+    scanner = cfg.scene.height_scanner
+    assert scanner.occlusion_probability == module.VITAL_V31_SCAN_OCCLUSION["occlusion_probability"]
+    assert scanner.occlusion_band_fraction == module.VITAL_V31_SCAN_OCCLUSION["occlusion_band_fraction"]
+    assert scanner.occlusion_ramp_steps == module.VITAL_V3_RAMP_STEPS
+    # torso COM offset via the IsaacLab startup event (string body name in the
+    # no-Isaac fallback, SceneEntityCfg otherwise)
+    com = cfg.domain_rand.events.randomize_com
+    assert com.mode == "startup"
+    assert com.params["com_range"] == {
+        "x": (-0.05, 0.05),
+        "y": (-0.05, 0.05),
+        "z": (-0.05, 0.05),
+    }
+    asset = com.params["asset_cfg"]
+    assert (asset if isinstance(asset, str) else asset.body_names) == "torso_link"
+    # the VITAL reward/termination package stays identical to v3
+    assert cfg.reward.action_rate_l2.weight == -0.01
+    assert cfg.acceleration_termination_enabled is False
+    assert cfg.deterministic_fall_limits == (0.8, 1.0)
+    assert cfg.gait.tracking_gate_enabled is False

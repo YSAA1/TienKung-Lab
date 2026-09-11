@@ -82,6 +82,21 @@ def edge_biased_block_rows(row_draw, height: int, block_h: int):
     return row.clamp(0, height - block_h)
 
 
+def central_band_column_draw(col_draw, width: int, block_w: int, margin_fraction: float = 0.25):
+    """Map unit draws to dropout-block starts inside the central column band.
+
+    Sparse-foothold courses need the lateral margins visible for footstep
+    selection, so blocks there avoid the outer ``margin_fraction`` bands
+    (RPL keeps side visibility on stepping stones and masks only continuous
+    terrain).
+    """
+    margin = max(1, int(width * float(margin_fraction)))
+    lo = margin
+    hi = max(lo + 1, width - margin - int(block_w) + 1)
+    span = hi - lo
+    return lo + (col_draw * span).clamp(0.0, float(span - 1)).long()
+
+
 def stamp_rectangular_blocks(mask, env_ids, rows, cols, block_h: int, block_w: int):
     """OR True into ``mask[env, r:r+h, c:c+w]`` without a Python env loop."""
     import torch
@@ -132,7 +147,9 @@ def apply_depth_boundary_corruption(
     near_edge = depth < local_max - float(edge_threshold_m)
     far_edge = depth > local_min + float(edge_threshold_m)
     result = depth.clone()
-    result = torch.where(near_edge & (drop < probability), torch.as_tensor(invalid_depth_m, device=depth.device), result)
+    result = torch.where(
+        near_edge & (drop < probability), torch.as_tensor(invalid_depth_m, device=depth.device), result
+    )
     result = torch.where(far_edge & (hit < probability), local_min, result)
     return result.squeeze(1) if squeeze_channel else result
 

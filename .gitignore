@@ -30,3 +30,4 @@ artifacts/consolidation/*.bundle
 artifacts/consolidation/baseline/
 artifacts/consolidation/worktree-preserved/
 artifacts/pytest-tmp/
+work/review/

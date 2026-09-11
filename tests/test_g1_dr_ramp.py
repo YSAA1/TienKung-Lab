@@ -89,3 +89,64 @@ def test_ramped_time_lags_delay_probability_grows_with_fraction():
     assert rates[0] > 0.0
     with pytest.raises(ValueError):
         ramped_time_lags(draws, 2, 1, 1.0)
+
+
+def _load_scan_occlusion_module():
+    spec = importlib.util.spec_from_file_location(
+        "legged_lab.locomotion.mdp.scan_occlusion",
+        ROOT / "legged_lab/locomotion/mdp/scan_occlusion.py",
+    )
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module
+
+
+occlusion = _load_scan_occlusion_module()
+apply_scan_occlusion = occlusion.apply_scan_occlusion
+sample_column_band_masks = occlusion.sample_column_band_masks
+
+
+def test_sample_column_band_masks_zero_probability_is_empty():
+    masks = sample_column_band_masks(64, (15, 13), (0.1, 0.3), 0.0, torch.device("cpu"))
+    assert masks.shape == (64, 15 * 13)
+    assert masks.dtype == torch.bool
+    assert not bool(torch.any(masks))
+
+
+def test_sample_column_band_masks_full_probability_max_band_covers_all():
+    masks = sample_column_band_masks(64, (15, 13), (1.0, 1.0), 1.0, torch.device("cpu"))
+    assert bool(torch.all(masks))
+
+
+def test_sample_column_band_masks_bands_are_lateral_columns():
+    torch.manual_seed(7)
+    rows, cols = 15, 13
+    masks = sample_column_band_masks(512, (rows, cols), (0.1, 0.5), 0.5, torch.device("cpu"))
+    grid = masks.view(-1, rows, cols)
+    occluded_envs = masks.any(dim=1)
+    assert 0.1 < float(occluded_envs.float().mean()) < 0.9
+    # every occluded env: all rows share one contiguous column band
+    for env in grid[occluded_envs]:
+        assert bool(torch.all(env == env[0:1]))
+        idx = env[0].nonzero().flatten()
+        assert 0 < len(idx) <= cols
+        if len(idx) > 1:
+            assert bool((idx[1:] - idx[:-1] == 1).all())
+
+
+def test_apply_scan_occlusion_preserves_unmasked_and_fills_within_clip():
+    torch.manual_seed(11)
+    scan = torch.zeros(8, 15 * 13)
+    masks = torch.zeros(8, 15 * 13, dtype=torch.bool)
+    masks[2, 4:9] = True
+    out = apply_scan_occlusion(scan, masks, -1.0, 1.0)
+    assert torch.equal(out[~masks], scan[~masks])
+    assert bool((out[masks] > -1.0).all()) and bool((out[masks] < 1.0).all())
+    assert not torch.equal(out[masks], scan[masks])
+
+
+def test_apply_scan_occlusion_empty_mask_is_identity():
+    scan = torch.randn(4, 15 * 13)
+    masks = torch.zeros(4, 15 * 13, dtype=torch.bool)
+    out = apply_scan_occlusion(scan, masks, -1.0, 1.0)
+    assert torch.equal(out, scan)

@@ -57,6 +57,7 @@ from legged_lab.locomotion.curriculum import (
     lightlp_terrain_level_moves,
     terrain_level_moves,
 )
+from legged_lab.locomotion.mdp.scan_occlusion import apply_scan_occlusion, sample_column_band_masks
 from legged_lab.locomotion.mdp.sparse_signals import (
     LIGHTLP_IMMUNITY_FRAC,
     LIGHTLP_IMMUNITY_PERIOD,
@@ -86,6 +87,7 @@ from legged_lab.locomotion.schemas import (
     TEACHER_PAPER_CONTACT_DIM,
     TEACHER_SCAN_CLIP,
     TEACHER_SCAN_INVALID_VALUE,
+    TEACHER_SCAN_SHAPE,
     TEACHER_SPARSE_CONTACT_DIM,
     ObservationLayout,
     assert_no_privilege_leakage,
@@ -468,6 +470,40 @@ class LocomotionEnv(VecEnv):
         self.amp_builder = AmpFeatureBuilder(self.robot, self.device, self.cfg.robot_spec) if self.enable_amp else None
         self.init_obs_buffer()
 
+        self.encoder_bias = None
+        if self.cfg.domain_rand.encoder_bias.enable:
+            lo, hi = self.cfg.domain_rand.encoder_bias.params["bias_range"]
+            self.encoder_bias = torch.empty(self.num_envs, len(self.policy_joint_ids), device=self.device).uniform_(
+                lo, hi
+            )
+        scanner_cfg = self.cfg.scene.height_scanner
+        self._scan_occlusion_probability = float(scanner_cfg.occlusion_probability)
+        self._scan_occlusion_band_fraction = tuple(scanner_cfg.occlusion_band_fraction)
+        self._scan_occlusion_ramp_steps = int(scanner_cfg.occlusion_ramp_steps)
+        self.scan_occlusion_masks = None
+        if self._scan_occlusion_probability > 0.0:
+            self.scan_occlusion_masks = sample_column_band_masks(
+                self.num_envs,
+                TEACHER_SCAN_SHAPE,
+                self._scan_occlusion_band_fraction,
+                0.0,
+                self.device,
+            )
+
+    def _policy_step_count(self) -> int:
+        return int(self.sim_step_counter) // max(1, int(self.cfg.sim.decimation))
+
+    def _encoder_bias_fraction(self) -> float:
+        ramp_steps = int(self.cfg.domain_rand.encoder_bias.params.get("ramp_steps", 0))
+        if ramp_steps <= 0:
+            return 1.0
+        return min(1.0, self._policy_step_count() / ramp_steps)
+
+    def _ramped_scan_occlusion_probability(self) -> float:
+        if self._scan_occlusion_ramp_steps <= 0:
+            return self._scan_occlusion_probability
+        return self._scan_occlusion_probability * min(1.0, self._policy_step_count() / self._scan_occlusion_ramp_steps)
+
     def _proprio_field_slice(self, field: str) -> tuple[int, int]:
         return field_slice(proprio_fields(self.num_actions), field)
 
@@ -759,6 +795,11 @@ class LocomotionEnv(VecEnv):
         current_actor_obs, current_critic_obs = self.compute_current_observations()
         if self.add_noise:
             current_actor_obs += (2 * torch.rand_like(current_actor_obs) - 1) * self.noise_scale_vec
+        if self.encoder_bias is not None:
+            bias_start, bias_end = self._proprio_field_slice("joint_pos")
+            current_actor_obs[:, bias_start:bias_end] += (
+                self.encoder_bias * self._encoder_bias_fraction() * self.obs_scales.joint_pos
+            )
 
         self.actor_obs_buffer.append(current_actor_obs)
         self.critic_obs_buffer.append(current_critic_obs)
@@ -786,6 +827,15 @@ class LocomotionEnv(VecEnv):
                 actor_scan[:, -self.observation_layout.scan_dim :] = noisy
             else:
                 actor_scan = noisy
+        if self.scan_occlusion_masks is not None:
+            # Occlude only the actor stream; the critic keeps the privileged scan.
+            actor_scan = actor_scan.clone()
+            actor_scan[:, -self.observation_layout.scan_dim :] = apply_scan_occlusion(
+                actor_scan[:, -self.observation_layout.scan_dim :],
+                self.scan_occlusion_masks,
+                TEACHER_SCAN_CLIP[0],
+                TEACHER_SCAN_CLIP[1],
+            )
         actor_obs = torch.cat([actor_obs, actor_scan], dim=-1)
         if getattr(self.cfg, "append_actor_feet_contact", False):
             net_contact_forces = self.contact_sensor.data.net_forces_w_history
@@ -1161,6 +1211,15 @@ class LocomotionEnv(VecEnv):
         self.actor_obs_buffer.reset(env_ids)
         self.critic_obs_buffer.reset(env_ids)
         self.scan_obs_buffer.reset(env_ids)
+        if getattr(self, "scan_occlusion_masks", None) is not None:
+            fresh = sample_column_band_masks(
+                self.num_envs,
+                TEACHER_SCAN_SHAPE,
+                self._scan_occlusion_band_fraction,
+                self._ramped_scan_occlusion_probability(),
+                self.device,
+            )
+            self.scan_occlusion_masks[env_ids] = fresh[env_ids]
         self.foot_accel_ema[env_ids] = 0.0
         self.action_buffer.reset(env_ids)
         self.episode_length_buf[env_ids] = 0

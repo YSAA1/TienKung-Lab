@@ -54,6 +54,7 @@ AMP/LightLP 运动算法以及 **T4 27DoF、Unitree G1 29DoF、Z2 29DoF** 的独
 | zhuoqun Isaac | `bash scripts/zhuoqun_run.sh …`（docker `t4-isaac-jammy:v2`） |
 | 本机 play 拉下来的 ckpt | [本机 Isaac Docker](runbooks/local-isaac-docker.md) → `scripts/local_run.sh` |
 | 老师 / 深度学生上机合同 | [部署手册](runbooks/t4-teacher-and-depth-deployment.md) |
+| 深度学生线关键代码地图 / 换机器人接入 | [深度学生线手册](runbooks/depth-student-line.md)（现行=S12 稀疏线） |
 | 资产合同 | `python -m pytest tests/test_t4_asset_migration.py` |
 | 观测合同 | `python -m pytest tests/test_t4_observation_contracts.py` |
 | 稀疏奖励 / 终止 / 列映射 / S12 命令与边框合同 | `python -m pytest tests/test_t4_sparse_reward_contracts.py tests/test_t4_sparse_monitor_contract.py tests/test_t4_sparse_command_contract.py tests/test_t4_terrain_column_map.py tests/test_t4_stepping_stone_contracts.py tests/test_distributed_log_reduce.py` |
