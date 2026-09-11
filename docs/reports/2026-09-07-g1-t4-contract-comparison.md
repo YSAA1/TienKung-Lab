@@ -1,6 +1,6 @@
 # T4 S11b 与当前 G1 full17：训练合同对照
 
-2026-09-07。以历史成功训练的冻结代码、实际保存的 env/agent YAML、当前运行源码 SHA、checkpoint 和独立物理探针为依据。不是把当前 T4 默认配置当成历史训练配置。原始JSON已归入[审计证据目录](../../artifacts/portability/g1_recovery_20260907/audit_inputs/)。当前执行以[现行计划](../plans/2026-09-07--robot-neutral-locomotion.md)顶部为准。
+2026-09-07。以历史成功训练的冻结代码、实际保存的 env/agent YAML、当前运行源码 SHA、checkpoint 和独立物理探针为依据。不是把当前 T4 默认配置当成历史训练配置。原始JSON已归入[审计证据目录](../../artifacts/portability/g1_recovery_20260907/audit_inputs/)。当前执行以[现行计划](../archive/plans/2026-09-07--robot-neutral-locomotion.md)（已归档，后续由 vital 系列计划接管）顶部为准。
 
 ## 判断
 

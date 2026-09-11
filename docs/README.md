@@ -7,13 +7,13 @@ AMP/LightLP 运动算法以及 **T4 27DoF、Unitree G1 29DoF、Z2 29DoF** 的独
 
 ## 当前工作面
 
-当前执行轨道：宇树 G1 `vital_v3` 教师（curated `unitree_v6` AMP + 端到端 ramp DR）与 `vital_v2` 对照双跑；Z2 教师 30k 已完成、行为待验收；T4 翻箱 G1/G2 在 zhuoqun。T4 S12 老师 plant 重训暂停。
+当前执行轨道：宇树 G1 `vital_v3` 教师（curated `unitree_v6` AMP + 端到端 ramp DR）与 `vital_v2` 对照双跑；Z2 教师 30k 已完成并通过双仿真器验收（MuJoCo 踏石 sim2sim gap 已知）；T4 翻箱 G1/G2 在 zhuoqun。T4 S12 老师 plant 重训暂停。
 
 | 轨道 | 现在做什么 | 执行计划 | 规格 |
 | --- | --- | --- | --- |
 | 梅花桩 | paused：G1 越障老师优先。T4 plant DR 重训计划尚未立项 | 计划未建；见 `.harness/work_index.md` | [表示先行蒸馏](archive/plans/2026-09-01--t4-s12-repr-first-distill-plan.md)（学生对照，已归档） |
 | Unitree G1 越障 teacher | 当前执行 `vital_v3`：curated `unitree_v6` AMP + ramp DR（GPU0/2）；`vital_v2` 全量 DR 对照（GPU1/3）。VITAL `model_29999` 仅对照 | [VITAL v3 开训](plans/2026-09-11--g1-vital-v3-curated-amp-ramped-dr-plan.md) | [规格](specs/2026-09-11--g1-vital-v3-curated-amp-ramped-dr.md)；gap 定位 `artifacts/g1_gap_20260910/FINDINGS.md` |
-| Z2 29DoF 越障 teacher | `reset_aligned_v1` 30k 完成（model_29999），行为验收待做 | [Z2 迁移](plans/2026-09-09--z2-teacher-migration.md) | 见 reset_aligned_v1/lineage.json |
+| Z2 29DoF 越障 teacher | done：`reset_aligned_v1` 30k（model_29999）双仿真器验收完成——Isaac d=0 flat/踏石/圆桩零摔，MuJoCo 平地 10/10、踏石 sim2sim gap | [Z2 迁移](plans/2026-09-09--z2-teacher-migration.md) | 见 reset_aligned_v1/lineage.json |
 | 翻箱 | G1 跟踪专家 → G2 heightscan 技能（zhuoqun）。**G2 学生与 G3 合并（走跑+翻箱成一条策略）等 G2 过箱后再开。** | [翻箱 recovery](plans/2026-08-15--t4-vault-g1-g2-recovery-plan.md) | [合并规格](specs/2026-08-13--t4-vault-loco-merge.md) |
 
 运行时切片与机器占用：`.harness/work_index.md`、`.harness/state.md`。

@@ -41,7 +41,7 @@
 
 ## 2026-09-07：教师算法从机器人配置中分离
 
-- 新工作面：`docs/plans/2026-09-07--robot-neutral-locomotion.md`。下面 portable_v1 属于已停止的对照，不能作为当前开训配置。
+- 新工作面：`docs/archive/plans/2026-09-07--robot-neutral-locomotion.md`（已归档）。下面 portable_v1 属于已停止的对照，不能作为当前开训配置。
 - 恢复随机重置 0.10/None/None，原 AMP 曲线与稀疏清零。通用算法迁入 `legged_lab/locomotion`，T4/G1 独立 spec 和配方，无跨机器人继承。
 - 实际 T4/G1 probe 均采样到 0～9，240 个 finite step，镜像与 reset 前 AMP 快照通过。Actor/Critic/AMP 分别 1937/2016/66 和 1997/2076/70。
 - 新机器人接入检查和 21 关节、不同命名的替身通过；核心回归149项、相邻回归90项通过（两组有重叠）。独立审查旧新镜像逐元素一致。

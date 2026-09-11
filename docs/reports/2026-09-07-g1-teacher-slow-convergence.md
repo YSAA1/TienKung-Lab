@@ -1,6 +1,6 @@
 # G1 教师收敛迟缓排查
 
-2026-09-07。代码工作面：`g1-portability-20260906`。当前修复与运行入口见[执行计划](../plans/2026-09-07--robot-neutral-locomotion.md)。下文v2/v3结论是历史记录。
+2026-09-07。代码工作面：`g1-portability-20260906`。当前修复与运行入口见[执行计划](../archive/plans/2026-09-07--robot-neutral-locomotion.md)（已归档，后续由 vital 系列计划接管）。下文v2/v3结论是历史记录。
 
 ## v4/v5崩塌与纯29DoF修复
 
