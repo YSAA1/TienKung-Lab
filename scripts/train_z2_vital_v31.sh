@@ -4,7 +4,8 @@ case "$PWD" in
   *TienKung-Lab-z2-vital-v31-20260912) ;;
   *) echo "refusing to run outside the isolated z2 v31 worktree: $PWD" >&2; exit 1 ;;
 esac
-export CUDA_DEVICE_ORDER=PCI_BUS_ID CUDA_VISIBLE_DEVICES=1,3
+export CUDA_DEVICE_ORDER=PCI_BUS_ID
+export CUDA_VISIBLE_DEVICES="${Z2_V31_GPUS:-0,2}"
 export OMP_NUM_THREADS=4 MKL_NUM_THREADS=4
 isaac_nv="$HOME/isaac-sim-standalone-5.1.0-linux-x86_64/kit/python/lib/python3.11/site-packages/nvidia"
 export LD_LIBRARY_PATH="$isaac_nv/nvjitlink/lib:$isaac_nv/cusparse/lib:${LD_LIBRARY_PATH:-}"
