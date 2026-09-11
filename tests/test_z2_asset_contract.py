@@ -21,6 +21,7 @@
 from __future__ import annotations
 
 import ast
+import importlib.util
 import csv
 import hashlib
 import json
@@ -78,10 +79,14 @@ Z2_ASSET = ROOT / "legged_lab/assets/z2"
 # The upstream provenance fixture is fetched once by
 # ``scripts/fetch_z2_upstream_fixtures.py`` (pinned commit) into the git-ignored
 # ``work/upstream-z2``; without it these lineage checks cannot run.
-pytest.skip(
-    "work/upstream-z2 fixture missing; run `python scripts/fetch_z2_upstream_fixtures.py` first",
-    allow_module_level=True,
-) if not UP.is_dir() else None
+(
+    pytest.skip(
+        "work/upstream-z2 fixture missing; run `python scripts/fetch_z2_upstream_fixtures.py` first",
+        allow_module_level=True,
+    )
+    if not UP.is_dir()
+    else None
+)
 
 
 def _list_assign(src: str, name: str) -> list:
@@ -1099,3 +1104,77 @@ def test_z2_shell_launchers_are_lf() -> None:
         raw = (ROOT / rel).read_bytes()
         assert b"\r\n" not in raw
         assert raw.startswith(b"#!/usr/bin/env bash\n")
+
+
+def test_z2_vital_v31_layers_shared_plant_dr_without_touching_rewards():
+    spec = importlib.util.spec_from_file_location("z2_motion_profile", ROOT / "legged_lab/envs/z2/motion_experiment.py")
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    cfg = SimpleNamespace(
+        robot_spec=SimpleNamespace(name="z2", torso="waist_yaw_link"),
+        domain_rand=SimpleNamespace(
+            action_delay=SimpleNamespace(enable=False, params={"min_delay": 0, "max_delay": 5}),
+            encoder_bias=SimpleNamespace(enable=False, params={"bias_range": (-0.015, 0.015), "ramp_steps": 0}),
+            events=SimpleNamespace(
+                physics_material=SimpleNamespace(params={"static_friction_range": (0.6, 1.0)}),
+                reset_base=SimpleNamespace(params={"velocity_range": {}}),
+                reset_robot_joints=SimpleNamespace(params={"position_range": (1.0, 1.0)}),
+            ),
+        ),
+        scene=SimpleNamespace(
+            height_scanner=SimpleNamespace(
+                occlusion_probability=0.0, occlusion_band_fraction=(0.1, 0.3), occlusion_ramp_steps=0
+            )
+        ),
+    )
+    module.apply_z2_motion_experiment(cfg, "z2_vital_v31")
+    assert cfg.domain_rand.action_delay.params == {"min_delay": 0, "max_delay": 1}
+    assert cfg.domain_rand.events.physics_material_ramp.params["ramp_steps"] == 36000
+    assert cfg.domain_rand.encoder_bias.enable is True
+    assert cfg.scene.height_scanner.occlusion_probability == 0.10
+    com = cfg.domain_rand.events.randomize_com
+    assert com.mode == "startup"
+    assert com.params["com_range"]["x"] == (-0.05, 0.05)
+    # the reset-aligned reward/termination base is untouched by this profile
+    assert not hasattr(cfg, "reward"), "Z2 experiment must not rewrite rewards"
+    with pytest.raises(ValueError, match="Z2-specific"):
+        module.apply_z2_motion_experiment(SimpleNamespace(robot_spec=SimpleNamespace(name="g1")), "z2_vital_v31")
+
+
+def test_curated_v2_drops_in_place_clips_and_keeps_class_ratio():
+    import legged_lab.assets.z2.schemas as z2_schemas
+
+    assert set(z2_schemas.AMP_CURATED_V2_STEMS) == {"walk_l", "run2", "run_l", "run_140_l"}
+    assert "run" not in z2_schemas.AMP_CURATED_V2_STEMS
+    assert "walk" not in z2_schemas.AMP_CURATED_V2_STEMS
+    # held-out promotion is explicit and subject clips stay out
+    assert "run2" not in z2_schemas.AMP_HELD_OUT_MOTIONS
+    assert "run_l" not in z2_schemas.AMP_HELD_OUT_MOTIONS
+    assert "run1_subject2" in z2_schemas.AMP_HELD_OUT_MOTIONS
+    # class ratio stays 2:1 walk:run like v1
+    walk_weight = z2_schemas.amp_motion_weight("walk_l", stems=z2_schemas.AMP_CURATED_V2_STEMS)
+    run_weight = z2_schemas.amp_motion_weight("run2", stems=z2_schemas.AMP_CURATED_V2_STEMS)
+    assert walk_weight == pytest.approx(1.0)
+    # class totals stay 2:1 (walk_forward 1.0 vs run 0.5) like v1
+    assert 3 * run_weight == pytest.approx(0.5)
+    assert walk_weight == pytest.approx(6 * run_weight)
+    # v1 default behaviour is unchanged for the registered teacher cfg
+    assert z2_schemas.amp_expert_files() == [
+        "legged_lab/envs/z2/datasets/motion_amp_expert/run.txt",
+        "legged_lab/envs/z2/datasets/motion_amp_expert/walk.txt",
+        "legged_lab/envs/z2/datasets/motion_amp_expert/walk_l.txt",
+    ]
+
+
+def test_curated_v2_sources_all_move_forward():
+    source_dir = ROOT / "legged_lab/envs/z2/datasets/motion_source_z2_v2"
+    manifest = json.loads((source_dir / "_manifest.json").read_text(encoding="utf-8"))
+    stems = {item["stem"] for item in manifest["motions"]}
+    assert stems == set(
+        __import__("legged_lab.assets.z2.schemas", fromlist=["AMP_CURATED_V2_STEMS"]).AMP_CURATED_V2_STEMS
+    )
+    for item in manifest["motions"]:
+        rows = np.loadtxt(source_dir / f"{item['stem']}.csv", delimiter=",")
+        net = np.linalg.norm(rows[-1, :2] - rows[0, :2])
+        speed = net / (rows.shape[0] / item["fps"])
+        assert speed > 0.5, f"{item['stem']} is not sustained forward motion ({speed:.2f} m/s)"

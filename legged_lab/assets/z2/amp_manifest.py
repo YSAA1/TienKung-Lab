@@ -26,10 +26,13 @@ from pathlib import Path
 
 from legged_lab.assets.z2.constants import Z2_29DOF_JOINT_NAMES, Z2_USD_LAYER_FILES
 from legged_lab.assets.z2.schemas import (
+    AMP_FORMAL_V1_STEMS,
     AMP_FRAME_DIM,
+    AMP_HELD_OUT_MOTIONS,
     AMP_MOTION_CLASSES,
     AMP_SCHEMA_VERSION,
     Z2_SOURCE_DATASET,
+    amp_motion_class,
 )
 
 PENDING_EXPERT_STATUS = "pending_isaac_fk"
@@ -62,10 +65,14 @@ def validate_z2_source_manifest(source_manifest: dict, motion_dir: Path) -> dict
         raise ValueError("Z2 source manifest policy_joint_names is not Z2_29DOF_JOINT_NAMES")
     by_stem = {item["stem"]: item for item in source_manifest["motions"]}
     checked = {}
-    for stem in AMP_MOTION_CLASSES:
-        item = by_stem.get(stem)
-        if item is None:
-            raise ValueError(f"Z2 source manifest is missing clip {stem!r}")
+    # Manifest-driven: every declared clip must be classed, not held out, and
+    # hash-clean. The manifest (not AMP_MOTION_CLASSES) defines the version's
+    # clip set, so v1 and curated v2 sources both validate.
+    for stem in by_stem:
+        if stem in AMP_HELD_OUT_MOTIONS:
+            raise ValueError(f"declared AMP motion {stem!r} is held out")
+        amp_motion_class(stem)
+        item = by_stem[stem]
         csv_path = motion_dir / f"{stem}.csv"
         if not csv_path.is_file():
             raise FileNotFoundError(f"declared AMP motion {stem!r} is missing at {csv_path}")
@@ -186,7 +193,9 @@ def assert_pending_expert_tree(expert_dir: Path) -> None:
             raise ValueError(f"pending expert tree must not contain {path.name}")
 
 
-def assert_completed_expert_tree(expert_dir: Path, *, source_dir: Path, root: Path) -> None:  # noqa: C901
+def assert_completed_expert_tree(  # noqa: C901
+    expert_dir: Path, *, source_dir: Path, root: Path, expected_stems: tuple[str, ...] = AMP_FORMAL_V1_STEMS
+) -> None:
     manifest = json.loads((expert_dir / "_manifest.json").read_text(encoding="utf-8"))
     if manifest.get("status") != COMPLETED_EXPERT_STATUS:
         raise ValueError(f"completed expert status must be {COMPLETED_EXPERT_STATUS}, got {manifest.get('status')}")
@@ -197,8 +206,8 @@ def assert_completed_expert_tree(expert_dir: Path, *, source_dir: Path, root: Pa
     if list(manifest.get("joint_order") or []) != list(Z2_29DOF_JOINT_NAMES):
         raise ValueError("completed manifest joint_order must be Z2_29DOF_JOINT_NAMES")
     clips = manifest.get("clips") or {}
-    if set(clips) != set(AMP_MOTION_CLASSES):
-        raise ValueError(f"completed clips must be {sorted(AMP_MOTION_CLASSES)}, got {sorted(clips)}")
+    if set(clips) != set(expected_stems):
+        raise ValueError(f"completed clips must be {sorted(expected_stems)}, got {sorted(clips)}")
     provenance = manifest.get("provenance") or {}
     if provenance.get("asset_mode") != "upstream_usd":
         raise ValueError("completed provenance asset_mode must be upstream_usd")

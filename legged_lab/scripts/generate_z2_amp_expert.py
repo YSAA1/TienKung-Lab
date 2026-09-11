@@ -72,7 +72,6 @@ from legged_lab.assets.z2.locomotion import Z2_LOCOMOTION  # noqa: E402
 from legged_lab.assets.z2.schemas import (  # noqa: E402
     AMP_FRAME_DIM,
     AMP_HELD_OUT_MOTIONS,
-    AMP_MOTION_CLASSES,
     AMP_SCHEMA_VERSION,
     Z2_SOURCE_CSV_WIDTH,
     Z2_SOURCE_DATASET,
@@ -103,12 +102,12 @@ def _read_motion(path: Path) -> list[list[float]]:
     return rows
 
 
-def _selected_motions(motion_dir: Path) -> list[Path]:
+def _selected_motions(motion_dir: Path, stems: list[str]) -> list[Path]:
     resolved = motion_dir if motion_dir.is_absolute() else ROOT / motion_dir
     paths = []
-    for stem in sorted(AMP_MOTION_CLASSES):
+    for stem in sorted(stems):
         if stem in AMP_HELD_OUT_MOTIONS:
-            continue
+            raise ValueError(f"manifest motion {stem!r} is held out")
         path = resolved / f"{stem}.csv"
         if not path.is_file():
             raise FileNotFoundError(f"declared AMP motion {stem!r} is missing at {path}")
@@ -153,7 +152,7 @@ def _kinematics_response(robot, sim, builder) -> float:
     return (foot_features[1] - foot_features[0]).abs().max().item()
 
 
-def _generate_motion(path, robot, sim, builder, motion_to_sim, device, fps):
+def _generate_motion(path, robot, sim, builder, motion_to_sim, device, fps, weight_stems):
     rows = _read_motion(path)
     dt = 1.0 / fps
     num_joints = len(Z2_29DOF_JOINT_NAMES)
@@ -178,7 +177,7 @@ def _generate_motion(path, robot, sim, builder, motion_to_sim, device, fps):
         previous_foot = current_foot
     return frames, {
         "motion_class": amp_motion_class(path.stem),
-        "motion_weight": amp_motion_weight(path.stem),
+        "motion_weight": amp_motion_weight(path.stem, stems=weight_stems),
         "frames": len(frames),
         "frame_duration": dt,
         "fps": fps,
@@ -188,12 +187,13 @@ def _generate_motion(path, robot, sim, builder, motion_to_sim, device, fps):
 
 def main() -> None:
     device = torch.device(args_cli.sim_device)
-    motions = _selected_motions(args_cli.motion_dir)
     source_dir = args_cli.motion_dir if args_cli.motion_dir.is_absolute() else ROOT / args_cli.motion_dir
     source_manifest_path = source_dir / "_manifest.json"
     if not source_manifest_path.is_file():
         raise FileNotFoundError(f"Z2 source manifest missing: {source_manifest_path}")
     source_manifest = json.loads(source_manifest_path.read_text(encoding="utf-8"))
+    # The source manifest, not AMP_MOTION_CLASSES, defines this run's clip set.
+    motions = _selected_motions(args_cli.motion_dir, [item["stem"] for item in source_manifest["motions"]])
     checked = validate_z2_source_manifest(source_manifest, source_dir)
 
     sim = sim_utils.SimulationContext(sim_utils.SimulationCfg(dt=args_cli.sim_dt, device=args_cli.sim_device))
@@ -229,7 +229,16 @@ def main() -> None:
     }
     for path in motions:
         fps = float(args_cli.fps) if args_cli.fps is not None else checked[path.stem]["fps"]
-        frames, stats = _generate_motion(path, robot, sim, builder, motion_to_sim, device, fps)
+        frames, stats = _generate_motion(
+            path,
+            robot,
+            sim,
+            builder,
+            motion_to_sim,
+            device,
+            fps,
+            weight_stems=tuple(item["stem"] for item in source_manifest["motions"]),
+        )
         payload = {
             "LoopMode": "Wrap",
             "FrameDuration": stats["frame_duration"],

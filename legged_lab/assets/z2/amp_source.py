@@ -38,6 +38,9 @@ from legged_lab.assets.z2.constants import (
     Z2_SOURCE_JOINT_ORDER,
 )
 from legged_lab.assets.z2.schemas import (
+    AMP_CURATED_V2_SOURCE_DIR,
+    AMP_CURATED_V2_STEMS,
+    AMP_FORMAL_V1_STEMS,
     AMP_HELD_OUT_MOTIONS,
     AMP_MOTION_CLASSES,
     AMP_MOTION_SOURCE_DIR,
@@ -191,7 +194,7 @@ def write_csv(path: Path, rows: np.ndarray) -> None:
             writer.writerow([f"{value:.16g}" for value in row])
 
 
-def convert_file(path: Path, output_csv: Path) -> dict:
+def convert_file(path: Path, output_csv: Path, weight_stems: tuple[str, ...] = AMP_FORMAL_V1_STEMS) -> dict:
     motion = load_motion(path)
     reject_foreign_tensor(path, np.asarray(motion["dof_pos"]))
     rows = motion_to_csv_rows(motion)
@@ -209,7 +212,7 @@ def convert_file(path: Path, output_csv: Path) -> dict:
         "source_joint_names": list(motion["source_joint_names"]),
         "policy_joint_names": list(Z2_29DOF_JOINT_NAMES),
         "motion_class": amp_motion_class(stem),
-        "motion_weight": amp_motion_weight(stem),
+        "motion_weight": amp_motion_weight(stem, stems=weight_stems),
         "dataset": Z2_SOURCE_DATASET,
     }
 
@@ -237,6 +240,48 @@ def convert_whitelist(raw_dir: Path | None = None, csv_dir: Path | None = None) 
         "lineage_note": (
             "CSV frames equal PKL frames. They are not expert txt or visualization txt "
             "of the same stem. qvel is not copied from 64D experts; Isaac FK writes 70D later."
+        ),
+        "motions": summaries,
+    }
+    csv_dir.mkdir(parents=True, exist_ok=True)
+    (csv_dir / "_manifest.json").write_text(json.dumps(manifest, indent=2) + "\n", encoding="utf-8")
+    return manifest
+
+
+# Curated v2: forward-motion-only replacement for the v1 set whose ``run`` and
+# ``walk`` clips are in-place (net root displacement < 2 cm). All four clips
+# keep sustained forward speed (see artifacts/z2_amp_recheck_20260912/).
+CURATED_V2_RAW_FILES: dict[str, str] = {
+    "walk_l": "walk_l.pkl",
+    "run2": "run2.pkl",
+    "run_l": "liyang/run_l.pkl",
+    "run_140_l": "liyang/run_140_l.pkl",
+}
+
+
+def convert_curated_v2(raw_dir: Path | None = None, csv_dir: Path | None = None) -> dict:
+    raw_dir = raw_dir or (ROOT / AMP_MOTION_SOURCE_RAW_DIR)
+    csv_dir = csv_dir or (ROOT / AMP_CURATED_V2_SOURCE_DIR)
+    summaries = []
+    for stem, filename in CURATED_V2_RAW_FILES.items():
+        if stem in AMP_HELD_OUT_MOTIONS:
+            raise ValueError(f"curated v2 stem {stem} is held out")
+        if stem not in AMP_MOTION_CLASSES:
+            raise ValueError(f"curated v2 stem {stem} has no AMP class")
+        source = raw_dir / filename
+        if not source.is_file():
+            raise FileNotFoundError(source)
+        summaries.append(convert_file(source, csv_dir / f"{stem}.csv", weight_stems=AMP_CURATED_V2_STEMS))
+    manifest = {
+        "schema": "z2_amp_source.v1",
+        "dataset": Z2_SOURCE_DATASET,
+        "policy_joint_names": list(Z2_29DOF_JOINT_NAMES),
+        "source_joint_order_fallback": list(Z2_SOURCE_JOINT_ORDER),
+        "held_out": list(AMP_HELD_OUT_MOTIONS),
+        "stems_version": "curated_v2",
+        "lineage_note": (
+            "Curated v2 drops the in-place v1 run/walk clips; every member keeps sustained "
+            "forward root motion. CSV frames equal PKL frames; Isaac FK writes 70D later."
         ),
         "motions": summaries,
     }

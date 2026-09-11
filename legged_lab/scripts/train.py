@@ -59,6 +59,11 @@ parser.add_argument(
     ),
     help="Opt-in cold-start G1 motion recipe",
 )
+parser.add_argument(
+    "--z2_motion_experiment",
+    choices=("z2_vital_v31",),
+    help="Opt-in cold-start Z2 plant-DR recipe (rewards/terminations untouched)",
+)
 
 # append RSL-RL cli arguments
 cli_args.add_rsl_rl_args(parser)
@@ -110,6 +115,12 @@ def train():
         from legged_lab.envs.g1.motion_experiment import apply_vital_motion_experiment
 
         apply_vital_motion_experiment(env_cfg, args_cli.g1_motion_experiment)
+    if args_cli.z2_motion_experiment is not None:
+        if env_class_name != "z2_loco_teacher" or agent_cfg.resume or args_cli.amp_expert_manifest is None:
+            raise ValueError("Z2 motion experiment requires z2_loco_teacher, cold start and an explicit AMP manifest")
+        from legged_lab.envs.z2.motion_experiment import apply_z2_motion_experiment
+
+        apply_z2_motion_experiment(env_cfg, args_cli.z2_motion_experiment)
     if args_cli.g1_progress_ab is not None:
         if env_class_name != "g1_loco_teacher" or agent_cfg.resume or args_cli.amp_expert_manifest is None:
             raise ValueError("G1 A/B requires g1_loco_teacher, cold start and an explicit full17 AMP manifest")

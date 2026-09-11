@@ -68,19 +68,30 @@ AMP_MOTION_CLASSES: dict[str, str] = {
     "walk": "walk_forward",
     "walk_l": "walk_forward",
     "run": "run",
+    # 2026-09-12 promoted out of the hold-out list: the v1 set turned out to
+    # contain two in-place clips (``run``/``walk`` move < 0.02 m/s net); these
+    # three are the clean forward-motion replacement members of curated v2.
+    "run2": "run",
+    "run_l": "run",
+    "run_140_l": "run",
 }
 
 AMP_HELD_OUT_MOTIONS: tuple[str, ...] = (
     "walk1_subject1",
     "run1_subject2",
-    "run2",
-    "run_l",
     "walk_l_unrepaired",
 )
+
+# Formal dataset versions. v1 keeps the migration lineage (including the two
+# in-place clips); curated v2 drops them and is the forward-motion set.
+AMP_FORMAL_V1_STEMS: tuple[str, ...] = ("run", "walk", "walk_l")
+AMP_CURATED_V2_STEMS: tuple[str, ...] = ("run2", "run_l", "run_140_l", "walk_l")
 
 AMP_FORMAL_EXPERT_DIR = "legged_lab/envs/z2/datasets/motion_amp_expert"
 AMP_MOTION_SOURCE_DIR = "legged_lab/envs/z2/datasets/motion_source"
 AMP_MOTION_SOURCE_RAW_DIR = "legged_lab/envs/z2/datasets/motion_source_raw"
+AMP_CURATED_V2_SOURCE_DIR = "legged_lab/envs/z2/datasets/motion_source_z2_v2"
+AMP_CURATED_V2_EXPERT_DIR = "legged_lab/envs/z2/datasets/motion_amp_expert_z2_v2"
 
 UPSTREAM_64D_EXPERT_WIDTH = 64
 UPSTREAM_VISUALIZATION_WIDTH = 70
@@ -105,12 +116,13 @@ def amp_motion_class(motion_stem: str) -> str:
         ) from error
 
 
-def amp_motion_weight(motion_stem: str) -> float:
+def amp_motion_weight(motion_stem: str, stems: tuple[str, ...] = AMP_FORMAL_V1_STEMS) -> float:
     motion_class = amp_motion_class(motion_stem)
-    class_members = [stem for stem, name in AMP_MOTION_CLASSES.items() if name == motion_class]
+    class_members = [stem for stem in stems if AMP_MOTION_CLASSES[stem] == motion_class]
     return AMP_MOTION_CLASS_WEIGHTS[motion_class] / len(class_members)
 
 
-def amp_expert_files(expert_dir: str = AMP_FORMAL_EXPERT_DIR) -> list[str]:
-    stems = sorted(stem for stem in AMP_MOTION_CLASSES if stem not in AMP_HELD_OUT_MOTIONS)
-    return [f"{expert_dir}/{stem}.txt" for stem in stems]
+def amp_expert_files(
+    expert_dir: str = AMP_FORMAL_EXPERT_DIR, stems: tuple[str, ...] = AMP_FORMAL_V1_STEMS
+) -> list[str]:
+    return [f"{expert_dir}/{stem}.txt" for stem in sorted(stems)]
