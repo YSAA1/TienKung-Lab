@@ -1,0 +1,145 @@
+{
+  "amp_schema_version": "z2_amp.v1",
+  "clips": {
+    "run2": {
+      "fps": 29.8159509202454,
+      "frames": 79,
+      "motion_class": "run",
+      "motion_weight": 0.16666666666666666,
+      "sha256": "6fc3bd1da0721516abb710ffb69e814fa85e926eebfe91155bbaa7e8ece141e2",
+      "source_csv": "legged_lab/envs/z2/datasets/motion_source_z2_v2/run2.csv",
+      "source_csv_sha256": "7895a26f8fa5dc08a8e0be75185cd3944051f1e8e2a83e810106397a2b0b8e89",
+      "source_raw_sha256": "67e15cdc03ece0fcfb28231b7bae478e536708b74138a5a3056ab478426b0ed8"
+    },
+    "run_140_l": {
+      "fps": 30.0,
+      "frames": 139,
+      "motion_class": "run",
+      "motion_weight": 0.16666666666666666,
+      "sha256": "85feccac78831d9947062397f268d6aa845e3cc5d792d8a9b6a935d4ab16f8a3",
+      "source_csv": "legged_lab/envs/z2/datasets/motion_source_z2_v2/run_140_l.csv",
+      "source_csv_sha256": "23c3d177e0b4f2a93cd38a8e884cce10093aec34c5294b659073d9bfc4c0b974",
+      "source_raw_sha256": "640be38b418870a80a52dbf547472917720e0ac348fc0faa84ec202670f20d77"
+    },
+    "run_l": {
+      "fps": 30.0,
+      "frames": 171,
+      "motion_class": "run",
+      "motion_weight": 0.16666666666666666,
+      "sha256": "21ee382cfc32c8b404ec3d9810596d91a4cc0861cfc457a5d3fdb78660e12b3a",
+      "source_csv": "legged_lab/envs/z2/datasets/motion_source_z2_v2/run_l.csv",
+      "source_csv_sha256": "e1fe0af80742a06ca3720d51a52e59a581befb3939629a3c7b3a57104a5ffca0",
+      "source_raw_sha256": "f4eb6bfb845ae66a82d5c6ce87661dadc06d54ce2de2a2bb988143d3101d90bc"
+    },
+    "walk_l": {
+      "fps": 30.0,
+      "frames": 280,
+      "motion_class": "walk_forward",
+      "motion_weight": 1.0,
+      "sha256": "34c4d74cebe664212e032a0234d742803630f6d8cd07d822cd2817e233bd39f8",
+      "source_csv": "legged_lab/envs/z2/datasets/motion_source_z2_v2/walk_l.csv",
+      "source_csv_sha256": "9e898ec2eb20ab693bbf271c260ebcfb68ad9191ff84e20e8368ef6bc4fcae79",
+      "source_raw_sha256": "74a5e3dcfd661ca299cf35e2c1dd56891e1117b6055c9a8f6b94497e1f2d6128"
+    }
+  },
+  "converter": {
+    "asset_mode": "upstream_usd",
+    "spawn_class": "Z2UsdFileCfg",
+    "urdf_converter_applied": false,
+    "usd_path": "/home/nubot/phn_ws/t4_train/TienKung-Lab-z2-vital-v31-20260912/legged_lab/assets/z2/usd/assembly.usd"
+  },
+  "frame_dim": 70,
+  "held_out_motions": [
+    "walk1_subject1",
+    "run1_subject2",
+    "walk_l_unrepaired"
+  ],
+  "joint_order": [
+    "L_hip_pitch_joint",
+    "R_hip_pitch_joint",
+    "waist_yaw_joint",
+    "L_hip_roll_joint",
+    "R_hip_roll_joint",
+    "waist_pitch_joint",
+    "L_hip_yaw_joint",
+    "R_hip_yaw_joint",
+    "waist_roll_joint",
+    "L_knee_joint",
+    "R_knee_joint",
+    "L_shoulder_pitch_joint",
+    "R_shoulder_pitch_joint",
+    "L_ankle_pitch_joint",
+    "R_ankle_pitch_joint",
+    "L_shoulder_roll_joint",
+    "R_shoulder_roll_joint",
+    "L_ankle_roll_joint",
+    "R_ankle_roll_joint",
+    "L_shoulder_yaw_joint",
+    "R_shoulder_yaw_joint",
+    "L_elbow_joint",
+    "R_elbow_joint",
+    "L_wrist_roll_joint",
+    "R_wrist_roll_joint",
+    "L_wrist_pitch_joint",
+    "R_wrist_pitch_joint",
+    "L_wrist_yaw_joint",
+    "R_wrist_yaw_joint"
+  ],
+  "kinematics_response": 0.11559756100177765,
+  "max_frames": 0,
+  "motions": {
+    "run2": {
+      "foot_feature_travel": 21.40289162285626,
+      "fps": 29.8159509202454,
+      "frame_duration": 0.03353909465020576,
+      "frames": 79,
+      "motion_class": "run",
+      "motion_weight": 0.16666666666666666
+    },
+    "run_140_l": {
+      "foot_feature_travel": 16.320923255756497,
+      "fps": 30.0,
+      "frame_duration": 0.03333333333333333,
+      "frames": 139,
+      "motion_class": "run",
+      "motion_weight": 0.16666666666666666
+    },
+    "run_l": {
+      "foot_feature_travel": 16.78120189718902,
+      "fps": 30.0,
+      "frame_duration": 0.03333333333333333,
+      "frames": 171,
+      "motion_class": "run",
+      "motion_weight": 0.16666666666666666
+    },
+    "walk_l": {
+      "foot_feature_travel": 21.350868452340364,
+      "fps": 30.0,
+      "frame_duration": 0.03333333333333333,
+      "frames": 280,
+      "motion_class": "walk_forward",
+      "motion_weight": 1.0
+    }
+  },
+  "note": "70D q29+dq29+hands6+feet6. train.py binds clips[stem].sha256 next to {stem}.txt.",
+  "plant": "Z2_29DOF_WALK_POSE_DAMPED_PD_CFG",
+  "provenance": {
+    "amp_manifest_sha256": "c76984f549a56e1553763822c019d21438635a8905e0a4ee2677da5e883e533a",
+    "asset_cfg_sha256": "8e6741198c1450a525156cb0d200fbcfacd83098db8d012a0ac8787640196ed6",
+    "asset_mode": "upstream_usd",
+    "generator_sha256": "d9c1ce53d1da292f3b3f6e86582ef78220e5df27d4cda9cc82ec9f5eb6c69db6",
+    "urdf_sha256": "337a586227113d14b3bb0ebc00ccf80f12d471d6af0afab980e80f9deb421226",
+    "usd_layers": {
+      "usd/assembly.usd": "9650d18c1d9438b7347e22e79c82bf6dc3d7ddd35159d9e420070b5243765be3",
+      "usd/configuration/assembly_base.usd": "0deae5be3b1057d5cb6f6f077b8ebb439cdd40292a9014b08fdc7390fb568e38",
+      "usd/configuration/assembly_physics.usd": "2a80a0aed6489aca372e7c90cb6d52a30a4445663a10da29f6acf51db8f7227c",
+      "usd/configuration/assembly_robot.usd": "ee13560711f740df121241e0afb3a45d7693ba772bbe4edd28c03c91ecb29e3a",
+      "usd/configuration/assembly_sensor.usd": "e8f1fae809827988792af1478302b974a073fac8663203c4e505a134cbd10a22"
+    }
+  },
+  "sim_dt": 0.005,
+  "simulator": "isaaclab",
+  "source_dataset": "nubot-zhixing/z2-lab-stable-AMP@c78eb1f8e31b7f7872733110c10276b7b2159414",
+  "status": "isaac_fk",
+  "transition_dim": 140
+}
