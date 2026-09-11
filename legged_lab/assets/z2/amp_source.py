@@ -189,7 +189,9 @@ def motion_to_csv_rows(motion: dict) -> np.ndarray:
 def write_csv(path: Path, rows: np.ndarray) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     with path.open("w", newline="", encoding="utf-8") as stream:
-        writer = csv.writer(stream)
+        # LF terminator matches the repo-wide eol=lf contract; csv.writer's
+        # CRLF default would make manifest sha256 machine-dependent.
+        writer = csv.writer(stream, lineterminator="\n")
         for row in rows:
             writer.writerow([f"{value:.16g}" for value in row])
 
